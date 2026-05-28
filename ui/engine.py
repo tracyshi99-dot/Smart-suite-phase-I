@@ -15,6 +15,16 @@ OUTPUT_PATH = BASE_PATH / "output"
 INPUT_PATH = BASE_PATH / "input"
 STEERING_PATH = BASE_PATH / ".kiro" / "steering"
 
+# On cloud, use temp directory for output
+import tempfile
+
+if not OUTPUT_PATH.exists():
+    OUTPUT_PATH = Path(tempfile.gettempdir()) / "smartsuite_output"
+    OUTPUT_PATH.mkdir(parents=True, exist_ok=True)
+if not INPUT_PATH.exists():
+    INPUT_PATH = Path(tempfile.gettempdir()) / "smartsuite_input"
+    INPUT_PATH.mkdir(parents=True, exist_ok=True)
+
 MODEL_ID = "anthropic.claude-sonnet-4-20250514"
 REGION = "us-east-1"
 MAX_TOKENS = 8192

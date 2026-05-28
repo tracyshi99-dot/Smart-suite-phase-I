@@ -17,6 +17,21 @@ OUTPUT_PATH = BASE_PATH / "output"
 INPUT_PATH = BASE_PATH / "input"
 METRICS_PATH = OUTPUT_PATH / "metrics"
 
+# On Streamlit Cloud, use a writable temp directory for output
+import tempfile
+import os
+
+if not OUTPUT_PATH.exists():
+    # Running on cloud - use temp dir
+    _CLOUD_OUTPUT = Path(tempfile.gettempdir()) / "smartsuite_output"
+    _CLOUD_OUTPUT.mkdir(parents=True, exist_ok=True)
+    OUTPUT_PATH = _CLOUD_OUTPUT
+    METRICS_PATH = OUTPUT_PATH / "metrics"
+    # Also create input dir with demo data
+    if not INPUT_PATH.exists():
+        INPUT_PATH = Path(tempfile.gettempdir()) / "smartsuite_input"
+        INPUT_PATH.mkdir(parents=True, exist_ok=True)
+
 st.set_page_config(
     page_title="Smart Suite 智系列控制台",
     page_icon="🧠",
@@ -94,6 +109,9 @@ def is_cloud():
 
 
 def load_keywords():
+    # First check if user uploaded keywords in session
+    if "uploaded_keywords" in st.session_state:
+        return st.session_state["uploaded_keywords"]
     df = load_csv_safe(INPUT_PATH / "seo_sem_keywords.csv")
     if df.empty and is_cloud():
         from demo_data import get_demo_keywords
@@ -301,6 +319,37 @@ if page == "🏠 总览":
         st.code(f"全流程执行 {selected_batch}，market={market}，keyword_limit={kw_limit}", language=None)
         st.code(f"智中枢决策 {week}，生成周度计划", language=None)
 
+    # --- Download Results ---
+    st.divider()
+    st.subheader("📥 下载结果")
+    batch_path = OUTPUT_PATH / selected_batch
+    if batch_path.exists():
+        col_d1, col_d2, col_d3, col_d4 = st.columns(4)
+        with col_d1:
+            zhiku_file = batch_path / "01_zhiku" / "zhiku_ai_queries.csv"
+            if zhiku_file.exists():
+                st.download_button("📚 下载智库", zhiku_file.read_bytes(),
+                                   file_name="zhiku_ai_queries.csv", mime="text/csv")
+        with col_d2:
+            zhizao_file = batch_path / "02_zhizao" / "zhizao_draft_content.csv"
+            if zhizao_file.exists():
+                st.download_button("✍️ 下载智造", zhizao_file.read_bytes(),
+                                   file_name="zhizao_draft_content.csv", mime="text/csv")
+        with col_d3:
+            opt_file = batch_path / "03_zhiyou" / "zhiyou_optimized_content.csv"
+            if opt_file.exists():
+                st.download_button("🔧 下载智优", opt_file.read_bytes(),
+                                   file_name="zhiyou_optimized_content.csv", mime="text/csv")
+        with col_d4:
+            zhibu_dir = batch_path / "04_zhibu"
+            if zhibu_dir.exists():
+                jsons = list(zhibu_dir.glob("*.json"))
+                if jsons:
+                    st.download_button("📦 下载智布", jsons[0].read_bytes(),
+                                       file_name="zhibu_output.json", mime="application/json")
+    else:
+        st.caption("执行流水线后，结果将在此处可下载。")
+
 
 # ============================================================
 # PAGE: 智库 (Step 1)
@@ -312,6 +361,17 @@ elif page == "📚 智库 (Step 1)":
     tab_input, tab_output, tab_exec = st.tabs(["📥 输入 (关键词库)", "📤 输出 (AI Queries)", "▶️ 执行"])
 
     with tab_input:
+        # File upload for cloud users
+        uploaded_file = st.file_uploader("📤 上传关键词 CSV（可选，覆盖默认数据）",
+                                         type=["csv"], key="kw_upload")
+        if uploaded_file is not None:
+            df_uploaded = pd.read_csv(uploaded_file)
+            st.session_state["uploaded_keywords"] = df_uploaded
+            # Also save to input path for engine to use
+            INPUT_PATH.mkdir(parents=True, exist_ok=True)
+            df_uploaded.to_csv(INPUT_PATH / "seo_sem_keywords.csv", index=False, encoding="utf-8-sig")
+            st.success(f"✅ 已上传 {len(df_uploaded)} 条关键词")
+
         df_kw = load_keywords()
         if not df_kw.empty:
             col1, col2, col3 = st.columns(3)

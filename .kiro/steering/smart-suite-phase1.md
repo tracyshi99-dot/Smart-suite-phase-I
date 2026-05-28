@@ -72,6 +72,7 @@ batch_path = output_path + "\\" + batch_id
 - 遵循"金字塔原理"
 - 在每个H2节点下，先用一句话给出核心结论/直接回答
 - 再展开详细解释
+- **首段规则**：文章首段应紧扣标题概述核心问题，并直接、有逻辑简短地给出结论；如有数据支撑更好，让用户和AI都能快速识别文章结论
 
 #### FAQ模块
 - 文章末尾必须包含 3个基于本文内容的"常见问题解答 (FAQ)"
@@ -407,7 +408,7 @@ overall_score = (intent_match * 0.30) + (ai_readability * 0.20) + (authority * 0
 
 #### 9. 版权声明
 
-- 对外发布的内容页脚需加：Copyright (c) 2025 Amazon. All rights Reserved.
+- 对外发布的内容页脚需加：Copyright (c) 2026 Amazon. All rights Reserved.
 
 **Auto-Fix Logic:**
 - 如果内容包含禁用词 → 自动替换为正确表述
@@ -442,6 +443,7 @@ overall_score = (intent_match * 0.30) + (ai_readability * 0.20) + (authority * 0
   "batch_id": "batch_001",
   "created_at": "",
   "total_items": 0,
+  "source_keywords": [],
   "items": [
     {
       "content_id": "",
@@ -471,10 +473,17 @@ overall_score = (intent_match * 0.30) + (ai_readability * 0.20) + (authority * 0
         "internal_links": ["https://gs.amazon.cn"]
       },
       "ai_friendly": {
-        "intent_match_score": "",
-        "ai_readability_score": "",
-        "authority_score": "",
-        "geo_compliance_score": ""
+        "intent_match_score": 0,
+        "ai_readability_score": 0,
+        "authority_score": 0,
+        "actionability_score": 0,
+        "differentiation_score": 0,
+        "overall_score": 0.00
+      },
+      "compliance": {
+        "status": "",
+        "disclaimer": "",
+        "copyright": "Copyright © 2026 Amazon. All rights Reserved."
       },
       "quality_metrics": {
         "word_count": 0,
@@ -493,6 +502,9 @@ overall_score = (intent_match * 0.30) + (ai_readability * 0.20) + (authority * 0
 - The `cta` field must use optimized_cta from Step 3.5
 - The `geo_summary` field must use optimized_geo_summary from Step 3.5
 - The `meta` fields must use optimized_meta_title and optimized_meta_description
+- The `ai_friendly` field must include all 5 scoring dimensions (intent_match, ai_readability, authority, actionability, differentiation) plus overall_score from Step 3 scorecard
+- The `compliance` field must include status (PASS/FIXED), disclaimer text, and copyright notice from Step 3.6
+- The `source_keywords` field at batch level must list all original keywords processed in this batch
 - Include quality_metrics for verification
 - Maintain full mapping: keyword_id -> query_id -> content_id
 - Save JSON locally
@@ -550,12 +562,103 @@ overall_score = (intent_match * 0.30) + (ai_readability * 0.20) + (authority * 0
 
 ---
 
+---
+
+## 智中枢 (Workflow Orchestrator) – Decision Engine
+
+**Trigger:** When the user says "本周该做什么" or "weekly plan" or "智中枢决策"
+
+**Input:** Read the latest 智析 report from `{output_path}\metrics\` (most recent file)
+
+**Decision Rules:**
+
+### Rule 1: Growth Acceleration（增长加速）
+```
+IF channel WoW > +30% for 2+ consecutive weeks
+THEN → Increase content production for that channel
+ACTION: Run 智库 + 智造 for that market, +5 keywords next batch
+PRIORITY: High
+```
+
+### Rule 2: Decline Alert（下降预警）
+```
+IF channel WoW < -20%
+THEN → Flag for investigation, pause new content for that channel
+ACTION: Generate attribution analysis, recommend root cause check
+PRIORITY: High
+```
+
+### Rule 3: Low Absolute Volume（绝对值过低）
+```
+IF GEO channel weekly < 50 AND YoY > +50%
+THEN → Strategy is working but scale is small, increase keyword coverage
+ACTION: Run 智库 to expand keyword list for that market
+PRIORITY: Medium
+```
+
+### Rule 4: High-Performing Site Expansion（高增长站点扩展）
+```
+IF site YoY > +100% (e.g. JP +103%)
+THEN → Prioritize content expansion for that site
+ACTION: Allocate 30%+ of next batch keywords to that site
+PRIORITY: High
+```
+
+### Rule 5: Content Gap Detection（内容缺口）
+```
+IF market has GEO traffic but no content produced in last 2 weeks
+THEN → Content pipeline stalled, restart production
+ACTION: Run full pipeline (智库 → 智造 → 智优 → 智布) for that market
+PRIORITY: Medium
+```
+
+### Rule 6: Benchmark Comparison（大盘对比）
+```
+IF our YoY < SSR benchmark YoY
+THEN → Underperforming, need strategy review
+ACTION: Generate gap analysis, recommend new keyword angles
+PRIORITY: Critical
+```
+
+### Rule 7: Input-Output Lag Check（投入产出滞后检查）
+```
+IF content published 2-3 weeks ago AND no GEO/Direct lift observed
+THEN → Content may not be indexed by AI engines
+ACTION: Review content quality scores, consider rewrite or new angles
+PRIORITY: Medium
+```
+
+### Output Format:
+When triggered, generate a weekly action plan:
+```
+📋 Smart Suite Weekly Plan - WK[XX]
+
+Based on 智析 data (WK[XX]):
+
+🟢 ACCELERATE:
+- [Channel/Market]: [Reason] → [Action]
+
+🔴 INVESTIGATE:
+- [Channel/Market]: [Reason] → [Action]
+
+📝 THIS WEEK'S EXECUTION PLAN:
+- 智库: [X] new keywords for [Market]
+- 智造: [X] articles targeting [Topic/Market]
+- 智优: Review [X] existing articles
+- 智布: Publish [X] articles
+
+⏰ ESTIMATED TIME: [X] hours
+```
+
+---
+
 ## Execution Commands
 
 When the user says any of the following, execute the corresponding step:
 
 | User Command | Action |
 |---|---|
+| "本周该做什么" 或 "weekly plan" 或 "智中枢决策" | Execute 智中枢 Decision Engine |
 | "执行 Step 1" 或 "开始智库" | Execute Step 1 |
 | "执行 Step 2" 或 "开始智造" | Execute Step 2 |
 | "执行 Step 3" 或 "开始智优评分" | Execute Step 3 (scoring only) |
