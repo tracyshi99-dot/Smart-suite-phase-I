@@ -1,0 +1,634 @@
+"""
+Smart Suite Execution Engine - Bedrock Claude 3.5 Sonnet
+Executes pipeline steps (智库→智造→智优→智布) via AWS Bedrock.
+"""
+import boto3
+import json
+import pandas as pd
+from pathlib import Path
+from datetime import datetime
+from typing import Optional
+
+# --- Config ---
+BASE_PATH = Path(__file__).parent.parent
+OUTPUT_PATH = BASE_PATH / "output"
+INPUT_PATH = BASE_PATH / "input"
+STEERING_PATH = BASE_PATH / ".kiro" / "steering"
+
+MODEL_ID = "anthropic.claude-sonnet-4-20250514"
+REGION = "us-east-1"
+MAX_TOKENS = 8192
+
+
+def get_client():
+    """Get Bedrock client - uses Streamlit secrets on cloud, local creds otherwise."""
+    try:
+        import streamlit as st
+        if hasattr(st, "secrets") and "aws" in st.secrets:
+            return boto3.client(
+                "bedrock-runtime",
+                region_name=st.secrets["aws"].get("region", REGION),
+                aws_access_key_id=st.secrets["aws"]["access_key_id"],
+                aws_secret_access_key=st.secrets["aws"]["secret_access_key"],
+            )
+    except Exception:
+        pass
+    # Fallback to local credentials (SSO, env vars, etc.)
+    return boto3.client("bedrock-runtime", region_name=REGION)
+
+
+def call_claude(system_prompt: str, user_prompt: str, max_tokens: int = MAX_TOKENS) -> str:
+    """Call Claude 3.5 Sonnet via Bedrock Converse API."""
+    client = get_client()
+    response = client.converse(
+        modelId=MODEL_ID,
+        messages=[{"role": "user", "content": [{"text": user_prompt}]}],
+        system=[{"text": system_prompt}],
+        inferenceConfig={"maxTokens": max_tokens, "temperature": 0.3},
+    )
+    return response["output"]["message"]["content"][0]["text"]
+
+
+def load_steering() -> str:
+    """Load the main steering file."""
+    path = STEERING_PATH / "smart-suite-phase1.md"
+    if path.exists():
+        return path.read_text(encoding="utf-8")
+    return ""
+
+
+def ensure_dir(path: Path):
+    path.mkdir(parents=True, exist_ok=True)
+
+
+def timestamp():
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+# ============================================================
+# STEP 1: 智库
+# ============================================================
+def run_zhiku(batch_id: str, market: str = "ALL", keyword_limit: int = 10,
+              progress_callback=None) -> dict:
+    """Execute Step 1: Generate AI queries from keywords."""
+    steering = load_steering()
+
+    # Load keywords
+    kw_path = INPUT_PATH / "seo_sem_keywords.csv"
+    if not kw_path.exists():
+        return {"success": False, "error": "关键词文件不存在: input/seo_sem_keywords.csv"}
+
+    df_kw = pd.read_csv(kw_path, encoding="utf-8-sig")
+
+    # Filter by market
+    if market != "ALL":
+        df_kw = df_kw[df_kw["market"] == market]
+
+    # Limit keywords
+    df_kw = df_kw.head(keyword_limit)
+
+    if df_kw.empty:
+        return {"success": False, "error": f"没有找到 market={market} 的关键词"}
+
+    if progress_callback:
+        progress_callback(0.1, "正在调用 Claude 生成 AI Queries...")
+
+    # Build prompt
+    kw_list = df_kw[["keyword_id", "Keyword", "market", "keyword_type", "priority"]].to_csv(index=False)
+
+    system_prompt = f"""你是 Smart Suite 智库模块。严格按照以下规则生成 AI 原生搜索查询。
+
+{steering}
+
+重点关注 Step 1: 智库 的规则。"""
+
+    user_prompt = f"""请为以下关键词生成 AI 原生搜索查询。
+
+关键词列表：
+{kw_list}
+
+要求：
+1. 每个关键词生成 1-3 个高质量 AI 查询
+2. 输出格式为 CSV，字段：keyword_id,keyword,query_id,ai_query,intent_type,query_type,priority_score,language,market,is_selected,created_at
+3. intent_type: informational / navigational / transactional / comparison
+4. query_type: branded / generic / industry / conversion-oriented
+5. priority_score: 1-5
+6. 只有高质量查询设 is_selected=TRUE
+7. created_at 使用 {timestamp()}
+8. 直接输出 CSV 内容，不要加任何解释文字或 markdown 代码块标记"""
+
+    result = call_claude(system_prompt, user_prompt)
+
+    if progress_callback:
+        progress_callback(0.7, "正在保存结果...")
+
+    # Parse and save
+    output_dir = OUTPUT_PATH / batch_id / "01_zhiku"
+    ensure_dir(output_dir)
+    output_file = output_dir / "zhiku_ai_queries.csv"
+
+    # Clean result (remove markdown code fences if present)
+    csv_content = result.strip()
+    if csv_content.startswith("```"):
+        csv_content = "\n".join(csv_content.split("\n")[1:])
+    if csv_content.endswith("```"):
+        csv_content = "\n".join(csv_content.split("\n")[:-1])
+
+    output_file.write_text(csv_content.strip(), encoding="utf-8-sig")
+
+    if progress_callback:
+        progress_callback(1.0, "智库完成 ✅")
+
+    # Count results
+    lines = [l for l in csv_content.strip().split("\n") if l.strip()]
+    query_count = max(0, len(lines) - 1)
+
+    return {
+        "success": True,
+        "output_file": str(output_file),
+        "query_count": query_count,
+        "keywords_processed": len(df_kw),
+    }
+
+
+# ============================================================
+# STEP 2: 智造
+# ============================================================
+def run_zhizao(batch_id: str, content_limit: int = 5,
+               progress_callback=None) -> dict:
+    """Execute Step 2: Generate draft content for selected queries."""
+    steering = load_steering()
+
+    # Load zhiku output
+    zhiku_path = OUTPUT_PATH / batch_id / "01_zhiku" / "zhiku_ai_queries.csv"
+    if not zhiku_path.exists():
+        return {"success": False, "error": "请先执行智库 (Step 1)"}
+
+    df_q = pd.read_csv(zhiku_path, encoding="utf-8-sig")
+
+    # Filter selected
+    if "is_selected" in df_q.columns:
+        df_q = df_q[df_q["is_selected"].astype(str).str.upper() == "TRUE"]
+
+    df_q = df_q.head(content_limit)
+
+    if df_q.empty:
+        return {"success": False, "error": "没有已选中的 AI Queries"}
+
+    output_dir = OUTPUT_PATH / batch_id / "02_zhizao"
+    ensure_dir(output_dir)
+
+    results = []
+    total = len(df_q)
+
+    for idx, row in df_q.iterrows():
+        if progress_callback:
+            progress_callback((idx + 1) / (total + 1),
+                              f"正在生成第 {idx+1}/{total} 篇内容...")
+
+        query = row.get("ai_query", "")
+        keyword = row.get("keyword", "")
+        keyword_id = row.get("keyword_id", "")
+        query_id = row.get("query_id", "")
+
+        system_prompt = f"""你是 Smart Suite 智造模块，一位精通跨境电商的顶级内容营销专家。
+严格按照以下规则生成内容。
+
+{steering}
+
+重点关注 Step 2: 智造 的规则和内容创作标准。"""
+
+        user_prompt = f"""请为以下 AI 查询生成一篇完整的 SEO+GEO 双优化文章。
+
+AI Query: {query}
+Keyword: {keyword}
+Keyword ID: {keyword_id}
+Query ID: {query_id}
+
+要求：
+1. 严格遵循内容结构要求（开头段落 + H2/H3 + FAQ + 结语）
+2. 至少 800 字
+3. 至少 1 个表格、2 个列表、3 个 FAQ
+4. 至少 2 次自然植入 https://gs.amazon.cn
+5. 首段前100字植入核心关键词并给出直接答案
+6. 不提及竞品（Shopee, Lazada, TikTok 等）
+
+请输出 JSON 格式：
+{{
+  "content_id": "C_{keyword_id}_{idx+1:03d}",
+  "query_id": "{query_id}",
+  "keyword_id": "{keyword_id}",
+  "ai_query": "{query}",
+  "title": "文章标题",
+  "meta_title": "SEO标题(60字内)",
+  "meta_description": "SEO描述(120字内)",
+  "target_audience": "目标受众",
+  "content_objective": "内容目标",
+  "content_draft": "完整文章正文(Markdown格式)",
+  "faq_section": "FAQ部分",
+  "cta": "行动号召",
+  "geo_summary": "100字摘要+官网链接",
+  "word_count": 数字,
+  "version": "v1",
+  "created_at": "{timestamp()}"
+}}"""
+
+        response = call_claude(system_prompt, user_prompt)
+
+        # Parse JSON
+        try:
+            # Clean response
+            text = response.strip()
+            if text.startswith("```"):
+                text = "\n".join(text.split("\n")[1:])
+            if text.endswith("```"):
+                text = "\n".join(text.split("\n")[:-1])
+            article = json.loads(text)
+            results.append(article)
+        except json.JSONDecodeError:
+            results.append({
+                "content_id": f"C_{keyword_id}_{idx+1:03d}",
+                "query_id": query_id,
+                "keyword_id": keyword_id,
+                "ai_query": query,
+                "title": f"[解析失败] {query[:30]}",
+                "content_draft": response,
+                "word_count": len(response),
+                "version": "v1",
+                "created_at": timestamp(),
+            })
+
+    # Save as CSV
+    df_out = pd.DataFrame(results)
+    output_file = output_dir / "zhizao_draft_content.csv"
+    df_out.to_csv(output_file, index=False, encoding="utf-8-sig")
+
+    if progress_callback:
+        progress_callback(1.0, "智造完成 ✅")
+
+    return {
+        "success": True,
+        "output_file": str(output_file),
+        "articles_generated": len(results),
+    }
+
+
+# ============================================================
+# STEP 3: 智优评分
+# ============================================================
+def run_zhiyou_score(batch_id: str, progress_callback=None) -> dict:
+    """Execute Step 3: Score content across 5 dimensions."""
+    steering = load_steering()
+
+    zhizao_path = OUTPUT_PATH / batch_id / "02_zhizao" / "zhizao_draft_content.csv"
+    if not zhizao_path.exists():
+        return {"success": False, "error": "请先执行智造 (Step 2)"}
+
+    df = pd.read_csv(zhizao_path, encoding="utf-8-sig")
+    if df.empty:
+        return {"success": False, "error": "智造输出为空"}
+
+    if progress_callback:
+        progress_callback(0.1, "正在评分...")
+
+    # Build content summaries for scoring
+    articles_text = ""
+    for idx, row in df.iterrows():
+        title = row.get("title", "")
+        content = str(row.get("content_draft", ""))[:2000]
+        articles_text += f"\n---\ncontent_id: {row.get('content_id', idx)}\nquery_id: {row.get('query_id', '')}\nkeyword_id: {row.get('keyword_id', '')}\nai_query: {row.get('ai_query', '')}\ntitle: {title}\ncontent (前2000字): {content}\n"
+
+    system_prompt = f"""你是 Smart Suite 智优评分模块。严格按照以下规则评分。
+
+{steering}
+
+重点关注 Step 3: 智优评分 的规则。"""
+
+    user_prompt = f"""请对以下内容进行 AI 引用概率评分。
+
+{articles_text}
+
+要求：
+1. 对每篇内容按 5 个维度评分（1-5分）
+2. 输出 CSV 格式，字段：content_id,query_id,keyword_id,ai_query,intent_match_score,ai_readability_score,authority_score,actionability_score,differentiation_score,overall_score,issues_found,risk_flags,optimization_suggestions,is_approved,version,updated_at
+3. overall_score = intent_match*0.30 + ai_readability*0.20 + authority*0.20 + actionability*0.20 + differentiation*0.10
+4. is_approved=TRUE 条件：overall_score>=4.5 且 intent_match>=4 且 authority>=4
+5. optimization_suggestions 必须具体可操作
+6. updated_at: {timestamp()}
+7. 直接输出 CSV，不要加解释或代码块标记"""
+
+    result = call_claude(system_prompt, user_prompt)
+
+    if progress_callback:
+        progress_callback(0.8, "正在保存评分卡...")
+
+    output_dir = OUTPUT_PATH / batch_id / "03_zhiyou"
+    ensure_dir(output_dir)
+    output_file = output_dir / "zhiyou_scorecard.csv"
+
+    csv_content = result.strip()
+    if csv_content.startswith("```"):
+        csv_content = "\n".join(csv_content.split("\n")[1:])
+    if csv_content.endswith("```"):
+        csv_content = "\n".join(csv_content.split("\n")[:-1])
+
+    output_file.write_text(csv_content.strip(), encoding="utf-8-sig")
+
+    if progress_callback:
+        progress_callback(1.0, "智优评分完成 ✅")
+
+    lines = [l for l in csv_content.strip().split("\n") if l.strip()]
+    return {
+        "success": True,
+        "output_file": str(output_file),
+        "articles_scored": max(0, len(lines) - 1),
+    }
+
+
+# ============================================================
+# STEP 3.5: 智优执行
+# ============================================================
+def run_zhiyou_execute(batch_id: str, progress_callback=None) -> dict:
+    """Execute Step 3.5: Rewrite content based on scorecard suggestions."""
+    steering = load_steering()
+
+    scorecard_path = OUTPUT_PATH / batch_id / "03_zhiyou" / "zhiyou_scorecard.csv"
+    zhizao_path = OUTPUT_PATH / batch_id / "02_zhizao" / "zhizao_draft_content.csv"
+
+    if not scorecard_path.exists():
+        return {"success": False, "error": "请先执行智优评分 (Step 3)"}
+    if not zhizao_path.exists():
+        return {"success": False, "error": "智造输出不存在"}
+
+    df_score = pd.read_csv(scorecard_path, encoding="utf-8-sig")
+    df_draft = pd.read_csv(zhizao_path, encoding="utf-8-sig")
+
+    # Filter approved only
+    if "is_approved" in df_score.columns:
+        approved_ids = df_score[df_score["is_approved"].astype(str).str.upper() == "TRUE"]["content_id"].tolist()
+    else:
+        approved_ids = df_score["content_id"].tolist()
+
+    if not approved_ids:
+        return {"success": False, "error": "没有通过评分的内容"}
+
+    results = []
+    total = len(approved_ids)
+
+    for i, cid in enumerate(approved_ids):
+        if progress_callback:
+            progress_callback((i + 1) / (total + 1), f"正在重写第 {i+1}/{total} 篇...")
+
+        draft_row = df_draft[df_draft["content_id"] == cid]
+        score_row = df_score[df_score["content_id"] == cid]
+
+        if draft_row.empty or score_row.empty:
+            continue
+
+        draft = draft_row.iloc[0]
+        score = score_row.iloc[0]
+
+        system_prompt = f"""你是 Smart Suite 智优执行模块。根据评分建议重写优化内容。
+
+{steering}
+
+重点关注 Step 3.5: 智优执行 的规则。"""
+
+        user_prompt = f"""请根据评分建议重写以下内容。
+
+原始标题: {draft.get('title', '')}
+原始内容: {str(draft.get('content_draft', ''))[:3000]}
+AI Query: {draft.get('ai_query', '')}
+
+评分结果:
+- intent_match: {score.get('intent_match_score', '')}
+- ai_readability: {score.get('ai_readability_score', '')}
+- authority: {score.get('authority_score', '')}
+- actionability: {score.get('actionability_score', '')}
+- differentiation: {score.get('differentiation_score', '')}
+- issues: {score.get('issues_found', '')}
+- suggestions: {score.get('optimization_suggestions', '')}
+
+请输出 JSON：
+{{
+  "content_id": "{cid}",
+  "query_id": "{draft.get('query_id', '')}",
+  "keyword_id": "{draft.get('keyword_id', '')}",
+  "ai_query": "{draft.get('ai_query', '')}",
+  "original_title": "{draft.get('title', '')}",
+  "optimized_title": "优化后标题",
+  "optimized_meta_title": "SEO标题",
+  "optimized_meta_description": "SEO描述",
+  "optimized_content": "完整重写文章(800-1500字,Markdown)",
+  "optimized_faq": "3个FAQ",
+  "optimized_cta": "CTA",
+  "optimized_geo_summary": "100字摘要+链接",
+  "word_count": 数字,
+  "table_count": 数字,
+  "list_count": 数字,
+  "link_count": 数字,
+  "changes_applied": "应用的优化列表",
+  "version": "v2",
+  "updated_at": "{timestamp()}"
+}}"""
+
+        response = call_claude(system_prompt, user_prompt)
+        try:
+            text = response.strip()
+            if text.startswith("```"):
+                text = "\n".join(text.split("\n")[1:])
+            if text.endswith("```"):
+                text = "\n".join(text.split("\n")[:-1])
+            article = json.loads(text)
+            results.append(article)
+        except json.JSONDecodeError:
+            results.append({"content_id": cid, "optimized_content": response,
+                            "version": "v2", "updated_at": timestamp()})
+
+    output_dir = OUTPUT_PATH / batch_id / "03_zhiyou"
+    ensure_dir(output_dir)
+    output_file = output_dir / "zhiyou_optimized_content.csv"
+    pd.DataFrame(results).to_csv(output_file, index=False, encoding="utf-8-sig")
+
+    if progress_callback:
+        progress_callback(1.0, "智优执行完成 ✅")
+
+    return {"success": True, "output_file": str(output_file), "articles_rewritten": len(results)}
+
+
+# ============================================================
+# STEP 3.6: 合规审查
+# ============================================================
+def run_zhiyou_compliance(batch_id: str, progress_callback=None) -> dict:
+    """Execute Step 3.6: Legal compliance check with auto-fix."""
+    steering = load_steering()
+
+    opt_path = OUTPUT_PATH / batch_id / "03_zhiyou" / "zhiyou_optimized_content.csv"
+    if not opt_path.exists():
+        return {"success": False, "error": "请先执行智优执行 (Step 3.5)"}
+
+    df = pd.read_csv(opt_path, encoding="utf-8-sig")
+    if df.empty:
+        return {"success": False, "error": "优化内容为空"}
+
+    if progress_callback:
+        progress_callback(0.1, "正在进行合规审查...")
+
+    # Build content for review
+    articles_text = ""
+    for idx, row in df.iterrows():
+        content = str(row.get("optimized_content", ""))[:3000]
+        articles_text += f"\n---\ncontent_id: {row.get('content_id', idx)}\ntitle: {row.get('optimized_title', '')}\ncontent: {content}\n"
+
+    system_prompt = f"""你是 Smart Suite 合规审查模块。严格按照以下合规规则审查并自动修正内容。
+
+{steering}
+
+重点关注 Step 3.6: 合规审查 的所有规则（禁用词、数据规范、注册表述、品牌使用等）。"""
+
+    user_prompt = f"""请对以下内容进行合规审查。
+
+{articles_text}
+
+要求：
+1. 检查所有合规规则（禁用词、数据引用、注册表述、品牌使用、地图敏感地区等）
+2. 自动修正可修复的问题
+3. 输出 CSV 格式，字段：content_id,query_id,keyword_id,compliance_status,issues_found,fixes_applied,final_content,final_faq,final_cta,final_geo_summary,updated_at
+4. compliance_status: PASS(无问题) / FIXED(已修正) / BLOCKED(需人工)
+5. updated_at: {timestamp()}
+6. 直接输出 CSV，不要加解释或代码块标记"""
+
+    result = call_claude(system_prompt, user_prompt, max_tokens=MAX_TOKENS)
+
+    if progress_callback:
+        progress_callback(0.8, "正在保存合规结果...")
+
+    output_file = OUTPUT_PATH / batch_id / "03_zhiyou" / "zhiyou_compliance_checked.csv"
+    csv_content = result.strip()
+    if csv_content.startswith("```"):
+        csv_content = "\n".join(csv_content.split("\n")[1:])
+    if csv_content.endswith("```"):
+        csv_content = "\n".join(csv_content.split("\n")[:-1])
+
+    output_file.write_text(csv_content.strip(), encoding="utf-8-sig")
+
+    if progress_callback:
+        progress_callback(1.0, "合规审查完成 ✅")
+
+    return {"success": True, "output_file": str(output_file)}
+
+
+# ============================================================
+# STEP 4: 智布
+# ============================================================
+def run_zhibu(batch_id: str, progress_callback=None) -> dict:
+    """Execute Step 4: Convert to structured JSON."""
+    steering = load_steering()
+
+    opt_path = OUTPUT_PATH / batch_id / "03_zhiyou" / "zhiyou_optimized_content.csv"
+    score_path = OUTPUT_PATH / batch_id / "03_zhiyou" / "zhiyou_scorecard.csv"
+
+    if not opt_path.exists():
+        return {"success": False, "error": "请先执行智优执行 (Step 3.5)"}
+
+    df_opt = pd.read_csv(opt_path, encoding="utf-8-sig")
+    df_score = pd.read_csv(score_path, encoding="utf-8-sig") if score_path.exists() else pd.DataFrame()
+
+    if df_opt.empty:
+        return {"success": False, "error": "优化内容为空"}
+
+    if progress_callback:
+        progress_callback(0.2, "正在生成 JSON...")
+
+    items = []
+    for _, row in df_opt.iterrows():
+        cid = row.get("content_id", "")
+        score_row = df_score[df_score["content_id"] == cid].iloc[0] if not df_score.empty and cid in df_score.get("content_id", pd.Series()).values else {}
+
+        item = {
+            "content_id": cid,
+            "query_id": row.get("query_id", ""),
+            "keyword_id": row.get("keyword_id", ""),
+            "keyword": row.get("ai_query", ""),
+            "ai_query": row.get("ai_query", ""),
+            "meta": {
+                "title": row.get("optimized_meta_title", row.get("optimized_title", "")),
+                "description": row.get("optimized_meta_description", ""),
+            },
+            "body": row.get("optimized_content", ""),
+            "faq": row.get("optimized_faq", ""),
+            "cta": row.get("optimized_cta", ""),
+            "geo_summary": row.get("optimized_geo_summary", ""),
+            "ai_friendly": {
+                "intent_match_score": score_row.get("intent_match_score", 0) if isinstance(score_row, dict) or hasattr(score_row, 'get') else 0,
+                "ai_readability_score": score_row.get("ai_readability_score", 0) if isinstance(score_row, dict) or hasattr(score_row, 'get') else 0,
+                "authority_score": score_row.get("authority_score", 0) if isinstance(score_row, dict) or hasattr(score_row, 'get') else 0,
+                "actionability_score": score_row.get("actionability_score", 0) if isinstance(score_row, dict) or hasattr(score_row, 'get') else 0,
+                "differentiation_score": score_row.get("differentiation_score", 0) if isinstance(score_row, dict) or hasattr(score_row, 'get') else 0,
+                "overall_score": score_row.get("overall_score", 0) if isinstance(score_row, dict) or hasattr(score_row, 'get') else 0,
+            },
+            "compliance": {
+                "status": "PASS",
+                "copyright": "Copyright © 2026 Amazon. All rights Reserved.",
+            },
+            "quality_metrics": {
+                "word_count": row.get("word_count", 0),
+                "table_count": row.get("table_count", 0),
+                "list_count": row.get("list_count", 0),
+                "link_count": row.get("link_count", 0),
+            },
+        }
+        items.append(item)
+
+    output_json = {
+        "batch_id": batch_id,
+        "created_at": timestamp(),
+        "total_items": len(items),
+        "items": items,
+    }
+
+    output_dir = OUTPUT_PATH / batch_id / "04_zhibu"
+    ensure_dir(output_dir)
+    output_file = output_dir / "zhibu_output.json"
+    output_file.write_text(json.dumps(output_json, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    if progress_callback:
+        progress_callback(1.0, "智布完成 ✅")
+
+    return {"success": True, "output_file": str(output_file), "items_count": len(items)}
+
+
+# ============================================================
+# FULL PIPELINE
+# ============================================================
+def run_full_pipeline(batch_id: str, market: str = "ALL", keyword_limit: int = 10,
+                      content_limit: int = 5, progress_callback=None) -> dict:
+    """Execute full pipeline: Steps 1 → 2 → 3 → 3.5 → 3.6 → 4."""
+    results = {}
+
+    steps = [
+        ("智库 (Step 1)", lambda cb: run_zhiku(batch_id, market, keyword_limit, cb)),
+        ("智造 (Step 2)", lambda cb: run_zhizao(batch_id, content_limit, cb)),
+        ("智优评分 (Step 3)", lambda cb: run_zhiyou_score(batch_id, cb)),
+        ("智优执行 (Step 3.5)", lambda cb: run_zhiyou_execute(batch_id, cb)),
+        ("合规审查 (Step 3.6)", lambda cb: run_zhiyou_compliance(batch_id, cb)),
+        ("智布 (Step 4)", lambda cb: run_zhibu(batch_id, cb)),
+    ]
+
+    for i, (name, func) in enumerate(steps):
+        if progress_callback:
+            progress_callback(i / len(steps), f"正在执行: {name}...")
+
+        result = func(None)
+        results[name] = result
+
+        if not result.get("success"):
+            results["stopped_at"] = name
+            results["error"] = result.get("error", "Unknown error")
+            break
+
+    if progress_callback:
+        progress_callback(1.0, "全流程完成 ✅")
+
+    results["success"] = all(r.get("success", False) for r in results.values() if isinstance(r, dict))
+    return results

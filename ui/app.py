@@ -272,17 +272,34 @@ if page == "🏠 总览":
 
     # --- Quick Actions ---
     st.divider()
-    st.subheader("⚡ 快捷指令")
-    col_a, col_b, col_c = st.columns(3)
+    st.subheader("⚡ 快捷操作")
+
+    col_a, col_b = st.columns(2)
     with col_a:
-        st.code(f"全流程执行 {selected_batch}，market={market}，keyword_limit={kw_limit}", language=None)
-        st.caption("全流程 Steps 1-5")
+        if st.button("🚀 一键执行全流程 (Steps 1-4)", type="primary", key="run_full"):
+            from engine import run_full_pipeline
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+
+            def update_progress(pct, msg):
+                progress_bar.progress(pct)
+                status_text.text(msg)
+
+            result = run_full_pipeline(selected_batch, market, kw_limit, 5, update_progress)
+
+            if result.get("success"):
+                st.success("✅ 全流程执行完成！")
+                for step_name, step_result in result.items():
+                    if isinstance(step_result, dict) and step_result.get("success"):
+                        st.caption(f"  ✅ {step_name}")
+            else:
+                st.error(f"❌ 停止于: {result.get('stopped_at', 'Unknown')}")
+                st.caption(f"原因: {result.get('error', '')}")
+
     with col_b:
+        st.markdown("**指令参考：**")
+        st.code(f"全流程执行 {selected_batch}，market={market}，keyword_limit={kw_limit}", language=None)
         st.code(f"智中枢决策 {week}，生成周度计划", language=None)
-        st.caption("智中枢决策")
-    with col_c:
-        st.code(f"生成智析报告 {week}", language=None)
-        st.caption("智析报告")
 
 
 # ============================================================
@@ -358,7 +375,24 @@ elif page == "📚 智库 (Step 1)":
         """)
         cmd = f"执行智库 {selected_batch}，market={market}，keyword_limit={kw_limit}"
         st.code(cmd, language=None)
-        st.caption("复制上方指令到 Kiro 对话框执行")
+
+        if st.button("🚀 执行智库", type="primary", key="run_zhiku"):
+            from engine import run_zhiku
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+
+            def update_progress(pct, msg):
+                progress_bar.progress(pct)
+                status_text.text(msg)
+
+            with st.spinner("正在调用 Bedrock Claude..."):
+                result = run_zhiku(selected_batch, market, kw_limit, update_progress)
+
+            if result["success"]:
+                st.success(f"✅ 智库完成！生成 {result['query_count']} 条 AI Queries")
+                st.caption(f"输出: {result['output_file']}")
+            else:
+                st.error(f"❌ 失败: {result['error']}")
 
 
 # ============================================================
@@ -427,9 +461,27 @@ elif page == "✍️ 智造 (Step 2)":
     with tab_exec:
         st.subheader("▶️ 执行智造")
         st.markdown(f"**批次:** `{selected_batch}`")
+        content_limit = st.number_input("生成文章数上限", 1, 20, 5, key="zhizao_limit")
         cmd = f"执行智造 {selected_batch}，生成内容"
         st.code(cmd, language=None)
-        st.caption("复制上方指令到 Kiro 对话框执行")
+
+        if st.button("🚀 执行智造", type="primary", key="run_zhizao"):
+            from engine import run_zhizao
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+
+            def update_progress(pct, msg):
+                progress_bar.progress(pct)
+                status_text.text(msg)
+
+            with st.spinner("正在调用 Bedrock Claude 生成内容..."):
+                result = run_zhizao(selected_batch, content_limit, update_progress)
+
+            if result["success"]:
+                st.success(f"✅ 智造完成！生成 {result['articles_generated']} 篇文章")
+                st.caption(f"输出: {result['output_file']}")
+            else:
+                st.error(f"❌ 失败: {result['error']}")
 
 
 # ============================================================
@@ -530,13 +582,65 @@ elif page == "🔧 智优 (Step 3)":
         col_a, col_b, col_c = st.columns(3)
         with col_a:
             st.markdown("**Step 3: 评分**")
-            st.code(f"执行智优评分 {selected_batch}", language=None)
+            if st.button("🚀 执行评分", key="run_score"):
+                from engine import run_zhiyou_score
+                with st.spinner("评分中..."):
+                    result = run_zhiyou_score(selected_batch)
+                if result["success"]:
+                    st.success(f"✅ 评分完成！{result['articles_scored']} 篇")
+                else:
+                    st.error(result["error"])
+
         with col_b:
             st.markdown("**Step 3.5: 重写**")
-            st.code(f"执行智优执行 {selected_batch}，基于评分建议重写", language=None)
+            if st.button("🚀 执行重写", key="run_rewrite"):
+                from engine import run_zhiyou_execute
+                with st.spinner("重写中..."):
+                    result = run_zhiyou_execute(selected_batch)
+                if result["success"]:
+                    st.success(f"✅ 重写完成！{result['articles_rewritten']} 篇")
+                else:
+                    st.error(result["error"])
+
         with col_c:
             st.markdown("**Step 3.6: 合规**")
-            st.code(f"执行合规审查 {selected_batch}", language=None)
+            if st.button("🚀 执行合规审查", key="run_compliance"):
+                from engine import run_zhiyou_compliance
+                with st.spinner("合规审查中..."):
+                    result = run_zhiyou_compliance(selected_batch)
+                if result["success"]:
+                    st.success("✅ 合规审查完成！")
+                else:
+                    st.error(result["error"])
+
+        st.divider()
+        st.markdown("**一键执行全部智优 (3 → 3.5 → 3.6)**")
+        if st.button("🚀 一键智优全流程", type="primary", key="run_zhiyou_all"):
+            from engine import run_zhiyou_score, run_zhiyou_execute, run_zhiyou_compliance
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+
+            status_text.text("Step 3: 评分中...")
+            progress_bar.progress(0.1)
+            r1 = run_zhiyou_score(selected_batch)
+            if not r1["success"]:
+                st.error(f"评分失败: {r1['error']}")
+            else:
+                progress_bar.progress(0.4)
+                status_text.text("Step 3.5: 重写中...")
+                r2 = run_zhiyou_execute(selected_batch)
+                if not r2["success"]:
+                    st.error(f"重写失败: {r2['error']}")
+                else:
+                    progress_bar.progress(0.7)
+                    status_text.text("Step 3.6: 合规审查中...")
+                    r3 = run_zhiyou_compliance(selected_batch)
+                    if not r3["success"]:
+                        st.error(f"合规失败: {r3['error']}")
+                    else:
+                        progress_bar.progress(1.0)
+                        status_text.text("")
+                        st.success("✅ 智优全流程完成！")
 
 
 # ============================================================
@@ -590,7 +694,16 @@ elif page == "📦 智布 (Step 4)":
     with tab_exec:
         st.subheader("▶️ 执行智布")
         st.code(f"执行智布 {selected_batch}，生成JSON", language=None)
-        st.caption("复制上方指令到 Kiro 对话框执行")
+
+        if st.button("🚀 执行智布", type="primary", key="run_zhibu"):
+            from engine import run_zhibu
+            with st.spinner("正在生成 JSON..."):
+                result = run_zhibu(selected_batch)
+            if result["success"]:
+                st.success(f"✅ 智布完成！{result['items_count']} 条目")
+                st.caption(f"输出: {result['output_file']}")
+            else:
+                st.error(f"❌ 失败: {result['error']}")
 
 
 # ============================================================
