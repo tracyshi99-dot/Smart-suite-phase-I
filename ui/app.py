@@ -1294,16 +1294,17 @@ elif page == "📦 智布":
 
 
 # ============================================================
-# PAGE: 智析 (Step 6)
+# ============================================================
+# PAGE: 智析 (Step 6) — 重构版
 # ============================================================
 elif page == "📈 智析":
-    st.title("📈 智析 – Performance Report")
+    st.title("📈 智析 – Performance & Gap Analysis")
     render_pipeline_flow("zhixi", selected_batch)
-    st.caption("Step 6: GEO + WW Direct Reg Start 趋势分析")
+    st.caption("效果分析：Output 趋势 · Input 产出追踪 · AI 引用监控 · Gap 机会点")
 
-    # --- Upload metrics data directly ---
-    with st.expander("📤 上传数据（手动导入 metrics 数据）", expanded=False):
-        st.caption("可选：上传 weekly/monthly metrics CSV，用于自定义分析展示")
+    # --- Upload metrics data ---
+    with st.expander("📤 上传数据（手动导入 metrics）", expanded=False):
+        st.caption("可选：上传 weekly/monthly metrics CSV")
         upload_zhixi = st.file_uploader("上传 Metrics CSV", type=["csv", "xlsx"], key="zhixi_direct_upload")
         if upload_zhixi:
             try:
@@ -1318,99 +1319,289 @@ elif page == "📈 智析":
             except Exception as e:
                 st.error(f"上传失败: {e}")
 
-    # Weekly Trend
-    st.subheader("📊 Weekly 趋势")
-    df_w = get_weekly_metrics()
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=df_w["Week"], y=df_w["Total"],
-                             mode="lines+markers", name="Total",
-                             line=dict(color="#4a9eff", width=3), marker=dict(size=8)))
-    fig.add_trace(go.Scatter(x=df_w["Week"], y=df_w["WW_Direct_EST"],
-                             mode="lines+markers", name="WW Direct EST",
-                             line=dict(color="#52b788", width=2)))
-    fig.add_trace(go.Scatter(x=df_w["Week"], y=df_w["CN_GEO"],
-                             mode="lines+markers", name="CN GEO",
-                             line=dict(color="#fbbf24", width=2)))
-    fig.add_trace(go.Scatter(x=df_w["Week"], y=df_w["WW_GEO"],
-                             mode="lines+markers", name="WW GEO",
-                             line=dict(color="#a78bfa", width=2)))
-    fig.update_layout(height=350, margin=dict(l=0, r=0, t=10, b=0),
-                      legend=dict(orientation="h", y=-0.15), yaxis_title="Reg Starts")
-    st.plotly_chart(fig, use_container_width=True)
+    # --- 4 Tabs ---
+    tab_output, tab_input, tab_citation, tab_gap = st.tabs([
+        "📊 Output 趋势",
+        "📥 Input 产出",
+        "🔗 AI 引用追踪",
+        "💡 Gap & 机会点",
+    ])
 
-    # WoW bar
-    st.subheader("WoW 变化率 (WK20 vs WK19)")
-    df_wow = pd.DataFrame({
-        "Channel": ["CN GEO", "WW GEO", "WW Direct EST", "WW Direct EM", "Total"],
-        "WoW%": [24, 41, 32, 3, 31],
-    })
-    fig_wow = px.bar(df_wow, x="Channel", y="WoW%", text="WoW%",
-                     color="WoW%", color_continuous_scale=["#f87171", "#fbbf24", "#52b788"])
-    fig_wow.update_traces(texttemplate="%{text}%", textposition="outside")
-    fig_wow.update_layout(height=260, margin=dict(l=0, r=0, t=10, b=0),
-                          showlegend=False, coloraxis_showscale=False)
-    st.plotly_chart(fig_wow, use_container_width=True)
+    # ============================================================
+    # TAB 1: Output 趋势
+    # ============================================================
+    with tab_output:
+        sub_weekly, sub_monthly, sub_ytd = st.tabs(["Weekly", "Monthly", "YTD"])
 
-    st.divider()
+        with sub_weekly:
+            st.subheader("📅 Weekly 趋势")
+            df_w = get_weekly_metrics()
+            # Week selector
+            all_weeks = df_w["Week"].tolist()
+            week_range = st.select_slider("选择周范围", options=all_weeks,
+                                          value=(all_weeks[0], all_weeks[-1]), key="zhixi_week_range")
+            start_idx = all_weeks.index(week_range[0])
+            end_idx = all_weeks.index(week_range[1])
+            df_w_filtered = df_w.iloc[start_idx:end_idx+1]
 
-    # YTD
-    st.subheader("📋 YTD 对比")
-    df_ytd = get_ytd_metrics()
-    df_ytd["增量"] = df_ytd["YTD_Actual"] - df_ytd["YTD_PY"]
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(x=df_w_filtered["Week"], y=df_w_filtered["Total"], mode="lines+markers", name="Total", line=dict(color="#4a9eff", width=3)))
+            fig.add_trace(go.Scatter(x=df_w_filtered["Week"], y=df_w_filtered["WW_Direct_EST"], mode="lines+markers", name="WW Direct EST", line=dict(color="#52b788", width=2)))
+            fig.add_trace(go.Scatter(x=df_w_filtered["Week"], y=df_w_filtered["CN_GEO"], mode="lines+markers", name="CN GEO", line=dict(color="#fbbf24", width=2)))
+            fig.add_trace(go.Scatter(x=df_w_filtered["Week"], y=df_w_filtered["WW_GEO"], mode="lines+markers", name="WW GEO", line=dict(color="#a78bfa", width=2)))
+            fig.update_layout(height=350, margin=dict(l=0, r=0, t=10, b=0), legend=dict(orientation="h", y=-0.15), yaxis_title="Reg Starts")
+            st.plotly_chart(fig, use_container_width=True)
+            st.dataframe(df_w_filtered, use_container_width=True, hide_index=True)
 
-    df_bar = df_ytd[df_ytd["Channel"] != "Total"].copy()
-    fig_bar = go.Figure()
-    fig_bar.add_trace(go.Bar(name="YTD Actual", x=df_bar["Channel"], y=df_bar["YTD_Actual"],
-                             marker_color="#4a9eff"))
-    fig_bar.add_trace(go.Bar(name="YTD PY", x=df_bar["Channel"], y=df_bar["YTD_PY"],
-                             marker_color="#555"))
-    fig_bar.update_layout(barmode="group", height=300, margin=dict(l=0, r=0, t=10, b=0),
-                          legend=dict(orientation="h", y=-0.15))
-    st.plotly_chart(fig_bar, use_container_width=True)
-    st.dataframe(df_ytd, use_container_width=True, hide_index=True)
+        with sub_monthly:
+            st.subheader("📆 Monthly 趋势")
+            monthly_data = pd.DataFrame({
+                "Channel": ["CN GEO", "WW GEO", "WW Direct EST", "WW Direct EM", "Total"],
+                "M1 (Jan)": [89, 51, 4965, 326, 5431],
+                "M2 (Feb)": [65, 49, 2389, 326, 2829],
+                "M3 (Mar)": [165, 91, 7269, 649, 8174],
+                "M4 (Apr)": [164, 71, 7205, 340, 7780],
+                "M5 (MTD)": [159, 88, 7323, 255, 7825],
+            })
+            st.dataframe(monthly_data, use_container_width=True, hide_index=True)
 
-    # vs Benchmark
-    st.subheader("vs SSR 大盘")
-    bench = pd.DataFrame({
-        "维度": ["GEO + WW Direct", "Net (含 CN Direct+SEO)", "SSR Total 大盘"],
-        "YTD YoY": ["+55%", "-10%", "-23%"],
-        "vs 大盘": ["+78 ppts", "+13 ppts", "Benchmark"],
-    })
-    st.dataframe(bench, use_container_width=True, hide_index=True)
+            # Monthly trend chart
+            months = ["Jan", "Feb", "Mar", "Apr", "May"]
+            fig_m = go.Figure()
+            fig_m.add_trace(go.Bar(name="CN GEO", x=months, y=[89, 65, 165, 164, 159], marker_color="#fbbf24"))
+            fig_m.add_trace(go.Bar(name="WW GEO", x=months, y=[51, 49, 91, 71, 88], marker_color="#a78bfa"))
+            fig_m.add_trace(go.Bar(name="WW Direct EST", x=months, y=[4965, 2389, 7269, 7205, 7323], marker_color="#4a9eff"))
+            fig_m.update_layout(barmode="group", height=300, margin=dict(l=0, r=0, t=10, b=0), legend=dict(orientation="h", y=-0.15))
+            st.plotly_chart(fig_m, use_container_width=True)
 
-    st.divider()
+        with sub_ytd:
+            st.subheader("📊 YTD 对比")
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("GEO+Direct Total", "28,741", "+55% YoY")
+            with col2:
+                st.metric("CN GEO", "574", "+452%")
+            with col3:
+                st.metric("WW Direct EST", "25,863", "+62%")
+            with col4:
+                st.metric("vs 大盘", "+78 ppts", "跑赢 SSR")
 
-    # Attribution
-    st.subheader("🎯 WK20 归因分析")
-    st.markdown("""
-**Output 变化：**
-- WK20 GEO + WW Direct = **2,047**，WoW **+31%**
-- CN GEO 连续 4 周增长：32→33→33→41
-- WW Direct EST 全面反弹：NA +29%, EU +42%, JP +67%
+            st.divider()
+            df_ytd = get_ytd_metrics()
+            df_ytd["增量"] = df_ytd["YTD_Actual"] - df_ytd["YTD_PY"]
+            st.dataframe(df_ytd, use_container_width=True, hide_index=True)
 
-**归因判断：**
-| 渠道 | 判断 | 原因 |
+            # Bar chart
+            df_bar = df_ytd[df_ytd["Channel"] != "Total"].copy()
+            fig_bar = go.Figure()
+            fig_bar.add_trace(go.Bar(name="YTD Actual", x=df_bar["Channel"], y=df_bar["YTD_Actual"], marker_color="#4a9eff"))
+            fig_bar.add_trace(go.Bar(name="YTD PY", x=df_bar["Channel"], y=df_bar["YTD_PY"], marker_color="#555"))
+            fig_bar.update_layout(barmode="group", height=300, margin=dict(l=0, r=0, t=10, b=0), legend=dict(orientation="h", y=-0.15))
+            st.plotly_chart(fig_bar, use_container_width=True)
+
+    # ============================================================
+    # TAB 2: Input 产出
+    # ============================================================
+    with tab_input:
+        st.subheader("📥 内容产出追踪")
+
+        # Load zhizao data for article stats
+        df_articles = load_zhizao(selected_batch)
+        if not df_articles.empty:
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("产出文章总数", len(df_articles))
+            with col2:
+                if "category" in df_articles.columns:
+                    st.metric("覆盖 Topic 数", df_articles["category"].nunique())
+                else:
+                    st.metric("覆盖 Topic 数", "N/A")
+            with col3:
+                if "word_count" in df_articles.columns:
+                    df_articles["word_count"] = pd.to_numeric(df_articles["word_count"], errors="coerce")
+                    st.metric("总字数", f"{df_articles['word_count'].sum():,.0f}")
+
+            st.divider()
+
+            # Filter by topic
+            if "category" in df_articles.columns:
+                topics = ["全部"] + sorted(df_articles["category"].dropna().unique().tolist())
+                topic_filter = st.selectbox("按 Topic 筛选", topics, key="zhixi_topic_filter")
+                df_filtered = df_articles if topic_filter == "全部" else df_articles[df_articles["category"] == topic_filter]
+            else:
+                df_filtered = df_articles
+
+            # Time filter
+            col_t1, col_t2 = st.columns(2)
+            with col_t1:
+                time_view = st.selectbox("时间维度", ["全部", "指定日期", "指定周", "本月", "YTD"], key="zhixi_time")
+            with col_t2:
+                if time_view == "指定日期":
+                    selected_date = st.date_input("选择日期", key="zhixi_date")
+                elif time_view == "指定周":
+                    selected_week = st.selectbox("选择周", [f"WK{i}" for i in range(1, 25)], index=20, key="zhixi_week_select")
+
+            # Display
+            display_cols = [c for c in ["title", "ai_query", "category", "word_count", "created_at"] if c in df_filtered.columns]
+            if display_cols:
+                st.dataframe(df_filtered[display_cols], use_container_width=True, hide_index=True)
+
+            # Topic distribution chart
+            if "category" in df_articles.columns:
+                st.divider()
+                st.markdown("**文章 Topic 分布**")
+                cat_counts = df_articles["category"].value_counts().reset_index()
+                cat_counts.columns = ["Topic", "文章数"]
+                fig_topic = px.bar(cat_counts.head(15), x="Topic", y="文章数", color="文章数",
+                                   color_continuous_scale=["#94a3b8", "#4a9eff"])
+                fig_topic.update_layout(height=280, margin=dict(l=0, r=0, t=10, b=0), showlegend=False, coloraxis_showscale=False)
+                st.plotly_chart(fig_topic, use_container_width=True)
+        else:
+            st.info("暂无文章产出数据。请先执行智造生成内容。")
+
+    # ============================================================
+    # TAB 3: AI 引用追踪
+    # ============================================================
+    with tab_citation:
+        st.subheader("🔗 AI 引用追踪")
+        st.markdown("追踪产出文章在各 AI 检索平台的引用情况")
+
+        # Check for citation data
+        citation_file = OUTPUT_PATH / "citation_tracking.csv"
+        df_cite = load_csv_safe(citation_file) if citation_file.exists() else pd.DataFrame()
+
+        if not df_cite.empty:
+            # Filters
+            col_f1, col_f2, col_f3 = st.columns(3)
+            with col_f1:
+                if "topic" in df_cite.columns:
+                    cite_cats = ["全部"] + sorted(df_cite["topic"].dropna().unique().tolist())
+                    cite_cat_filter = st.selectbox("按 Category 筛选", cite_cats, key="cite_cat_filter")
+                else:
+                    cite_cat_filter = "全部"
+            with col_f2:
+                cite_date_mode = st.selectbox("日期筛选", ["全部", "指定日期", "日期范围"], key="cite_date_mode")
+            with col_f3:
+                if cite_date_mode == "指定日期":
+                    cite_date_pick = st.date_input("选择日期", key="cite_date_pick")
+                elif cite_date_mode == "日期范围":
+                    cite_date_range = st.date_input("选择范围", value=[], key="cite_date_range")
+
+            # Apply filters
+            df_cite_filtered = df_cite.copy()
+            if cite_cat_filter != "全部" and "topic" in df_cite_filtered.columns:
+                df_cite_filtered = df_cite_filtered[df_cite_filtered["topic"] == cite_cat_filter]
+            if cite_date_mode == "指定日期" and "date" in df_cite_filtered.columns:
+                df_cite_filtered = df_cite_filtered[df_cite_filtered["date"] == str(cite_date_pick)]
+            elif cite_date_mode == "日期范围" and "date" in df_cite_filtered.columns and len(cite_date_range) == 2:
+                df_cite_filtered = df_cite_filtered[
+                    (df_cite_filtered["date"] >= str(cite_date_range[0])) &
+                    (df_cite_filtered["date"] <= str(cite_date_range[1]))
+                ]
+
+            # KPIs
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("引用记录", len(df_cite_filtered))
+            with col2:
+                if "platform" in df_cite_filtered.columns:
+                    st.metric("涉及平台", df_cite_filtered["platform"].nunique())
+            with col3:
+                if "has_link" in df_cite_filtered.columns:
+                    link_count = df_cite_filtered[df_cite_filtered["has_link"].astype(str).str.contains("✅|TRUE|YES", case=False, na=False)].shape[0]
+                    st.metric("带官网链接", link_count)
+
+            st.divider()
+            st.dataframe(df_cite_filtered, use_container_width=True, hide_index=True)
+
+        # Manual entry form (always show)
+        st.divider()
+        st.markdown("**➕ 录入引用记录：**")
+        with st.form("add_citation"):
+            col_c1, col_c2 = st.columns(2)
+            with col_c1:
+                cite_topic = st.selectbox("文章 Category", CATEGORIES_35, key="cite_form_topic")
+                cite_platform = st.multiselect("AI 平台", ["ChatGPT", "Perplexity", "Gemini", "DeepSeek", "豆包", "Kimi", "千问", "其他"], default=["ChatGPT"], key="cite_form_platform")
+            with col_c2:
+                cite_mentioned = st.selectbox("内容提及", ["✅ 有提及", "❌ 未提及", "⚠️ 部分"], key="cite_form_mentioned")
+                cite_link = st.selectbox("带官网链接", ["✅ 有链接", "❌ 无链接"], key="cite_form_link")
+            col_d1, col_d2 = st.columns(2)
+            with col_d1:
+                cite_date_start = st.date_input("开始日期", key="cite_form_start")
+            with col_d2:
+                cite_date_end = st.date_input("结束日期", key="cite_form_end")
+            cite_date = str(cite_date_start) if cite_date_start == cite_date_end else f"{cite_date_start} ~ {cite_date_end}"
+            cite_note = st.text_input("备注（可选）", key="cite_form_note")
+
+            if st.form_submit_button("添加记录"):
+                new_row = pd.DataFrame([{
+                    "topic": cite_topic, "platform": ",".join(cite_platform),
+                    "mentioned": cite_mentioned, "has_link": cite_link,
+                    "date": str(cite_date), "note": cite_note,
+                }])
+                citation_file.parent.mkdir(parents=True, exist_ok=True)
+                if citation_file.exists():
+                    df_existing = load_csv_safe(citation_file)
+                    df_combined = pd.concat([df_existing, new_row], ignore_index=True)
+                else:
+                    df_combined = new_row
+                df_combined.to_csv(citation_file, index=False, encoding="utf-8-sig")
+                st.success("✅ 已添加")
+
+    # ============================================================
+    # TAB 4: Gap & 机会点
+    # ============================================================
+    with tab_gap:
+        st.subheader("💡 Gap & 机会点")
+        st.markdown("基于引用追踪和内容覆盖分析，识别优化机会")
+
+        # Coverage gap analysis
+        st.markdown("**📊 类别覆盖 Gap**")
+        df_all_articles = load_zhizao(selected_batch)
+        if not df_all_articles.empty and "category" in df_all_articles.columns:
+            covered_topics = set(df_all_articles["category"].dropna().unique())
+            all_topics = set(CATEGORIES_35)
+            uncovered = sorted(all_topics - covered_topics)
+
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("已覆盖类别", f"{len(covered_topics)}/35")
+            with col2:
+                st.metric("未覆盖类别", len(uncovered))
+
+            if uncovered:
+                st.markdown("**❌ 未覆盖的类别（优先产出内容）：**")
+                for i, topic in enumerate(uncovered, 1):
+                    st.markdown(f"{i}. {topic}")
+        else:
+            st.caption("暂无文章数据，无法分析覆盖 Gap")
+
+        st.divider()
+
+        # Opportunity recommendations
+        st.markdown("**🚀 优化建议**")
+        st.markdown("""
+- **高优先级**：未覆盖类别中检索量最高的 → 立即产出内容
+- **中优先级**：已有内容但未被 AI 引用的 → 优化 GEO 信号
+- **低优先级**：已被引用但无链接的 → 优化链接植入策略
+        """)
+
+        st.divider()
+
+        # Attribution summary
+        st.markdown("**🎯 归因分析**")
+        st.markdown("""
+| 渠道 | 判断 | 建议 |
 |---|---|---|
-| CN GEO | 🟢 持续增长 | AI search 带 referrer 流量稳步提升 |
-| WW Direct EST | 🟢 全面反弹 | 前几周发布内容被 AI 引擎收录（滞后效应）|
-| JP Direct | 🟢 +67% WoW | 日本 AI search 渗透加速 |
+| CN GEO | 🟢 持续增长 | 继续扩大覆盖 |
+| WW Direct EST | 🟢 +62% YoY | 保持节奏 |
+| JP Direct | 🟢 增速最快 | 优先扩展 JP 内容 |
+| AE Direct | 🔴 -61% YoY | 排查原因 |
+        """)
 
-**🚀 Opportunities:**
-- 增加 EU/JP 检索短语覆盖（GEO 绝对值低）
-- 排查 AE Direct 下降原因（YoY -61%）
-- 建立 input 活动周度追踪，完善归因链路
-    """)
-
-    # 📜 历史记录 (no reuse)
+    # 📜 历史记录
     with st.expander("📜 历史记录"):
         metrics_dir = OUTPUT_PATH / "metrics"
-        col_h1, col_h2 = st.columns([4, 1])
-        with col_h2:
-            if st.button("🗑️ 清空", key="clear_zhixi_hist"):
-                if metrics_dir.exists():
-                    for f in metrics_dir.glob("*.csv"):
-                        f.unlink()
-                    st.success("已清空")
         if metrics_dir.exists():
             files = sorted(metrics_dir.glob("*.csv"), key=lambda f: f.stat().st_mtime, reverse=True)
             for f in files:
@@ -1423,8 +1614,6 @@ elif page == "📈 智析":
         else:
             st.caption("暂无历史")
 
-
-# ============================================================
 # PAGE: 智中枢
 # ============================================================
 elif page == "🎯 智中枢":

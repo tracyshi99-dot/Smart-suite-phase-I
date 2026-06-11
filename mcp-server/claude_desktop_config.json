@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "smartsuite": {
+      "command": "uvx",
+      "args": [
+        "--from", "mcp[cli]",
+        "mcp", "run",
+        "C:\\Users\\yujiashi\\Desktop\\SmartSuite_Phase1\\mcp-server\\server.py"
+      ]
+    }
+  }
+}

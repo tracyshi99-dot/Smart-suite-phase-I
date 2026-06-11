@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Suite 智系列控制台</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f0f; color: #e0e0e0; min-height: 100vh; padding: 24px; }
+.container { max-width: 1100px; margin: 0 auto; }
+h1 { font-size: 28px; font-weight: 700; margin-bottom: 4px; color: #fff; }
+.subtitle { color: #888; font-size: 14px; margin-bottom: 24px; }
+.config-bar { display: flex; gap: 16px; margin-bottom: 24px; align-items: center; }
+.config-bar label { font-size: 13px; color: #aaa; }
+.config-bar select, .config-bar input { background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 14px; }
+.config-bar select { min-width: 140px; }
+.config-bar input { width: 80px; }
+.section-title { font-size: 16px; font-weight: 600; color: #ccc; margin: 20px 0 12px; padding-left: 4px; border-left: 3px solid #4a9eff; padding-left: 12px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 16px; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
+.card:hover { border-color: #4a9eff; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(74,158,255,0.15); }
+.card.active { border-color: #4a9eff; background: #1a2a3a; }
+.card-icon { font-size: 24px; margin-bottom: 8px; }
+.card-name { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 4px; }
+.card-desc { font-size: 12px; color: #888; line-height: 1.4; }
+.card-step { position: absolute; top: 8px; right: 10px; font-size: 11px; color: #555; }
+.output-panel { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 20px; margin-top: 16px; }
+.output-title { font-size: 14px; font-weight: 600; color: #4a9eff; margin-bottom: 12px; }
+.command-box { background: #0a0a0a; border: 1px solid #333; border-radius: 6px; padding: 14px; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 13px; color: #4aff9e; line-height: 1.6; white-space: pre-wrap; word-break: break-all; min-height: 60px; }
+.btn-row { display: flex; gap: 8px; margin-top: 12px; }
+.btn { padding: 8px 16px; border-radius: 6px; border: none; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+.btn-primary { background: #4a9eff; color: #fff; }
+.btn-primary:hover { background: #3a8eef; }
+.btn-secondary { background: #2a2a2a; color: #ccc; border: 1px solid #444; }
+.btn-secondary:hover { background: #333; }
+.status-bar { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding: 12px 16px; background: #1a1a1a; border-radius: 8px; border: 1px solid #2a2a2a; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: #4aff9e; display: inline-block; margin-right: 8px; }
+.status-text { font-size: 13px; color: #888; }
+.toast { position: fixed; bottom: 24px; right: 24px; background: #4a9eff; color: #fff; padding: 12px 20px; border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>🧠 Smart Suite 智系列控制台</h1>
+<p class="subtitle">GEO Content Pipeline + Performance Analytics | Phase I</p>
+
+<div class="config-bar">
+<div><label>Batch ID</label><br><select id="batchId"><option>batch_004</option><option>batch_003</option><option>batch_002</option><option>batch_001</option></select></div>
+<div><label>Market</label><br><select id="market"><option value="ALL">ALL</option><option value="CN">CN</option><option value="NA">NA</option><option value="EU">EU</option><option value="JP">JP</option></select></div>
+<div><label>Keywords</label><br><input type="number" id="kwLimit" value="10" min="1" max="50"></div>
+<div><label>Week</label><br><input type="text" id="week" value="WK22" style="width:70px"></div>
+</div>
+
+<div class="section-title">内容生产流水线</div>
+<div class="grid">
+<div class="card" onclick="selectTool('zhiku')"><div class="card-step">Step 1</div><div class="card-icon">📚</div><div class="card-name">智库</div><div class="card-desc">AI Query Generation - 从关键词生成 AI 搜索查询</div></div>
+<div class="card" onclick="selectTool('zhizao')"><div class="card-step">Step 2</div><div class="card-icon">✍️</div><div class="card-name">智造</div><div class="card-desc">Content Generation - 生成 SEO+GEO 双优化内容</div></div>
+<div class="card" onclick="selectTool('zhiyou_score')"><div class="card-step">Step 3</div><div class="card-icon">📊</div><div class="card-name">智优评分</div><div class="card-desc">AI Citation Scoring - 5维度 AI 引用概率评分</div></div>
+<div class="card" onclick="selectTool('zhiyou_execute')"><div class="card-step">Step 3.5</div><div class="card-icon">🔧</div><div class="card-name">智优执行</div><div class="card-desc">Content Rewrite - 基于评分建议重写优化</div></div>
+<div class="card" onclick="selectTool('zhiyou_compliance')"><div class="card-step">Step 3.6</div><div class="card-icon">⚖️</div><div class="card-name">合规审查</div><div class="card-desc">Legal Compliance - 亚马逊合规检查+自动修正</div></div>
+<div class="card" onclick="selectTool('zhibu')"><div class="card-step">Step 4</div><div class="card-icon">📦</div><div class="card-name">智布</div><div class="card-desc">JSON Formatting - 结构化 JSON 输出</div></div>
+<div class="card" onclick="selectTool('batch_report')"><div class="card-step">Step 5</div><div class="card-icon">📋</div><div class="card-name">批次报告</div><div class="card-desc">Batch Summary - 全流程统计汇总</div></div>
+</div>
+
+<div class="section-title">分析与决策</div>
+<div class="grid">
+<div class="card" onclick="selectTool('zhixi')"><div class="card-icon">📈</div><div class="card-name">智析</div><div class="card-desc">Performance Report - WK1-21 完整 Excel 报告</div></div>
+<div class="card" onclick="selectTool('zhongshu')"><div class="card-icon">🎯</div><div class="card-name">智中枢</div><div class="card-desc">Decision Engine - 7规则周度决策计划</div></div>
+<div class="card" onclick="selectTool('full_pipeline')"><div class="card-icon">🚀</div><div class="card-name">全流程执行</div><div class="card-desc">Full Pipeline - Step 1-5 顺序执行</div></div>
+</div>
+
+<div class="output-panel">
+<div class="output-title">📋 生成指令 — 复制到 Kiro 对话框执行</div>
+<div class="command-box" id="commandBox">← 点击上方卡片选择要执行的步骤</div>
+<div class="btn-row">
+<button class="btn btn-primary" onclick="copyCommand()">📋 复制指令</button>
+<button class="btn btn-secondary" onclick="openOutput()">📂 打开输出目录</button>
+</div>
+</div>
+
+<div class="status-bar">
+<div><span class="status-dot"></span><span class="status-text">MCP Server: Connected (smartsuite)</span></div>
+<div class="status-text">Last: zhixi_report_WK21_v6.xlsx ✅</div>
+</div>
+</div>
+
+<div class="toast" id="toast">已复制到剪贴板</div>
+</body>
+</html>
+
+<script>
+const commands = {
+  zhiku: () => `执行智库 ${getVal('batchId')}，market=${getVal('market')}，keyword_limit=${getVal('kwLimit')}`,
+  zhizao: () => `执行智造 ${getVal('batchId')}，生成内容`,
+  zhiyou_score: () => `执行智优评分 ${getVal('batchId')}`,
+  zhiyou_execute: () => `执行智优执行 ${getVal('batchId')}，基于评分建议重写`,
+  zhiyou_compliance: () => `执行合规审查 ${getVal('batchId')}`,
+  zhibu: () => `执行智布 ${getVal('batchId')}，生成JSON`,
+  batch_report: () => `生成批次报告 ${getVal('batchId')}`,
+  zhixi: () => `生成智析报告 ${getVal('week')}`,
+  zhongshu: () => `智中枢决策 ${getVal('week')}，生成周度计划`,
+  full_pipeline: () => `全流程执行 ${getVal('batchId')}，market=${getVal('market')}，keyword_limit=${getVal('kwLimit')}`
+};
+
+const outputPaths = {
+  zhiku: () => `output\\${getVal('batchId')}\\01_zhiku\\`,
+  zhizao: () => `output\\${getVal('batchId')}\\02_zhizao\\`,
+  zhiyou_score: () => `output\\${getVal('batchId')}\\03_zhiyou\\zhiyou_scorecard.csv`,
+  zhiyou_execute: () => `output\\${getVal('batchId')}\\03_zhiyou\\zhiyou_optimized_content.csv`,
+  zhiyou_compliance: () => `output\\${getVal('batchId')}\\03_zhiyou\\zhiyou_compliance_checked.csv`,
+  zhibu: () => `output\\${getVal('batchId')}\\04_zhibu\\`,
+  batch_report: () => `output\\Batch_Summary_Report\\${getVal('batchId')}_summary.csv`,
+  zhixi: () => `output\\metrics\\zhixi_report_${getVal('week')}.xlsx`,
+  zhongshu: () => `output\\metrics\\`,
+  full_pipeline: () => `output\\${getVal('batchId')}\\`
+};
+
+let currentTool = null;
+
+function getVal(id) { return document.getElementById(id).value; }
+
+function selectTool(tool) {
+  currentTool = tool;
+  document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  document.getElementById('commandBox').textContent = commands[tool]();
+}
+
+function copyCommand() {
+  if (!currentTool) return;
+  const text = commands[currentTool]();
+  navigator.clipboard.writeText(text).then(() => {
+    const toast = document.getElementById('toast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
+  });
+}
+
+function openOutput() {
+  if (!currentTool) return;
+  const path = outputPaths[currentTool]();
+  alert('输出路径:\n\nC:\\Users\\yujiashi\\Desktop\\SmartSuite_Phase1\\' + path + '\n\n请在文件管理器中打开');
+}
+
+// Update command when config changes
+document.querySelectorAll('select, input').forEach(el => {
+  el.addEventListener('change', () => { if (currentTool) document.getElementById('commandBox').textContent = commands[currentTool](); });
+  el.addEventListener('input', () => { if (currentTool) document.getElementById('commandBox').textContent = commands[currentTool](); });
+});
+</script>

@@ -4,3 +4,4 @@ __pycache__/
 output/
 ui/.venv/
 ui/.streamlit/secrets.toml
+logs/

@@ -222,3 +222,24 @@ inclusion: manual
 - engine.py 的 run_zhiku 已改为 append 模式
 - CSV 自动修复（_fix_csv_quoting）在每次写入后执行
 - load_csv_safe 使用 Python engine 作为 fallback
+
+
+### 智析页面重构需求
+- **Output 区域** — 3 个 Tab：
+  - Weekly：周度趋势图
+  - Monthly：月度汇总
+  - YTD：年度累计对比
+- **Input 区域** — 产出文章统计：
+  - 产出文章数量
+  - 对应的 topic（类别）
+  - 可筛选：按文章 topic 类别、按时间（天/周/月/YTD）
+- **引用追踪**：
+  - 产出文章 topic → 被哪些 AI 检索平台引用了
+  - 是否带官网链接
+  - 按平台分布展示
+
+- **Gap & 机会点 Tab**：
+  - 展示内容覆盖缺口（哪些 topic/类别没有被 AI 引用）
+  - 竞品被引用但我们没有的内容
+  - 优先级建议（基于检索量 × 覆盖率 gap）
+  - 可操作的优化建议列表

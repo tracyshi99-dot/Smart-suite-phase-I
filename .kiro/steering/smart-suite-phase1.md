@@ -79,6 +79,64 @@ batch_path = output_path + "\\" + batch_id
 - 问题应针对用户高频疑问
 - 答案简洁明了
 
+#### GEO 平台差异化规则（按区域和平台分别执行）
+
+> 核心原则：不同平台不是同一套规则，需按平台信源结构、内容形态、验证方式分别设计。
+> DSS 原则：语义深度（Depth）、数据支持（Support）、权威来源（Source）。
+
+##### 内容结构
+
+| 区域 | 要求 |
+|---|---|
+| 中国 | 短标题清晰、问答式段落、参数/场景/对比明确，适合被 AI 直接抽取。每篇围绕一个真实问题，不写泛广告稿。 |
+| 海外 | 英文内容更重要；H1/H2/H3 清晰结构化、FAQ、How-to、Comparison、Review、Use case 更容易被引用。规范长文目录结构，多用列表和步骤。针对不同检索器（Retriever）的语义切片（Chunking）进行前置设计。 |
+
+##### 信源选择
+
+| 区域 | 要求 |
+|---|---|
+| 中国 | 门户、行业站、百科/问答、垂直媒体；生态型平台会偏向自身内容池。先测提示词引用源，再反推投放平台。跨平台优先寻找共同高引用信源。 |
+| 海外 | 官网、英文权威媒体、行业站、Wikipedia、Reddit、Quora、垂直社区、评测站、文档页。海外项目必须做站内内容和技术 SEO 基础。Gemini/ChatGPT/Perplexity 都极度重视官网可读性。 |
+
+##### 官网价值
+
+| 区域 | 要求 |
+|---|---|
+| 中国 | 官网有用，但国内平台不一定优先引用官网，需要外部高权重信源、自媒体协同。国内部分封闭生态 AI 无法直接抓取孤立官网，往往需要第三方引流或提及。 |
+| 海外 | 官网极其关键，尤其结构化数据（Schema）、产品详情页、技术文档、博客、FAQ、客户案例页。部署完善的 Schema.org 结构化数据，提交健全的 sitemap。官网是海外 AI 检索获取"官方绝对事实"的第一底座。 |
+
+##### 内容形态
+
+| 区域 | 要求 |
+|---|---|
+| 中国 | 图文优先；短视频可做补充，但不等于 AI 主答案会直接读取视频全部内容。核心营销资源优先倾斜图文和可抓取网页。视频不要作为核心 GEO 考核目标。 |
+| 海外 | 图文、技术白皮书、长文评测、论坛讨论（Reddit/Quora）、FAQ、数据报告、新闻通稿优先。多发布带数据图表的结构化网页。GPT/Gemini 的多模态识别在检索时仍高度依赖上下文文本锚点。 |
+
+##### 各平台内容偏好（中国）
+
+| 平台 | 核心偏好 | 执行建议 |
+|---|---|---|
+| **豆包** | 结构化图文、清晰问答、榜单/对比/攻略；显著受字节生态内容影响（抖音图文、头条、掘金等） | 针对抖音图文或头条号进行针对性关键词卡位布局。偏好通俗易懂、高互动和高传播属性的内容。 |
+| **腾讯元宝** | 受微信公众号、视频号、腾讯生态影响；标题明确、事实完整 | 重点投放高权重、高互动（在看/点赞多）的微信公众号深度长文。微信生态相对封闭，外部网页难直接触达。元宝能深度检索其他平台无法触及的优质微信图文池。 |
+| **DeepSeek** | 偏开放网页信源，受 Bing/百度收录和 API 接口影响大；偏好信息密度高、逻辑严密、多数据支撑的内容，重视第三方独立网页（GitHub、专业技术博客、行业官网） | 提升信息密度和专业度；确保 Bing/百度已收录；做好高质量外部垂直技术网站投放。纯靠生态平台（小红书/微信）对 DeepSeek 优化效果有限。 |
+| **Kimi** | 适合长文本理解，极度偏好信息完整、逻辑清楚、论证详实、可直接引用的长图文/网页、PDF 报告、行业深度分析 | 产出万字级别行业白皮书、深度测评长文，以开放网页形式发布。拒绝碎片化、信息量极低的短公关稿。Kimi 对长文的总结引用效率极高。 |
+
+##### 各平台内容偏好（海外）
+
+| 平台 | 核心偏好 | 执行建议 |
+|---|---|---|
+| **ChatGPT/SearchGPT** | 英文权威网页、企业官网、结构化 FAQ、客观第三方评测/对比、清晰新闻来源 | 确保 robots.txt 未封禁 OpenAI 爬虫（OAI-SearchBot）。避免过度主观夸大词汇，AI 容易过滤营销黑话。SearchGPT 正向原生 AI 搜索演进，青睐"直接回答问题"的高质量媒体源。 |
+| **Google Gemini / AI Overviews** | 强依赖 Google 全网索引库；极看重 E-E-A-T（经验、专业、权威、可靠）、结构化数据（Schema）、官网技术 SEO、新鲜度（Freshness） | 优化移动端适配，严格按 Google 搜索白皮书做站内 SEO，及时针对热点发布最新动态。Google 传统搜索排名极低则极难进入 AI Overviews 引用卡片。它是传统 Google 搜索的直接 AI 延伸，标准最为严苛。 |
+| **Microsoft Copilot / Bing** | 深度受 Bing 索引和微软生态影响；偏好可被索引的官网、新闻报道、维基百科、LinkedIn 等公开职业/商务内容 | 确保网站在 Bing Webmaster Tools 中已提交并收录；优化 LinkedIn 品牌官方信息与深度文章。很多国内开发者屏蔽了 Bing 爬虫，出海项目需特别解除。与 Bing 搜索强绑定，对企业级 B2B 信息抓取更为敏感。 |
+| **Perplexity** | 典型"学术/研究型"偏好；极度偏好时效性强的新闻源、Reddit/Quora 真实讨论、维基百科、带具体数据支撑的科研论文/行业报告 | 编排内容多引用确切数据、百分比和行业公认事实；在 Reddit 等海外高权重论坛进行品牌口碑铺垫。拒绝无客观证据的纯公关稿。会把所有引用源像学术论文标注序号，对高事实密度段落采纳率极高。 |
+
+##### 评估方式
+
+| 区域 | 要求 |
+|---|---|
+| 中国 | 按豆包、元宝、DeepSeek、千问等分别多轮测试，不能混成一个结论。同一提示词至少多轮、多平台交叉测试。单次命中不能代表稳定效果，引用存在周期性波动需持续监测。 |
+| 海外 | 按 ChatGPT/SearchGPT、Gemini、Perplexity、Copilot 分别看引用、推荐、带流情况。使用专门的 GEO 监测工具或通过特定 Prompt 追踪来源比例。需留意不同模型版本（如 GPT-4o vs GPT-4）的检索源差异。追踪转化流量时关注直接跳转（Referral）指标。 |
+
 ### 链接植入规范
 - 必须在文中与"亚马逊全球开店"、"注册账号"、"了解更多"等相关语境中
 - 自然植入至少 2次 https://gs.amazon.cn 链接
@@ -137,6 +195,14 @@ batch_path = output_path + "\\" + batch_id
 **Input:** `{batch_path}\01_zhiku\zhiku_ai_queries.csv`
 
 **Filter:** Process ONLY records where `is_selected = TRUE`
+
+**Knowledge Source (MANDATORY):**
+- 所有内容撰写必须通过 3PKC Knowledge Central MCP Server (`issca-3pkc-genai-mcp`) 检索知识库获取事实、数据和参考信息
+- 使用 `search_knowledge` 工具搜索与 AI query 相关的知识
+- 使用 `type2_semantic_retrieval` 获取 applied knowledge bundles
+- **严禁**使用模型自身训练知识或外部网络搜索来撰写内容正文
+- 仅允许使用 KMS 检索结果 + 输入关键词信息 作为内容来源
+- 如果 KMS 无相关知识，标记该 query 为 `knowledge_gap = TRUE`，跳过生成
 
 **Task:** Generate draft content for each selected AI query. Content must follow ALL SEO + GEO standards defined above.
 
@@ -281,6 +347,14 @@ overall_score = (intent_match * 0.30) + (ai_readability * 0.20) + (authority * 0
 - `{batch_path}\03_zhiyou\zhiyou_scorecard.csv` (scores and suggestions)
 
 **Filter:** Process ONLY records where `is_approved = TRUE` in scorecard
+
+**Knowledge Source (MANDATORY):**
+- 内容改写/补充时，必须通过 3PKC Knowledge Central MCP Server (`issca-3pkc-genai-mcp`) 检索知识库获取补充事实和数据
+- 使用 `search_knowledge` 工具搜索优化建议中涉及的具体知识点
+- 使用 `type2_semantic_retrieval` 获取 applied knowledge 以增强权威性
+- **严禁**使用模型自身训练知识或外部网络搜索来补充新内容
+- 已有的原始 draft 内容可保留，但新增/修改的信息必须来自 KMS
+- 如果 KMS 无法提供建议所需的补充信息，在 `changes_applied` 中注明 `knowledge_gap`
 
 **Task:** Rewrite each approved draft content by fully incorporating ALL optimization suggestions from the scorecard. The output must be a complete, publish-ready article following all SEO + GEO standards.
 
