@@ -25,9 +25,9 @@ if not INPUT_PATH.exists():
     INPUT_PATH = Path(tempfile.gettempdir()) / "smartsuite_input"
     INPUT_PATH.mkdir(parents=True, exist_ok=True)
 
-MODEL_ID = "anthropic.claude-sonnet-4-20250514"
+MODEL_ID = "anthropic.claude-3-sonnet-20240229-v1:0"
 REGION = "us-east-1"
-MAX_TOKENS = 8192
+MAX_TOKENS = 4096
 
 
 def get_client():
@@ -75,6 +75,109 @@ def timestamp():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
+def _fix_csv_quoting(filepath: Path):
+    """Re-save CSV through pandas to fix any quoting/column issues."""
+    try:
+        df = pd.read_csv(filepath, encoding="utf-8-sig", on_bad_lines="skip", engine="python")
+        if not df.empty:
+            df.to_csv(filepath, index=False, encoding="utf-8-sig")
+    except Exception:
+        pass  # Don't corrupt file if we can't parse it
+
+
+# ============================================================
+# SEMANTIC EXPANSION (源B: 核心词根裂变)
+# ============================================================
+def run_semantic_expansion(core_semantic: str, market: str = "CN", count: int = 15,
+                           language: str = "zh", batch_id: str = "batch_001",
+                           progress_callback=None) -> dict:
+    """Generate AI-native search queries by expanding a core semantic concept."""
+    if progress_callback:
+        progress_callback(0.1, "正在裂变检索短语...")
+
+    system_prompt = f"""你是一位精通 AI 搜索引擎用户行为的专家。
+
+你的任务是：给定核心语义「{core_semantic}」，裂变出用户在 AI 搜索引擎（如 ChatGPT、DeepSeek、Perplexity）中关于这个主题最可能输入的检索短语。
+
+关键规则：
+1. 所有短语必须直接包含或紧密围绕「{core_semantic}」这个词/概念
+2. 模拟真实用户提问，口语化，10-25字
+3. 覆盖不同角度：是什么、怎么做、多少钱、有什么好处、有什么风险、和XX比哪个好
+4. 不要偏离核心词，不要生成与「{core_semantic}」无关的内容
+5. 短语中应该能看到「{core_semantic}」或其同义词"""
+
+    user_prompt = f"""核心语义：{core_semantic}
+目标市场：{market}
+输出语言：{language}
+生成数量：{count}
+
+请输出 CSV 格式，字段：
+keyword_id,keyword,query_id,ai_query,intent_type,query_type,priority_score,estimated_volume,category,language,market,is_selected,created_at
+
+规则：
+- keyword_id: SEM_001
+- keyword: "{core_semantic}"
+- query_id: SEM_001_01, SEM_001_02...
+- ai_query: 裂变出的检索短语（必须与「{core_semantic}」直接相关）
+- intent_type: informational / comparison / transactional / troubleshooting
+- priority_score: 1-5（与核心词相关性+商业价值综合评分）
+- estimated_volume: 预估月检索量（high/medium/low）
+- category: 从以下类别选最匹配的：跨境电商知识早知道|跨境电商行业入门了解|亚马逊商城基础情况了解|新手怎么注册亚马逊|亚马逊开店成本费用详解|亚马逊物流仓储科普|教你打造优质Listing|店铺运营提升全攻略|亚马逊广告基础知识大全|跨境电商选品方法及趋势
+- is_selected: TRUE
+- created_at: {timestamp()}
+
+重要：如果字段包含逗号必须用双引号包裹。直接输出CSV，不要代码块。"""
+
+    result = call_claude(system_prompt, user_prompt)
+
+    if progress_callback:
+        progress_callback(0.7, "正在保存...")
+
+    output_dir = OUTPUT_PATH / batch_id / "01_zhiku"
+    ensure_dir(output_dir)
+    output_file = output_dir / "zhiku_ai_queries.csv"
+
+    csv_content = result.strip()
+    if csv_content.startswith("```"):
+        csv_content = "\n".join(csv_content.split("\n")[1:])
+    if csv_content.endswith("```"):
+        csv_content = "\n".join(csv_content.split("\n")[:-1])
+
+    # Ensure header
+    expected_header = "keyword_id,keyword,query_id,ai_query,intent_type,query_type,priority_score,estimated_volume,category,language,market,is_selected,created_at"
+    csv_lines = csv_content.strip().split("\n")
+    if csv_lines and "ai_query" not in csv_lines[0] and "keyword_id" not in csv_lines[0]:
+        csv_content = expected_header + "\n" + csv_content.strip()
+
+    # Append to existing file
+    if output_file.exists():
+        try:
+            existing = output_file.read_text(encoding="utf-8-sig").strip()
+            if existing and len(existing) > 10:
+                new_lines = csv_content.strip().split("\n")
+                if new_lines and ("keyword_id" in new_lines[0] or "ai_query" in new_lines[0]):
+                    new_lines = new_lines[1:]
+                if new_lines:
+                    output_file.write_text(existing + "\n" + "\n".join(new_lines), encoding="utf-8-sig")
+            else:
+                output_file.write_text(csv_content.strip(), encoding="utf-8-sig")
+        except Exception:
+            output_file.write_text(csv_content.strip(), encoding="utf-8-sig")
+    else:
+        output_file.write_text(csv_content.strip(), encoding="utf-8-sig")
+
+    if progress_callback:
+        progress_callback(1.0, "裂变完成 ✅")
+
+    # Auto-fix CSV quoting
+    _fix_csv_quoting(output_file)
+
+    lines = [l for l in csv_content.strip().split("\n") if l.strip()]
+    query_count = max(0, len(lines) - 1)
+
+    return {"success": True, "output_file": str(output_file), "query_count": query_count}
+
+
 # ============================================================
 # STEP 1: 智库
 # ============================================================
@@ -118,14 +221,16 @@ def run_zhiku(batch_id: str, market: str = "ALL", keyword_limit: int = 10,
 {kw_list}
 
 要求：
-1. 每个关键词生成 1-3 个高质量 AI 查询
-2. 输出格式为 CSV，字段：keyword_id,keyword,query_id,ai_query,intent_type,query_type,priority_score,language,market,is_selected,created_at
+1. 每个关键词生成 8-12 个高质量 AI 查询
+2. 输出格式为 CSV，字段：keyword_id,keyword,query_id,ai_query,intent_type,query_type,priority_score,estimated_volume,category,language,market,is_selected,created_at
 3. intent_type: informational / navigational / transactional / comparison
 4. query_type: branded / generic / industry / conversion-oriented
 5. priority_score: 1-5
-6. 只有高质量查询设 is_selected=TRUE
-7. created_at 使用 {timestamp()}
-8. 直接输出 CSV 内容，不要加任何解释文字或 markdown 代码块标记"""
+6. category: 从以下类别选最匹配的一个：跨境电商知识早知道|跨境电商行业入门了解|亚马逊商城基础情况了解|新手怎么注册亚马逊|亚马逊开店成本费用详解|亚马逊物流仓储科普|教你打造优质Listing|店铺运营提升全攻略|亚马逊广告基础知识大全|跨境电商选品方法及趋势
+7. 只有高质量查询设 is_selected=TRUE
+8. created_at 使用 {timestamp()}
+9. 如果字段包含逗号必须用双引号包裹
+10. 直接输出 CSV 内容，不要加任何解释文字或 markdown 代码块标记"""
 
     result = call_claude(system_prompt, user_prompt)
 
@@ -144,10 +249,34 @@ def run_zhiku(batch_id: str, market: str = "ALL", keyword_limit: int = 10,
     if csv_content.endswith("```"):
         csv_content = "\n".join(csv_content.split("\n")[:-1])
 
-    output_file.write_text(csv_content.strip(), encoding="utf-8-sig")
+    # Ensure header
+    expected_header = "keyword_id,keyword,query_id,ai_query,intent_type,query_type,priority_score,estimated_volume,category,language,market,is_selected,created_at"
+    csv_lines = csv_content.strip().split("\n")
+    if csv_lines and "ai_query" not in csv_lines[0] and "keyword_id" not in csv_lines[0]:
+        csv_content = expected_header + "\n" + csv_content.strip()
+
+    # Append to existing file (not overwrite)
+    if output_file.exists():
+        try:
+            existing = output_file.read_text(encoding="utf-8-sig").strip()
+            if existing and len(existing) > 10:
+                new_lines = csv_content.strip().split("\n")
+                if new_lines and ("keyword_id" in new_lines[0] or "ai_query" in new_lines[0]):
+                    new_lines = new_lines[1:]
+                if new_lines:
+                    output_file.write_text(existing + "\n" + "\n".join(new_lines), encoding="utf-8-sig")
+            else:
+                output_file.write_text(csv_content.strip(), encoding="utf-8-sig")
+        except Exception:
+            output_file.write_text(csv_content.strip(), encoding="utf-8-sig")
+    else:
+        output_file.write_text(csv_content.strip(), encoding="utf-8-sig")
 
     if progress_callback:
         progress_callback(1.0, "智库完成 ✅")
+
+    # Auto-fix CSV quoting
+    _fix_csv_quoting(output_file)
 
     # Count results
     lines = [l for l in csv_content.strip().split("\n") if l.strip()]
@@ -178,7 +307,8 @@ def run_zhizao(batch_id: str, content_limit: int = 5,
 
     # Filter selected
     if "is_selected" in df_q.columns:
-        df_q = df_q[df_q["is_selected"].astype(str).str.upper() == "TRUE"]
+        df_q["is_selected"] = df_q["is_selected"].astype(str).str.strip().str.upper()
+        df_q = df_q[df_q["is_selected"].isin(["TRUE", "1", "YES"])]
 
     df_q = df_q.head(content_limit)
 
