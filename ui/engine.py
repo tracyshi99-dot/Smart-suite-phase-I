@@ -44,7 +44,9 @@ def get_client():
     except Exception:
         pass
     # Fallback to local credentials (SSO, env vars, etc.)
-    return boto3.client("bedrock-runtime", region_name=REGION)
+    from botocore.config import Config
+    config = Config(read_timeout=300, connect_timeout=10, retries={"max_attempts": 2})
+    return boto3.client("bedrock-runtime", region_name=REGION, config=config)
 
 
 def call_claude(system_prompt: str, user_prompt: str, max_tokens: int = MAX_TOKENS) -> str:
@@ -730,7 +732,7 @@ def run_zhibu(batch_id: str, progress_callback=None) -> dict:
     output_dir = OUTPUT_PATH / batch_id / "04_zhibu"
     ensure_dir(output_dir)
     output_file = output_dir / "zhibu_output.json"
-    output_file.write_text(json.dumps(output_json, ensure_ascii=False, indent=2), encoding="utf-8")
+    output_file.write_text(json.dumps(output_json, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
 
     if progress_callback:
         progress_callback(1.0, "智布完成 ✅")

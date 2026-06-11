@@ -869,6 +869,32 @@ elif page == "✍️ 智造":
         jump_to("🔧 智优")
         st.rerun()
 
+    # 📜 历史记录 + 清空
+    with st.expander("📜 历史记录"):
+        zhizao_dir = OUTPUT_PATH / selected_batch / "02_zhizao"
+        col_h1, col_h2 = st.columns([4, 1])
+        with col_h2:
+            if st.button("🗑️ 清空全部", key="clear_zhizao_hist"):
+                if zhizao_dir.exists():
+                    for f in zhizao_dir.glob("*.csv"):
+                        f.unlink()
+                    st.success("已清空")
+        if zhizao_dir.exists():
+            files = sorted(zhizao_dir.glob("*.csv"), key=lambda f: f.stat().st_mtime, reverse=True)
+            for f in files:
+                mtime = datetime.fromtimestamp(f.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S")
+                col_i, col_r, col_d = st.columns([3, 1, 1])
+                with col_i:
+                    st.caption(f"📄 {f.name} · {f.stat().st_size/1024:.1f}KB · 🕐 {mtime}")
+                with col_r:
+                    if st.button("♻️ 复用", key=f"reuse_zhizao_{f.name}"):
+                        st.session_state["reuse_zhizao_file"] = str(f)
+                        st.success(f"已选择复用: {f.name}")
+                with col_d:
+                    st.download_button("⬇️", f.read_bytes(), file_name=f.name, mime="text/csv", key=f"dl_zhizao_{f.name}")
+        else:
+            st.caption("暂无历史")
+
 
 # ============================================================
 # PAGE: 智优 (Step 3) — 一键自动完成
@@ -877,6 +903,23 @@ elif page == "🔧 智优":
     st.title("🔧 智优 – Score · Rewrite · Compliance")
     render_pipeline_flow("zhiyou", selected_batch)
     st.caption("Step 3: 一键自动完成 评分 → 重写优化 → 合规审查")
+
+    # --- Upload content directly (skip 智造) ---
+    with st.expander("📤 上传内容（跳过智造直接优化）", expanded=False):
+        st.caption("可选：上传已有文章 CSV，直接进行评分/重写/合规审查")
+        upload_zhiyou = st.file_uploader("上传 CSV（需含 content_draft 列）", type=["csv", "xlsx"], key="zhiyou_direct_upload")
+        if upload_zhiyou:
+            try:
+                if upload_zhiyou.name.endswith(".xlsx"):
+                    df_up = pd.read_excel(upload_zhiyou, engine="openpyxl")
+                else:
+                    df_up = pd.read_csv(upload_zhiyou, encoding="utf-8-sig", on_bad_lines="skip", engine="python")
+                out_dir = OUTPUT_PATH / selected_batch / "02_zhizao"
+                out_dir.mkdir(parents=True, exist_ok=True)
+                df_up.to_csv(out_dir / "zhizao_draft_content.csv", index=False, encoding="utf-8-sig")
+                st.success(f"✅ 已上传 {len(df_up)} 篇文章，可执行智优")
+            except Exception as e:
+                st.error(f"上传失败: {e}")
 
     # One-click execution
     st.subheader("▶️ 一键执行智优全流程")
@@ -988,11 +1031,93 @@ elif page == "🔧 智优":
         else:
             st.info("暂无合规审查结果")
 
+    # --- 文章预览 & 编辑 + 确认 ---
+    st.divider()
+    df_opt = load_optimized(selected_batch)
+    if not df_opt.empty:
+        st.subheader(f"📖 优化后文章预览 & 编辑（{len(df_opt)} 篇）")
+        st.caption("可直接编辑优化后的文章内容，修改自动保存")
+
+        opt_file = OUTPUT_PATH / selected_batch / "03_zhiyou" / "zhiyou_optimized_content.csv"
+        content_col = "optimized_content" if "optimized_content" in df_opt.columns else "content_draft"
+        title_col = "optimized_title" if "optimized_title" in df_opt.columns else "title"
+
+        content_changed = False
+        for idx, row in df_opt.iterrows():
+            title = str(row.get(title_col, f"文章 {idx+1}"))
+            word_count = row.get("word_count", "?")
+            with st.expander(f"📄 {title} ({word_count} 字)"):
+                if "ai_query" in df_opt.columns:
+                    st.caption(f"检索短语: {row.get('ai_query', '')}")
+                if content_col in df_opt.columns:
+                    original = str(row.get(content_col, ""))
+                    edited = st.text_area("内容", value=original, height=300,
+                                          key=f"zhiyou_edit_{idx}", label_visibility="collapsed")
+                    if edited != original:
+                        df_opt.at[idx, content_col] = edited
+                        df_opt.at[idx, "word_count"] = len(edited)
+                        content_changed = True
+
+        if content_changed:
+            df_opt.to_csv(opt_file, index=False, encoding="utf-8-sig")
+            st.success("✅ 修改已自动保存")
+
+        # 确认环节
+        st.divider()
+        st.subheader("✅ 文章确认")
+        st.caption("勾选确认通过的文章，确认后进入智布发布")
+
+        if "confirmed" not in df_opt.columns:
+            df_opt["confirmed"] = True
+
+        if title_col in df_opt.columns:
+            df_confirm = st.data_editor(
+                df_opt[[title_col, "confirmed"]].reset_index(drop=True),
+                column_config={
+                    title_col: st.column_config.TextColumn("文章标题", disabled=True),
+                    "confirmed": st.column_config.CheckboxColumn("确认通过"),
+                },
+                use_container_width=True, hide_index=True,
+                key="zhiyou_confirm_editor",
+            )
+            confirmed_count = df_confirm["confirmed"].sum()
+            st.markdown(f"**已确认 {confirmed_count} / {len(df_confirm)} 篇**")
+
+            # Auto-save confirmation
+            df_opt["confirmed"] = df_confirm["confirmed"].values
+            df_opt.to_csv(opt_file, index=False, encoding="utf-8-sig")
+
     # CTA → 智布
     st.divider()
     if st.button("➡️ 进入智布 (Step 4)", type="primary", key="cta_zhiyou_to_zhibu"):
         jump_to("📦 智布")
         st.rerun()
+
+    # 📜 历史记录 + 清空
+    with st.expander("📜 历史记录"):
+        zhiyou_dir = OUTPUT_PATH / selected_batch / "03_zhiyou"
+        col_h1, col_h2 = st.columns([4, 1])
+        with col_h2:
+            if st.button("🗑️ 清空全部", key="clear_zhiyou_hist"):
+                if zhiyou_dir.exists():
+                    for f in zhiyou_dir.glob("*.csv"):
+                        f.unlink()
+                    st.success("已清空")
+        if zhiyou_dir.exists():
+            files = sorted(zhiyou_dir.glob("*.csv"), key=lambda f: f.stat().st_mtime, reverse=True)
+            for f in files:
+                mtime = datetime.fromtimestamp(f.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S")
+                col_i, col_r, col_d = st.columns([3, 1, 1])
+                with col_i:
+                    st.caption(f"📄 {f.name} · {f.stat().st_size/1024:.1f}KB · 🕐 {mtime}")
+                with col_r:
+                    if st.button("♻️ 复用", key=f"reuse_zhiyou_{f.name}"):
+                        st.session_state["reuse_zhiyou_file"] = str(f)
+                        st.success(f"已选择复用: {f.name}")
+                with col_d:
+                    st.download_button("⬇️", f.read_bytes(), file_name=f.name, mime="text/csv", key=f"dl_zhiyou_{f.name}")
+        else:
+            st.caption("暂无历史")
 
 
 # ============================================================
@@ -1002,6 +1127,23 @@ elif page == "📦 智布":
     st.title("📦 智布 – JSON / Word Formatting")
     render_pipeline_flow("zhibu", selected_batch)
     st.caption("Step 4: 将优化内容转换为结构化 JSON 和 Word 文档")
+
+    # --- Upload content directly (skip 智优) ---
+    with st.expander("📤 上传内容（跳过智优直接发布格式化）", expanded=False):
+        st.caption("可选：上传已优化完成的文章 CSV，直接生成 JSON/Word")
+        upload_zhibu = st.file_uploader("上传 CSV（需含 optimized_content 列）", type=["csv", "xlsx"], key="zhibu_direct_upload")
+        if upload_zhibu:
+            try:
+                if upload_zhibu.name.endswith(".xlsx"):
+                    df_up = pd.read_excel(upload_zhibu, engine="openpyxl")
+                else:
+                    df_up = pd.read_csv(upload_zhibu, encoding="utf-8-sig", on_bad_lines="skip", engine="python")
+                out_dir = OUTPUT_PATH / selected_batch / "03_zhiyou"
+                out_dir.mkdir(parents=True, exist_ok=True)
+                df_up.to_csv(out_dir / "zhiyou_optimized_content.csv", index=False, encoding="utf-8-sig")
+                st.success(f"✅ 已上传 {len(df_up)} 篇，可执行智布")
+            except Exception as e:
+                st.error(f"上传失败: {e}")
 
     # Execution
     st.subheader("▶️ 生成发布格式")
@@ -1036,7 +1178,20 @@ elif page == "📦 智布":
     # Output display
     data = load_zhibu(selected_batch)
     if data:
-        st.subheader("📤 输出概览")
+        col_title, col_clear = st.columns([4, 1])
+        with col_title:
+            st.subheader("📤 输出概览")
+        with col_clear:
+            if st.button("🗑️ 清空预览", key="clear_zhibu_preview"):
+                zhibu_dir = OUTPUT_PATH / selected_batch / "04_zhibu"
+                if zhibu_dir.exists():
+                    # Move current files to archive (rename with timestamp)
+                    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    archive_dir = zhibu_dir / "archive"
+                    archive_dir.mkdir(exist_ok=True)
+                    for f in list(zhibu_dir.glob("*.json")):
+                        f.rename(archive_dir / f"{f.stem}_{ts}{f.suffix}")
+                st.success("已清空预览（历史已归档）")
         col1, col2, col3 = st.columns(3)
         with col1:
             st.metric("总条目", data.get("total_items", 0))
@@ -1056,8 +1211,24 @@ elif page == "📦 智布":
                     "word_count": item.get("quality_metrics", {}).get("word_count", 0),
                     "overall_score": item.get("ai_friendly", {}).get("overall_score", 0),
                     "compliance": item.get("compliance", {}).get("status", ""),
+                    "selected": True,
                 })
-            st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+            df_items = pd.DataFrame(rows)
+            edited_items = st.data_editor(
+                df_items,
+                column_config={
+                    "content_id": st.column_config.TextColumn("ID", disabled=True),
+                    "title": st.column_config.TextColumn("标题", disabled=True),
+                    "word_count": st.column_config.NumberColumn("字数", disabled=True),
+                    "overall_score": st.column_config.NumberColumn("评分", disabled=True),
+                    "compliance": st.column_config.TextColumn("合规", disabled=True),
+                    "selected": st.column_config.CheckboxColumn("选中"),
+                },
+                use_container_width=True, hide_index=True,
+                key="zhibu_select_editor",
+            )
+            selected_count = edited_items["selected"].sum()
+            st.caption(f"已选中 {selected_count} / {len(edited_items)} 篇")
 
         # JSON preview
         st.divider()
@@ -1072,28 +1243,54 @@ elif page == "📦 智布":
     else:
         st.info(f"批次 {selected_batch} 暂无智布输出")
 
-    # Word docs display
-    word_dir = OUTPUT_PATH / selected_batch / "02_zhizao_word"
+    # Word docs display — only show 智优 Final version
     word_dir_opt = OUTPUT_PATH / selected_batch / "03_zhiyou_word"
-    for wd in [word_dir, word_dir_opt]:
-        if wd.exists():
-            docs = list(wd.glob("*.docx"))
-            if docs:
-                st.divider()
-                st.subheader(f"📄 Word 文档 ({wd.name})")
-                for doc in docs:
-                    st.download_button(
-                        f"📄 {doc.name}", doc.read_bytes(),
-                        file_name=doc.name,
-                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                        key=f"dl_word_{doc.name}"
-                    )
+    if word_dir_opt.exists():
+        docs = list(word_dir_opt.glob("*.docx"))
+        if docs:
+            st.divider()
+            st.subheader("📄 Final Word 文档")
+            for doc in docs:
+                st.download_button(
+                    f"📄 {doc.name}", doc.read_bytes(),
+                    file_name=doc.name,
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    key=f"dl_word_{doc.name}"
+                )
 
     # CTA → 智析
     st.divider()
     if st.button("➡️ 查看智析 (Step 6)", type="primary", key="cta_zhibu_to_zhixi"):
         jump_to("📈 智析")
         st.rerun()
+
+    # 📜 历史记录（不清空，带复用）
+    with st.expander("📜 历史记录"):
+        zhibu_dir = OUTPUT_PATH / selected_batch / "04_zhibu"
+        all_hist_files = []
+        if zhibu_dir.exists():
+            # Current files
+            all_hist_files.extend([f for f in zhibu_dir.iterdir() if f.is_file()])
+            # Archived files
+            archive_dir = zhibu_dir / "archive"
+            if archive_dir.exists():
+                all_hist_files.extend([f for f in archive_dir.iterdir() if f.is_file()])
+        if all_hist_files:
+            all_hist_files.sort(key=lambda f: f.stat().st_mtime, reverse=True)
+            for f in all_hist_files:
+                mtime = datetime.fromtimestamp(f.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S")
+                col_i, col_r, col_d = st.columns([3, 1, 1])
+                with col_i:
+                    st.caption(f"📄 {f.name} · {f.stat().st_size/1024:.1f}KB · 🕐 {mtime}")
+                with col_r:
+                    if st.button("♻️ 复用", key=f"reuse_zhibu_{f.name}"):
+                        st.session_state["reuse_zhibu_file"] = str(f)
+                        st.success(f"已选择复用: {f.name}")
+                with col_d:
+                    mime = "application/json" if f.suffix == ".json" else "text/csv"
+                    st.download_button("⬇️", f.read_bytes(), file_name=f.name, mime=mime, key=f"dl_zhibu_{f.name}")
+        else:
+            st.caption("暂无历史")
 
 
 # ============================================================
@@ -1103,6 +1300,23 @@ elif page == "📈 智析":
     st.title("📈 智析 – Performance Report")
     render_pipeline_flow("zhixi", selected_batch)
     st.caption("Step 6: GEO + WW Direct Reg Start 趋势分析")
+
+    # --- Upload metrics data directly ---
+    with st.expander("📤 上传数据（手动导入 metrics 数据）", expanded=False):
+        st.caption("可选：上传 weekly/monthly metrics CSV，用于自定义分析展示")
+        upload_zhixi = st.file_uploader("上传 Metrics CSV", type=["csv", "xlsx"], key="zhixi_direct_upload")
+        if upload_zhixi:
+            try:
+                if upload_zhixi.name.endswith(".xlsx"):
+                    df_up = pd.read_excel(upload_zhixi, engine="openpyxl")
+                else:
+                    df_up = pd.read_csv(upload_zhixi, encoding="utf-8-sig", on_bad_lines="skip", engine="python")
+                metrics_dir = OUTPUT_PATH / "metrics"
+                metrics_dir.mkdir(parents=True, exist_ok=True)
+                df_up.to_csv(metrics_dir / "uploaded_metrics.csv", index=False, encoding="utf-8-sig")
+                st.success(f"✅ 已上传 {len(df_up)} 行数据")
+            except Exception as e:
+                st.error(f"上传失败: {e}")
 
     # Weekly Trend
     st.subheader("📊 Weekly 趋势")
@@ -1186,6 +1400,28 @@ elif page == "📈 智析":
 - 排查 AE Direct 下降原因（YoY -61%）
 - 建立 input 活动周度追踪，完善归因链路
     """)
+
+    # 📜 历史记录 (no reuse)
+    with st.expander("📜 历史记录"):
+        metrics_dir = OUTPUT_PATH / "metrics"
+        col_h1, col_h2 = st.columns([4, 1])
+        with col_h2:
+            if st.button("🗑️ 清空", key="clear_zhixi_hist"):
+                if metrics_dir.exists():
+                    for f in metrics_dir.glob("*.csv"):
+                        f.unlink()
+                    st.success("已清空")
+        if metrics_dir.exists():
+            files = sorted(metrics_dir.glob("*.csv"), key=lambda f: f.stat().st_mtime, reverse=True)
+            for f in files:
+                mtime = datetime.fromtimestamp(f.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S")
+                col_i, col_d = st.columns([4, 1])
+                with col_i:
+                    st.caption(f"📄 {f.name} · {f.stat().st_size/1024:.1f}KB · 🕐 {mtime}")
+                with col_d:
+                    st.download_button("⬇️", f.read_bytes(), file_name=f.name, mime="text/csv", key=f"dl_zhixi_{f.name}")
+        else:
+            st.caption("暂无历史")
 
 
 # ============================================================
