@@ -29,7 +29,7 @@ if not OUTPUT_PATH.exists():
         INPUT_PATH.mkdir(parents=True, exist_ok=True)
 
 st.set_page_config(
-    page_title="Smart Suite 智系列控制台",
+    page_title="Smart Suite Console",
     page_icon="🧠",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -312,9 +312,14 @@ NAV_PAGES = [
 # SIDEBAR
 # ============================================================
 with st.sidebar:
+    # Language toggle
+    ui_lang = st.selectbox("🌐", ["中文", "English"], key="ui_lang", label_visibility="collapsed")
+    is_en = (ui_lang == "English")
+
     st.title("🧠 Smart Suite")
-    st.caption("智系列 · GEO Content Pipeline · Phase I")
+    st.caption("GEO Content Pipeline · Phase I" if is_en else "智系列 · GEO Content Pipeline · Phase I")
     st.divider()
+
 
     # Handle jump_to_page
     if "jump_to_page" in st.session_state:
@@ -331,83 +336,195 @@ with st.sidebar:
     st.divider()
 
     batches = get_batches()
-    selected_batch = st.selectbox("📂 当前批次", batches, key="batch")
+    selected_batch = st.selectbox("📂 Current Batch" if is_en else "📂 当前批次", batches, key="batch")
     market = st.selectbox("🌍 Market", ["ALL", "CN", "NA", "EU", "JP"])
     kw_limit = st.number_input("🔑 Keyword Limit", 1, 50, 10)
     week = st.text_input("📅 Week", "WK21")
 
     st.divider()
-    st.caption(f"路径: {BASE_PATH}")
+    st.caption(f"{'Path' if is_en else '路径'}: {BASE_PATH}")
 
 
 # ============================================================
 # PAGE: 总览
 # ============================================================
 if page == "🏠 总览":
-    st.title("🏠 Smart Suite 总览")
+    st.title("🏠 Smart Suite Overview" if is_en else "🏠 Smart Suite 总览")
 
     # --- 工具介绍 ---
-    st.subheader("🧠 Smart Suite 是什么？")
+    st.subheader("🧠 What is Smart Suite?" if is_en else "🧠 Smart Suite 是什么？")
     st.markdown("""
+    Smart Suite is an **AI-driven GEO (Generative Engine Optimization) content pipeline tool**
+    that helps the Amazon Global Selling team efficiently produce, optimize, and distribute content
+    that can be cited by AI search engines (ChatGPT, Perplexity, DeepSeek, etc.).
+    """ if is_en else """
     Smart Suite 是一套 **AI 驱动的 GEO (Generative Engine Optimization) 内容流水线工具**，
     帮助亚马逊全球开店团队高效生产、优化和分发能够被 AI 搜索引擎（ChatGPT、Perplexity、DeepSeek 等）引用的内容。
     """)
 
     # --- User Workflow ---
     st.divider()
-    st.subheader("📋 完整 Workflow")
-    st.markdown("""
-    ```
-    ┌─────────────────────────────────────────────────────────────────────────┐
-    │                        Smart Suite 工作流程                              │
-    ├─────────────────────────────────────────────────────────────────────────┤
-    │                                                                         │
-    │  📝 需求入口                                                            │
-    │  ├── 产品 GEO 需求（Intake）→ 直接进入智库                              │
-    │  └── 用户旅程调研（智测）→ 发现 Gap → 转为需求 → 进入智库               │
-    │                                                                         │
-    │  ═══════════════════════════════════════════════════════════════════════  │
-    │                                                                         │
-    │  7 步内容流水线（可独立运行，也可顺序执行）                              │
-    │                                                                         │
-    │  ① 智库 ──→ ② 智造 ──→ ③ 智优 ──→ ④ 智布 ──→ ⑤ 智传 ──→ ⑥ 智析 ──→ ⑦ 智中枢 │
-    │  │           │           │           │           │           │           │
-    │  │ SEO词+    │ AI生成    │ 评分+     │ JSON+     │ 分发到    │ 效果     │ 决策+
-    │  │ 词根裂变  │ 长文章    │ 重写+     │ Word      │ 各渠道    │ 分析     │ 周计划
-    │  │ →检索短语 │           │ 合规      │           │           │ +引用    │
-    │  │           │           │           │           │           │ 追踪     │
-    │  ▼           ▼           ▼           ▼           ▼           ▼           │
-    │  输出:       输出:       输出:       输出:       输出:       输出:       │
-    │  AI短语库    草稿文章    Final文章   JSON/Word   发布记录    趋势报告    │
-    │                                                                         │
-    │  ═══════════════════════════════════════════════════════════════════════  │
-    │                                                                         │
-    │  🔄 反馈循环                                                            │
-    │  智析发现 Gap → 智中枢生成计划 → 回到智库补充短语 → 重新产出内容         │
-    │                                                                         │
-    └─────────────────────────────────────────────────────────────────────────┘
-    ```
-    """)
+    st.subheader("📋 Complete Workflow" if is_en else "📋 完整 Workflow")
+
+    import streamlit.components.v1 as components
+    workflow_html = '''
+    <div style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding:20px;background:#0f1419;border-radius:12px;border:1px solid #2d3748;">
+
+      <!-- 需求入口 -->
+      <div style="text-align:center;margin-bottom:24px;">
+        <div style="display:inline-block;background:#1a2332;border:2px solid #4a9eff;border-radius:12px;padding:14px 28px;">
+          <div style="color:#4a9eff;font-weight:700;font-size:16px;">📝 需求入口</div>
+          <div style="color:#a0aec0;font-size:13px;margin-top:4px;">Intake 产品需求 ｜ 智测 用户旅程调研</div>
+        </div>
+      </div>
+
+      <div style="text-align:center;color:#4a9eff;font-size:20px;margin-bottom:16px;">▼</div>
+
+      <!-- 7步流水线 -->
+      <div style="display:flex;align-items:flex-start;justify-content:center;gap:6px;flex-wrap:nowrap;overflow-x:auto;padding:8px 0;">
+
+        <!-- Step 1 -->
+        <div style="min-width:120px;text-align:center;">
+          <div style="background:#1e3a5f;border:2px solid #4a9eff;border-radius:10px;padding:10px 8px;">
+            <div style="font-size:18px;">📚</div>
+            <div style="color:#fff;font-weight:700;font-size:15px;">智库</div>
+            <div style="color:#90cdf4;font-size:12px;margin-top:4px;">检索短语生成</div>
+          </div>
+          <div style="color:#718096;font-size:11px;margin-top:4px;line-height:1.4;">
+            <b style="color:#e2e8f0;">输入:</b> SEO词/词根<br>
+            <b style="color:#e2e8f0;">输出:</b> AI短语库<br>
+            <b style="color:#fbbf24;">关键:</b> 分类+评分
+          </div>
+        </div>
+
+        <div style="color:#4a9eff;font-size:16px;padding-top:20px;">→</div>
+
+        <!-- Step 2 -->
+        <div style="min-width:120px;text-align:center;">
+          <div style="background:#1e3a5f;border:2px solid #4a9eff;border-radius:10px;padding:10px 8px;">
+            <div style="font-size:18px;">✍️</div>
+            <div style="color:#fff;font-weight:700;font-size:15px;">智造</div>
+            <div style="color:#90cdf4;font-size:12px;margin-top:4px;">内容生成</div>
+          </div>
+          <div style="color:#718096;font-size:11px;margin-top:4px;line-height:1.4;">
+            <b style="color:#e2e8f0;">输入:</b> 选中短语<br>
+            <b style="color:#e2e8f0;">输出:</b> 草稿文章<br>
+            <b style="color:#fbbf24;">关键:</b> 800+字/篇
+          </div>
+        </div>
+
+        <div style="color:#4a9eff;font-size:16px;padding-top:20px;">→</div>
+
+        <!-- Step 3 -->
+        <div style="min-width:120px;text-align:center;">
+          <div style="background:#1e3a5f;border:2px solid #22c55e;border-radius:10px;padding:10px 8px;">
+            <div style="font-size:18px;">🔧</div>
+            <div style="color:#fff;font-weight:700;font-size:15px;">智优</div>
+            <div style="color:#86efac;font-size:12px;margin-top:4px;">评分+重写+合规</div>
+          </div>
+          <div style="color:#718096;font-size:11px;margin-top:4px;line-height:1.4;">
+            <b style="color:#e2e8f0;">输入:</b> 草稿文章<br>
+            <b style="color:#e2e8f0;">输出:</b> Final文章<br>
+            <b style="color:#fbbf24;">关键:</b> 5维评分≥4.5
+          </div>
+        </div>
+
+        <div style="color:#4a9eff;font-size:16px;padding-top:20px;">→</div>
+
+        <!-- Step 4 -->
+        <div style="min-width:120px;text-align:center;">
+          <div style="background:#1a2332;border:2px solid #4a5568;border-radius:10px;padding:10px 8px;">
+            <div style="font-size:18px;">📦</div>
+            <div style="color:#e2e8f0;font-weight:700;font-size:15px;">智布</div>
+            <div style="color:#a0aec0;font-size:12px;margin-top:4px;">格式化</div>
+          </div>
+          <div style="color:#718096;font-size:11px;margin-top:4px;line-height:1.4;">
+            <b style="color:#e2e8f0;">输入:</b> Final文章<br>
+            <b style="color:#e2e8f0;">输出:</b> JSON+Word<br>
+            <b style="color:#fbbf24;">关键:</b> CMS适配
+          </div>
+        </div>
+
+        <div style="color:#4a5568;font-size:16px;padding-top:20px;">→</div>
+
+        <!-- Step 5 -->
+        <div style="min-width:120px;text-align:center;">
+          <div style="background:#1a2332;border:2px solid #4a5568;border-radius:10px;padding:10px 8px;">
+            <div style="font-size:18px;">📡</div>
+            <div style="color:#e2e8f0;font-weight:700;font-size:15px;">智传</div>
+            <div style="color:#a0aec0;font-size:12px;margin-top:4px;">内容分发</div>
+          </div>
+          <div style="color:#718096;font-size:11px;margin-top:4px;line-height:1.4;">
+            <b style="color:#e2e8f0;">输入:</b> JSON/Word<br>
+            <b style="color:#e2e8f0;">输出:</b> 发布记录<br>
+            <b style="color:#fbbf24;">关键:</b> 多渠道
+          </div>
+        </div>
+
+        <div style="color:#4a5568;font-size:16px;padding-top:20px;">→</div>
+
+        <!-- Step 6 -->
+        <div style="min-width:120px;text-align:center;">
+          <div style="background:#1a2332;border:2px solid #f59e0b;border-radius:10px;padding:10px 8px;">
+            <div style="font-size:18px;">📈</div>
+            <div style="color:#fff;font-weight:700;font-size:15px;">智析</div>
+            <div style="color:#fcd34d;font-size:12px;margin-top:4px;">效果分析</div>
+          </div>
+          <div style="color:#718096;font-size:11px;margin-top:4px;line-height:1.4;">
+            <b style="color:#e2e8f0;">输入:</b> 发布数据<br>
+            <b style="color:#e2e8f0;">输出:</b> 趋势+引用<br>
+            <b style="color:#fbbf24;">关键:</b> Gap识别
+          </div>
+        </div>
+
+        <div style="color:#4a5568;font-size:16px;padding-top:20px;">→</div>
+
+        <!-- Step 7 -->
+        <div style="min-width:120px;text-align:center;">
+          <div style="background:#1a2332;border:2px solid #f59e0b;border-radius:10px;padding:10px 8px;">
+            <div style="font-size:18px;">🎯</div>
+            <div style="color:#fff;font-weight:700;font-size:15px;">智中枢</div>
+            <div style="color:#fcd34d;font-size:12px;margin-top:4px;">决策引擎</div>
+          </div>
+          <div style="color:#718096;font-size:11px;margin-top:4px;line-height:1.4;">
+            <b style="color:#e2e8f0;">输入:</b> 智析报告<br>
+            <b style="color:#e2e8f0;">输出:</b> 周计划<br>
+            <b style="color:#fbbf24;">关键:</b> 7条规则
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 反馈循环 -->
+      <div style="text-align:center;margin-top:16px;padding:8px;border-top:1px dashed #4a5568;">
+        <span style="color:#f59e0b;font-size:12px;">🔄 反馈循环：智析发现 Gap → 智中枢生成计划 → 回到智库补充 → 重新产出</span>
+      </div>
+
+    </div>
+    '''
+    components.html(workflow_html, height=420)
 
     st.markdown("""
-    **关键说明：**
-    - 每步都可以**独立运行**（上传已有数据直接执行）
-    - 也可以**顺序执行**（上一步的输出自动流入下一步）
-    - **需求中心**是入口（Intake + 智测），可以随时从这里发起新需求
-    - **智析 + 智中枢**形成反馈循环，驱动下一轮内容产出
+    **💡 Key Notes:**
+    - Each step can be **run independently** (upload existing data to execute directly) or **sequentially** (previous step output flows to the next)
+    - 🔵Blue border = Core content production steps ｜ 🟢Green = Quality assurance ｜ 🟡Yellow = Data-driven decisions
+    """ if is_en else """
+    **💡 关键说明：**
+    - 每步可**独立运行**（上传已有数据直接执行）或**顺序执行**（上一步输出自动流入下一步）
+    - 🔵蓝色边框 = 内容生产核心步骤 ｜ 🟢绿色 = 质量保障 ｜ 🟡黄色 = 数据驱动决策
     """)
 
     st.divider()
-    st.subheader("🔧 7 个 AI 工具")
+    st.subheader("🔧 7 AI Tools" if is_en else "🔧 7 个 AI 工具")
 
     tool_info = [
-        ("📚 智库", "检索短语生成与管理", "从 SEO/SEM 关键词或核心词根裂变生成 AI 原生检索短语，自动分类、去重、评分"),
-        ("✍️ 智造", "内容生成", "基于选中的检索短语，AI 自动生成 SEO+GEO 双优化的长文章"),
-        ("🔧 智优", "内容优化", "一键完成：AI 评分（5维度）→ 重写优化 → 合规审查"),
-        ("📦 智布", "格式化发布", "将优化后的内容转换为 JSON 结构化数据和 Word 文档，用于 CMS 发布"),
-        ("📡 智传", "内容分发", "将内容分发到各个渠道（官网、第三方平台等），追踪发布状态"),
-        ("📈 智析", "效果分析", "追踪 GEO + WW Direct Reg Start 趋势，周度/月度/YTD 数据分析，归因判断"),
-        ("🎯 智中枢", "决策引擎", "基于智析数据 + 7 条决策规则，自动生成周度行动计划和优先级建议"),
+        ("📚 智库", "Search Phrase Generation & Management" if is_en else "检索短语生成与管理", "Generate AI-native search phrases from SEO/SEM keywords or seed words, with auto-classification, dedup, and scoring" if is_en else "从 SEO/SEM 关键词或核心词根裂变生成 AI 原生检索短语，自动分类、去重、评分"),
+        ("✍️ 智造", "Content Generation" if is_en else "内容生成", "AI auto-generates SEO+GEO dual-optimized long articles based on selected search phrases" if is_en else "基于选中的检索短语，AI 自动生成 SEO+GEO 双优化的长文章"),
+        ("🔧 智优", "Content Optimization" if is_en else "内容优化", "One-click: AI scoring (5 dimensions) → rewrite optimization → compliance review" if is_en else "一键完成：AI 评分（5维度）→ 重写优化 → 合规审查"),
+        ("📦 智布", "Format & Publish" if is_en else "格式化发布", "Convert optimized content to JSON structured data and Word documents for CMS publishing" if is_en else "将优化后的内容转换为 JSON 结构化数据和 Word 文档，用于 CMS 发布"),
+        ("📡 智传", "Content Distribution" if is_en else "内容分发", "Distribute content to various channels (website, third-party platforms, etc.) and track publishing status" if is_en else "将内容分发到各个渠道（官网、第三方平台等），追踪发布状态"),
+        ("📈 智析", "Performance Analytics" if is_en else "效果分析", "Track GEO + WW Direct Reg Start trends, weekly/monthly/YTD data analysis, attribution analysis" if is_en else "追踪 GEO + WW Direct Reg Start 趋势，周度/月度/YTD 数据分析，归因判断"),
+        ("🎯 智中枢", "Decision Engine" if is_en else "决策引擎", "Based on analytics data + 7 decision rules, auto-generate weekly action plans and priority recommendations" if is_en else "基于智析数据 + 7 条决策规则，自动生成周度行动计划和优先级建议"),
     ]
 
     for icon_name, subtitle, desc in tool_info:
@@ -423,31 +540,31 @@ if page == "🏠 总览":
 # PAGE: 智库 (Step 1) — 单页线性流程
 # ============================================================
 elif page == "📚 智库":
-    st.title("📚 智库 – AI 检索短语生成")
+    st.title("📚 Query Library – AI Search Phrase Generation" if is_en else "📚 智库 – AI 检索短语生成")
     render_pipeline_flow("zhiku", selected_batch)
-    st.caption("Step 1: 从 SEO/SEM 关键词或核心词根裂变生成 AI 原生检索短语")
+    st.caption("Step 1: Generate AI-native search phrases from SEO/SEM keywords or seed words" if is_en else "Step 1: 从 SEO/SEM 关键词或核心词根裂变生成 AI 原生检索短语")
 
     # ─── ① 生成检索短语 ───
-    st.subheader("① 生成检索短语")
+    st.subheader("① Generate Search Phrases" if is_en else "① 生成检索短语")
 
     # Load current zhiku data for progress tracking
     df_q_current = load_zhiku_live(selected_batch)
     current_count = len(df_q_current) if not df_q_current.empty else 0
 
-    st.caption("可选 A、B 单独或同时使用，结果自动合并去重")
+    st.caption("Use Source A, B individually or together; results auto-merged and deduped" if is_en else "可选 A、B 单独或同时使用，结果自动合并去重")
 
     col_src_a, col_src_b = st.columns(2)
 
     # ── 源 A：SEO/SEM 关键词裂变 ──
     with col_src_a:
-        st.markdown("**源 A：SEO/SEM 关键词裂变**")
-        uploaded_file = st.file_uploader("上传关键词 CSV", type=["csv"], key="kw_upload_zhiku")
+        st.markdown("**Source A: SEO/SEM Keyword Expansion**" if is_en else "**源 A：SEO/SEM 关键词裂变**")
+        uploaded_file = st.file_uploader("Upload Keywords CSV" if is_en else "上传关键词 CSV", type=["csv"], key="kw_upload_zhiku")
         if uploaded_file is not None:
             df_uploaded = pd.read_csv(uploaded_file, on_bad_lines="skip")
             st.session_state["uploaded_keywords"] = df_uploaded
             INPUT_PATH.mkdir(parents=True, exist_ok=True)
             df_uploaded.to_csv(INPUT_PATH / "seo_sem_keywords.csv", index=False, encoding="utf-8-sig")
-            st.success(f"✅ {len(df_uploaded)} 个关键词")
+            st.success(f"✅ {len(df_uploaded)} {'keywords' if is_en else '个关键词'}")
 
         df_kw = load_keywords()
         kw_count = len(df_kw) if not df_kw.empty else 0
@@ -456,20 +573,20 @@ elif page == "📚 智库":
             # Show current progress
             _df_live = load_csv_safe(OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv")
             existing_a = len(_df_live) if not _df_live.empty else 0
-            st.caption(f"{kw_count} 关键词 · 预估 ~{target_a} 条")
+            st.caption(f"{kw_count} {'keywords' if is_en else '关键词'} · {'est.' if is_en else '预估'} ~{target_a} {'phrases' if is_en else '条'}")
             if existing_a > 0:
-                st.progress(min(1.0, existing_a / target_a), text=f"库中 {existing_a}/{target_a}")
-                btn_text_a = f"🔄 继续裂变源 A（库中 {existing_a} 条）"
+                st.progress(min(1.0, existing_a / target_a), text=f"{'Library' if is_en else '库中'} {existing_a}/{target_a}")
+                btn_text_a = f"🔄 {'Continue Expand Source A' if is_en else '继续裂变源 A'}（{'library' if is_en else '库中'} {existing_a} {'phrases' if is_en else '条'}）"
             else:
-                btn_text_a = "🚀 裂变源 A"
-            kw_per_batch = st.select_slider("每次处理关键词数", options=[10, 20, 30, 50], value=10, key="kw_per_batch")
+                btn_text_a = "🚀 Expand Source A" if is_en else "🚀 裂变源 A"
+            kw_per_batch = st.select_slider("Keywords per batch" if is_en else "每次处理关键词数", options=[10, 20, 30, 50], value=10, key="kw_per_batch")
             if st.button(btn_text_a, type="primary", key="run_source_a"):
                 try:
                     from engine import run_zhiku
-                    with st.spinner("源 A 裂变中..."):
+                    with st.spinner("Expanding Source A..." if is_en else "源 A 裂变中..."):
                         result = run_zhiku(selected_batch, market, kw_per_batch)
                     if result["success"]:
-                        st.success(f"✅ +{result['query_count']} 条")
+                        st.success(f"✅ +{result['query_count']} {'phrases' if is_en else '条'}")
                     else:
                         st.error(result['error'])
                 except Exception as e:
@@ -477,27 +594,27 @@ elif page == "📚 智库":
 
     # ── 源 B：核心词根裂变 ──
     with col_src_b:
-        st.markdown("**源 B：核心词根裂变**")
-        seed_words = st.text_area("核心词根（每行一个）", placeholder="跨境电商\n亚马逊开店\n选品", height=100, key="seed_words_input")
+        st.markdown("**Source B: Seed Word Expansion**" if is_en else "**源 B：核心词根裂变**")
+        seed_words = st.text_area("Seed words (one per line)" if is_en else "核心词根（每行一个）", placeholder="跨境电商\n亚马逊开店\n选品", height=100, key="seed_words_input")
         seeds = [w.strip() for w in seed_words.strip().split("\n") if w.strip()] if seed_words else []
 
         if seeds:
-            st.caption(f"{len(seeds)} 个词根 · 预估 ~{len(seeds) * 15} 条")
+            st.caption(f"{len(seeds)} {'seeds' if is_en else '个词根'} · {'est.' if is_en else '预估'} ~{len(seeds) * 15} {'phrases' if is_en else '条'}")
 
-        if st.button("🚀 裂变源 B", type="primary", key="run_source_b", disabled=(len(seeds) == 0)):
+        if st.button("🚀 Expand Source B" if is_en else "🚀 裂变源 B", type="primary", key="run_source_b", disabled=(len(seeds) == 0)):
             if seeds:
                 try:
                     from engine import run_semantic_expansion
                     total_gen = 0
-                    with st.spinner("源 B 裂变中..."):
+                    with st.spinner("Expanding Source B..." if is_en else "源 B 裂变中..."):
                         for seed in seeds:
                             r = run_semantic_expansion(seed, market, 15, "zh", selected_batch)
                             if r.get("success"):
                                 total_gen += r.get("query_count", 0)
                     if total_gen > 0:
-                        st.success(f"✅ +{total_gen} 条")
+                        st.success(f"✅ +{total_gen} {'phrases' if is_en else '条'}")
                     else:
-                        st.warning("未生成短语")
+                        st.warning("No phrases generated" if is_en else "未生成短语")
                 except Exception as e:
                     st.error(str(e))
 
@@ -505,9 +622,9 @@ elif page == "📚 智库":
     if current_count > 0:
         col_info, col_clear = st.columns([3, 1])
         with col_info:
-            st.caption(f"📊 短语库已有 {current_count} 条")
+            st.caption(f"📊 {'Phrase library has' if is_en else '短语库已有'} {current_count} {'phrases' if is_en else '条'}")
         with col_clear:
-            if st.button("🗑️ 清空", key="clear_zhiku"):
+            if st.button("🗑️ Clear" if is_en else "🗑️ 清空", key="clear_zhiku"):
                 zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
                 if zhiku_file.exists():
                     # Archive instead of delete
@@ -515,14 +632,14 @@ elif page == "📚 智库":
                     archive_dir.mkdir(exist_ok=True)
                     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
                     zhiku_file.rename(archive_dir / f"{zhiku_file.stem}_{ts}{zhiku_file.suffix}")
-                st.success("已清空（历史已归档）")
+                st.success("Cleared (history archived)" if is_en else "已清空（历史已归档）")
 
     st.divider()
 
     # ─── 上传已有短语 ───
-    with st.expander("📤 上传已有检索短语（人工准备）", expanded=False):
-        st.caption("直接上传准备好的检索短语 CSV，自动合并到短语库")
-        uploaded_phrases = st.file_uploader("上传 CSV", type=["csv", "xlsx"], key="upload_existing_phrases")
+    with st.expander("📤 Upload Existing Phrases (Manual)" if is_en else "📤 上传已有检索短语（人工准备）", expanded=False):
+        st.caption("Upload prepared search phrase CSV, auto-merged into phrase library" if is_en else "直接上传准备好的检索短语 CSV，自动合并到短语库")
+        uploaded_phrases = st.file_uploader("Upload CSV" if is_en else "上传 CSV", type=["csv", "xlsx"], key="upload_existing_phrases")
         if uploaded_phrases:
             try:
                 if uploaded_phrases.name.endswith(".xlsx"):
@@ -538,36 +655,36 @@ elif page == "📚 智库":
                         if "ai_query" in df_merged.columns:
                             df_merged = df_merged.drop_duplicates(subset=["ai_query"], keep="first")
                         df_merged.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
-                        st.success(f"✅ 导入 {len(df_import)} 条，合并去重后库中 {len(df_merged)} 条")
+                        st.success(f"✅ {'Imported' if is_en else '导入'} {len(df_import)} {'phrases, after dedup library has' if is_en else '条，合并去重后库中'} {len(df_merged)} {'phrases' if is_en else '条'}")
                     else:
                         df_import.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
-                        st.success(f"✅ 导入 {len(df_import)} 条")
+                        st.success(f"✅ {'Imported' if is_en else '导入'} {len(df_import)} {'phrases' if is_en else '条'}")
                 else:
                     df_import.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
-                    st.success(f"✅ 导入 {len(df_import)} 条")
+                    st.success(f"✅ {'Imported' if is_en else '导入'} {len(df_import)} {'phrases' if is_en else '条'}")
             except Exception as e:
-                st.error(f"导入失败: {e}")
+                st.error(f"{'Import failed' if is_en else '导入失败'}: {e}")
 
     st.divider()
 
     # ─── ② 短语库 — 分类 & 校对 ───
-    st.subheader("② 短语库 — 分类 & 校对")
+    st.subheader("② Phrase Library — Classify & Proofread" if is_en else "② 短语库 — 分类 & 校对")
 
     df_q = load_zhiku_live(selected_batch)
 
     if df_q.empty:
-        st.caption("⏳ 请先执行第①步生成检索短语")
+        st.caption("⏳ Please run Step ① to generate search phrases first" if is_en else "⏳ 请先执行第①步生成检索短语")
     else:
         # Filters — simple selectbox
         col_f1, col_f2 = st.columns(2)
         with col_f1:
             if "category" in df_q.columns:
                 cat_options = ["全部"] + sorted(df_q["category"].dropna().unique().tolist())
-                cat_filter = st.selectbox("按类别筛选", cat_options, key="cat_filter")
+                cat_filter = st.selectbox("Filter by category" if is_en else "按类别筛选", cat_options, key="cat_filter")
             else:
                 cat_filter = "全部"
         with col_f2:
-            score_range = st.slider("按综合分筛选", 1.0, 5.0, (1.0, 5.0), 0.5, key="score_filter")
+            score_range = st.slider("Filter by score" if is_en else "按综合分筛选", 1.0, 5.0, (1.0, 5.0), 0.5, key="score_filter")
 
         # Apply filters
         df_display = df_q.copy()
@@ -589,7 +706,7 @@ elif page == "📚 智库":
         if edit_cols:
             # Select all/none toggle
             if "is_selected" in df_display.columns:
-                select_action = st.radio("选中操作", ["不变", "全选", "全不选"], horizontal=True, key="select_action", label_visibility="collapsed")
+                select_action = st.radio("Select action" if is_en else "选中操作", ["不变", "全选", "全不选"], horizontal=True, key="select_action", label_visibility="collapsed")
                 if select_action == "全选":
                     output_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
                     df_q["is_selected"] = "TRUE"
@@ -605,13 +722,13 @@ elif page == "📚 智库":
             column_config = {}
             if "category" in df_display.columns:
                 column_config["category"] = st.column_config.SelectboxColumn(
-                    "类别", options=CATEGORIES_35, width="medium"
+                    "Category" if is_en else "类别", options=CATEGORIES_35, width="medium"
                 )
             if "is_selected" in df_display.columns:
-                column_config["is_selected"] = st.column_config.CheckboxColumn("选中")
+                column_config["is_selected"] = st.column_config.CheckboxColumn("Selected" if is_en else "选中")
             if "target_market" in df_display.columns:
                 column_config["target_market"] = st.column_config.SelectboxColumn(
-                    "适用平台", options=["CN", "WW", "Both"]
+                    "Target Market" if is_en else "适用平台", options=["CN", "WW", "Both"]
                 )
 
             edited_df = st.data_editor(
@@ -638,7 +755,7 @@ elif page == "📚 智库":
             # Export button
             csv_export = df_display.to_csv(index=False).encode("utf-8-sig")
             st.download_button(
-                "📥 导出筛选结果 CSV", csv_export,
+                "📥 Export Filtered CSV" if is_en else "📥 导出筛选结果 CSV", csv_export,
                 file_name=f"zhiku_filtered_{selected_batch}.csv", mime="text/csv"
             )
         else:
@@ -646,29 +763,29 @@ elif page == "📚 智库":
 
         # ─── 📊 类别覆盖看板 ───
         st.divider()
-        st.subheader("📊 类别覆盖看板")
+        st.subheader("📊 Category Coverage Dashboard" if is_en else "📊 类别覆盖看板")
 
         col_k1, col_k2, col_k3, col_k4 = st.columns(4)
         with col_k1:
-            st.metric("总短语", len(df_q))
+            st.metric("Total Phrases" if is_en else "总短语", len(df_q))
         with col_k2:
             if "category" in df_q.columns:
                 covered = df_q["category"].dropna().nunique()
-                st.metric("已覆盖类别", f"{covered}/35")
+                st.metric("Categories Covered" if is_en else "已覆盖类别", f"{covered}/35")
             else:
-                st.metric("已覆盖类别", "N/A")
+                st.metric("Categories Covered" if is_en else "已覆盖类别", "N/A")
         with col_k3:
             if "category" in df_q.columns:
                 empty_cats = 35 - df_q["category"].dropna().nunique()
-                st.metric("空类别", empty_cats)
+                st.metric("Empty Categories" if is_en else "空类别", empty_cats)
             else:
-                st.metric("空类别", "N/A")
+                st.metric("Empty Categories" if is_en else "空类别", "N/A")
         with col_k4:
             if "is_selected" in df_q.columns:
                 sel_count = df_q[df_q["is_selected"].astype(str).str.upper() == "TRUE"].shape[0]
-                st.metric("已选中", sel_count)
+                st.metric("Selected" if is_en else "已选中", sel_count)
             else:
-                st.metric("已选中", "N/A")
+                st.metric("Selected" if is_en else "已选中", "N/A")
 
         if "category" in df_q.columns:
             cat_counts = df_q["category"].value_counts().reset_index()
@@ -682,7 +799,7 @@ elif page == "📚 智库":
     st.divider()
 
     # ─── ③ Gap 验证 ───
-    st.subheader("③ Gap 验证")
+    st.subheader("③ Gap Verification" if is_en else "③ Gap 验证")
     if not df_q.empty and "priority_score" in df_q.columns:
         df_gap = df_q.sort_values("priority_score", ascending=False).head(20).copy()
         gap_cols = ["ai_query", "priority_score"]
@@ -697,10 +814,10 @@ elif page == "📚 智库":
 
         gap_config = {
             "content_mentioned": st.column_config.SelectboxColumn(
-                "内容提及", options=["✅", "❌", "⚠️"]
+                "Content Mentioned" if is_en else "内容提及", options=["✅", "❌", "⚠️"]
             ),
             "has_link": st.column_config.SelectboxColumn(
-                "带链接", options=["✅", "❌"]
+                "Has Link" if is_en else "带链接", options=["✅", "❌"]
             ),
         }
         st.data_editor(
@@ -708,18 +825,18 @@ elif page == "📚 智库":
             use_container_width=True, hide_index=True, key="gap_editor"
         )
     elif df_q.empty:
-        st.info("执行第①步后显示 Gap 验证")
+        st.info("Gap verification will show after running Step ①" if is_en else "执行第①步后显示 Gap 验证")
 
     st.divider()
 
     # CTA → 智造
-    st.subheader("✅ 智库完成")
-    if st.button("➡️ 进入智造 (Step 2)", type="primary", key="cta_zhiku_to_zhizao"):
+    st.subheader("✅ Query Library Complete" if is_en else "✅ 智库完成")
+    if st.button("➡️ Go to Content Creation (Step 2)" if is_en else "➡️ 进入智造 (Step 2)", type="primary", key="cta_zhiku_to_zhizao"):
         jump_to("✍️ 智造")
         st.rerun()
 
     # 📜 历史记录
-    with st.expander("📜 历史记录"):
+    with st.expander("📜 History" if is_en else "📜 历史记录"):
         batch_path = OUTPUT_PATH / selected_batch / "01_zhiku"
         all_files = []
         if batch_path.exists():
@@ -738,21 +855,21 @@ elif page == "📚 智库":
                 with col_d:
                     st.download_button("⬇️", f.read_bytes(), file_name=f.name, mime="text/csv", key=f"dl_{f.name}")
         else:
-            st.caption("暂无历史文件")
+            st.caption("No history files" if is_en else "暂无历史文件")
 
 
 # ============================================================
 # PAGE: 智造 (Step 2) — 单页线性流程
 # ============================================================
 elif page == "✍️ 智造":
-    st.title("✍️ 智造 – Content Generation")
+    st.title("✍️ Content Creation – Content Generation" if is_en else "✍️ 智造 – Content Generation")
     render_pipeline_flow("zhizao", selected_batch)
-    st.caption("Step 2: 基于 AI Queries 生成 SEO+GEO 双优化内容")
+    st.caption("Step 2: Generate SEO+GEO dual-optimized content based on AI Queries" if is_en else "Step 2: 基于 AI Queries 生成 SEO+GEO 双优化内容")
 
     # --- Upload custom phrases directly ---
-    with st.expander("📤 上传检索短语（跳过智库直接生产内容）", expanded=False):
-        st.caption("可选：如果已有准备好的检索短语 CSV/Excel，上传到此处后点击执行智造即可直接生产内容，无需经过智库裂变流程")
-        upload_direct = st.file_uploader("上传 CSV（需包含 ai_query 列）", type=["csv", "xlsx"], key="zhizao_direct_upload")
+    with st.expander("📤 Upload Phrases (skip Query Library)" if is_en else "📤 上传检索短语（跳过智库直接生产内容）", expanded=False):
+        st.caption("Optional: Upload prepared search phrase CSV/Excel, then click Run Content Gen to produce content directly" if is_en else "可选：如果已有准备好的检索短语 CSV/Excel，上传到此处后点击执行智造即可直接生产内容，无需经过智库裂变流程")
+        upload_direct = st.file_uploader("Upload CSV (must contain ai_query column)" if is_en else "上传 CSV（需包含 ai_query 列）", type=["csv", "xlsx"], key="zhizao_direct_upload")
         if upload_direct:
             try:
                 if upload_direct.name.endswith(".xlsx"):
@@ -769,15 +886,15 @@ elif page == "✍️ 智造":
                 else:
                     df_direct["is_selected"] = "TRUE"
                 df_direct.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
-                st.success(f"✅ 已上传 {len(df_direct)} 条检索短语，点击下方执行智造")
+                st.success(f"✅ {'Uploaded' if is_en else '已上传'} {len(df_direct)} {'phrases, click Run Content Gen below' if is_en else '条检索短语，点击下方执行智造'}")
             except Exception as e:
-                st.error(f"上传失败: {e}")
+                st.error(f"{'Upload failed' if is_en else '上传失败'}: {e}")
 
     # Execution
-    st.subheader("▶️ 生成内容")
-    content_limit = st.number_input("生成文章数上限", 1, 20, 5, key="zhizao_limit")
+    st.subheader("▶️ Generate Content" if is_en else "▶️ 生成内容")
+    content_limit = st.number_input("Article generation limit" if is_en else "生成文章数上限", 1, 20, 5, key="zhizao_limit")
 
-    if st.button("🚀 执行智造", type="primary", key="run_zhizao"):
+    if st.button("🚀 Run Content Gen" if is_en else "🚀 执行智造", type="primary", key="run_zhizao"):
         try:
             from engine import run_zhizao
             progress_bar = st.progress(0)
@@ -787,31 +904,31 @@ elif page == "✍️ 智造":
                 progress_bar.progress(min(1.0, max(0.0, pct)))
                 status_text.text(msg)
 
-            with st.spinner("正在调用 Bedrock Claude 生成内容..."):
+            with st.spinner("Calling Bedrock Claude to generate content..." if is_en else "正在调用 Bedrock Claude 生成内容..."):
                 result = run_zhizao(selected_batch, content_limit, update_progress_z)
 
             if result["success"]:
-                st.success(f"✅ 智造完成！生成 {result['articles_generated']} 篇文章")
+                st.success(f"✅ {'Content Gen complete! Generated' if is_en else '智造完成！生成'} {result['articles_generated']} {'articles' if is_en else '篇文章'}")
             else:
-                st.error(f"❌ 失败: {result['error']}")
+                st.error(f"❌ {'Failed' if is_en else '失败'}: {result['error']}")
         except ImportError:
-            st.error("engine 模块未就绪")
+            st.error("engine module not ready" if is_en else "engine 模块未就绪")
 
     st.divider()
 
     # Content display
     df_z = load_zhizao(selected_batch)
     if not df_z.empty:
-        st.subheader("📤 生成内容列表")
+        st.subheader("📤 Generated Content List" if is_en else "📤 生成内容列表")
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.metric("生成文章数", len(df_z))
+            st.metric("Articles Generated" if is_en else "生成文章数", len(df_z))
         with col2:
             if "word_count" in df_z.columns:
-                st.metric("平均字数", f"{df_z['word_count'].mean():.0f}")
+                st.metric("Avg Word Count" if is_en else "平均字数", f"{df_z['word_count'].mean():.0f}")
         with col3:
             if "version" in df_z.columns:
-                st.metric("版本", df_z["version"].iloc[0] if len(df_z) > 0 else "N/A")
+                st.metric("Version" if is_en else "版本", df_z["version"].iloc[0] if len(df_z) > 0 else "N/A")
 
         display_cols = [c for c in ["content_id", "ai_query", "title", "word_count", "version"]
                        if c in df_z.columns]
@@ -823,42 +940,42 @@ elif page == "✍️ 智造":
         col_dl, col_ul, col_cl = st.columns(3)
         with col_dl:
             csv_bytes = df_z.to_csv(index=False).encode("utf-8-sig")
-            st.download_button("📥 下载 CSV", csv_bytes,
+            st.download_button("📥 Download CSV" if is_en else "📥 下载 CSV", csv_bytes,
                                file_name=f"zhizao_{selected_batch}.csv", mime="text/csv")
         with col_ul:
             uploaded_zhizao = st.file_uploader(
-                "📤 上传修改后文件", type=["csv"], key="upload_zhizao_edit"
+                "📤 Upload Modified File" if is_en else "📤 上传修改后文件", type=["csv"], key="upload_zhizao_edit"
             )
             if uploaded_zhizao is not None:
                 df_new = pd.read_csv(uploaded_zhizao, on_bad_lines="skip")
                 out_path = OUTPUT_PATH / selected_batch / "02_zhizao" / "zhizao_draft_content.csv"
                 out_path.parent.mkdir(parents=True, exist_ok=True)
                 df_new.to_csv(out_path, index=False, encoding="utf-8-sig")
-                st.success(f"✅ 已上传覆盖 {len(df_new)} 条记录")
+                st.success(f"✅ {'Uploaded and replaced' if is_en else '已上传覆盖'} {len(df_new)} {'records' if is_en else '条记录'}")
         with col_cl:
-            if st.button("🗑️ 清空历史", key="clear_zhizao"):
+            if st.button("🗑️ Clear History" if is_en else "🗑️ 清空历史", key="clear_zhizao"):
                 zhizao_file = OUTPUT_PATH / selected_batch / "02_zhizao" / "zhizao_draft_content.csv"
                 if zhizao_file.exists():
                     zhizao_file.unlink()
-                st.success("已清空")
+                st.success("Cleared" if is_en else "已清空")
 
         # Article preview — all articles (editable)
         st.divider()
-        st.subheader(f"📖 文章预览 & 编辑（{len(df_z)} 篇）")
-        st.caption("可直接在下方编辑文章内容，修改后自动保存")
+        st.subheader(f"📖 {'Article Preview & Edit' if is_en else '文章预览 & 编辑'}（{len(df_z)} {'articles' if is_en else '篇'}）")
+        st.caption("Edit article content below, changes auto-saved" if is_en else "可直接在下方编辑文章内容，修改后自动保存")
         if "title" in df_z.columns:
             zhizao_file = OUTPUT_PATH / selected_batch / "02_zhizao" / "zhizao_draft_content.csv"
             content_changed = False
             for idx, row in df_z.iterrows():
-                title = str(row.get("title", f"文章 {idx+1}"))
+                title = str(row.get("title", f"{'Article' if is_en else '文章'} {idx+1}"))
                 word_count = row.get("word_count", "?")
-                with st.expander(f"📄 {title} ({word_count} 字)"):
+                with st.expander(f"📄 {title} ({word_count} {'words' if is_en else '字'})"):
                     if "ai_query" in df_z.columns:
-                        st.caption(f"检索短语: {row.get('ai_query', '')}")
+                        st.caption(f"{'Search phrase' if is_en else '检索短语'}: {row.get('ai_query', '')}")
                     if "content_draft" in df_z.columns:
                         original = str(row.get("content_draft", ""))
                         edited_content = st.text_area(
-                            "正文内容",
+                            "Body Content" if is_en else "正文内容",
                             value=original,
                             height=300,
                             key=f"edit_article_{idx}",
@@ -871,12 +988,12 @@ elif page == "✍️ 智造":
             # Auto-save if any content changed
             if content_changed:
                 df_z.to_csv(zhizao_file, index=False, encoding="utf-8-sig")
-                st.success("✅ 修改已自动保存")
+                st.success("✅ Changes auto-saved" if is_en else "✅ 修改已自动保存")
 
         # --- 文章确认环节 ---
         st.divider()
-        st.subheader("✅ 文章确认")
-        st.caption("勾选确认通过的文章，只有确认的文章才会进入智优优化")
+        st.subheader("✅ Article Confirmation" if is_en else "✅ 文章确认")
+        st.caption("Check confirmed articles; only confirmed ones proceed to Optimization" if is_en else "勾选确认通过的文章，只有确认的文章才会进入智优优化")
 
         # Add confirmed column if not exists
         if "confirmed" not in df_z.columns:
@@ -893,8 +1010,8 @@ elif page == "✍️ 智造":
             df_confirm_edit = st.data_editor(
                 df_z[["title", "confirmed"]].reset_index(drop=True),
                 column_config={
-                    "title": st.column_config.TextColumn("文章标题", disabled=True),
-                    "confirmed": st.column_config.CheckboxColumn("确认通过"),
+                    "title": st.column_config.TextColumn("Article Title" if is_en else "文章标题", disabled=True),
+                    "confirmed": st.column_config.CheckboxColumn("Confirmed" if is_en else "确认通过"),
                 },
                 use_container_width=True,
                 hide_index=True,
@@ -903,31 +1020,31 @@ elif page == "✍️ 智造":
 
             confirmed_count = df_confirm_edit["confirmed"].sum()
             total_count = len(df_confirm_edit)
-            st.markdown(f"**已确认 {confirmed_count} / {total_count} 篇**")
+            st.markdown(f"**{'Confirmed' if is_en else '已确认'} {confirmed_count} / {total_count} {'articles' if is_en else '篇'}**")
 
             # Auto-save confirmation status
             zhizao_file = OUTPUT_PATH / selected_batch / "02_zhizao" / "zhizao_draft_content.csv"
             df_z["confirmed"] = df_confirm_edit["confirmed"].values
             df_z.to_csv(zhizao_file, index=False, encoding="utf-8-sig")
     else:
-        st.info(f"批次 {selected_batch} 暂无智造输出，请先执行生成。")
+        st.info(f"{'Batch' if is_en else '批次'} {selected_batch} {'has no content output yet, please run generation first.' if is_en else '暂无智造输出，请先执行生成。'}")
 
     # CTA → 智优
     st.divider()
-    if st.button("➡️ 进入智优 (Step 3)", type="primary", key="cta_zhizao_to_zhiyou"):
+    if st.button("➡️ Go to Optimization (Step 3)" if is_en else "➡️ 进入智优 (Step 3)", type="primary", key="cta_zhizao_to_zhiyou"):
         jump_to("🔧 智优")
         st.rerun()
 
     # 📜 历史记录 + 清空
-    with st.expander("📜 历史记录"):
+    with st.expander("📜 History" if is_en else "📜 历史记录"):
         zhizao_dir = OUTPUT_PATH / selected_batch / "02_zhizao"
         col_h1, col_h2 = st.columns([4, 1])
         with col_h2:
-            if st.button("🗑️ 清空全部", key="clear_zhizao_hist"):
+            if st.button("🗑️ Clear All" if is_en else "🗑️ 清空全部", key="clear_zhizao_hist"):
                 if zhizao_dir.exists():
                     for f in zhizao_dir.glob("*.csv"):
                         f.unlink()
-                    st.success("已清空")
+                    st.success("Cleared" if is_en else "已清空")
         if zhizao_dir.exists():
             files = sorted(zhizao_dir.glob("*.csv"), key=lambda f: f.stat().st_mtime, reverse=True)
             for f in files:
@@ -936,27 +1053,27 @@ elif page == "✍️ 智造":
                 with col_i:
                     st.caption(f"📄 {f.name} · {f.stat().st_size/1024:.1f}KB · 🕐 {mtime}")
                 with col_r:
-                    if st.button("♻️ 复用", key=f"reuse_zhizao_{f.name}"):
+                    if st.button("♻️ Reuse" if is_en else "♻️ 复用", key=f"reuse_zhizao_{f.name}"):
                         st.session_state["reuse_zhizao_file"] = str(f)
-                        st.success(f"已选择复用: {f.name}")
+                        st.success(f"{'Selected for reuse' if is_en else '已选择复用'}: {f.name}")
                 with col_d:
                     st.download_button("⬇️", f.read_bytes(), file_name=f.name, mime="text/csv", key=f"dl_zhizao_{f.name}")
         else:
-            st.caption("暂无历史")
+            st.caption("No history" if is_en else "暂无历史")
 
 
 # ============================================================
 # PAGE: 智优 (Step 3) — 一键自动完成
 # ============================================================
 elif page == "🔧 智优":
-    st.title("🔧 智优 – Score · Rewrite · Compliance")
+    st.title("🔧 Optimization – Score · Rewrite · Compliance" if is_en else "🔧 智优 – Score · Rewrite · Compliance")
     render_pipeline_flow("zhiyou", selected_batch)
-    st.caption("Step 3: 一键自动完成 评分 → 重写优化 → 合规审查")
+    st.caption("Step 3: One-click auto: Score → Rewrite → Compliance Review" if is_en else "Step 3: 一键自动完成 评分 → 重写优化 → 合规审查")
 
     # --- Upload content directly (skip 智造) ---
-    with st.expander("📤 上传内容（跳过智造直接优化）", expanded=False):
-        st.caption("可选：上传已有文章 CSV，直接进行评分/重写/合规审查")
-        upload_zhiyou = st.file_uploader("上传 CSV（需含 content_draft 列）", type=["csv", "xlsx"], key="zhiyou_direct_upload")
+    with st.expander("📤 Upload Content (skip Content Creation)" if is_en else "📤 上传内容（跳过智造直接优化）", expanded=False):
+        st.caption("Optional: Upload existing article CSV for scoring/rewrite/compliance review" if is_en else "可选：上传已有文章 CSV，直接进行评分/重写/合规审查")
+        upload_zhiyou = st.file_uploader("Upload CSV (must contain content_draft column)" if is_en else "上传 CSV（需含 content_draft 列）", type=["csv", "xlsx"], key="zhiyou_direct_upload")
         if upload_zhiyou:
             try:
                 if upload_zhiyou.name.endswith(".xlsx"):
@@ -966,63 +1083,63 @@ elif page == "🔧 智优":
                 out_dir = OUTPUT_PATH / selected_batch / "02_zhizao"
                 out_dir.mkdir(parents=True, exist_ok=True)
                 df_up.to_csv(out_dir / "zhizao_draft_content.csv", index=False, encoding="utf-8-sig")
-                st.success(f"✅ 已上传 {len(df_up)} 篇文章，可执行智优")
+                st.success(f"✅ {'Uploaded' if is_en else '已上传'} {len(df_up)} {'articles, ready for Optimization' if is_en else '篇文章，可执行智优'}")
             except Exception as e:
-                st.error(f"上传失败: {e}")
+                st.error(f"{'Upload failed' if is_en else '上传失败'}: {e}")
 
     # One-click execution
-    st.subheader("▶️ 一键执行智优全流程")
-    st.markdown("自动按顺序执行：**评分 → 重写 → 合规审查**")
+    st.subheader("▶️ One-Click Full Optimization" if is_en else "▶️ 一键执行智优全流程")
+    st.markdown("Auto-execute in order: **Score → Rewrite → Compliance Review**" if is_en else "自动按顺序执行：**评分 → 重写 → 合规审查**")
 
-    if st.button("🚀 一键智优全流程", type="primary", key="run_zhiyou_all"):
+    if st.button("🚀 One-Click Full Optimization" if is_en else "🚀 一键智优全流程", type="primary", key="run_zhiyou_all"):
         try:
             from engine import run_zhiyou_score, run_zhiyou_execute, run_zhiyou_compliance
             progress_bar = st.progress(0)
             status_text = st.empty()
 
-            status_text.text("Step 3: 评分中...")
+            status_text.text("Step 3: Scoring..." if is_en else "Step 3: 评分中...")
             progress_bar.progress(0.1)
             r1 = run_zhiyou_score(selected_batch)
             if not r1["success"]:
-                st.error(f"评分失败: {r1['error']}")
+                st.error(f"{'Scoring failed' if is_en else '评分失败'}: {r1['error']}")
             else:
                 progress_bar.progress(0.4)
-                status_text.text("Step 3.5: 重写中...")
+                status_text.text("Step 3.5: Rewriting..." if is_en else "Step 3.5: 重写中...")
                 r2 = run_zhiyou_execute(selected_batch)
                 if not r2["success"]:
-                    st.error(f"重写失败: {r2['error']}")
+                    st.error(f"{'Rewrite failed' if is_en else '重写失败'}: {r2['error']}")
                 else:
                     progress_bar.progress(0.7)
-                    status_text.text("Step 3.6: 合规审查中...")
+                    status_text.text("Step 3.6: Compliance review..." if is_en else "Step 3.6: 合规审查中...")
                     r3 = run_zhiyou_compliance(selected_batch)
                     if not r3["success"]:
-                        st.error(f"合规失败: {r3['error']}")
+                        st.error(f"{'Compliance failed' if is_en else '合规失败'}: {r3['error']}")
                     else:
                         progress_bar.progress(1.0)
                         status_text.text("")
-                        st.success("✅ 智优全流程完成！")
+                        st.success("✅ Full Optimization complete!" if is_en else "✅ 智优全流程完成！")
         except ImportError:
-            st.error("engine 模块未就绪")
+            st.error("engine module not ready" if is_en else "engine 模块未就绪")
 
     st.divider()
 
     # Results display (expanders)
-    st.subheader("📊 结果查看")
+    st.subheader("📊 Results" if is_en else "📊 结果查看")
 
     # Scorecard
-    with st.expander("📊 评分卡 (Step 3)", expanded=False):
+    with st.expander("📊 Scorecard (Step 3)" if is_en else "📊 评分卡 (Step 3)", expanded=False):
         df_sc = load_scorecard(selected_batch)
         if not df_sc.empty:
             col1, col2, col3 = st.columns(3)
             with col1:
-                st.metric("评分文章数", len(df_sc))
+                st.metric("Articles Scored" if is_en else "评分文章数", len(df_sc))
             with col2:
                 if "overall_score" in df_sc.columns:
-                    st.metric("平均总分", f"{df_sc['overall_score'].mean():.2f}/5")
+                    st.metric("Avg Score" if is_en else "平均总分", f"{df_sc['overall_score'].mean():.2f}/5")
             with col3:
                 if "is_approved" in df_sc.columns:
                     approved = df_sc[df_sc["is_approved"].astype(str).str.upper() == "TRUE"].shape[0]
-                    st.metric("通过数", f"{approved}/{len(df_sc)}")
+                    st.metric("Passed" if is_en else "通过数", f"{approved}/{len(df_sc)}")
 
             # Radar chart
             score_cols = [c for c in df_sc.columns if c.endswith("_score") and c != "overall_score"]
@@ -1043,18 +1160,18 @@ elif page == "🔧 智优":
 
             st.dataframe(df_sc, use_container_width=True, hide_index=True)
         else:
-            st.info("暂无评分卡")
+            st.info("No scorecard yet" if is_en else "暂无评分卡")
 
     # Rewrite
-    with st.expander("✍️ 优化重写 (Step 3.5)", expanded=False):
+    with st.expander("✍️ Optimized Rewrite (Step 3.5)" if is_en else "✍️ 优化重写 (Step 3.5)", expanded=False):
         df_opt = load_optimized(selected_batch)
         if not df_opt.empty:
             col1, col2 = st.columns(2)
             with col1:
-                st.metric("优化文章数", len(df_opt))
+                st.metric("Optimized Articles" if is_en else "优化文章数", len(df_opt))
             with col2:
                 if "word_count" in df_opt.columns:
-                    st.metric("平均字数", f"{df_opt['word_count'].mean():.0f}")
+                    st.metric("Avg Word Count" if is_en else "平均字数", f"{df_opt['word_count'].mean():.0f}")
 
             display_cols = [c for c in ["content_id", "optimized_title", "word_count",
                                         "table_count", "list_count", "link_count", "version"]
@@ -1062,10 +1179,10 @@ elif page == "🔧 智优":
             if display_cols:
                 st.dataframe(df_opt[display_cols], use_container_width=True, hide_index=True)
         else:
-            st.info("暂无优化重写输出")
+            st.info("No optimized rewrite output yet" if is_en else "暂无优化重写输出")
 
     # Compliance
-    with st.expander("⚖️ 合规审查 (Step 3.6)", expanded=False):
+    with st.expander("⚖️ Compliance Review (Step 3.6)" if is_en else "⚖️ 合规审查 (Step 3.6)", expanded=False):
         df_comp = load_compliance(selected_batch)
         if not df_comp.empty:
             col1, col2, col3 = st.columns(3)
@@ -1078,14 +1195,14 @@ elif page == "🔧 智优":
                     st.metric("BLOCKED", int((df_comp["compliance_status"] == "BLOCKED").sum()))
             st.dataframe(df_comp, use_container_width=True, hide_index=True)
         else:
-            st.info("暂无合规审查结果")
+            st.info("No compliance review results yet" if is_en else "暂无合规审查结果")
 
     # --- 文章预览 & 编辑 + 确认 ---
     st.divider()
     df_opt = load_optimized(selected_batch)
     if not df_opt.empty:
-        st.subheader(f"📖 优化后文章预览 & 编辑（{len(df_opt)} 篇）")
-        st.caption("可直接编辑优化后的文章内容，修改自动保存")
+        st.subheader(f"📖 {'Optimized Article Preview & Edit' if is_en else '优化后文章预览 & 编辑'}（{len(df_opt)} {'articles' if is_en else '篇'}）")
+        st.caption("Edit optimized articles below, changes auto-saved" if is_en else "可直接编辑优化后的文章内容，修改自动保存")
 
         opt_file = OUTPUT_PATH / selected_batch / "03_zhiyou" / "zhiyou_optimized_content.csv"
         content_col = "optimized_content" if "optimized_content" in df_opt.columns else "content_draft"
@@ -1093,14 +1210,14 @@ elif page == "🔧 智优":
 
         content_changed = False
         for idx, row in df_opt.iterrows():
-            title = str(row.get(title_col, f"文章 {idx+1}"))
+            title = str(row.get(title_col, f"{'Article' if is_en else '文章'} {idx+1}"))
             word_count = row.get("word_count", "?")
-            with st.expander(f"📄 {title} ({word_count} 字)"):
+            with st.expander(f"📄 {title} ({word_count} {'words' if is_en else '字'})"):
                 if "ai_query" in df_opt.columns:
-                    st.caption(f"检索短语: {row.get('ai_query', '')}")
+                    st.caption(f"{'Search phrase' if is_en else '检索短语'}: {row.get('ai_query', '')}")
                 if content_col in df_opt.columns:
                     original = str(row.get(content_col, ""))
-                    edited = st.text_area("内容", value=original, height=300,
+                    edited = st.text_area("Content" if is_en else "内容", value=original, height=300,
                                           key=f"zhiyou_edit_{idx}", label_visibility="collapsed")
                     if edited != original:
                         df_opt.at[idx, content_col] = edited
@@ -1109,12 +1226,12 @@ elif page == "🔧 智优":
 
         if content_changed:
             df_opt.to_csv(opt_file, index=False, encoding="utf-8-sig")
-            st.success("✅ 修改已自动保存")
+            st.success("✅ Changes auto-saved" if is_en else "✅ 修改已自动保存")
 
         # 确认环节
         st.divider()
-        st.subheader("✅ 文章确认")
-        st.caption("勾选确认通过的文章，确认后进入智布发布")
+        st.subheader("✅ Article Confirmation" if is_en else "✅ 文章确认")
+        st.caption("Check confirmed articles; confirmed ones proceed to Publishing" if is_en else "勾选确认通过的文章，确认后进入智布发布")
 
         if "confirmed" not in df_opt.columns:
             df_opt["confirmed"] = True
@@ -1123,14 +1240,14 @@ elif page == "🔧 智优":
             df_confirm = st.data_editor(
                 df_opt[[title_col, "confirmed"]].reset_index(drop=True),
                 column_config={
-                    title_col: st.column_config.TextColumn("文章标题", disabled=True),
-                    "confirmed": st.column_config.CheckboxColumn("确认通过"),
+                    title_col: st.column_config.TextColumn("Article Title" if is_en else "文章标题", disabled=True),
+                    "confirmed": st.column_config.CheckboxColumn("Confirmed" if is_en else "确认通过"),
                 },
                 use_container_width=True, hide_index=True,
                 key="zhiyou_confirm_editor",
             )
             confirmed_count = df_confirm["confirmed"].sum()
-            st.markdown(f"**已确认 {confirmed_count} / {len(df_confirm)} 篇**")
+            st.markdown(f"**{'Confirmed' if is_en else '已确认'} {confirmed_count} / {len(df_confirm)} {'articles' if is_en else '篇'}**")
 
             # Auto-save confirmation
             df_opt["confirmed"] = df_confirm["confirmed"].values
@@ -1138,20 +1255,20 @@ elif page == "🔧 智优":
 
     # CTA → 智布
     st.divider()
-    if st.button("➡️ 进入智布 (Step 4)", type="primary", key="cta_zhiyou_to_zhibu"):
+    if st.button("➡️ Go to Publishing (Step 4)" if is_en else "➡️ 进入智布 (Step 4)", type="primary", key="cta_zhiyou_to_zhibu"):
         jump_to("📦 智布")
         st.rerun()
 
     # 📜 历史记录 + 清空
-    with st.expander("📜 历史记录"):
+    with st.expander("📜 History" if is_en else "📜 历史记录"):
         zhiyou_dir = OUTPUT_PATH / selected_batch / "03_zhiyou"
         col_h1, col_h2 = st.columns([4, 1])
         with col_h2:
-            if st.button("🗑️ 清空全部", key="clear_zhiyou_hist"):
+            if st.button("🗑️ Clear All" if is_en else "🗑️ 清空全部", key="clear_zhiyou_hist"):
                 if zhiyou_dir.exists():
                     for f in zhiyou_dir.glob("*.csv"):
                         f.unlink()
-                    st.success("已清空")
+                    st.success("Cleared" if is_en else "已清空")
         if zhiyou_dir.exists():
             files = sorted(zhiyou_dir.glob("*.csv"), key=lambda f: f.stat().st_mtime, reverse=True)
             for f in files:
@@ -1160,27 +1277,27 @@ elif page == "🔧 智优":
                 with col_i:
                     st.caption(f"📄 {f.name} · {f.stat().st_size/1024:.1f}KB · 🕐 {mtime}")
                 with col_r:
-                    if st.button("♻️ 复用", key=f"reuse_zhiyou_{f.name}"):
+                    if st.button("♻️ Reuse" if is_en else "♻️ 复用", key=f"reuse_zhiyou_{f.name}"):
                         st.session_state["reuse_zhiyou_file"] = str(f)
-                        st.success(f"已选择复用: {f.name}")
+                        st.success(f"{'Selected for reuse' if is_en else '已选择复用'}: {f.name}")
                 with col_d:
                     st.download_button("⬇️", f.read_bytes(), file_name=f.name, mime="text/csv", key=f"dl_zhiyou_{f.name}")
         else:
-            st.caption("暂无历史")
+            st.caption("No history" if is_en else "暂无历史")
 
 
 # ============================================================
 # PAGE: 智布 (Step 4)
 # ============================================================
 elif page == "📦 智布":
-    st.title("📦 智布 – JSON / Word Formatting")
+    st.title("📦 Publishing – JSON / Word Formatting" if is_en else "📦 智布 – JSON / Word Formatting")
     render_pipeline_flow("zhibu", selected_batch)
-    st.caption("Step 4: 将优化内容转换为结构化 JSON 和 Word 文档")
+    st.caption("Step 4: Convert optimized content to structured JSON and Word documents" if is_en else "Step 4: 将优化内容转换为结构化 JSON 和 Word 文档")
 
     # --- Upload content directly (skip 智优) ---
-    with st.expander("📤 上传内容（跳过智优直接发布格式化）", expanded=False):
-        st.caption("可选：上传已优化完成的文章 CSV，直接生成 JSON/Word")
-        upload_zhibu = st.file_uploader("上传 CSV（需含 optimized_content 列）", type=["csv", "xlsx"], key="zhibu_direct_upload")
+    with st.expander("📤 Upload Content (skip Optimization)" if is_en else "📤 上传内容（跳过智优直接发布格式化）", expanded=False):
+        st.caption("Optional: Upload optimized article CSV, generate JSON/Word directly" if is_en else "可选：上传已优化完成的文章 CSV，直接生成 JSON/Word")
+        upload_zhibu = st.file_uploader("Upload CSV (must contain optimized_content column)" if is_en else "上传 CSV（需含 optimized_content 列）", type=["csv", "xlsx"], key="zhibu_direct_upload")
         if upload_zhibu:
             try:
                 if upload_zhibu.name.endswith(".xlsx"):
@@ -1190,37 +1307,37 @@ elif page == "📦 智布":
                 out_dir = OUTPUT_PATH / selected_batch / "03_zhiyou"
                 out_dir.mkdir(parents=True, exist_ok=True)
                 df_up.to_csv(out_dir / "zhiyou_optimized_content.csv", index=False, encoding="utf-8-sig")
-                st.success(f"✅ 已上传 {len(df_up)} 篇，可执行智布")
+                st.success(f"✅ {'Uploaded' if is_en else '已上传'} {len(df_up)} {'articles, ready for Publishing' if is_en else '篇，可执行智布'}")
             except Exception as e:
-                st.error(f"上传失败: {e}")
+                st.error(f"{'Upload failed' if is_en else '上传失败'}: {e}")
 
     # Execution
-    st.subheader("▶️ 生成发布格式")
+    st.subheader("▶️ Generate Publishing Format" if is_en else "▶️ 生成发布格式")
     col_exec1, col_exec2 = st.columns(2)
     with col_exec1:
-        if st.button("🚀 生成 JSON", type="primary", key="run_zhibu"):
+        if st.button("🚀 Generate JSON" if is_en else "🚀 生成 JSON", type="primary", key="run_zhibu"):
             try:
                 from engine import run_zhibu
-                with st.spinner("正在生成 JSON..."):
+                with st.spinner("Generating JSON..." if is_en else "正在生成 JSON..."):
                     result = run_zhibu(selected_batch)
                 if result["success"]:
-                    st.success(f"✅ 智布完成！{result['items_count']} 条目")
+                    st.success(f"✅ {'Publishing complete!' if is_en else '智布完成！'} {result['items_count']} {'items' if is_en else '条目'}")
                 else:
-                    st.error(f"❌ 失败: {result['error']}")
+                    st.error(f"❌ {'Failed' if is_en else '失败'}: {result['error']}")
             except ImportError:
-                st.error("engine 模块未就绪")
+                st.error("engine module not ready" if is_en else "engine 模块未就绪")
     with col_exec2:
-        if st.button("📄 生成 Word 文档", key="run_word"):
+        if st.button("📄 Generate Word Docs" if is_en else "📄 生成 Word 文档", key="run_word"):
             try:
                 from engine import generate_word_docs
-                with st.spinner("正在生成 Word 文档..."):
+                with st.spinner("Generating Word documents..." if is_en else "正在生成 Word 文档..."):
                     result = generate_word_docs(selected_batch)
                 if result["success"]:
-                    st.success(f"✅ Word 生成完成！{result.get('doc_count', 0)} 篇")
+                    st.success(f"✅ {'Word generation complete!' if is_en else 'Word 生成完成！'} {result.get('doc_count', 0)} {'articles' if is_en else '篇'}")
                 else:
-                    st.error(f"❌ 失败: {result['error']}")
+                    st.error(f"❌ {'Failed' if is_en else '失败'}: {result['error']}")
             except ImportError:
-                st.error("engine.generate_word_docs 未实现")
+                st.error("engine.generate_word_docs not implemented" if is_en else "engine.generate_word_docs 未实现")
 
     st.divider()
 
@@ -1229,9 +1346,9 @@ elif page == "📦 智布":
     if data:
         col_title, col_clear = st.columns([4, 1])
         with col_title:
-            st.subheader("📤 输出概览")
+            st.subheader("📤 Output Overview" if is_en else "📤 输出概览")
         with col_clear:
-            if st.button("🗑️ 清空预览", key="clear_zhibu_preview"):
+            if st.button("🗑️ Clear Preview" if is_en else "🗑️ 清空预览", key="clear_zhibu_preview"):
                 zhibu_dir = OUTPUT_PATH / selected_batch / "04_zhibu"
                 if zhibu_dir.exists():
                     # Move current files to archive (rename with timestamp)
@@ -1240,15 +1357,15 @@ elif page == "📦 智布":
                     archive_dir.mkdir(exist_ok=True)
                     for f in list(zhibu_dir.glob("*.json")):
                         f.rename(archive_dir / f"{f.stem}_{ts}{f.suffix}")
-                st.success("已清空预览（历史已归档）")
+                st.success("Preview cleared (history archived)" if is_en else "已清空预览（历史已归档）")
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.metric("总条目", data.get("total_items", 0))
+            st.metric("Total Items" if is_en else "总条目", data.get("total_items", 0))
         with col2:
-            st.metric("批次", data.get("batch_id", "N/A"))
+            st.metric("Batch" if is_en else "批次", data.get("batch_id", "N/A"))
         with col3:
             kws = data.get("source_keywords", [])
-            st.metric("源关键词", len(kws) if isinstance(kws, list) else 0)
+            st.metric("Source Keywords" if is_en else "源关键词", len(kws) if isinstance(kws, list) else 0)
 
         items = data.get("items", [])
         if items:
@@ -1267,30 +1384,30 @@ elif page == "📦 智布":
                 df_items,
                 column_config={
                     "content_id": st.column_config.TextColumn("ID", disabled=True),
-                    "title": st.column_config.TextColumn("标题", disabled=True),
-                    "word_count": st.column_config.NumberColumn("字数", disabled=True),
-                    "overall_score": st.column_config.NumberColumn("评分", disabled=True),
-                    "compliance": st.column_config.TextColumn("合规", disabled=True),
-                    "selected": st.column_config.CheckboxColumn("选中"),
+                    "title": st.column_config.TextColumn("Title" if is_en else "标题", disabled=True),
+                    "word_count": st.column_config.NumberColumn("Word Count" if is_en else "字数", disabled=True),
+                    "overall_score": st.column_config.NumberColumn("Score" if is_en else "评分", disabled=True),
+                    "compliance": st.column_config.TextColumn("Compliance" if is_en else "合规", disabled=True),
+                    "selected": st.column_config.CheckboxColumn("Selected" if is_en else "选中"),
                 },
                 use_container_width=True, hide_index=True,
                 key="zhibu_select_editor",
             )
             selected_count = edited_items["selected"].sum()
-            st.caption(f"已选中 {selected_count} / {len(edited_items)} 篇")
+            st.caption(f"{'Selected' if is_en else '已选中'} {selected_count} / {len(edited_items)} {'articles' if is_en else '篇'}")
 
         # JSON preview
         st.divider()
-        st.subheader("🔍 JSON 预览")
+        st.subheader("🔍 JSON Preview" if is_en else "🔍 JSON 预览")
         if items:
             sel_idx = st.selectbox(
-                "选择条目", range(len(items)),
+                "Select item" if is_en else "选择条目", range(len(items)),
                 format_func=lambda i: items[i].get("meta", {}).get("title", f"Item {i}"),
                 key="zhibu_preview_select"
             )
             st.json(items[sel_idx])
     else:
-        st.info(f"批次 {selected_batch} 暂无智布输出")
+        st.info(f"{'Batch' if is_en else '批次'} {selected_batch} {'has no publishing output yet' if is_en else '暂无智布输出'}")
 
     # Word docs display — only show 智优 Final version
     word_dir_opt = OUTPUT_PATH / selected_batch / "03_zhiyou_word"
@@ -1298,7 +1415,7 @@ elif page == "📦 智布":
         docs = list(word_dir_opt.glob("*.docx"))
         if docs:
             st.divider()
-            st.subheader("📄 Final Word 文档")
+            st.subheader("📄 Final Word Documents" if is_en else "📄 Final Word 文档")
             for doc in docs:
                 st.download_button(
                     f"📄 {doc.name}", doc.read_bytes(),
@@ -1309,12 +1426,12 @@ elif page == "📦 智布":
 
     # CTA → 智析
     st.divider()
-    if st.button("➡️ 查看智析 (Step 6)", type="primary", key="cta_zhibu_to_zhixi"):
+    if st.button("➡️ View Analytics (Step 6)" if is_en else "➡️ 查看智析 (Step 6)", type="primary", key="cta_zhibu_to_zhixi"):
         jump_to("📈 智析")
         st.rerun()
 
     # 📜 历史记录（不清空，带复用）
-    with st.expander("📜 历史记录"):
+    with st.expander("📜 History" if is_en else "📜 历史记录"):
         zhibu_dir = OUTPUT_PATH / selected_batch / "04_zhibu"
         all_hist_files = []
         if zhibu_dir.exists():
@@ -1332,14 +1449,14 @@ elif page == "📦 智布":
                 with col_i:
                     st.caption(f"📄 {f.name} · {f.stat().st_size/1024:.1f}KB · 🕐 {mtime}")
                 with col_r:
-                    if st.button("♻️ 复用", key=f"reuse_zhibu_{f.name}"):
+                    if st.button("♻️ Reuse" if is_en else "♻️ 复用", key=f"reuse_zhibu_{f.name}"):
                         st.session_state["reuse_zhibu_file"] = str(f)
-                        st.success(f"已选择复用: {f.name}")
+                        st.success(f"{'Selected for reuse' if is_en else '已选择复用'}: {f.name}")
                 with col_d:
                     mime = "application/json" if f.suffix == ".json" else "text/csv"
                     st.download_button("⬇️", f.read_bytes(), file_name=f.name, mime=mime, key=f"dl_zhibu_{f.name}")
         else:
-            st.caption("暂无历史")
+            st.caption("No history" if is_en else "暂无历史")
 
 
 # ============================================================
@@ -1347,14 +1464,14 @@ elif page == "📦 智布":
 # PAGE: 智析 (Step 6) — 重构版
 # ============================================================
 elif page == "📈 智析":
-    st.title("📈 智析 – Performance & Gap Analysis")
+    st.title("📈 Analytics – Performance & Gap Analysis" if is_en else "📈 智析 – Performance & Gap Analysis")
     render_pipeline_flow("zhixi", selected_batch)
-    st.caption("效果分析：Output 趋势 · Input 产出追踪 · AI 引用监控 · Gap 机会点")
+    st.caption("Performance Analysis: Output trends · Input tracking · AI citation monitoring · Gap opportunities" if is_en else "效果分析：Output 趋势 · Input 产出追踪 · AI 引用监控 · Gap 机会点")
 
     # --- Upload metrics data ---
-    with st.expander("📤 上传数据（手动导入 metrics）", expanded=False):
-        st.caption("可选：上传 weekly/monthly metrics CSV")
-        upload_zhixi = st.file_uploader("上传 Metrics CSV", type=["csv", "xlsx"], key="zhixi_direct_upload")
+    with st.expander("📤 Upload Data (manual metrics import)" if is_en else "📤 上传数据（手动导入 metrics）", expanded=False):
+        st.caption("Optional: Upload weekly/monthly metrics CSV" if is_en else "可选：上传 weekly/monthly metrics CSV")
+        upload_zhixi = st.file_uploader("Upload Metrics CSV" if is_en else "上传 Metrics CSV", type=["csv", "xlsx"], key="zhixi_direct_upload")
         if upload_zhixi:
             try:
                 if upload_zhixi.name.endswith(".xlsx"):
@@ -1364,16 +1481,16 @@ elif page == "📈 智析":
                 metrics_dir = OUTPUT_PATH / "metrics"
                 metrics_dir.mkdir(parents=True, exist_ok=True)
                 df_up.to_csv(metrics_dir / "uploaded_metrics.csv", index=False, encoding="utf-8-sig")
-                st.success(f"✅ 已上传 {len(df_up)} 行数据")
+                st.success(f"✅ {'Uploaded' if is_en else '已上传'} {len(df_up)} {'rows' if is_en else '行数据'}")
             except Exception as e:
-                st.error(f"上传失败: {e}")
+                st.error(f"{'Upload failed' if is_en else '上传失败'}: {e}")
 
     # --- 4 Tabs ---
     tab_output, tab_input, tab_citation, tab_gap = st.tabs([
-        "📊 Output 趋势",
-        "📥 Input 产出",
-        "🔗 AI 引用追踪",
-        "💡 Gap & 机会点",
+        "📊 Output Trends" if is_en else "📊 Output 趋势",
+        "📥 Input Production" if is_en else "📥 Input 产出",
+        "🔗 AI Citation Tracking" if is_en else "🔗 AI 引用追踪",
+        "💡 Gap & Opportunities" if is_en else "💡 Gap & 机会点",
     ])
 
     # ============================================================
@@ -1383,11 +1500,11 @@ elif page == "📈 智析":
         sub_weekly, sub_monthly, sub_ytd = st.tabs(["Weekly", "Monthly", "YTD"])
 
         with sub_weekly:
-            st.subheader("📅 Weekly 趋势")
+            st.subheader("📅 Weekly Trends" if is_en else "📅 Weekly 趋势")
             df_w = get_weekly_metrics()
             # Week selector
             all_weeks = df_w["Week"].tolist()
-            week_range = st.select_slider("选择周范围", options=all_weeks,
+            week_range = st.select_slider("Select week range" if is_en else "选择周范围", options=all_weeks,
                                           value=(all_weeks[0], all_weeks[-1]), key="zhixi_week_range")
             start_idx = all_weeks.index(week_range[0])
             end_idx = all_weeks.index(week_range[1])
@@ -1403,7 +1520,7 @@ elif page == "📈 智析":
             st.dataframe(df_w_filtered, use_container_width=True, hide_index=True)
 
         with sub_monthly:
-            st.subheader("📆 Monthly 趋势")
+            st.subheader("📆 Monthly Trends" if is_en else "📆 Monthly 趋势")
             monthly_data = pd.DataFrame({
                 "Channel": ["CN GEO", "WW GEO", "WW Direct EST", "WW Direct EM", "Total"],
                 "M1 (Jan)": [89, 51, 4965, 326, 5431],
@@ -1424,7 +1541,7 @@ elif page == "📈 智析":
             st.plotly_chart(fig_m, use_container_width=True)
 
         with sub_ytd:
-            st.subheader("📊 YTD 对比")
+            st.subheader("📊 YTD Comparison" if is_en else "📊 YTD 对比")
             col1, col2, col3, col4 = st.columns(4)
             with col1:
                 st.metric("GEO+Direct Total", "28,741", "+55% YoY")
@@ -1433,7 +1550,7 @@ elif page == "📈 智析":
             with col3:
                 st.metric("WW Direct EST", "25,863", "+62%")
             with col4:
-                st.metric("vs 大盘", "+78 ppts", "跑赢 SSR")
+                st.metric("vs Benchmark" if is_en else "vs 大盘", "+78 ppts", "Outperforming SSR" if is_en else "跑赢 SSR")
 
             st.divider()
             df_ytd = get_ytd_metrics()
@@ -1452,30 +1569,30 @@ elif page == "📈 智析":
     # TAB 2: Input 产出
     # ============================================================
     with tab_input:
-        st.subheader("📥 内容产出追踪")
+        st.subheader("📥 Content Production Tracking" if is_en else "📥 内容产出追踪")
 
         # Load zhizao data for article stats
         df_articles = load_zhizao(selected_batch)
         if not df_articles.empty:
             col1, col2, col3 = st.columns(3)
             with col1:
-                st.metric("产出文章总数", len(df_articles))
+                st.metric("Total Articles" if is_en else "产出文章总数", len(df_articles))
             with col2:
                 if "category" in df_articles.columns:
-                    st.metric("覆盖 Topic 数", df_articles["category"].nunique())
+                    st.metric("Topics Covered" if is_en else "覆盖 Topic 数", df_articles["category"].nunique())
                 else:
-                    st.metric("覆盖 Topic 数", "N/A")
+                    st.metric("Topics Covered" if is_en else "覆盖 Topic 数", "N/A")
             with col3:
                 if "word_count" in df_articles.columns:
                     df_articles["word_count"] = pd.to_numeric(df_articles["word_count"], errors="coerce")
-                    st.metric("总字数", f"{df_articles['word_count'].sum():,.0f}")
+                    st.metric("Total Words" if is_en else "总字数", f"{df_articles['word_count'].sum():,.0f}")
 
             st.divider()
 
             # Filter by topic
             if "category" in df_articles.columns:
                 topics = ["全部"] + sorted(df_articles["category"].dropna().unique().tolist())
-                topic_filter = st.selectbox("按 Topic 筛选", topics, key="zhixi_topic_filter")
+                topic_filter = st.selectbox("Filter by Topic" if is_en else "按 Topic 筛选", topics, key="zhixi_topic_filter")
                 df_filtered = df_articles if topic_filter == "全部" else df_articles[df_articles["category"] == topic_filter]
             else:
                 df_filtered = df_articles
@@ -1483,12 +1600,12 @@ elif page == "📈 智析":
             # Time filter
             col_t1, col_t2 = st.columns(2)
             with col_t1:
-                time_view = st.selectbox("时间维度", ["全部", "指定日期", "指定周", "本月", "YTD"], key="zhixi_time")
+                time_view = st.selectbox("Time Dimension" if is_en else "时间维度", ["全部", "指定日期", "指定周", "本月", "YTD"], key="zhixi_time")
             with col_t2:
                 if time_view == "指定日期":
-                    selected_date = st.date_input("选择日期", key="zhixi_date")
+                    selected_date = st.date_input("Select date" if is_en else "选择日期", key="zhixi_date")
                 elif time_view == "指定周":
-                    selected_week = st.selectbox("选择周", [f"WK{i}" for i in range(1, 25)], index=20, key="zhixi_week_select")
+                    selected_week = st.selectbox("Select week" if is_en else "选择周", [f"WK{i}" for i in range(1, 25)], index=20, key="zhixi_week_select")
 
             # Display
             display_cols = [c for c in ["title", "ai_query", "category", "word_count", "created_at"] if c in df_filtered.columns]
@@ -1498,7 +1615,7 @@ elif page == "📈 智析":
             # Topic distribution chart
             if "category" in df_articles.columns:
                 st.divider()
-                st.markdown("**文章 Topic 分布**")
+                st.markdown("**Article Topic Distribution**" if is_en else "**文章 Topic 分布**")
                 cat_counts = df_articles["category"].value_counts().reset_index()
                 cat_counts.columns = ["Topic", "文章数"]
                 fig_topic = px.bar(cat_counts.head(15), x="Topic", y="文章数", color="文章数",
@@ -1506,15 +1623,15 @@ elif page == "📈 智析":
                 fig_topic.update_layout(height=280, margin=dict(l=0, r=0, t=10, b=0), showlegend=False, coloraxis_showscale=False)
                 st.plotly_chart(fig_topic, use_container_width=True)
         else:
-            st.info("暂无文章产出数据。请先执行智造生成内容。")
+            st.info("No article production data. Please run Content Creation first." if is_en else "暂无文章产出数据。请先执行智造生成内容。")
 
     # ============================================================
     # ============================================================
     # TAB 3: AI 引用追踪 (矩阵式)
     # ============================================================
     with tab_citation:
-        st.subheader("🔗 AI 引用追踪")
-        st.markdown("每个 Topic 在各 AI 平台的引用状态一览")
+        st.subheader("🔗 AI Citation Tracking" if is_en else "🔗 AI 引用追踪")
+        st.markdown("Overview of citation status for each Topic across AI platforms" if is_en else "每个 Topic 在各 AI 平台的引用状态一览")
 
         AI_PLATFORMS_LIST = ["ChatGPT", "Perplexity", "Gemini", "DeepSeek", "豆包", "Kimi", "千问"]
         STATUS_OPTIONS = ["未检测", "✅ 提及+链接", "✅ 提及无链接", "❌ 未提及"]
@@ -1544,7 +1661,7 @@ elif page == "📈 智析":
 
         # Filter by topic
         if "Topic" in df_matrix.columns:
-            topic_filter = st.selectbox("筛选 Topic", ["全部"] + df_matrix["Topic"].tolist(), key="matrix_topic_filter")
+            topic_filter = st.selectbox("Filter Topic" if is_en else "筛选 Topic", ["全部"] + df_matrix["Topic"].tolist(), key="matrix_topic_filter")
             if topic_filter != "全部":
                 df_matrix_display = df_matrix[df_matrix["Topic"] == topic_filter]
             else:
@@ -1593,33 +1710,33 @@ elif page == "📈 智析":
             with col1:
                 st.metric("Total Topics", len(df_matrix))
             with col2:
-                st.metric("有提及", mentioned_cells)
+                st.metric("Mentioned" if is_en else "有提及", mentioned_cells)
             with col3:
-                st.metric("带链接", linked_cells)
+                st.metric("With Link" if is_en else "带链接", linked_cells)
             with col4:
                 coverage = mentioned_cells / total_cells * 100 if total_cells > 0 else 0
-                st.metric("覆盖率", f"{coverage:.1f}%")
+                st.metric("Coverage" if is_en else "覆盖率", f"{coverage:.1f}%")
 
         # Add new topic row
         st.divider()
-        with st.expander("➕ 新增 Topic"):
-            new_topic = st.selectbox("选择 Topic", [t for t in CATEGORIES_35 if t not in df_matrix.get("Topic", pd.Series()).tolist()], key="add_matrix_topic")
-            if st.button("添加", key="add_matrix_row"):
+        with st.expander("➕ Add Topic" if is_en else "➕ 新增 Topic"):
+            new_topic = st.selectbox("Select Topic" if is_en else "选择 Topic", [t for t in CATEGORIES_35 if t not in df_matrix.get("Topic", pd.Series()).tolist()], key="add_matrix_topic")
+            if st.button("Add" if is_en else "添加", key="add_matrix_row"):
                 new_row = {"Topic": new_topic}
                 for p in AI_PLATFORMS_LIST:
                     new_row[p] = "未检测"
                 df_matrix = pd.concat([df_matrix, pd.DataFrame([new_row])], ignore_index=True)
                 df_matrix.to_csv(citation_file, index=False, encoding="utf-8-sig")
-                st.success(f"✅ 已添加: {new_topic}")
+                st.success(f"✅ {'Added' if is_en else '已添加'}: {new_topic}")
 
     # TAB 4: Gap & 机会点
     # ============================================================
     with tab_gap:
-        st.subheader("💡 Gap & 机会点")
-        st.markdown("基于引用追踪和内容覆盖分析，识别优化机会")
+        st.subheader("💡 Gap & Opportunities" if is_en else "💡 Gap & 机会点")
+        st.markdown("Identify optimization opportunities based on citation tracking and content coverage analysis" if is_en else "基于引用追踪和内容覆盖分析，识别优化机会")
 
         # Coverage gap analysis
-        st.markdown("**📊 类别覆盖 Gap**")
+        st.markdown("**📊 Category Coverage Gap**" if is_en else "**📊 类别覆盖 Gap**")
         df_all_articles = load_zhizao(selected_batch)
         if not df_all_articles.empty and "category" in df_all_articles.columns:
             covered_topics = set(df_all_articles["category"].dropna().unique())
@@ -1628,22 +1745,26 @@ elif page == "📈 智析":
 
             col1, col2 = st.columns(2)
             with col1:
-                st.metric("已覆盖类别", f"{len(covered_topics)}/35")
+                st.metric("Categories Covered" if is_en else "已覆盖类别", f"{len(covered_topics)}/35")
             with col2:
-                st.metric("未覆盖类别", len(uncovered))
+                st.metric("Uncovered Categories" if is_en else "未覆盖类别", len(uncovered))
 
             if uncovered:
-                st.markdown("**❌ 未覆盖的类别（优先产出内容）：**")
+                st.markdown("**❌ Uncovered categories (priority for content production):**" if is_en else "**❌ 未覆盖的类别（优先产出内容）：**")
                 for i, topic in enumerate(uncovered, 1):
                     st.markdown(f"{i}. {topic}")
         else:
-            st.caption("暂无文章数据，无法分析覆盖 Gap")
+            st.caption("No article data available for coverage gap analysis" if is_en else "暂无文章数据，无法分析覆盖 Gap")
 
         st.divider()
 
         # Opportunity recommendations
-        st.markdown("**🚀 优化建议**")
+        st.markdown("**🚀 Optimization Recommendations**" if is_en else "**🚀 优化建议**")
         st.markdown("""
+- **High Priority**: Uncovered categories with highest search volume → Produce content immediately
+- **Medium Priority**: Has content but not cited by AI → Optimize GEO signals
+- **Low Priority**: Cited but no link → Optimize link placement strategy
+        """ if is_en else """
 - **高优先级**：未覆盖类别中检索量最高的 → 立即产出内容
 - **中优先级**：已有内容但未被 AI 引用的 → 优化 GEO 信号
 - **低优先级**：已被引用但无链接的 → 优化链接植入策略
@@ -1652,8 +1773,15 @@ elif page == "📈 智析":
         st.divider()
 
         # Attribution summary
-        st.markdown("**🎯 归因分析**")
+        st.markdown("**🎯 Attribution Analysis**" if is_en else "**🎯 归因分析**")
         st.markdown("""
+| Channel | Assessment | Recommendation |
+|---|---|---|
+| CN GEO | 🟢 Continuous growth | Continue expanding coverage |
+| WW Direct EST | 🟢 +62% YoY | Maintain pace |
+| JP Direct | 🟢 Fastest growth | Prioritize JP content expansion |
+| AE Direct | 🔴 -61% YoY | Investigate cause |
+        """ if is_en else """
 | 渠道 | 判断 | 建议 |
 |---|---|---|
 | CN GEO | 🟢 持续增长 | 继续扩大覆盖 |
@@ -1663,7 +1791,7 @@ elif page == "📈 智析":
         """)
 
     # 📜 历史记录
-    with st.expander("📜 历史记录"):
+    with st.expander("📜 History" if is_en else "📜 历史记录"):
         metrics_dir = OUTPUT_PATH / "metrics"
         if metrics_dir.exists():
             files = sorted(metrics_dir.glob("*.csv"), key=lambda f: f.stat().st_mtime, reverse=True)
@@ -1675,36 +1803,48 @@ elif page == "📈 智析":
                 with col_d:
                     st.download_button("⬇️", f.read_bytes(), file_name=f.name, mime="text/csv", key=f"dl_zhixi_{f.name}")
         else:
-            st.caption("暂无历史")
+            st.caption("No history" if is_en else "暂无历史")
 
 # PAGE: 智中枢
 # ============================================================
 elif page == "🎯 智中枢":
-    st.title("🎯 智中枢 – Decision Engine")
+    st.title("🎯 Decision Engine" if is_en else "🎯 智中枢 – Decision Engine")
     render_pipeline_flow("zhongshu", selected_batch)
-    st.caption("基于智析数据 + 7 条决策规则，生成周度行动计划")
+    st.caption("Based on analytics data + 7 decision rules, generate weekly action plan" if is_en else "基于智析数据 + 7 条决策规则，生成周度行动计划")
 
     # Decision Rules
-    st.subheader("📜 7 条决策规则")
+    st.subheader("📜 7 Decision Rules" if is_en else "📜 7 条决策规则")
     rules = [
-        ("Rule 1: Growth Acceleration", "渠道 WoW > +30% 连续2周", "增加该渠道内容产出", "🟢"),
-        ("Rule 2: Decline Alert", "渠道 WoW < -20%", "暂停新内容，排查原因", "🔴"),
-        ("Rule 3: Low Absolute Volume", "GEO 周 < 50 且 YoY > +50%", "扩大关键词覆盖", "🟡"),
-        ("Rule 4: High-Performing Site", "站点 YoY > +100%", "优先扩展该站点内容", "🟢"),
-        ("Rule 5: Content Gap", "市场有流量但2周无新内容", "重启全流程", "🟡"),
-        ("Rule 6: Benchmark Comparison", "我方 YoY < 大盘 YoY", "策略复盘", "🔴"),
-        ("Rule 7: Input-Output Lag", "内容发布2-3周无提升", "检查内容质量/重写", "🟡"),
+        ("Rule 1: Growth Acceleration", "Channel WoW > +30% for 2 consecutive weeks" if is_en else "渠道 WoW > +30% 连续2周", "Increase content output for that channel" if is_en else "增加该渠道内容产出", "🟢"),
+        ("Rule 2: Decline Alert", "Channel WoW < -20%" if is_en else "渠道 WoW < -20%", "Pause new content, investigate cause" if is_en else "暂停新内容，排查原因", "🔴"),
+        ("Rule 3: Low Absolute Volume", "GEO weekly < 50 and YoY > +50%" if is_en else "GEO 周 < 50 且 YoY > +50%", "Expand keyword coverage" if is_en else "扩大关键词覆盖", "🟡"),
+        ("Rule 4: High-Performing Site", "Site YoY > +100%" if is_en else "站点 YoY > +100%", "Prioritize content expansion for that site" if is_en else "优先扩展该站点内容", "🟢"),
+        ("Rule 5: Content Gap", "Market has traffic but no new content for 2 weeks" if is_en else "市场有流量但2周无新内容", "Restart full pipeline" if is_en else "重启全流程", "🟡"),
+        ("Rule 6: Benchmark Comparison", "Our YoY < benchmark YoY" if is_en else "我方 YoY < 大盘 YoY", "Strategy review" if is_en else "策略复盘", "🔴"),
+        ("Rule 7: Input-Output Lag", "Content published 2-3 weeks with no improvement" if is_en else "内容发布2-3周无提升", "Check content quality/rewrite" if is_en else "检查内容质量/重写", "🟡"),
     ]
     for name, condition, action, emoji in rules:
         with st.expander(f"{emoji} {name}"):
-            st.markdown(f"**触发条件:** {condition}")
-            st.markdown(f"**执行动作:** {action}")
+            st.markdown(f"**{'Trigger Condition' if is_en else '触发条件'}:** {condition}")
+            st.markdown(f"**{'Action' if is_en else '执行动作'}:** {action}")
 
     st.divider()
 
     # Weekly Plan
     st.subheader(f"📋 Smart Suite Weekly Plan - {week}")
     st.markdown("""
+**🟢 ACCELERATE:**
+- CN GEO: 4 consecutive weeks of growth → Expand CN keyword coverage
+- JP Direct: +67% WoW, +103% YoY → Prioritize JP content expansion
+- WW Direct EST: +32% WoW → Maintain current pace
+
+**🟡 MONITOR:**
+- WW Direct EM: Flat → Watch next week's trend
+- EU GEO: Low absolute value (5/month) → Expand EU search phrases
+
+**🔴 INVESTIGATE:**
+- AE Direct: YoY -61% → Investigate decline cause
+    """ if is_en else """
 **🟢 ACCELERATE:**
 - CN GEO: 连续4周增长 → 增加 CN 关键词覆盖
 - JP Direct: +67% WoW, +103% YoY → 优先扩展 JP 内容
@@ -1730,7 +1870,7 @@ elif page == "🎯 智中枢":
     """)
 
     st.divider()
-    st.subheader("🚀 全流程快捷指令")
+    st.subheader("🚀 Full Pipeline Quick Commands" if is_en else "🚀 全流程快捷指令")
     pipeline_cmds = [
         ("1. 智库", f"执行智库 {selected_batch}，market={market}，keyword_limit={kw_limit}"),
         ("2. 智造", f"执行智造 {selected_batch}，生成内容"),
@@ -1747,8 +1887,8 @@ elif page == "🎯 智中枢":
 # PAGE: 批次对比
 # ============================================================
 elif page == "📊 批次对比":
-    st.title("📊 批次对比")
-    st.caption("对比不同批次的产出效果")
+    st.title("📊 Batch Comparison" if is_en else "📊 批次对比")
+    st.caption("Compare output performance across different batches" if is_en else "对比不同批次的产出效果")
 
     col_b1, col_b2 = st.columns(2)
     with col_b1:
@@ -1765,33 +1905,33 @@ elif page == "📊 批次对比":
     col1, col2 = st.columns(2)
     with col1:
         st.subheader(f"📚 {batch_a}")
-        st.metric("智库短语数", len(df_a))
+        st.metric("Query Phrases" if is_en else "智库短语数", len(df_a))
         df_za = load_zhizao(batch_a)
-        st.metric("智造文章数", len(df_za))
+        st.metric("Articles" if is_en else "智造文章数", len(df_za))
         df_sa = load_scorecard(batch_a)
         if not df_sa.empty and "overall_score" in df_sa.columns:
-            st.metric("平均评分", f"{df_sa['overall_score'].mean():.2f}")
+            st.metric("Avg Score" if is_en else "平均评分", f"{df_sa['overall_score'].mean():.2f}")
         else:
-            st.metric("平均评分", "N/A")
+            st.metric("Avg Score" if is_en else "平均评分", "N/A")
 
     with col2:
         st.subheader(f"📚 {batch_b}")
-        st.metric("智库短语数", len(df_b))
+        st.metric("Query Phrases" if is_en else "智库短语数", len(df_b))
         df_zb = load_zhizao(batch_b)
-        st.metric("智造文章数", len(df_zb))
+        st.metric("Articles" if is_en else "智造文章数", len(df_zb))
         df_sb = load_scorecard(batch_b)
         if not df_sb.empty and "overall_score" in df_sb.columns:
-            st.metric("平均评分", f"{df_sb['overall_score'].mean():.2f}")
+            st.metric("Avg Score" if is_en else "平均评分", f"{df_sb['overall_score'].mean():.2f}")
         else:
-            st.metric("平均评分", "N/A")
+            st.metric("Avg Score" if is_en else "平均评分", "N/A")
 
 
 # ============================================================
 # PAGE: 发布追踪
 # ============================================================
 elif page == "📌 发布追踪":
-    st.title("📌 发布追踪")
-    st.caption("追踪已发布内容的引用和效果")
+    st.title("📌 Publish Tracking" if is_en else "📌 发布追踪")
+    st.caption("Track published content citations and performance" if is_en else "追踪已发布内容的引用和效果")
 
     # Look for published tracking data
     tracking_file = OUTPUT_PATH / "publish_tracking.csv"
@@ -1800,18 +1940,18 @@ elif page == "📌 发布追踪":
         if not df_track.empty:
             st.dataframe(df_track, use_container_width=True, hide_index=True)
         else:
-            st.info("追踪数据为空")
+            st.info("Tracking data is empty" if is_en else "追踪数据为空")
     else:
-        st.info("暂无发布追踪数据。发布后系统将自动记录。")
+        st.info("No publish tracking data yet. System will auto-record after publishing." if is_en else "暂无发布追踪数据。发布后系统将自动记录。")
 
     st.divider()
-    st.subheader("手动添加发布记录")
+    st.subheader("Manually Add Publish Record" if is_en else "手动添加发布记录")
     with st.form("add_publish_record"):
-        pub_title = st.text_input("文章标题")
-        pub_url = st.text_input("发布 URL")
-        pub_date = st.date_input("发布日期")
-        pub_platform = st.selectbox("平台", ["官网", "知乎", "微信公众号", "其他"])
-        submitted = st.form_submit_button("添加记录")
+        pub_title = st.text_input("Article Title" if is_en else "文章标题")
+        pub_url = st.text_input("Publish URL" if is_en else "发布 URL")
+        pub_date = st.date_input("Publish Date" if is_en else "发布日期")
+        pub_platform = st.selectbox("Platform" if is_en else "平台", ["官网", "知乎", "微信公众号", "其他"])
+        submitted = st.form_submit_button("Add Record" if is_en else "添加记录")
         if submitted and pub_title:
             new_row = pd.DataFrame([{
                 "title": pub_title,
@@ -1827,32 +1967,32 @@ elif page == "📌 发布追踪":
                 tracking_file.parent.mkdir(parents=True, exist_ok=True)
                 df_combined = new_row
             df_combined.to_csv(tracking_file, index=False, encoding="utf-8-sig")
-            st.success(f"✅ 已添加: {pub_title}")
+            st.success(f"✅ {'Added' if is_en else '已添加'}: {pub_title}")
 
 
 # ============================================================
 # PAGE: 需求中心 (Intake + 智测)
 # ============================================================
 elif page == "📝 需求中心":
-    st.title("📝 需求中心")
-    st.caption("Intake + 智测合并 — 产品需求提交、用户旅程调研、需求追踪")
+    st.title("📝 Request Center" if is_en else "📝 需求中心")
+    st.caption("Intake + Journey Research — Product request submission, user journey research, request tracking" if is_en else "Intake + 智测合并 — 产品需求提交、用户旅程调研、需求追踪")
 
     tab_geo, tab_zhice, tab_tracking = st.tabs([
-        "🚀 产品 GEO 需求",
-        "🔬 用户旅程调研 (智测)",
-        "📋 需求进展追踪",
+        "🚀 Product GEO Request" if is_en else "🚀 产品 GEO 需求",
+        "🔬 User Journey Research" if is_en else "🔬 用户旅程调研 (智测)",
+        "📋 Request Progress Tracking" if is_en else "📋 需求进展追踪",
     ])
 
     with tab_geo:
-        st.subheader("🚀 产品 GEO 需求")
-        st.markdown("提交产品名 → 裂变 → 生成 → 发布")
+        st.subheader("🚀 Product GEO Request" if is_en else "🚀 产品 GEO 需求")
+        st.markdown("Submit product name → Expand → Generate → Publish" if is_en else "提交产品名 → 裂变 → 生成 → 发布")
 
         with st.form("geo_intake_form"):
-            product_name = st.text_input("产品名称", placeholder="例如：亚马逊FBA物流服务")
-            product_desc = st.text_area("产品简述", placeholder="简要描述产品特点和目标受众")
-            target_market_intake = st.multiselect("目标市场", ["CN", "NA", "EU", "JP", "AU"])
-            priority_intake = st.select_slider("优先级", options=["低", "中", "高", "紧急"], value="中")
-            submitted_geo = st.form_submit_button("提交需求", type="primary")
+            product_name = st.text_input("Product Name" if is_en else "产品名称", placeholder="例如：亚马逊FBA物流服务")
+            product_desc = st.text_area("Product Description" if is_en else "产品简述", placeholder="简要描述产品特点和目标受众")
+            target_market_intake = st.multiselect("Target Market" if is_en else "目标市场", ["CN", "NA", "EU", "JP", "AU"])
+            priority_intake = st.select_slider("Priority" if is_en else "优先级", options=["低", "中", "高", "紧急"], value="中")
+            submitted_geo = st.form_submit_button("Submit Request" if is_en else "提交需求", type="primary")
 
             if submitted_geo and product_name:
                 intake_file = OUTPUT_PATH / "intake_requests.csv"
@@ -1871,25 +2011,25 @@ elif page == "📝 需求中心":
                     intake_file.parent.mkdir(parents=True, exist_ok=True)
                     df_combined = new_req
                 df_combined.to_csv(intake_file, index=False, encoding="utf-8-sig")
-                st.success(f"✅ 需求已提交: {product_name}")
+                st.success(f"✅ {'Request submitted' if is_en else '需求已提交'}: {product_name}")
 
     with tab_zhice:
-        st.subheader("🔬 用户旅程调研 (智测)")
-        st.markdown("设定 persona → 模拟旅程 → 输出 gap")
+        st.subheader("🔬 User Journey Research" if is_en else "🔬 用户旅程调研 (智测)")
+        st.markdown("Set persona → Simulate journey → Output gaps" if is_en else "设定 persona → 模拟旅程 → 输出 gap")
 
-        persona_name = st.text_input("用户画像名称", placeholder="例如：深圳3C配件卖家")
-        persona_goal = st.text_area("用户目标", placeholder="想开亚马逊美国站，寻找入门路径")
+        persona_name = st.text_input("Persona Name" if is_en else "用户画像名称", placeholder="例如：深圳3C配件卖家")
+        persona_goal = st.text_area("User Goal" if is_en else "用户目标", placeholder="想开亚马逊美国站，寻找入门路径")
         platforms = st.multiselect(
-            "AI 检索平台",
+            "AI Search Platforms" if is_en else "AI 检索平台",
             ["chatgpt", "perplexity", "gemini", "deepseek", "doubao", "kimi", "yuanbao", "qianwen"],
             default=["chatgpt", "perplexity", "deepseek"],
         )
-        rounds_count = st.number_input("模拟轮次", 3, 10, 5, key="zhice_rounds")
+        rounds_count = st.number_input("Simulation Rounds" if is_en else "模拟轮次", 3, 10, 5, key="zhice_rounds")
 
-        if st.button("🚀 开始模拟旅程", type="primary", key="run_zhice"):
+        if st.button("🚀 Start Journey Simulation" if is_en else "🚀 开始模拟旅程", type="primary", key="run_zhice"):
             try:
                 from zhice_engine import run_zhice_journey
-                with st.spinner("正在模拟用户旅程..."):
+                with st.spinner("Simulating user journey..." if is_en else "正在模拟用户旅程..."):
                     result = run_zhice_journey(
                         persona_name=persona_name,
                         persona_goal=persona_goal,
@@ -1897,35 +2037,39 @@ elif page == "📝 需求中心":
                         rounds=rounds_count,
                     )
                 if result.get("success"):
-                    st.success("✅ 旅程模拟完成！")
+                    st.success("✅ Journey simulation complete!" if is_en else "✅ 旅程模拟完成！")
                     st.json(result.get("summary", {}))
                 else:
-                    st.error(f"❌ 失败: {result.get('error', '')}")
+                    st.error(f"❌ {'Failed' if is_en else '失败'}: {result.get('error', '')}")
             except ImportError:
-                st.error("zhice_engine 模块未就绪")
+                st.error("zhice_engine module not ready" if is_en else "zhice_engine 模块未就绪")
 
     with tab_tracking:
-        st.subheader("📋 需求进展追踪")
+        st.subheader("📋 Request Progress Tracking" if is_en else "📋 需求进展追踪")
         intake_file = OUTPUT_PATH / "intake_requests.csv"
         if intake_file.exists():
             df_intake = load_csv_safe(intake_file)
             if not df_intake.empty:
                 st.dataframe(df_intake, use_container_width=True, hide_index=True)
             else:
-                st.info("暂无需求记录")
+                st.info("No request records" if is_en else "暂无需求记录")
         else:
-            st.info("暂无需求记录，请在「产品 GEO 需求」标签页提交。")
+            st.info("No request records yet. Please submit in the Product GEO Request tab." if is_en else "暂无需求记录，请在「产品 GEO 需求」标签页提交。")
 
 
 # ============================================================
 # PAGE: 引用分析
 # ============================================================
 elif page == "🔍 引用分析":
-    st.title("🔍 引用分析")
-    st.caption("分析 AI 搜索引擎对内容的引用情况")
+    st.title("🔍 Citation Analysis" if is_en else "🔍 引用分析")
+    st.caption("Analyze AI search engine citation of our content" if is_en else "分析 AI 搜索引擎对内容的引用情况")
 
-    st.subheader("AI 引擎引用监控")
+    st.subheader("AI Engine Citation Monitoring" if is_en else "AI 引擎引用监控")
     st.markdown("""
+    Track citation status of our content across these AI search platforms:
+    - **CN**: DeepSeek / 豆包 / Kimi / 元宝 / 通义千问
+    - **WW**: ChatGPT / Perplexity / Gemini
+    """ if is_en else """
     追踪我们的内容在以下 AI 搜索平台的被引用情况：
     - **CN**: DeepSeek / 豆包 / Kimi / 元宝 / 通义千问
     - **WW**: ChatGPT / Perplexity / Gemini
@@ -1938,18 +2082,18 @@ elif page == "🔍 引用分析":
         if not df_cite.empty:
             col1, col2, col3 = st.columns(3)
             with col1:
-                st.metric("总引用次数", len(df_cite))
+                st.metric("Total Citations" if is_en else "总引用次数", len(df_cite))
             with col2:
                 if "platform" in df_cite.columns:
-                    st.metric("引用平台数", df_cite["platform"].nunique())
+                    st.metric("Citation Platforms" if is_en else "引用平台数", df_cite["platform"].nunique())
             with col3:
                 if "content_id" in df_cite.columns:
-                    st.metric("被引用内容数", df_cite["content_id"].nunique())
+                    st.metric("Cited Content Count" if is_en else "被引用内容数", df_cite["content_id"].nunique())
             st.dataframe(df_cite, use_container_width=True, hide_index=True)
         else:
-            st.info("暂无引用数据")
+            st.info("No citation data" if is_en else "暂无引用数据")
     else:
-        st.info("暂无引用追踪数据。运行智测后将自动生成引用分析。")
+        st.info("No citation tracking data yet. Run journey research to auto-generate citation analysis." if is_en else "暂无引用追踪数据。运行智测后将自动生成引用分析。")
 
 
 # ============================================================
@@ -1957,9 +2101,9 @@ elif page == "🔍 引用分析":
 # ============================================================
 elif page == "⚙️ Settings":
     st.title("⚙️ Settings")
-    st.caption("系统配置")
+    st.caption("System Configuration" if is_en else "系统配置")
 
-    st.subheader("🔑 API 配置")
+    st.subheader("🔑 API Configuration" if is_en else "🔑 API 配置")
     st.markdown("""
     - **AWS Bedrock**: 使用本地 AWS credentials（SSO / env vars）
     - **Model**: Claude 3.5 Sonnet (`anthropic.claude-sonnet-4-20250514`)
@@ -1967,15 +2111,15 @@ elif page == "⚙️ Settings":
     """)
 
     st.divider()
-    st.subheader("📂 路径配置")
-    st.text(f"项目根目录: {BASE_PATH}")
-    st.text(f"输出目录: {OUTPUT_PATH}")
-    st.text(f"输入目录: {INPUT_PATH}")
+    st.subheader("📂 Path Configuration" if is_en else "📂 路径配置")
+    st.text(f"{'Project Root' if is_en else '项目根目录'}: {BASE_PATH}")
+    st.text(f"{'Output Dir' if is_en else '输出目录'}: {OUTPUT_PATH}")
+    st.text(f"{'Input Dir' if is_en else '输入目录'}: {INPUT_PATH}")
 
     st.divider()
-    st.subheader("📊 批次管理")
-    new_batch = st.text_input("创建新批次", placeholder="batch_004", key="new_batch_input")
-    if st.button("创建批次", key="create_batch"):
+    st.subheader("📊 Batch Management" if is_en else "📊 批次管理")
+    new_batch = st.text_input("Create New Batch" if is_en else "创建新批次", placeholder="batch_004", key="new_batch_input")
+    if st.button("Create Batch" if is_en else "创建批次", key="create_batch"):
         if new_batch:
             new_path = OUTPUT_PATH / new_batch
             new_path.mkdir(parents=True, exist_ok=True)
@@ -1983,10 +2127,10 @@ elif page == "⚙️ Settings":
             (new_path / "02_zhizao").mkdir(exist_ok=True)
             (new_path / "03_zhiyou").mkdir(exist_ok=True)
             (new_path / "04_zhibu").mkdir(exist_ok=True)
-            st.success(f"✅ 已创建批次: {new_batch}")
+            st.success(f"✅ {'Batch created' if is_en else '已创建批次'}: {new_batch}")
 
     st.divider()
-    st.subheader("🏷️ 类别体系 (35类)")
+    st.subheader("🏷️ Category System (35 Categories)" if is_en else "🏷️ 类别体系 (35类)")
     for i, cat in enumerate(CATEGORIES_35, 1):
         st.text(f"{i:2d}. {cat}")
 
@@ -1996,7 +2140,7 @@ elif page == "⚙️ Settings":
 # ============================================================
 st.divider()
 st.caption(
-    f"Smart Suite Phase I · 智系列控制台 · "
+    f"Smart Suite Phase I · {'Console' if is_en else '智系列控制台'} · "
     f"{datetime.now().strftime('%Y-%m-%d %H:%M')} · "
     f"Batches: {len(batches)}"
 )
