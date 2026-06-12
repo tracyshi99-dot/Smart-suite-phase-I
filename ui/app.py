@@ -75,10 +75,10 @@ def render_pipeline_flow(current_step_id: str, batch_id: str = ""):
             text_color = "#fff"
             icon_html = '<div style="font-size:14px;margin-bottom:2px;">🔵</div>'
         else:
-            border_color = "#555"
+            border_color = "#4a5568"
             bg = "#1a1f2e"
-            text_color = "#777"
-            icon_html = '<div style="font-size:14px;margin-bottom:2px;color:#666;">○</div>'
+            text_color = "#a0aec0"
+            icon_html = '<div style="font-size:14px;margin-bottom:2px;color:#718096;">○</div>'
 
         cards_html += f'''
         <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -351,8 +351,50 @@ if page == "🏠 总览":
     st.markdown("""
     Smart Suite 是一套 **AI 驱动的 GEO (Generative Engine Optimization) 内容流水线工具**，
     帮助亚马逊全球开店团队高效生产、优化和分发能够被 AI 搜索引擎（ChatGPT、Perplexity、DeepSeek 等）引用的内容。
+    """)
 
-    **使用方法：** 按照 7 步流程从左到右执行，每一步完成后点击 CTA 跳转到下一步。也可以跳过中间步骤直接执行任意工具。
+    # --- User Workflow ---
+    st.divider()
+    st.subheader("📋 完整 Workflow")
+    st.markdown("""
+    ```
+    ┌─────────────────────────────────────────────────────────────────────────┐
+    │                        Smart Suite 工作流程                              │
+    ├─────────────────────────────────────────────────────────────────────────┤
+    │                                                                         │
+    │  📝 需求入口                                                            │
+    │  ├── 产品 GEO 需求（Intake）→ 直接进入智库                              │
+    │  └── 用户旅程调研（智测）→ 发现 Gap → 转为需求 → 进入智库               │
+    │                                                                         │
+    │  ═══════════════════════════════════════════════════════════════════════  │
+    │                                                                         │
+    │  7 步内容流水线（可独立运行，也可顺序执行）                              │
+    │                                                                         │
+    │  ① 智库 ──→ ② 智造 ──→ ③ 智优 ──→ ④ 智布 ──→ ⑤ 智传 ──→ ⑥ 智析 ──→ ⑦ 智中枢 │
+    │  │           │           │           │           │           │           │
+    │  │ SEO词+    │ AI生成    │ 评分+     │ JSON+     │ 分发到    │ 效果     │ 决策+
+    │  │ 词根裂变  │ 长文章    │ 重写+     │ Word      │ 各渠道    │ 分析     │ 周计划
+    │  │ →检索短语 │           │ 合规      │           │           │ +引用    │
+    │  │           │           │           │           │           │ 追踪     │
+    │  ▼           ▼           ▼           ▼           ▼           ▼           │
+    │  输出:       输出:       输出:       输出:       输出:       输出:       │
+    │  AI短语库    草稿文章    Final文章   JSON/Word   发布记录    趋势报告    │
+    │                                                                         │
+    │  ═══════════════════════════════════════════════════════════════════════  │
+    │                                                                         │
+    │  🔄 反馈循环                                                            │
+    │  智析发现 Gap → 智中枢生成计划 → 回到智库补充短语 → 重新产出内容         │
+    │                                                                         │
+    └─────────────────────────────────────────────────────────────────────────┘
+    ```
+    """)
+
+    st.markdown("""
+    **关键说明：**
+    - 每步都可以**独立运行**（上传已有数据直接执行）
+    - 也可以**顺序执行**（上一步的输出自动流入下一步）
+    - **需求中心**是入口（Intake + 智测），可以随时从这里发起新需求
+    - **智析 + 智中枢**形成反馈循环，驱动下一轮内容产出
     """)
 
     st.divider()
@@ -468,8 +510,12 @@ elif page == "📚 智库":
             if st.button("🗑️ 清空", key="clear_zhiku"):
                 zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
                 if zhiku_file.exists():
-                    zhiku_file.unlink()
-                st.success("已清空")
+                    # Archive instead of delete
+                    archive_dir = zhiku_file.parent / "archive"
+                    archive_dir.mkdir(exist_ok=True)
+                    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    zhiku_file.rename(archive_dir / f"{zhiku_file.stem}_{ts}{zhiku_file.suffix}")
+                st.success("已清空（历史已归档）")
 
     st.divider()
 
@@ -675,19 +721,22 @@ elif page == "📚 智库":
     # 📜 历史记录
     with st.expander("📜 历史记录"):
         batch_path = OUTPUT_PATH / selected_batch / "01_zhiku"
+        all_files = []
         if batch_path.exists():
-            files = sorted(batch_path.glob("*.csv"), key=lambda f: f.stat().st_mtime, reverse=True)
-            if files:
-                for f in files:
-                    mtime = datetime.fromtimestamp(f.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S")
-                    size_kb = f.stat().st_size / 1024
-                    col_i, col_d = st.columns([3, 1])
-                    with col_i:
-                        st.caption(f"📄 {f.name} · {size_kb:.1f}KB · 🕐 {mtime}")
-                    with col_d:
-                        st.download_button("⬇️", f.read_bytes(), file_name=f.name, mime="text/csv", key=f"dl_{f.name}")
-            else:
-                st.caption("暂无历史文件")
+            all_files.extend([f for f in batch_path.glob("*.csv")])
+            archive_path = batch_path / "archive"
+            if archive_path.exists():
+                all_files.extend([f for f in archive_path.glob("*.csv")])
+        if all_files:
+            all_files.sort(key=lambda f: f.stat().st_mtime, reverse=True)
+            for f in all_files:
+                mtime = datetime.fromtimestamp(f.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S")
+                size_kb = f.stat().st_size / 1024
+                col_i, col_d = st.columns([3, 1])
+                with col_i:
+                    st.caption(f"📄 {f.name} · {size_kb:.1f}KB · 🕐 {mtime}")
+                with col_d:
+                    st.download_button("⬇️", f.read_bytes(), file_name=f.name, mime="text/csv", key=f"dl_{f.name}")
         else:
             st.caption("暂无历史文件")
 
@@ -1460,95 +1509,109 @@ elif page == "📈 智析":
             st.info("暂无文章产出数据。请先执行智造生成内容。")
 
     # ============================================================
-    # TAB 3: AI 引用追踪
+    # ============================================================
+    # TAB 3: AI 引用追踪 (矩阵式)
     # ============================================================
     with tab_citation:
         st.subheader("🔗 AI 引用追踪")
-        st.markdown("追踪产出文章在各 AI 检索平台的引用情况")
+        st.markdown("每个 Topic 在各 AI 平台的引用状态一览")
 
-        # Check for citation data
-        citation_file = OUTPUT_PATH / "citation_tracking.csv"
-        df_cite = load_csv_safe(citation_file) if citation_file.exists() else pd.DataFrame()
+        AI_PLATFORMS_LIST = ["ChatGPT", "Perplexity", "Gemini", "DeepSeek", "豆包", "Kimi", "千问"]
+        STATUS_OPTIONS = ["未检测", "✅ 提及+链接", "✅ 提及无链接", "❌ 未提及"]
 
-        if not df_cite.empty:
-            # Filters
-            col_f1, col_f2, col_f3 = st.columns(3)
-            with col_f1:
-                if "topic" in df_cite.columns:
-                    cite_cats = ["全部"] + sorted(df_cite["topic"].dropna().unique().tolist())
-                    cite_cat_filter = st.selectbox("按 Category 筛选", cite_cats, key="cite_cat_filter")
-                else:
-                    cite_cat_filter = "全部"
-            with col_f2:
-                cite_date_mode = st.selectbox("日期筛选", ["全部", "指定日期", "日期范围"], key="cite_date_mode")
-            with col_f3:
-                if cite_date_mode == "指定日期":
-                    cite_date_pick = st.date_input("选择日期", key="cite_date_pick")
-                elif cite_date_mode == "日期范围":
-                    cite_date_range = st.date_input("选择范围", value=[], key="cite_date_range")
+        citation_file = OUTPUT_PATH / "citation_matrix.csv"
 
-            # Apply filters
-            df_cite_filtered = df_cite.copy()
-            if cite_cat_filter != "全部" and "topic" in df_cite_filtered.columns:
-                df_cite_filtered = df_cite_filtered[df_cite_filtered["topic"] == cite_cat_filter]
-            if cite_date_mode == "指定日期" and "date" in df_cite_filtered.columns:
-                df_cite_filtered = df_cite_filtered[df_cite_filtered["date"] == str(cite_date_pick)]
-            elif cite_date_mode == "日期范围" and "date" in df_cite_filtered.columns and len(cite_date_range) == 2:
-                df_cite_filtered = df_cite_filtered[
-                    (df_cite_filtered["date"] >= str(cite_date_range[0])) &
-                    (df_cite_filtered["date"] <= str(cite_date_range[1]))
-                ]
+        # Load or create matrix
+        if citation_file.exists():
+            df_matrix = load_csv_safe(citation_file)
+        else:
+            df_matrix = pd.DataFrame()
 
-            # KPIs
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric("引用记录", len(df_cite_filtered))
-            with col2:
-                if "platform" in df_cite_filtered.columns:
-                    st.metric("涉及平台", df_cite_filtered["platform"].nunique())
-            with col3:
-                if "has_link" in df_cite_filtered.columns:
-                    link_count = df_cite_filtered[df_cite_filtered["has_link"].astype(str).str.contains("✅|TRUE|YES", case=False, na=False)].shape[0]
-                    st.metric("带官网链接", link_count)
+        # If empty, initialize with topics from articles
+        if df_matrix.empty:
+            df_articles = load_zhizao(selected_batch)
+            if not df_articles.empty and "category" in df_articles.columns:
+                topics = sorted(df_articles["category"].dropna().unique().tolist())
+            else:
+                topics = CATEGORIES_35[:10]  # Default sample
+            rows = []
+            for topic in topics:
+                row = {"Topic": topic}
+                for platform in AI_PLATFORMS_LIST:
+                    row[platform] = "未检测"
+                rows.append(row)
+            df_matrix = pd.DataFrame(rows)
 
-            st.divider()
-            st.dataframe(df_cite_filtered, use_container_width=True, hide_index=True)
+        # Filter by topic
+        if "Topic" in df_matrix.columns:
+            topic_filter = st.selectbox("筛选 Topic", ["全部"] + df_matrix["Topic"].tolist(), key="matrix_topic_filter")
+            if topic_filter != "全部":
+                df_matrix_display = df_matrix[df_matrix["Topic"] == topic_filter]
+            else:
+                df_matrix_display = df_matrix
+        else:
+            df_matrix_display = df_matrix
 
-        # Manual entry form (always show)
+        # Editable matrix
+        col_config = {"Topic": st.column_config.TextColumn("Topic", disabled=True, width="large")}
+        for platform in AI_PLATFORMS_LIST:
+            if platform in df_matrix_display.columns:
+                col_config[platform] = st.column_config.SelectboxColumn(
+                    platform, options=STATUS_OPTIONS, width="small"
+                )
+
+        edited_matrix = st.data_editor(
+            df_matrix_display,
+            column_config=col_config,
+            use_container_width=True,
+            hide_index=True,
+            key="citation_matrix_editor",
+        )
+
+        # Auto-save
+        citation_file.parent.mkdir(parents=True, exist_ok=True)
+        # Merge edits back
+        if topic_filter == "全部":
+            edited_matrix.to_csv(citation_file, index=False, encoding="utf-8-sig")
+        else:
+            # Update only filtered rows
+            df_matrix.loc[df_matrix["Topic"] == topic_filter, AI_PLATFORMS_LIST] = edited_matrix[AI_PLATFORMS_LIST].values
+            df_matrix.to_csv(citation_file, index=False, encoding="utf-8-sig")
+
+        # Summary KPIs
         st.divider()
-        st.markdown("**➕ 录入引用记录：**")
-        with st.form("add_citation"):
-            col_c1, col_c2 = st.columns(2)
-            with col_c1:
-                cite_topic = st.selectbox("文章 Category", CATEGORIES_35, key="cite_form_topic")
-                cite_platform = st.multiselect("AI 平台", ["ChatGPT", "Perplexity", "Gemini", "DeepSeek", "豆包", "Kimi", "千问", "其他"], default=["ChatGPT"], key="cite_form_platform")
-            with col_c2:
-                cite_mentioned = st.selectbox("内容提及", ["✅ 有提及", "❌ 未提及", "⚠️ 部分"], key="cite_form_mentioned")
-                cite_link = st.selectbox("带官网链接", ["✅ 有链接", "❌ 无链接"], key="cite_form_link")
-            col_d1, col_d2 = st.columns(2)
-            with col_d1:
-                cite_date_start = st.date_input("开始日期", key="cite_form_start")
-            with col_d2:
-                cite_date_end = st.date_input("结束日期", key="cite_form_end")
-            cite_date = str(cite_date_start) if cite_date_start == cite_date_end else f"{cite_date_start} ~ {cite_date_end}"
-            cite_note = st.text_input("备注（可选）", key="cite_form_note")
+        if "Topic" in df_matrix.columns:
+            total_cells = len(df_matrix) * len(AI_PLATFORMS_LIST)
+            mentioned_cells = 0
+            linked_cells = 0
+            for platform in AI_PLATFORMS_LIST:
+                if platform in df_matrix.columns:
+                    mentioned_cells += df_matrix[platform].astype(str).str.contains("✅").sum()
+                    linked_cells += df_matrix[platform].astype(str).str.contains("链接").sum()
 
-            if st.form_submit_button("添加记录"):
-                new_row = pd.DataFrame([{
-                    "topic": cite_topic, "platform": ",".join(cite_platform),
-                    "mentioned": cite_mentioned, "has_link": cite_link,
-                    "date": str(cite_date), "note": cite_note,
-                }])
-                citation_file.parent.mkdir(parents=True, exist_ok=True)
-                if citation_file.exists():
-                    df_existing = load_csv_safe(citation_file)
-                    df_combined = pd.concat([df_existing, new_row], ignore_index=True)
-                else:
-                    df_combined = new_row
-                df_combined.to_csv(citation_file, index=False, encoding="utf-8-sig")
-                st.success("✅ 已添加")
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("Total Topics", len(df_matrix))
+            with col2:
+                st.metric("有提及", mentioned_cells)
+            with col3:
+                st.metric("带链接", linked_cells)
+            with col4:
+                coverage = mentioned_cells / total_cells * 100 if total_cells > 0 else 0
+                st.metric("覆盖率", f"{coverage:.1f}%")
 
-    # ============================================================
+        # Add new topic row
+        st.divider()
+        with st.expander("➕ 新增 Topic"):
+            new_topic = st.selectbox("选择 Topic", [t for t in CATEGORIES_35 if t not in df_matrix.get("Topic", pd.Series()).tolist()], key="add_matrix_topic")
+            if st.button("添加", key="add_matrix_row"):
+                new_row = {"Topic": new_topic}
+                for p in AI_PLATFORMS_LIST:
+                    new_row[p] = "未检测"
+                df_matrix = pd.concat([df_matrix, pd.DataFrame([new_row])], ignore_index=True)
+                df_matrix.to_csv(citation_file, index=False, encoding="utf-8-sig")
+                st.success(f"✅ 已添加: {new_topic}")
+
     # TAB 4: Gap & 机会点
     # ============================================================
     with tab_gap:
