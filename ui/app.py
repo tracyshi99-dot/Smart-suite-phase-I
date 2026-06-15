@@ -363,137 +363,133 @@ if page == "🏠 总览":
     """)
 
     # ═══════════════════════════════════════════════════════════
-    # --- User Workflow ---
     # ═══════════════════════════════════════════════════════════
-    # LAYER 1: 基础流水线
+    # WORKFLOW: Swimlane style - Pipeline + Feedback in one view
     # ═══════════════════════════════════════════════════════════
     st.divider()
-    st.subheader("📋 Layer 1: Content Pipeline" if is_en else "📋 第一层：内容流水线")
-    st.caption("The basic end-to-end content production flow" if is_en else "基础的端到端内容生产流程")
+    st.subheader("📋 How Smart Suite Works" if is_en else "📋 Smart Suite 工作原理")
 
     import streamlit.components.v1 as components
-    pipeline_html = '''
-    <div style="font-family:-apple-system,sans-serif;padding:16px;background:#0f1419;border-radius:12px;border:1px solid #2d3748;">
-      <div style="display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:nowrap;padding:8px 0;">
-        <div style="text-align:center;min-width:90px;">
-          <div style="background:#1e3a5f;border:2px solid #4a9eff;border-radius:10px;padding:10px 6px;">
-            <div style="font-size:18px;">📚</div>
-            <div style="color:#fff;font-weight:700;font-size:13px;">智库</div>
+    swimlane_html = '''
+    <div style="font-family:-apple-system,sans-serif;padding:20px;background:#0f1419;border-radius:12px;border:1px solid #2d3748;position:relative;">
+
+      <!-- LANE 1: Forward Pipeline -->
+      <div style="margin-bottom:8px;padding:4px 12px;background:#111820;border-radius:6px;">
+        <span style="color:#4a9eff;font-size:11px;font-weight:600;">▶ 正向流水线 (Content Pipeline)</span>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:center;gap:3px;padding:10px 0 16px 0;flex-wrap:nowrap;">
+        <div style="text-align:center;min-width:80px;">
+          <div style="background:#1e3a5f;border:2px solid #4a9eff;border-radius:8px;padding:8px 4px;">
+            <div style="font-size:15px;">📚</div>
+            <div style="color:#fff;font-weight:700;font-size:12px;">智库</div>
           </div>
-          <div style="color:#90cdf4;font-size:10px;margin-top:3px;">发现短语</div>
         </div>
-        <div style="color:#4a9eff;font-size:16px;">→</div>
-        <div style="text-align:center;min-width:90px;">
-          <div style="background:#1e3a5f;border:2px solid #4a9eff;border-radius:10px;padding:10px 6px;">
-            <div style="font-size:18px;">✍️</div>
-            <div style="color:#fff;font-weight:700;font-size:13px;">智造</div>
+        <div style="color:#4a9eff;font-size:13px;">→</div>
+        <div style="text-align:center;min-width:80px;">
+          <div style="background:#1e3a5f;border:2px solid #4a9eff;border-radius:8px;padding:8px 4px;">
+            <div style="font-size:15px;">✍️</div>
+            <div style="color:#fff;font-weight:700;font-size:12px;">智造</div>
           </div>
-          <div style="color:#90cdf4;font-size:10px;margin-top:3px;">生成内容</div>
         </div>
-        <div style="color:#4a9eff;font-size:16px;">→</div>
-        <div style="text-align:center;min-width:90px;">
-          <div style="background:#1a3328;border:2px solid #22c55e;border-radius:10px;padding:10px 6px;">
-            <div style="font-size:18px;">🔧</div>
-            <div style="color:#fff;font-weight:700;font-size:13px;">智优</div>
+        <div style="color:#4a9eff;font-size:13px;">→</div>
+        <div style="text-align:center;min-width:80px;">
+          <div style="background:#1a3328;border:2px solid #22c55e;border-radius:8px;padding:8px 4px;">
+            <div style="font-size:15px;">🔧</div>
+            <div style="color:#fff;font-weight:700;font-size:12px;">智优</div>
           </div>
-          <div style="color:#86efac;font-size:10px;margin-top:3px;">优化校准</div>
         </div>
-        <div style="color:#4a9eff;font-size:16px;">→</div>
-        <div style="text-align:center;min-width:90px;">
-          <div style="background:#1a2332;border:2px solid #4a5568;border-radius:10px;padding:10px 6px;">
-            <div style="font-size:18px;">📦</div>
-            <div style="color:#e2e8f0;font-weight:700;font-size:13px;">智布</div>
+        <div style="color:#4a9eff;font-size:13px;">→</div>
+        <div style="text-align:center;min-width:80px;">
+          <div style="background:#1a2332;border:2px solid #4a5568;border-radius:8px;padding:8px 4px;">
+            <div style="font-size:15px;">📦</div>
+            <div style="color:#ccc;font-weight:700;font-size:12px;">智布</div>
           </div>
-          <div style="color:#a0aec0;font-size:10px;margin-top:3px;">格式化</div>
         </div>
-        <div style="color:#4a5568;font-size:16px;">→</div>
-        <div style="text-align:center;min-width:90px;">
-          <div style="background:#1a2332;border:2px solid #4a5568;border-radius:10px;padding:10px 6px;">
-            <div style="font-size:18px;">📡</div>
-            <div style="color:#e2e8f0;font-weight:700;font-size:13px;">智传</div>
+        <div style="color:#4a5568;font-size:13px;">→</div>
+        <div style="text-align:center;min-width:80px;">
+          <div style="background:#1a2332;border:2px solid #4a5568;border-radius:8px;padding:8px 4px;">
+            <div style="font-size:15px;">📡</div>
+            <div style="color:#ccc;font-weight:700;font-size:12px;">智传</div>
           </div>
-          <div style="color:#a0aec0;font-size:10px;margin-top:3px;">分发上线</div>
         </div>
-        <div style="color:#4a5568;font-size:16px;">→</div>
-        <div style="text-align:center;min-width:90px;">
-          <div style="background:#2d2305;border:2px solid #f59e0b;border-radius:10px;padding:10px 6px;">
-            <div style="font-size:18px;">📈</div>
-            <div style="color:#fff;font-weight:700;font-size:13px;">智析</div>
+        <div style="color:#4a5568;font-size:13px;">→</div>
+        <div style="text-align:center;min-width:80px;">
+          <div style="background:#2d2305;border:2px solid #f59e0b;border-radius:8px;padding:8px 4px;">
+            <div style="font-size:15px;">📈</div>
+            <div style="color:#fff;font-weight:700;font-size:12px;">智析</div>
           </div>
-          <div style="color:#fcd34d;font-size:10px;margin-top:3px;">追踪效果</div>
         </div>
-        <div style="color:#f59e0b;font-size:16px;">→</div>
-        <div style="text-align:center;min-width:90px;">
-          <div style="background:#2d2305;border:2px solid #f59e0b;border-radius:10px;padding:10px 6px;">
-            <div style="font-size:18px;">🎯</div>
-            <div style="color:#fff;font-weight:700;font-size:13px;">智中枢</div>
+        <div style="color:#f59e0b;font-size:13px;">→</div>
+        <div style="text-align:center;min-width:80px;">
+          <div style="background:#2d2305;border:2px solid #f59e0b;border-radius:8px;padding:8px 4px;">
+            <div style="font-size:15px;">🎯</div>
+            <div style="color:#fff;font-weight:700;font-size:12px;">智中枢</div>
           </div>
-          <div style="color:#fcd34d;font-size:10px;margin-top:3px;">决策规划</div>
         </div>
       </div>
+
+      <!-- DIVIDER -->
+      <div style="border-top:1px dashed #f59e0b;margin:4px 0 12px 0;"></div>
+
+      <!-- LANE 2: Feedback Loop -->
+      <div style="margin-bottom:8px;padding:4px 12px;background:#1a1500;border-radius:6px;">
+        <span style="color:#f59e0b;font-size:11px;font-weight:600;">↩ 进化反馈 (Evolution Feedback)</span>
+      </div>
+
+      <div style="display:flex;align-items:flex-start;justify-content:center;gap:8px;padding:8px 0;flex-wrap:wrap;">
+
+        <!-- Source -->
+        <div style="text-align:center;min-width:140px;">
+          <div style="background:#2d2305;border:2px solid #f59e0b;border-radius:8px;padding:10px 8px;">
+            <div style="color:#f59e0b;font-weight:700;font-size:12px;">📈 智析 / 🔬 智测</div>
+            <div style="color:#fcd34d;font-size:10px;margin-top:2px;">分析 AI 引用模式</div>
+          </div>
+        </div>
+
+        <div style="color:#f59e0b;font-size:16px;padding-top:12px;">→</div>
+
+        <!-- Extract -->
+        <div style="text-align:center;min-width:120px;">
+          <div style="background:#1a2332;border:2px dashed #f59e0b;border-radius:8px;padding:10px 8px;">
+            <div style="color:#fcd34d;font-weight:700;font-size:12px;">🧬 提取模式</div>
+            <div style="color:#718096;font-size:9px;margin-top:2px;">结构·权威·FAQ<br>可引用性因素</div>
+          </div>
+        </div>
+
+        <div style="color:#f59e0b;font-size:16px;padding-top:12px;">→</div>
+
+        <!-- Targets -->
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <div style="background:#1e3a5f;border:1px solid #4a9eff;border-radius:6px;padding:4px 10px;display:flex;align-items:center;gap:6px;">
+            <span style="font-size:12px;">📚</span>
+            <span style="color:#90cdf4;font-size:10px;">智库：补充新短语</span>
+          </div>
+          <div style="background:#1e3a5f;border:1px solid #4a9eff;border-radius:6px;padding:4px 10px;display:flex;align-items:center;gap:6px;">
+            <span style="font-size:12px;">✍️</span>
+            <span style="color:#90cdf4;font-size:10px;">智造：按引用模式生成</span>
+          </div>
+          <div style="background:#1a3328;border:1px solid #22c55e;border-radius:6px;padding:4px 10px;display:flex;align-items:center;gap:6px;">
+            <span style="font-size:12px;">🔧</span>
+            <span style="color:#86efac;font-size:10px;">智优：按引用特征评分</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Bottom insight -->
+      <div style="text-align:center;margin-top:12px;padding:8px;background:#111820;border-radius:6px;">
+        <span style="color:#22c55e;font-size:12px;font-weight:600;">✨ 每轮循环 → 内容更匹配 AI 引用偏好 → 引用率持续提升</span>
+      </div>
+
     </div>
     '''
-    components.html(pipeline_html, height=110)
-
-    # ═══════════════════════════════════════════════════════════
-    # LAYER 2: 进化反馈
-    # ═══════════════════════════════════════════════════════════
-    st.divider()
-    st.subheader("🔄 Layer 2: Evolution Feedback" if is_en else "🔄 第二层：进化反馈")
-    st.caption("How intelligence flows back to improve earlier steps" if is_en else "智析/智测的发现如何反馈回前面的步骤，让系统越来越准")
-
-    feedback_html = '''
-    <div style="font-family:-apple-system,sans-serif;padding:20px;background:#0f1419;border-radius:12px;border:1px solid #2d3748;">
-
-      <!-- Source: 智析/智测 -->
-      <div style="text-align:center;margin-bottom:16px;">
-        <div style="display:inline-block;background:#2d2305;border:2px solid #f59e0b;border-radius:12px;padding:12px 24px;">
-          <div style="color:#f59e0b;font-weight:700;font-size:15px;">📈 智析 / 🔬 智测</div>
-          <div style="color:#fcd34d;font-size:12px;margin-top:4px;">发现：AI 引擎实际引用了哪些内容？引用模式是什么？</div>
-        </div>
-      </div>
-
-      <!-- Arrow down -->
-      <div style="text-align:center;color:#f59e0b;font-size:14px;margin-bottom:12px;">
-        ▼ 提取成功模式，反馈到 ▼
-      </div>
-
-      <!-- 3 targets -->
-      <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;">
-        <div style="background:#1e3a5f;border:2px solid #4a9eff;border-radius:10px;padding:12px 16px;min-width:180px;text-align:center;">
-          <div style="font-size:16px;">📚</div>
-          <div style="color:#fff;font-weight:700;font-size:14px;">智库</div>
-          <div style="color:#90cdf4;font-size:11px;margin-top:4px;">补充新检索短语</div>
-          <div style="color:#718096;font-size:10px;margin-top:2px;">发现用户还在问什么<br>→ 新增到短语库</div>
-        </div>
-
-        <div style="background:#1e3a5f;border:2px solid #4a9eff;border-radius:10px;padding:12px 16px;min-width:180px;text-align:center;">
-          <div style="font-size:16px;">✍️</div>
-          <div style="color:#fff;font-weight:700;font-size:14px;">智造</div>
-          <div style="color:#90cdf4;font-size:11px;margin-top:4px;">优化生成规则</div>
-          <div style="color:#718096;font-size:10px;margin-top:2px;">按被引用内容的结构<br>→ 调整内容生成模板</div>
-        </div>
-
-        <div style="background:#1a3328;border:2px solid #22c55e;border-radius:10px;padding:12px 16px;min-width:180px;text-align:center;">
-          <div style="font-size:16px;">🔧</div>
-          <div style="color:#fff;font-weight:700;font-size:14px;">智优</div>
-          <div style="color:#86efac;font-size:11px;margin-top:4px;">校准评分标准</div>
-          <div style="color:#718096;font-size:10px;margin-top:2px;">按引用成功特征<br>→ 更新5维评分权重</div>
-        </div>
-      </div>
-
-      <!-- Result -->
-      <div style="text-align:center;margin-top:16px;padding-top:12px;border-top:1px dashed #4a5568;">
-        <span style="color:#22c55e;font-size:13px;font-weight:600;">结果：每轮循环后，产出的内容更容易被 AI 引擎引用</span>
-      </div>
-    </div>
-    '''
-    components.html(feedback_html, height=310)
+    components.html(swimlane_html, height=380)
 
     st.markdown("""
-    **🎯 Core Insight:** Smart Suite doesn't just produce content — it learns from real AI citation data and continuously improves what it produces. The system gets smarter with every cycle.
+    **🎯 The key insight:** We don't guess what AI wants — we observe what it already cites, extract the pattern, and replicate it in our production pipeline. Every cycle makes the output more citable.
     """ if is_en else """
-    **🎯 核心洞察：** Smart Suite 不只是生产内容 — 它从真实的 AI 引用数据中学习，持续改进产出质量。系统每跑一轮就更聪明一分。
+    **🎯 核心逻辑：** 不靠猜测 AI 喜欢什么 — 观察它实际引用了什么 → 提取模式 → 注入到生产流程。每轮循环让产出更容易被引用。
     """)
 
     st.divider()
