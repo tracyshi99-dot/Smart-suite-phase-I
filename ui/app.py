@@ -363,143 +363,138 @@ if page == "🏠 总览":
     """)
 
     # ═══════════════════════════════════════════════════════════
+    # --- User Workflow ---
     # ═══════════════════════════════════════════════════════════
-    # WORKFLOW: Flowchart style (draw.io inspired)
+    # LAYER 1: 基础流水线
     # ═══════════════════════════════════════════════════════════
     st.divider()
-    st.subheader("📋 How Smart Suite Works" if is_en else "📋 Smart Suite 工作原理")
+    st.subheader("📋 Layer 1: Content Pipeline" if is_en else "📋 第一层：内容流水线")
+    st.caption("The basic end-to-end content production flow" if is_en else "基础的端到端内容生产流程")
 
     import streamlit.components.v1 as components
-    flowchart_html = '''
-    <svg viewBox="0 0 820 240" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:820px;height:auto;font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#1a1f2e;border-radius:10px;border:1px solid #2d3748;display:block;margin:0 auto;cursor:pointer;" onclick="this.requestFullscreen?this.requestFullscreen():this.webkitRequestFullscreen&&this.webkitRequestFullscreen()">
-      <defs>
-        <marker id="ab" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><path d="M0,0 L6,2.5 L0,5Z" fill="#4a9eff"/></marker>
-        <marker id="ao" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><path d="M0,0 L6,2.5 L0,5Z" fill="#f59e0b"/></marker>
-        <marker id="ag" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><path d="M0,0 L6,2.5 L0,5Z" fill="#22c55e"/></marker>
-        <marker id="ap" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><path d="M0,0 L6,2.5 L0,5Z" fill="#a855f7"/></marker>
-      </defs>
-
-      <!-- Click hint -->
-      <text x="810" y="12" text-anchor="end" fill="#64748b" font-size="6">🔍 点击放大</text>
-
-      <!-- ═══ ROW 1: Forward Pipeline (y=14, h=32) ═══ -->
-      <rect x="8" y="14" width="80" height="32" rx="5" fill="#1e3a5f" stroke="#4a9eff" stroke-width="1.5"/>
-      <text x="48" y="27" text-anchor="middle" fill="#fff" font-size="8.5" font-weight="700">📚 智库</text>
-      <text x="48" y="38" text-anchor="middle" fill="#90cdf4" font-size="6.5">检索短语</text>
-      <line x1="88" y1="30" x2="103" y2="30" stroke="#4a9eff" stroke-width="1.2" marker-end="url(#ab)"/>
-
-      <rect x="106" y="14" width="80" height="32" rx="5" fill="#1e3a5f" stroke="#4a9eff" stroke-width="1.5"/>
-      <text x="146" y="27" text-anchor="middle" fill="#fff" font-size="8.5" font-weight="700">✍️ 智造</text>
-      <text x="146" y="38" text-anchor="middle" fill="#90cdf4" font-size="6.5">内容生成</text>
-      <line x1="186" y1="30" x2="201" y2="30" stroke="#4a9eff" stroke-width="1.2" marker-end="url(#ab)"/>
-
-      <rect x="204" y="14" width="86" height="32" rx="5" fill="#14352a" stroke="#22c55e" stroke-width="1.5"/>
-      <text x="247" y="27" text-anchor="middle" fill="#fff" font-size="8.5" font-weight="700">🔧 智优</text>
-      <text x="247" y="38" text-anchor="middle" fill="#86efac" font-size="6.5">评分+优化</text>
-      <line x1="290" y1="30" x2="305" y2="30" stroke="#4a9eff" stroke-width="1.2" marker-end="url(#ab)"/>
-
-      <rect x="308" y="14" width="80" height="32" rx="5" fill="#1e293b" stroke="#64748b" stroke-width="1.5"/>
-      <text x="348" y="27" text-anchor="middle" fill="#e2e8f0" font-size="8.5" font-weight="700">📦 智布</text>
-      <text x="348" y="38" text-anchor="middle" fill="#94a3b8" font-size="6.5">格式化</text>
-      <line x1="388" y1="30" x2="403" y2="30" stroke="#64748b" stroke-width="1.2" marker-end="url(#ab)"/>
-
-      <rect x="406" y="14" width="80" height="32" rx="5" fill="#1e293b" stroke="#64748b" stroke-width="1.5"/>
-      <text x="446" y="27" text-anchor="middle" fill="#e2e8f0" font-size="8.5" font-weight="700">📡 智传</text>
-      <text x="446" y="38" text-anchor="middle" fill="#94a3b8" font-size="6.5">分发</text>
-      <line x1="486" y1="30" x2="501" y2="30" stroke="#64748b" stroke-width="1.2" marker-end="url(#ab)"/>
-
-      <rect x="504" y="14" width="80" height="32" rx="5" fill="#2d2305" stroke="#f59e0b" stroke-width="1.5"/>
-      <text x="544" y="27" text-anchor="middle" fill="#fff" font-size="8.5" font-weight="700">📈 智析</text>
-      <text x="544" y="38" text-anchor="middle" fill="#fcd34d" font-size="6.5">数据整合</text>
-      <line x1="584" y1="30" x2="599" y2="30" stroke="#f59e0b" stroke-width="1.2" marker-end="url(#ao)"/>
-
-      <rect x="602" y="14" width="86" height="32" rx="5" fill="#2d2305" stroke="#f59e0b" stroke-width="1.5"/>
-      <text x="645" y="27" text-anchor="middle" fill="#fff" font-size="8.5" font-weight="700">🎯 智中枢</text>
-      <text x="645" y="38" text-anchor="middle" fill="#fcd34d" font-size="6.5">决策调度</text>
-
-      <!-- 智测 independent -->
-      <rect x="720" y="14" width="72" height="32" rx="5" fill="#1c1024" stroke="#a855f7" stroke-width="1.5"/>
-      <text x="756" y="27" text-anchor="middle" fill="#c084fc" font-size="8.5" font-weight="700">🔬 智测</text>
-      <text x="756" y="38" text-anchor="middle" fill="#a78bfa" font-size="6.5">AI检索验证</text>
-
-      <!-- ═══ DATA INPUTS TO 智析 (y=55 channel) ═══ -->
-      <!-- 智测 → 智析 -->
-      <path d="M 720,35 L 700,35 L 700,56 L 565,56" fill="none" stroke="#a855f7" stroke-width="0.9" marker-end="url(#ap)"/>
-      <text x="632" y="53" text-anchor="middle" fill="#a78bfa" font-size="5.5">验证结果</text>
-
-      <!-- SEO/SEM data → 智析 (from left) -->
-      <rect x="350" y="52" width="108" height="14" rx="3" fill="#111827" stroke="#64748b" stroke-width="0.8"/>
-      <text x="404" y="62" text-anchor="middle" fill="#94a3b8" font-size="6">SEO/SEM Performance</text>
-      <line x1="458" y1="59" x2="504" y2="59" stroke="#64748b" stroke-width="0.8" marker-end="url(#ab)"/>
-
-      <!-- GEO Reg Start data → 智析 -->
-      <rect x="350" y="70" width="108" height="14" rx="3" fill="#111827" stroke="#64748b" stroke-width="0.8"/>
-      <text x="404" y="80" text-anchor="middle" fill="#94a3b8" font-size="6">GEO RegStart/Launch</text>
-      <line x1="458" y1="77" x2="504" y2="68" stroke="#64748b" stroke-width="0.8" marker-end="url(#ab)"/>
-
-      <!-- 智析收集label -->
-      <text x="544" y="68" text-anchor="middle" fill="#fcd34d" font-size="5.5">整合全部数据</text>
-
-      <!-- ═══ 智析 → 智中枢 (y=75 channel) ═══ -->
-      <path d="M 544,46 L 544,75 L 645,75 L 645,50" fill="none" stroke="#f59e0b" stroke-width="1" marker-end="url(#ao)"/>
-      <text x="594" y="73" text-anchor="middle" fill="#fcd34d" font-size="5.5">洞察+Gap+机会点</text>
-
-      <!-- ═══ 智中枢 dispatches ALL tools (y=92 horizontal bus) ═══ -->
-      <path d="M 645,46 L 645,92 L 48,92" fill="none" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4,2"/>
-      <line x1="48" y1="92" x2="48" y2="50" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#ao)"/>
-      <line x1="146" y1="92" x2="146" y2="50" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#ao)"/>
-      <line x1="247" y1="92" x2="247" y2="50" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#ao)"/>
-      <line x1="348" y1="92" x2="348" y2="50" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#ao)"/>
-      <line x1="446" y1="92" x2="446" y2="50" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#ao)"/>
-
-      <!-- Dispatch label -->
-      <rect x="255" y="85" width="130" height="12" rx="2" fill="#1a1f2e"/>
-      <text x="320" y="94" text-anchor="middle" fill="#f59e0b" font-size="6" font-weight="600">🎯 智中枢调度所有工具</text>
-
-      <!-- ═══ ROW 2: What gets triggered (y=108) ═══ -->
-      <text x="410" y="112" text-anchor="middle" fill="#64748b" font-size="6.5">▼ 智中枢基于数据+机会点，调度各工具迭代执行 ▼</text>
-
-      <rect x="20" y="120" width="148" height="26" rx="4" fill="#1e3a5f" stroke="#4a9eff" stroke-width="1"/>
-      <text x="94" y="132" text-anchor="middle" fill="#fff" font-size="7" font-weight="700">📚 扩展短语 · 填补Gap</text>
-      <text x="94" y="141" text-anchor="middle" fill="#64748b" font-size="6">新增市场+高转化短语</text>
-
-      <rect x="180" y="120" width="158" height="26" rx="4" fill="#1e3a5f" stroke="#4a9eff" stroke-width="1"/>
-      <text x="259" y="132" text-anchor="middle" fill="#fff" font-size="7" font-weight="700">✍️ 按引用模式生成新内容</text>
-      <text x="259" y="141" text-anchor="middle" fill="#64748b" font-size="6">复刻成功结构·权威·FAQ</text>
-
-      <rect x="350" y="120" width="148" height="26" rx="4" fill="#14352a" stroke="#22c55e" stroke-width="1"/>
-      <text x="424" y="132" text-anchor="middle" fill="#fff" font-size="7" font-weight="700">🔧 校准评分+重写优化</text>
-      <text x="424" y="141" text-anchor="middle" fill="#64748b" font-size="6">按引用特征更新权重</text>
-
-      <rect x="510" y="120" width="148" height="26" rx="4" fill="#1e293b" stroke="#64748b" stroke-width="1"/>
-      <text x="584" y="132" text-anchor="middle" fill="#e2e8f0" font-size="7" font-weight="700">📦📡 优化发布渠道策略</text>
-      <text x="584" y="141" text-anchor="middle" fill="#64748b" font-size="6">选择最易被AI抓取的渠道</text>
-
-      <!-- ═══ Iteration loop ═══ -->
-      <rect x="160" y="160" width="500" height="24" rx="5" fill="#0f2818" stroke="#22c55e" stroke-width="1"/>
-      <text x="410" y="172" text-anchor="middle" fill="#22c55e" font-size="7.5" font-weight="700">🔄 持续迭代：生产→分发→追踪→整合分析→决策→再调度执行 → 引用率↑</text>
-      <text x="410" y="181" text-anchor="middle" fill="#86efac" font-size="6">每轮循环让内容更匹配AI引用偏好，系统越跑越聪明</text>
-
-      <!-- ═══ Legend ═══ -->
-      <rect x="15" y="196" width="790" height="20" rx="4" fill="#111827"/>
-      <line x1="30" y1="206" x2="46" y2="206" stroke="#4a9eff" stroke-width="1.5"/>
-      <text x="50" y="209" fill="#94a3b8" font-size="6.5">正向流程</text>
-      <line x1="110" y1="206" x2="126" y2="206" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4,2"/>
-      <text x="130" y="209" fill="#94a3b8" font-size="6.5">智中枢调度</text>
-      <line x1="195" y1="206" x2="211" y2="206" stroke="#a855f7" stroke-width="1"/>
-      <text x="215" y="209" fill="#94a3b8" font-size="6.5">智测→智析</text>
-      <line x1="270" y1="206" x2="286" y2="206" stroke="#64748b" stroke-width="0.8"/>
-      <text x="290" y="209" fill="#94a3b8" font-size="6.5">数据输入</text>
-      <line x1="340" y1="206" x2="356" y2="206" stroke="#f59e0b" stroke-width="1"/>
-      <text x="360" y="209" fill="#94a3b8" font-size="6.5">智析→智中枢</text>
-      <rect x="420" y="201" width="9" height="9" rx="2" fill="#22c55e" opacity="0.3" stroke="#22c55e" stroke-width="0.8"/>
-      <text x="434" y="209" fill="#94a3b8" font-size="6.5">迭代闭环</text>
-
-      <!-- Fullscreen background for dark mode -->
-      <style>svg:fullscreen{background:#1a1f2e;padding:40px;}</style>
-    </svg>
+    pipeline_html = '''
+    <div style="font-family:-apple-system,sans-serif;padding:16px;background:#0f1419;border-radius:12px;border:1px solid #2d3748;">
+      <div style="display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:nowrap;padding:8px 0;">
+        <div style="text-align:center;min-width:90px;">
+          <div style="background:#1e3a5f;border:2px solid #4a9eff;border-radius:10px;padding:10px 6px;">
+            <div style="font-size:18px;">📚</div>
+            <div style="color:#fff;font-weight:700;font-size:13px;">智库</div>
+          </div>
+          <div style="color:#90cdf4;font-size:10px;margin-top:3px;">发现短语</div>
+        </div>
+        <div style="color:#4a9eff;font-size:16px;">→</div>
+        <div style="text-align:center;min-width:90px;">
+          <div style="background:#1e3a5f;border:2px solid #4a9eff;border-radius:10px;padding:10px 6px;">
+            <div style="font-size:18px;">✍️</div>
+            <div style="color:#fff;font-weight:700;font-size:13px;">智造</div>
+          </div>
+          <div style="color:#90cdf4;font-size:10px;margin-top:3px;">生成内容</div>
+        </div>
+        <div style="color:#4a9eff;font-size:16px;">→</div>
+        <div style="text-align:center;min-width:90px;">
+          <div style="background:#1a3328;border:2px solid #22c55e;border-radius:10px;padding:10px 6px;">
+            <div style="font-size:18px;">🔧</div>
+            <div style="color:#fff;font-weight:700;font-size:13px;">智优</div>
+          </div>
+          <div style="color:#86efac;font-size:10px;margin-top:3px;">优化校准</div>
+        </div>
+        <div style="color:#4a9eff;font-size:16px;">→</div>
+        <div style="text-align:center;min-width:90px;">
+          <div style="background:#1a2332;border:2px solid #4a5568;border-radius:10px;padding:10px 6px;">
+            <div style="font-size:18px;">📦</div>
+            <div style="color:#e2e8f0;font-weight:700;font-size:13px;">智布</div>
+          </div>
+          <div style="color:#a0aec0;font-size:10px;margin-top:3px;">格式化</div>
+        </div>
+        <div style="color:#4a5568;font-size:16px;">→</div>
+        <div style="text-align:center;min-width:90px;">
+          <div style="background:#1a2332;border:2px solid #4a5568;border-radius:10px;padding:10px 6px;">
+            <div style="font-size:18px;">📡</div>
+            <div style="color:#e2e8f0;font-weight:700;font-size:13px;">智传</div>
+          </div>
+          <div style="color:#a0aec0;font-size:10px;margin-top:3px;">分发上线</div>
+        </div>
+        <div style="color:#4a5568;font-size:16px;">→</div>
+        <div style="text-align:center;min-width:90px;">
+          <div style="background:#2d2305;border:2px solid #f59e0b;border-radius:10px;padding:10px 6px;">
+            <div style="font-size:18px;">📈</div>
+            <div style="color:#fff;font-weight:700;font-size:13px;">智析</div>
+          </div>
+          <div style="color:#fcd34d;font-size:10px;margin-top:3px;">追踪效果</div>
+        </div>
+        <div style="color:#f59e0b;font-size:16px;">→</div>
+        <div style="text-align:center;min-width:90px;">
+          <div style="background:#2d2305;border:2px solid #f59e0b;border-radius:10px;padding:10px 6px;">
+            <div style="font-size:18px;">🎯</div>
+            <div style="color:#fff;font-weight:700;font-size:13px;">智中枢</div>
+          </div>
+          <div style="color:#fcd34d;font-size:10px;margin-top:3px;">决策规划</div>
+        </div>
+      </div>
+    </div>
     '''
-    components.html(flowchart_html, height=250)
+    components.html(pipeline_html, height=110)
+
+    # ═══════════════════════════════════════════════════════════
+    # LAYER 2: 进化反馈
+    # ═══════════════════════════════════════════════════════════
+    st.divider()
+    st.subheader("🔄 Layer 2: Evolution Feedback" if is_en else "🔄 第二层：进化反馈")
+    st.caption("How intelligence flows back to improve earlier steps" if is_en else "智析/智测的发现如何反馈回前面的步骤，让系统越来越准")
+
+    feedback_html = '''
+    <div style="font-family:-apple-system,sans-serif;padding:20px;background:#0f1419;border-radius:12px;border:1px solid #2d3748;">
+
+      <!-- Source: 智析/智测 -->
+      <div style="text-align:center;margin-bottom:16px;">
+        <div style="display:inline-block;background:#2d2305;border:2px solid #f59e0b;border-radius:12px;padding:12px 24px;">
+          <div style="color:#f59e0b;font-weight:700;font-size:15px;">📈 智析 / 🔬 智测</div>
+          <div style="color:#fcd34d;font-size:12px;margin-top:4px;">发现：AI 引擎实际引用了哪些内容？引用模式是什么？</div>
+        </div>
+      </div>
+
+      <!-- Arrow down -->
+      <div style="text-align:center;color:#f59e0b;font-size:14px;margin-bottom:12px;">
+        ▼ 提取成功模式，反馈到 ▼
+      </div>
+
+      <!-- 3 targets -->
+      <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;">
+        <div style="background:#1e3a5f;border:2px solid #4a9eff;border-radius:10px;padding:12px 16px;min-width:180px;text-align:center;">
+          <div style="font-size:16px;">📚</div>
+          <div style="color:#fff;font-weight:700;font-size:14px;">智库</div>
+          <div style="color:#90cdf4;font-size:11px;margin-top:4px;">补充新检索短语</div>
+          <div style="color:#718096;font-size:10px;margin-top:2px;">发现用户还在问什么<br>→ 新增到短语库</div>
+        </div>
+
+        <div style="background:#1e3a5f;border:2px solid #4a9eff;border-radius:10px;padding:12px 16px;min-width:180px;text-align:center;">
+          <div style="font-size:16px;">✍️</div>
+          <div style="color:#fff;font-weight:700;font-size:14px;">智造</div>
+          <div style="color:#90cdf4;font-size:11px;margin-top:4px;">优化生成规则</div>
+          <div style="color:#718096;font-size:10px;margin-top:2px;">按被引用内容的结构<br>→ 调整内容生成模板</div>
+        </div>
+
+        <div style="background:#1a3328;border:2px solid #22c55e;border-radius:10px;padding:12px 16px;min-width:180px;text-align:center;">
+          <div style="font-size:16px;">🔧</div>
+          <div style="color:#fff;font-weight:700;font-size:14px;">智优</div>
+          <div style="color:#86efac;font-size:11px;margin-top:4px;">校准评分标准</div>
+          <div style="color:#718096;font-size:10px;margin-top:2px;">按引用成功特征<br>→ 更新5维评分权重</div>
+        </div>
+      </div>
+
+      <!-- Result -->
+      <div style="text-align:center;margin-top:16px;padding-top:12px;border-top:1px dashed #4a5568;">
+        <span style="color:#22c55e;font-size:13px;font-weight:600;">结果：每轮循环后，产出的内容更容易被 AI 引擎引用</span>
+      </div>
+    </div>
+    '''
+    components.html(feedback_html, height=310)
+
+    st.markdown("""
+    **🎯 Core Insight:** Smart Suite doesn't just produce content — it learns from real AI citation data and continuously improves what it produces. The system gets smarter with every cycle.
+    """ if is_en else """
+    **🎯 核心洞察：** Smart Suite 不只是生产内容 — 它从真实的 AI 引用数据中学习，持续改进产出质量。系统每跑一轮就更聪明一分。
+    """)
 
     st.divider()
 
