@@ -371,7 +371,7 @@ if page == "🏠 总览":
 
     import streamlit.components.v1 as components
     flowchart_html = '''
-    <svg viewBox="0 0 820 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:820px;height:auto;font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#1a1f2e;border-radius:10px;border:1px solid #2d3748;display:block;margin:0 auto;">
+    <svg viewBox="0 0 820 280" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:820px;height:auto;font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#1a1f2e;border-radius:10px;border:1px solid #2d3748;display:block;margin:0 auto;">
       <defs>
         <marker id="ab" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><path d="M0,0 L6,2.5 L0,5Z" fill="#4a9eff"/></marker>
         <marker id="ao" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><path d="M0,0 L6,2.5 L0,5Z" fill="#f59e0b"/></marker>
@@ -379,110 +379,106 @@ if page == "🏠 总览":
         <marker id="ap" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><path d="M0,0 L6,2.5 L0,5Z" fill="#a855f7"/></marker>
       </defs>
 
-      <!-- ROW 1: Pipeline y=8 h=34 -->
-      <rect x="8" y="8" width="82" height="34" rx="5" fill="#1e3a5f" stroke="#4a9eff" stroke-width="1.5"/>
-      <text x="49" y="22" text-anchor="middle" fill="#fff" font-size="9" font-weight="700">📚 智库</text>
-      <text x="49" y="34" text-anchor="middle" fill="#90cdf4" font-size="7">检索短语</text>
-      <line x1="90" y1="25" x2="106" y2="25" stroke="#4a9eff" stroke-width="1.2" marker-end="url(#ab)"/>
+      <!-- ═══ ROW 1: Forward Pipeline (y=10, h=34) ═══ -->
+      <rect x="8" y="10" width="82" height="34" rx="5" fill="#1e3a5f" stroke="#4a9eff" stroke-width="1.5"/>
+      <text x="49" y="24" text-anchor="middle" fill="#fff" font-size="9" font-weight="700">📚 智库</text>
+      <text x="49" y="36" text-anchor="middle" fill="#90cdf4" font-size="7">检索短语</text>
+      <line x1="90" y1="27" x2="106" y2="27" stroke="#4a9eff" stroke-width="1.2" marker-end="url(#ab)"/>
 
-      <rect x="109" y="8" width="82" height="34" rx="5" fill="#1e3a5f" stroke="#4a9eff" stroke-width="1.5"/>
-      <text x="150" y="22" text-anchor="middle" fill="#fff" font-size="9" font-weight="700">✍️ 智造</text>
-      <text x="150" y="34" text-anchor="middle" fill="#90cdf4" font-size="7">内容生成</text>
-      <line x1="191" y1="25" x2="207" y2="25" stroke="#4a9eff" stroke-width="1.2" marker-end="url(#ab)"/>
+      <rect x="109" y="10" width="82" height="34" rx="5" fill="#1e3a5f" stroke="#4a9eff" stroke-width="1.5"/>
+      <text x="150" y="24" text-anchor="middle" fill="#fff" font-size="9" font-weight="700">✍️ 智造</text>
+      <text x="150" y="36" text-anchor="middle" fill="#90cdf4" font-size="7">内容生成</text>
+      <line x1="191" y1="27" x2="207" y2="27" stroke="#4a9eff" stroke-width="1.2" marker-end="url(#ab)"/>
 
-      <rect x="210" y="8" width="90" height="34" rx="5" fill="#14352a" stroke="#22c55e" stroke-width="1.5"/>
-      <text x="255" y="22" text-anchor="middle" fill="#fff" font-size="9" font-weight="700">🔧 智优</text>
-      <text x="255" y="34" text-anchor="middle" fill="#86efac" font-size="7">评分+优化</text>
-      <line x1="300" y1="25" x2="316" y2="25" stroke="#4a9eff" stroke-width="1.2" marker-end="url(#ab)"/>
+      <rect x="210" y="10" width="90" height="34" rx="5" fill="#14352a" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="255" y="24" text-anchor="middle" fill="#fff" font-size="9" font-weight="700">🔧 智优</text>
+      <text x="255" y="36" text-anchor="middle" fill="#86efac" font-size="7">评分+优化</text>
+      <line x1="300" y1="27" x2="316" y2="27" stroke="#4a9eff" stroke-width="1.2" marker-end="url(#ab)"/>
 
-      <rect x="319" y="8" width="82" height="34" rx="5" fill="#1e293b" stroke="#64748b" stroke-width="1.5"/>
-      <text x="360" y="22" text-anchor="middle" fill="#e2e8f0" font-size="9" font-weight="700">📦 智布</text>
-      <text x="360" y="34" text-anchor="middle" fill="#94a3b8" font-size="7">格式化</text>
-      <line x1="401" y1="25" x2="417" y2="25" stroke="#64748b" stroke-width="1.2" marker-end="url(#ab)"/>
+      <rect x="319" y="10" width="82" height="34" rx="5" fill="#1e293b" stroke="#64748b" stroke-width="1.5"/>
+      <text x="360" y="24" text-anchor="middle" fill="#e2e8f0" font-size="9" font-weight="700">📦 智布</text>
+      <text x="360" y="36" text-anchor="middle" fill="#94a3b8" font-size="7">格式化</text>
+      <line x1="401" y1="27" x2="417" y2="27" stroke="#64748b" stroke-width="1.2" marker-end="url(#ab)"/>
 
-      <rect x="420" y="8" width="82" height="34" rx="5" fill="#1e293b" stroke="#64748b" stroke-width="1.5"/>
-      <text x="461" y="22" text-anchor="middle" fill="#e2e8f0" font-size="9" font-weight="700">📡 智传</text>
-      <text x="461" y="34" text-anchor="middle" fill="#94a3b8" font-size="7">分发</text>
-      <line x1="502" y1="25" x2="518" y2="25" stroke="#64748b" stroke-width="1.2" marker-end="url(#ab)"/>
+      <rect x="420" y="10" width="82" height="34" rx="5" fill="#1e293b" stroke="#64748b" stroke-width="1.5"/>
+      <text x="461" y="24" text-anchor="middle" fill="#e2e8f0" font-size="9" font-weight="700">📡 智传</text>
+      <text x="461" y="36" text-anchor="middle" fill="#94a3b8" font-size="7">分发</text>
+      <line x1="502" y1="27" x2="518" y2="27" stroke="#64748b" stroke-width="1.2" marker-end="url(#ab)"/>
 
-      <rect x="521" y="8" width="82" height="34" rx="5" fill="#2d2305" stroke="#f59e0b" stroke-width="1.5"/>
-      <text x="562" y="22" text-anchor="middle" fill="#fff" font-size="9" font-weight="700">📈 智析</text>
-      <text x="562" y="34" text-anchor="middle" fill="#fcd34d" font-size="7">追踪</text>
-      <line x1="603" y1="25" x2="619" y2="25" stroke="#f59e0b" stroke-width="1.2" marker-end="url(#ao)"/>
+      <rect x="521" y="10" width="82" height="34" rx="5" fill="#2d2305" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="562" y="24" text-anchor="middle" fill="#fff" font-size="9" font-weight="700">📈 智析</text>
+      <text x="562" y="36" text-anchor="middle" fill="#fcd34d" font-size="7">数据+洞察</text>
+      <line x1="603" y1="27" x2="619" y2="27" stroke="#f59e0b" stroke-width="1.2" marker-end="url(#ao)"/>
 
-      <rect x="622" y="8" width="82" height="34" rx="5" fill="#2d2305" stroke="#f59e0b" stroke-width="1.5"/>
-      <text x="663" y="22" text-anchor="middle" fill="#fff" font-size="9" font-weight="700">🎯 智中枢</text>
-      <text x="663" y="34" text-anchor="middle" fill="#fcd34d" font-size="7">决策</text>
+      <rect x="622" y="10" width="82" height="34" rx="5" fill="#2d2305" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="663" y="24" text-anchor="middle" fill="#fff" font-size="9" font-weight="700">🎯 智中枢</text>
+      <text x="663" y="36" text-anchor="middle" fill="#fcd34d" font-size="7">决策调度</text>
 
-      <!-- ROW 2: Decision y=60 -->
-      <line x1="562" y1="42" x2="562" y2="58" stroke="#f59e0b" stroke-width="1.2" marker-end="url(#ao)"/>
-      <polygon points="562,62 612,82 562,102 512,82" fill="#1a1500" stroke="#f59e0b" stroke-width="1.2"/>
-      <text x="562" y="80" text-anchor="middle" fill="#fcd34d" font-size="7.5" font-weight="600">AI引用了吗?</text>
-      <text x="562" y="90" text-anchor="middle" fill="#f59e0b" font-size="6.5">分析模式</text>
+      <!-- 智测 (independent module, top-right) -->
+      <rect x="738" y="10" width="72" height="34" rx="5" fill="#1c1024" stroke="#a855f7" stroke-width="1.5"/>
+      <text x="774" y="24" text-anchor="middle" fill="#c084fc" font-size="9" font-weight="700">🔬 智测</text>
+      <text x="774" y="36" text-anchor="middle" fill="#a78bfa" font-size="7">AI检索验证</text>
 
-      <!-- YES left -->
-      <line x1="512" y1="82" x2="438" y2="82" stroke="#22c55e" stroke-width="1.2" marker-end="url(#ag)"/>
-      <text x="475" y="76" text-anchor="middle" fill="#22c55e" font-size="6.5" font-weight="600">YES</text>
+      <!-- ═══ FEEDBACK CONNECTIONS (below pipeline, clean lines) ═══ -->
 
-      <rect x="310" y="68" width="126" height="28" rx="4" fill="#0f2818" stroke="#22c55e" stroke-width="1.2" stroke-dasharray="3,2"/>
-      <text x="373" y="80" text-anchor="middle" fill="#22c55e" font-size="8" font-weight="700">🧬 提取成功模式</text>
-      <text x="373" y="90" text-anchor="middle" fill="#86efac" font-size="6.5">结构·权威·FAQ·可引用性</text>
+      <!-- 1) 智测 → 智析: verification results feed into analytics -->
+      <path d="M 738,27 L 720,27 L 720,55 L 580,55" fill="none" stroke="#a855f7" stroke-width="1" marker-end="url(#ap)"/>
+      <text x="650" y="52" text-anchor="middle" fill="#a78bfa" font-size="6">验证结果</text>
 
-      <!-- NO right -->
-      <line x1="612" y1="82" x2="636" y2="82" stroke="#ef4444" stroke-width="1.2" marker-end="url(#ap)"/>
-      <text x="624" y="76" text-anchor="middle" fill="#ef4444" font-size="6.5" font-weight="600">NO</text>
+      <!-- 2) 智析 → 智中枢: insights & gaps -->
+      <path d="M 562,44 L 562,65 L 663,65 L 663,48" fill="none" stroke="#f59e0b" stroke-width="1" marker-end="url(#ao)"/>
+      <text x="612" y="62" text-anchor="middle" fill="#fcd34d" font-size="6">洞察+Gap</text>
 
-      <rect x="639" y="68" width="65" height="28" rx="4" fill="#1c1024" stroke="#a855f7" stroke-width="1.2"/>
-      <text x="672" y="80" text-anchor="middle" fill="#c084fc" font-size="8" font-weight="700">🔬 智测</text>
-      <text x="672" y="90" text-anchor="middle" fill="#a78bfa" font-size="6.5">模拟检索</text>
+      <!-- 3) 智中枢 → dispatches to 智库/智造/智优 (decision arrows) -->
+      <!-- 智中枢 goes down then curves left back to the 3 tools -->
+      <path d="M 663,44 L 663,90 L 49,90 L 49,48" fill="none" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="4,2" marker-end="url(#ao)"/>
+      <path d="M 663,90 L 150,90 L 150,48" fill="none" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="4,2" marker-end="url(#ao)"/>
+      <path d="M 663,90 L 255,90 L 255,48" fill="none" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="4,2" marker-end="url(#ao)"/>
 
-      <!-- 智测 down -->
-      <line x1="672" y1="96" x2="672" y2="108" stroke="#a855f7" stroke-width="1" marker-end="url(#ap)"/>
-      <rect x="640" y="110" width="64" height="18" rx="3" fill="#1e1030" stroke="#a855f7" stroke-width="1"/>
-      <text x="672" y="122" text-anchor="middle" fill="#c084fc" font-size="6.5">缺口→新短语</text>
+      <!-- Label on the dispatch line -->
+      <rect x="330" y="82" width="100" height="14" rx="3" fill="#1a1f2e"/>
+      <text x="380" y="92" text-anchor="middle" fill="#f59e0b" font-size="6.5" font-weight="600">智中枢调度执行</text>
 
-      <!-- 智测 curve back to 智库 -->
-      <path d="M 640,119 C 400,140 120,120 49,46" fill="none" stroke="#a855f7" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#ap)"/>
+      <!-- ═══ ROW 2: What 智中枢 triggers (y=110) ═══ -->
+      <text x="410" y="115" text-anchor="middle" fill="#64748b" font-size="7">▼ 智中枢基于数据决策，调度以下工具迭代执行 ▼</text>
 
-      <!-- ROW 3: Feedback targets y=140 -->
-      <line x1="373" y1="96" x2="373" y2="138" stroke="#22c55e" stroke-width="1.2" marker-end="url(#ag)"/>
-      <text x="373" y="134" text-anchor="middle" fill="#22c55e" font-size="6.5" font-weight="600">反馈↓</text>
+      <rect x="55" y="125" width="180" height="30" rx="4" fill="#1e3a5f" stroke="#4a9eff" stroke-width="1"/>
+      <text x="145" y="138" text-anchor="middle" fill="#fff" font-size="7.5" font-weight="700">📚 智库：扩展/补充检索短语</text>
+      <text x="145" y="149" text-anchor="middle" fill="#64748b" font-size="6.5">新增市场短语 · 填补内容Gap</text>
 
-      <rect x="95" y="142" width="155" height="30" rx="4" fill="#1e3a5f" stroke="#4a9eff" stroke-width="1.2"/>
-      <text x="173" y="155" text-anchor="middle" fill="#fff" font-size="7.5" font-weight="700">📚 智库：补充新检索短语</text>
-      <text x="173" y="166" text-anchor="middle" fill="#64748b" font-size="6.5">用户还在问什么→新增短语库</text>
+      <rect x="260" y="125" width="210" height="30" rx="4" fill="#1e3a5f" stroke="#4a9eff" stroke-width="1"/>
+      <text x="365" y="138" text-anchor="middle" fill="#fff" font-size="7.5" font-weight="700">✍️ 智造：按引用模式生成新内容</text>
+      <text x="365" y="149" text-anchor="middle" fill="#64748b" font-size="6.5">复刻被引用的结构·权威·FAQ格式</text>
 
-      <rect x="270" y="142" width="175" height="30" rx="4" fill="#1e3a5f" stroke="#4a9eff" stroke-width="1.2"/>
-      <text x="358" y="155" text-anchor="middle" fill="#fff" font-size="7.5" font-weight="700">✍️ 智造：复刻引用内容模式</text>
-      <text x="358" y="166" text-anchor="middle" fill="#64748b" font-size="6.5">按被引用结构→调整生成模板</text>
+      <rect x="495" y="125" width="180" height="30" rx="4" fill="#14352a" stroke="#22c55e" stroke-width="1"/>
+      <text x="585" y="138" text-anchor="middle" fill="#fff" font-size="7.5" font-weight="700">🔧 智优：校准评分+重写优化</text>
+      <text x="585" y="149" text-anchor="middle" fill="#64748b" font-size="6.5">更新评分权重 · 按引用特征优化</text>
 
-      <rect x="465" y="142" width="155" height="30" rx="4" fill="#14352a" stroke="#22c55e" stroke-width="1.2"/>
-      <text x="543" y="155" text-anchor="middle" fill="#fff" font-size="7.5" font-weight="700">🔧 智优：校准评分标准</text>
-      <text x="543" y="166" text-anchor="middle" fill="#64748b" font-size="6.5">引用特征→更新评分权重</text>
+      <!-- ═══ ROW 3: Iteration loop indicator ═══ -->
+      <rect x="180" y="172" width="460" height="28" rx="5" fill="#0f2818" stroke="#22c55e" stroke-width="1"/>
+      <text x="410" y="185" text-anchor="middle" fill="#22c55e" font-size="8" font-weight="700">🔄 持续迭代：生产 → 分发 → 追踪 → 分析 → 决策 → 再生产</text>
+      <text x="410" y="195" text-anchor="middle" fill="#86efac" font-size="6.5">每轮循环 → 内容更匹配 AI 引用偏好 → 引用率持续提升</text>
 
-      <!-- Dashed back arrows -->
-      <path d="M 130,142 C 130,100 49,70 49,46" fill="none" stroke="#4a9eff" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#ab)"/>
-      <path d="M 340,142 C 340,100 150,70 150,46" fill="none" stroke="#4a9eff" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#ab)"/>
-      <path d="M 510,142 C 510,100 255,70 255,46" fill="none" stroke="#22c55e" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#ag)"/>
+      <!-- ═══ Legend ═══ -->
+      <rect x="15" y="212" width="790" height="22" rx="4" fill="#111827"/>
+      <line x1="30" y1="223" x2="48" y2="223" stroke="#4a9eff" stroke-width="1.5"/>
+      <text x="52" y="226" fill="#94a3b8" font-size="7">正向流程</text>
+      <line x1="115" y1="223" x2="133" y2="223" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="4,2"/>
+      <text x="137" y="226" fill="#94a3b8" font-size="7">智中枢调度</text>
+      <line x1="210" y1="223" x2="228" y2="223" stroke="#a855f7" stroke-width="1"/>
+      <text x="232" y="226" fill="#94a3b8" font-size="7">智测→智析</text>
+      <line x1="295" y1="223" x2="313" y2="223" stroke="#f59e0b" stroke-width="1"/>
+      <text x="317" y="226" fill="#94a3b8" font-size="7">智析→智中枢</text>
+      <rect x="390" y="218" width="9" height="9" rx="2" fill="#22c55e" opacity="0.3" stroke="#22c55e" stroke-width="0.8"/>
+      <text x="404" y="226" fill="#94a3b8" font-size="7">迭代循环</text>
 
-      <!-- Summary -->
-      <rect x="140" y="188" width="500" height="26" rx="5" fill="#0f2818" stroke="#22c55e" stroke-width="1"/>
-      <text x="390" y="200" text-anchor="middle" fill="#22c55e" font-size="8" font-weight="700">✨ 每轮循环 → 内容更匹配 AI 引用偏好 → 引用率持续提升</text>
-      <text x="390" y="210" text-anchor="middle" fill="#86efac" font-size="6.5">观察AI实际引用什么 → 提取模式 → 注入生产流程 → 重复</text>
+      <!-- Iteration curved arrow (visual) -->
+      <path d="M 675,155 C 750,155 780,130 780,100 C 780,75 760,55 730,55" fill="none" stroke="#22c55e" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#ag)"/>
+      <text x="790" y="105" text-anchor="start" fill="#22c55e" font-size="6">迭代</text>
 
-      <!-- Legend -->
-      <rect x="15" y="225" width="790" height="24" rx="4" fill="#111827"/>
-      <line x1="30" y1="237" x2="46" y2="237" stroke="#4a9eff" stroke-width="1.5"/>
-      <text x="50" y="240" fill="#94a3b8" font-size="7">正向流程</text>
-      <line x1="110" y1="237" x2="126" y2="237" stroke="#22c55e" stroke-width="1.5"/>
-      <text x="130" y="240" fill="#94a3b8" font-size="7">进化反馈</text>
-      <line x1="190" y1="237" x2="206" y2="237" stroke="#a855f7" stroke-width="1" stroke-dasharray="3,2"/>
-      <text x="210" y="240" fill="#94a3b8" font-size="7">缺口补充</text>
-      <polygon points="278,232 286,237 278,242 270,237" fill="none" stroke="#f59e0b" stroke-width="1"/>
-      <text x="292" y="240" fill="#94a3b8" font-size="7">决策</text>
     </svg>
     '''
-    components.html(flowchart_html, height=270)
+    components.html(flowchart_html, height=250)
 
     st.divider()
 
