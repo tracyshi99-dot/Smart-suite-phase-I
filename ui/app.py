@@ -890,11 +890,61 @@ elif page == "✍️ 智造":
             except Exception as e:
                 st.error(f"{'Upload failed' if is_en else '上传失败'}: {e}")
 
+    # --- Show selected phrases from 智库 (editable) ---
+    st.subheader("📋 Selected Phrases from Query Library" if is_en else "📋 智库已选中短语")
+    zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
+    df_zhiku = load_csv_safe(zhiku_file) if zhiku_file.exists() else pd.DataFrame()
+    if not df_zhiku.empty and "is_selected" in df_zhiku.columns:
+        df_selected = df_zhiku[df_zhiku["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])].copy()
+        if not df_selected.empty:
+            edit_cols_z = [c for c in ["ai_query", "category", "priority_score", "is_selected"] if c in df_selected.columns]
+            edited_phrases = st.data_editor(
+                df_selected[edit_cols_z].reset_index(drop=True),
+                column_config={
+                    "ai_query": st.column_config.TextColumn("Search Phrase" if is_en else "检索短语", width="large"),
+                    "category": st.column_config.TextColumn("Category" if is_en else "类别"),
+                    "priority_score": st.column_config.NumberColumn("Score" if is_en else "综合分"),
+                    "is_selected": st.column_config.CheckboxColumn("Selected" if is_en else "选中"),
+                },
+                use_container_width=True, hide_index=True,
+                key="zhizao_phrase_editor",
+            )
+            st.caption(f"{'Selected' if is_en else '已选中'}: {edited_phrases['is_selected'].sum()} / {len(edited_phrases)} {'phrases' if is_en else '条'}")
+            # Auto-save edits back
+            try:
+                df_zhiku.loc[df_selected.index, "is_selected"] = edited_phrases["is_selected"].apply(lambda x: "TRUE" if x else "FALSE").values
+                df_zhiku.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
+            except Exception:
+                pass
+        else:
+            st.caption("No selected phrases in Query Library. Please go back to select some." if is_en else "智库中无已选中短语，请返回智库选中后再执行。")
+    else:
+        st.caption("No query library data found." if is_en else "未找到智库数据。")
+
+    st.divider()
+
     # Execution
     st.subheader("▶️ Generate Content" if is_en else "▶️ 生成内容")
-    content_limit = st.number_input("Article generation limit" if is_en else "生成文章数上限", 1, 20, 5, key="zhizao_limit")
 
-    if st.button("🚀 Run Content Gen" if is_en else "🚀 执行智造", type="primary", key="run_zhizao"):
+    # Show progress: how many already generated vs total selected
+    df_existing_content = load_zhizao(selected_batch)
+    already_generated = len(df_existing_content) if not df_existing_content.empty else 0
+    total_selected = len(df_zhiku[df_zhiku["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])]) if not df_zhiku.empty and "is_selected" in df_zhiku.columns else 0
+
+    if total_selected > 0:
+        st.progress(min(1.0, already_generated / total_selected), text=f"{'Generated' if is_en else '已生成'} {already_generated}/{total_selected} {'articles' if is_en else '篇'}")
+
+    content_limit = st.number_input("Articles per batch" if is_en else "每批生成文章数", 1, 20, 5, key="zhizao_limit")
+
+    remaining = max(0, total_selected - already_generated)
+    if already_generated > 0 and remaining > 0:
+        btn_label_z = f"🔄 {'Continue generating next' if is_en else '继续生成下一批'} {min(content_limit, remaining)} {'articles' if is_en else '篇'} ({already_generated}/{total_selected})"
+    elif remaining == 0 and already_generated > 0:
+        btn_label_z = f"✅ {'All done' if is_en else '全部生成完毕'} ({already_generated}/{total_selected})"
+    else:
+        btn_label_z = "🚀 Run Content Gen" if is_en else "🚀 执行智造"
+
+    if st.button(btn_label_z, type="primary", key="run_zhizao", disabled=(remaining == 0 and already_generated > 0)):
         try:
             from engine import run_zhizao
             progress_bar = st.progress(0)
@@ -908,7 +958,7 @@ elif page == "✍️ 智造":
                 result = run_zhizao(selected_batch, content_limit, update_progress_z)
 
             if result["success"]:
-                st.success(f"✅ {'Content Gen complete! Generated' if is_en else '智造完成！生成'} {result['articles_generated']} {'articles' if is_en else '篇文章'}")
+                st.success(f"✅ +{result['articles_generated']} {'articles' if is_en else '篇'}")
             else:
                 st.error(f"❌ {'Failed' if is_en else '失败'}: {result['error']}")
         except ImportError:
@@ -1087,11 +1137,50 @@ elif page == "🔧 智优":
             except Exception as e:
                 st.error(f"{'Upload failed' if is_en else '上传失败'}: {e}")
 
+    # --- Show incoming content from 智造 ---
+    st.subheader("📋 Content from Content Creation" if is_en else "📋 智造输入内容")
+    df_incoming = load_zhizao(selected_batch)
+    if not df_incoming.empty:
+        display_cols_in = [c for c in ["title", "ai_query", "word_count", "confirmed"] if c in df_incoming.columns]
+        if "confirmed" not in df_incoming.columns:
+            df_incoming["confirmed"] = True
+        st.data_editor(
+            df_incoming[display_cols_in].reset_index(drop=True) if display_cols_in else df_incoming,
+            column_config={
+                "title": st.column_config.TextColumn("Title" if is_en else "标题", disabled=True),
+                "ai_query": st.column_config.TextColumn("Search Phrase" if is_en else "检索短语", disabled=True),
+                "word_count": st.column_config.NumberColumn("Words" if is_en else "字数", disabled=True),
+                "confirmed": st.column_config.CheckboxColumn("Include" if is_en else "纳入优化"),
+            },
+            use_container_width=True, hide_index=True,
+            key="zhiyou_incoming_editor",
+        )
+        st.caption(f"{len(df_incoming)} {'articles from Content Creation' if is_en else '篇来自智造'}")
+    else:
+        st.caption("No content from Content Creation. Upload or run Content Creation first." if is_en else "暂无智造内容，请先上传或执行智造。")
+
+    st.divider()
+
     # One-click execution
     st.subheader("▶️ One-Click Full Optimization" if is_en else "▶️ 一键执行智优全流程")
     st.markdown("Auto-execute in order: **Score → Rewrite → Compliance Review**" if is_en else "自动按顺序执行：**评分 → 重写 → 合规审查**")
 
-    if st.button("🚀 One-Click Full Optimization" if is_en else "🚀 一键智优全流程", type="primary", key="run_zhiyou_all"):
+    # Show progress
+    df_opt_existing = load_optimized(selected_batch)
+    df_incoming_count = len(df_incoming) if not df_incoming.empty else 0
+    opt_done = len(df_opt_existing) if not df_opt_existing.empty else 0
+
+    if df_incoming_count > 0:
+        st.progress(min(1.0, opt_done / df_incoming_count), text=f"{'Optimized' if is_en else '已优化'} {opt_done}/{df_incoming_count} {'articles' if is_en else '篇'}")
+
+    if opt_done > 0 and opt_done < df_incoming_count:
+        btn_zhiyou = f"🔄 {'Continue optimizing remaining' if is_en else '继续优化剩余'} {df_incoming_count - opt_done} {'articles' if is_en else '篇'} ({opt_done}/{df_incoming_count})"
+    elif opt_done >= df_incoming_count and opt_done > 0:
+        btn_zhiyou = f"✅ {'All optimized' if is_en else '全部优化完毕'} ({opt_done}/{df_incoming_count})"
+    else:
+        btn_zhiyou = "🚀 One-Click Full Optimization" if is_en else "🚀 一键智优全流程"
+
+    if st.button(btn_zhiyou, type="primary", key="run_zhiyou_all", disabled=(opt_done >= df_incoming_count and opt_done > 0)):
         try:
             from engine import run_zhiyou_score, run_zhiyou_execute, run_zhiyou_compliance
             progress_bar = st.progress(0)
@@ -1311,11 +1400,39 @@ elif page == "📦 智布":
             except Exception as e:
                 st.error(f"{'Upload failed' if is_en else '上传失败'}: {e}")
 
+    # --- Show incoming content from 智优 ---
+    st.subheader("📋 Optimized Content from Optimization" if is_en else "📋 智优输入内容")
+    df_opt_in = load_optimized(selected_batch)
+    if not df_opt_in.empty:
+        title_col = "optimized_title" if "optimized_title" in df_opt_in.columns else "title"
+        display_cols_zb = [c for c in [title_col, "ai_query", "word_count"] if c in df_opt_in.columns]
+        if display_cols_zb:
+            st.dataframe(df_opt_in[display_cols_zb], use_container_width=True, hide_index=True)
+        st.caption(f"{len(df_opt_in)} {'optimized articles ready for publishing' if is_en else '篇优化文章待发布'}")
+    else:
+        st.caption("No optimized content. Upload or run Optimization first." if is_en else "暂无智优内容，请先上传或执行智优。")
+
+    st.divider()
+
     # Execution
     st.subheader("▶️ Generate Publishing Format" if is_en else "▶️ 生成发布格式")
+    # Progress
+    zhibu_data = load_zhibu(selected_batch)
+    zhibu_done = len(zhibu_data.get("items", [])) if zhibu_data else 0
+    zhibu_total = len(df_opt_in) if not df_opt_in.empty else 0
+
+    if zhibu_total > 0:
+        st.progress(min(1.0, zhibu_done / zhibu_total), text=f"{'Published' if is_en else '已格式化'} {zhibu_done}/{zhibu_total} {'articles' if is_en else '篇'}")
+
     col_exec1, col_exec2 = st.columns(2)
     with col_exec1:
-        if st.button("🚀 Generate JSON" if is_en else "🚀 生成 JSON", type="primary", key="run_zhibu"):
+        if zhibu_done > 0 and zhibu_done < zhibu_total:
+            btn_zhibu = f"🔄 {'Continue formatting remaining' if is_en else '继续格式化剩余'} {zhibu_total - zhibu_done} {'articles' if is_en else '篇'}"
+        elif zhibu_done >= zhibu_total and zhibu_done > 0:
+            btn_zhibu = f"✅ {'All formatted' if is_en else '全部格式化完毕'}"
+        else:
+            btn_zhibu = "🚀 Generate JSON" if is_en else "🚀 生成 JSON"
+        if st.button(btn_zhibu, type="primary", key="run_zhibu"):
             try:
                 from engine import run_zhibu
                 with st.spinner("Generating JSON..." if is_en else "正在生成 JSON..."):
@@ -2128,6 +2245,41 @@ elif page == "⚙️ Settings":
             (new_path / "03_zhiyou").mkdir(exist_ok=True)
             (new_path / "04_zhibu").mkdir(exist_ok=True)
             st.success(f"✅ {'Batch created' if is_en else '已创建批次'}: {new_batch}")
+
+    st.divider()
+    st.subheader("📜 Steering Rules Editor" if is_en else "📜 Steering 规则编辑器")
+    st.caption("Edit AI behavior rules. Changes affect both Kiro and Streamlit content generation." if is_en else "编辑 AI 行为规则。修改后 Kiro 和 Streamlit 生成内容都会遵守新规则。")
+
+    # List steering files
+    steering_dir = BASE_PATH / ".kiro" / "steering"
+    if steering_dir.exists():
+        steering_files = sorted([f.name for f in steering_dir.glob("*.md")])
+        selected_steering = st.selectbox(
+            "Select file" if is_en else "选择文件",
+            steering_files,
+            key="steering_file_select"
+        )
+
+        if selected_steering:
+            steering_path = steering_dir / selected_steering
+            current_content = steering_path.read_text(encoding="utf-8")
+
+            edited_steering = st.text_area(
+                f"Editing: {selected_steering}" if is_en else f"编辑: {selected_steering}",
+                value=current_content,
+                height=400,
+                key="steering_editor",
+            )
+
+            col_save, col_info = st.columns([1, 3])
+            with col_save:
+                if st.button("💾 Save" if is_en else "💾 保存", key="save_steering"):
+                    steering_path.write_text(edited_steering, encoding="utf-8")
+                    st.success("✅ Saved!" if is_en else "✅ 已保存！")
+            with col_info:
+                st.caption(f"{'File size' if is_en else '文件大小'}: {len(current_content):,} chars · {'Path' if is_en else '路径'}: {steering_path}")
+    else:
+        st.warning("Steering directory not found" if is_en else "未找到 steering 目录")
 
     st.divider()
     st.subheader("🏷️ Category System (35 Categories)" if is_en else "🏷️ 类别体系 (35类)")
