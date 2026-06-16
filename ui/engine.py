@@ -27,7 +27,7 @@ if not INPUT_PATH.exists():
 
 MODEL_ID = "anthropic.claude-3-sonnet-20240229-v1:0"
 REGION = "us-east-1"
-MAX_TOKENS = 4096
+MAX_TOKENS = 8192
 
 
 def get_client():
@@ -408,15 +408,24 @@ Query ID: {query_id}
                 text = "\n".join(text.split("\n")[1:])
             if text.endswith("```"):
                 text = "\n".join(text.split("\n")[:-1])
+            # Try to find JSON object in response
+            json_start = text.find("{")
+            json_end = text.rfind("}") + 1
+            if json_start >= 0 and json_end > json_start:
+                text = text[json_start:json_end]
             article = json.loads(text)
             results.append(article)
-        except json.JSONDecodeError:
+        except (json.JSONDecodeError, ValueError):
+            # Fallback: extract title from first ## heading or first line
+            import re
+            title_match = re.search(r'^##\s*(.+)', response, re.MULTILINE)
+            title = title_match.group(1).strip() if title_match else query[:50]
             results.append({
                 "content_id": f"C_{keyword_id}_{idx+1:03d}",
                 "query_id": query_id,
                 "keyword_id": keyword_id,
                 "ai_query": query,
-                "title": f"[解析失败] {query[:30]}",
+                "title": title,
                 "content_draft": response,
                 "word_count": len(response),
                 "version": "v1",
