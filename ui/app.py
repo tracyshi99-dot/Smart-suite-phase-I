@@ -678,7 +678,7 @@ elif page == "📚 智库":
         col_f1, col_f2 = st.columns(2)
         with col_f1:
             if "category" in df_q.columns:
-                cat_options = ["全部"] + sorted(df_q["category"].dropna().unique().tolist())
+                cat_options = ["全部", "✅ 已选中", "⬜ 未选中"] + sorted(df_q["category"].dropna().unique().tolist())
                 cat_filter = st.selectbox("Filter by category" if is_en else "按类别筛选", cat_options, key="cat_filter")
             else:
                 cat_filter = "全部"
@@ -687,7 +687,11 @@ elif page == "📚 智库":
 
         # Apply filters
         df_display = df_q.copy()
-        if cat_filter != "全部" and "category" in df_display.columns:
+        if cat_filter == "✅ 已选中" and "is_selected" in df_display.columns:
+            df_display = df_display[df_display["is_selected"].astype(str).str.strip().str.upper().isin(["TRUE", "1", "YES"])]
+        elif cat_filter == "⬜ 未选中" and "is_selected" in df_display.columns:
+            df_display = df_display[~df_display["is_selected"].astype(str).str.strip().str.upper().isin(["TRUE", "1", "YES"])]
+        elif cat_filter != "全部" and "category" in df_display.columns:
             df_display = df_display[df_display["category"] == cat_filter]
         if "priority_score" in df_display.columns:
             df_display["priority_score"] = pd.to_numeric(df_display["priority_score"], errors="coerce")
