@@ -846,9 +846,13 @@ elif page == "📚 智库":
             for f in all_files:
                 mtime = datetime.fromtimestamp(f.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S")
                 size_kb = f.stat().st_size / 1024
-                col_i, col_d = st.columns([3, 1])
+                col_i, col_r, col_d = st.columns([3, 1, 1])
                 with col_i:
                     st.caption(f"📄 {f.name} · {size_kb:.1f}KB · 🕐 {mtime}")
+                with col_r:
+                    if st.button("♻️ Reuse" if is_en else "♻️ 复用", key=f"reuse_zhiku_{f.name}"):
+                        st.session_state["reuse_zhiku_file"] = str(f)
+                        st.success(f"{'Selected for reuse' if is_en else '已选择复用'}: {f.name}")
                 with col_d:
                     st.download_button("⬇️", f.read_bytes(), file_name=f.name, mime="text/csv", key=f"dl_{f.name}")
         else:
@@ -1911,9 +1915,13 @@ elif page == "📈 智析":
             files = sorted(metrics_dir.glob("*.csv"), key=lambda f: f.stat().st_mtime, reverse=True)
             for f in files:
                 mtime = datetime.fromtimestamp(f.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S")
-                col_i, col_d = st.columns([4, 1])
+                col_i, col_r, col_d = st.columns([3, 1, 1])
                 with col_i:
                     st.caption(f"📄 {f.name} · {f.stat().st_size/1024:.1f}KB · 🕐 {mtime}")
+                with col_r:
+                    if st.button("♻️ Reuse" if is_en else "♻️ 复用", key=f"reuse_zhixi_{f.name}"):
+                        st.session_state["reuse_zhixi_file"] = str(f)
+                        st.success(f"{'Selected for reuse' if is_en else '已选择复用'}: {f.name}")
                 with col_d:
                     st.download_button("⬇️", f.read_bytes(), file_name=f.name, mime="text/csv", key=f"dl_zhixi_{f.name}")
         else:
