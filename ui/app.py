@@ -708,12 +708,18 @@ elif page == "📚 智库":
                     output_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
                     df_q["is_selected"] = "TRUE"
                     df_q.to_csv(output_file, index=False, encoding="utf-8-sig")
+                    st.session_state["select_action"] = "不变"
                     st.rerun()
                 elif select_action == "全不选":
                     output_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
                     df_q["is_selected"] = "FALSE"
                     df_q.to_csv(output_file, index=False, encoding="utf-8-sig")
+                    st.session_state["select_action"] = "不变"
                     st.rerun()
+
+            # Convert is_selected to boolean for checkbox display
+            if "is_selected" in df_display.columns:
+                df_display["is_selected"] = df_display["is_selected"].astype(str).str.strip().str.upper().isin(["TRUE", "1", "YES"])
 
             # Configure column types for data editor
             column_config = {}
@@ -744,7 +750,11 @@ elif page == "📚 智库":
                 for col in edit_cols:
                     if col in edited_df.columns and col in df_q.columns:
                         if len(edited_df) <= len(df_q):
-                            df_q.loc[df_q.index[:len(edited_df)], col] = edited_df[col].values
+                            if col == "is_selected":
+                                # Convert boolean back to string TRUE/FALSE
+                                df_q.loc[df_q.index[:len(edited_df)], col] = edited_df[col].apply(lambda x: "TRUE" if x else "FALSE").values
+                            else:
+                                df_q.loc[df_q.index[:len(edited_df)], col] = edited_df[col].values
                 df_q.to_csv(output_file, index=False, encoding="utf-8-sig")
             except Exception:
                 pass
