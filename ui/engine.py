@@ -513,14 +513,14 @@ def run_zhiyou_execute(batch_id: str, progress_callback=None) -> dict:
     df_score = pd.read_csv(scorecard_path, encoding="utf-8-sig")
     df_draft = pd.read_csv(zhizao_path, encoding="utf-8-sig")
 
-    # Filter approved only
-    if "is_approved" in df_score.columns:
-        approved_ids = df_score[df_score["is_approved"].astype(str).str.upper() == "TRUE"]["content_id"].tolist()
-    else:
+    # Process all scored content (don't block on approval — rewrite all to improve)
+    if "content_id" in df_score.columns:
         approved_ids = df_score["content_id"].tolist()
+    else:
+        approved_ids = df_draft["content_id"].tolist() if "content_id" in df_draft.columns else []
 
     if not approved_ids:
-        return {"success": False, "error": "没有通过评分的内容"}
+        return {"success": False, "error": "没有可重写的内容"}
 
     results = []
     total = len(approved_ids)
