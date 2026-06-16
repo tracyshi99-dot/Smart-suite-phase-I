@@ -1221,11 +1221,11 @@ elif page == "🔧 智优":
     if opt_done > 0 and opt_done < df_incoming_count:
         btn_zhiyou = f"🔄 {'Continue optimizing remaining' if is_en else '继续优化剩余'} {df_incoming_count - opt_done} {'articles' if is_en else '篇'} ({opt_done}/{df_incoming_count})"
     elif opt_done >= df_incoming_count and opt_done > 0:
-        btn_zhiyou = f"✅ {'All optimized' if is_en else '全部优化完毕'} ({opt_done}/{df_incoming_count})"
+        btn_zhiyou = f"🔄 {'Re-optimize' if is_en else '重新优化'} ({opt_done} {'done' if is_en else '篇已完成'})"
     else:
         btn_zhiyou = "🚀 One-Click Full Optimization" if is_en else "🚀 一键智优全流程"
 
-    if st.button(btn_zhiyou, type="primary", key="run_zhiyou_all", disabled=(opt_done >= df_incoming_count and opt_done > 0)):
+    if st.button(btn_zhiyou, type="primary", key="run_zhiyou_all"):
         try:
             from engine import run_zhiyou_score, run_zhiyou_execute, run_zhiyou_compliance
             progress_bar = st.progress(0)
