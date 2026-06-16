@@ -545,6 +545,7 @@ def run_zhiyou_execute(batch_id: str, progress_callback=None) -> dict:
 - 第二行空行
 - 然后是优化后的完整正文（Markdown格式）
 - 必须围绕原始AI Query主题
+- 至少2次自然植入 https://gs.amazon.cn
 - 严禁跑题，严禁输出JSON"""
 
         user_prompt = f"""请根据评分建议重写优化以下文章。
