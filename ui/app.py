@@ -1231,6 +1231,17 @@ elif page == "🔧 智优":
             progress_bar = st.progress(0)
             status_text = st.empty()
 
+            # Filter zhizao content to only include articles selected in the data_editor above
+            if "edited_incoming" in dir() and "include_zhiyou" in edited_incoming.columns:
+                selected_titles = edited_incoming[edited_incoming["include_zhiyou"] == True]
+                if not selected_titles.empty and not df_incoming.empty:
+                    # Write only selected articles to zhizao file for processing
+                    selected_indices = selected_titles.index.tolist()
+                    df_to_process = df_incoming.iloc[selected_indices]
+                    zhizao_path = OUTPUT_PATH / selected_batch / "02_zhizao" / "zhizao_draft_content.csv"
+                    zhizao_path.parent.mkdir(parents=True, exist_ok=True)
+                    df_to_process.to_csv(zhizao_path, index=False, encoding="utf-8-sig")
+
             status_text.text("Step 3: Scoring..." if is_en else "Step 3: 评分中...")
             progress_bar.progress(0.1)
             r1 = run_zhiyou_score(selected_batch)
