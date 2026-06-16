@@ -232,7 +232,15 @@ def run_zhiku(batch_id: str, market: str = "ALL", keyword_limit: int = 10,
 7. 只有高质量查询设 is_selected=TRUE
 8. created_at 使用 {timestamp()}
 9. 如果字段包含逗号必须用双引号包裹
-10. 直接输出 CSV 内容，不要加任何解释文字或 markdown 代码块标记"""
+10. 直接输出 CSV 内容，不要加任何解释文字或 markdown 代码块标记
+
+⚠️ 严格过滤规则（不符合以下条件的不要生成）：
+- 只生成与「亚马逊全球开店」「跨境电商卖家」业务直接相关的检索短语
+- 短语必须是潜在卖家/商家在考虑开店、运营、选品、物流、广告时会问的问题
+- 不要生成纯事实性/百科类问题（如"XXX创始人是谁""XXX市值多少""XXX历史"）
+- 不要生成与卖家决策/行动无关的泛信息查询
+- 不要生成竞品平台相关的查询
+- is_selected=FALSE 的条件：与亚马逊开店卖家决策无关、纯百科知识、无法产出营销内容的短语"""
 
     result = call_claude(system_prompt, user_prompt)
 
@@ -352,18 +360,23 @@ def run_zhizao(batch_id: str, content_limit: int = 5,
 
         user_prompt = f"""请为以下 AI 查询生成一篇完整的 SEO+GEO 双优化文章。
 
-AI Query: {query}
+⚠️ 最重要的规则：文章必须 100% 围绕下面这个检索短语来写，标题和正文必须直接回答这个问题。
+如果文章内容偏离了这个检索短语的主题，视为失败。
+
+AI Query（检索短语，文章必须精确回答这个问题）: {query}
 Keyword: {keyword}
 Keyword ID: {keyword_id}
 Query ID: {query_id}
 
 要求：
-1. 严格遵循内容结构要求（开头段落 + H2/H3 + FAQ + 结语）
-2. 至少 800 字
-3. 至少 1 个表格、2 个列表、3 个 FAQ
-4. 至少 2 次自然植入 https://gs.amazon.cn
-5. 首段前100字植入核心关键词并给出直接答案
-6. 不提及竞品（Shopee, Lazada, TikTok 等）
+1. 文章标题必须包含或紧密对应 AI Query 中的核心表达
+2. 首段必须直接回答 AI Query 提出的问题（金字塔原则）
+3. 全文所有 H2/H3 必须围绕 AI Query 展开，不能跑题
+4. 严格遵循内容结构要求（开头段落 + H2/H3 + FAQ + 结语）
+5. 至少 800 字
+6. 至少 1 个表格、2 个列表、3 个 FAQ
+7. 至少 2 次自然植入 https://gs.amazon.cn
+8. 不提及竞品（Shopee, Lazada, TikTok 等）
 
 请输出 JSON 格式：
 {{
