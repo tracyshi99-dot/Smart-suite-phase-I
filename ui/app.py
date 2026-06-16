@@ -751,14 +751,15 @@ elif page == "📚 智库":
             output_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
             output_file.parent.mkdir(parents=True, exist_ok=True)
             try:
+                # Use filtered indices to map edits back correctly
+                filtered_indices = df_display.index[:len(edited_df)]
                 for col in edit_cols:
                     if col in edited_df.columns and col in df_q.columns:
-                        if len(edited_df) <= len(df_q):
-                            if col == "is_selected":
-                                # Convert boolean back to string TRUE/FALSE
-                                df_q.loc[df_q.index[:len(edited_df)], col] = edited_df[col].apply(lambda x: "TRUE" if x else "FALSE").values
-                            else:
-                                df_q.loc[df_q.index[:len(edited_df)], col] = edited_df[col].values
+                        if col == "is_selected":
+                            # Convert boolean back to string TRUE/FALSE
+                            df_q.loc[filtered_indices, col] = edited_df[col].apply(lambda x: "TRUE" if x else "FALSE").values
+                        else:
+                            df_q.loc[filtered_indices, col] = edited_df[col].values
                 df_q.to_csv(output_file, index=False, encoding="utf-8-sig")
             except Exception:
                 pass
