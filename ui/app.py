@@ -440,38 +440,46 @@ if page == "🏠 总览":
       <div style="display:flex;align-items:flex-start;justify-content:center;gap:8px;padding:8px 0;flex-wrap:wrap;">
 
         <!-- Source -->
-        <div style="text-align:center;min-width:140px;">
+        <div style="text-align:center;min-width:130px;">
           <div style="background:#2d2305;border:2px solid #f59e0b;border-radius:8px;padding:10px 8px;">
-            <div style="color:#f59e0b;font-weight:700;font-size:12px;">📈 智析 / 🔬 智测</div>
-            <div style="color:#fcd34d;font-size:10px;margin-top:2px;">分析 AI 引用模式</div>
+            <div style="color:#f59e0b;font-weight:700;font-size:12px;">📈 智析</div>
+            <div style="color:#fcd34d;font-size:9px;margin-top:2px;">整合数据+引用模式<br>SEO/GEO Performance</div>
           </div>
         </div>
 
-        <div style="color:#f59e0b;font-size:16px;padding-top:12px;">→</div>
+        <div style="color:#f59e0b;font-size:14px;padding-top:14px;">→</div>
 
-        <!-- Extract -->
-        <div style="text-align:center;min-width:120px;">
-          <div style="background:#1a2332;border:2px dashed #f59e0b;border-radius:8px;padding:10px 8px;">
-            <div style="color:#fcd34d;font-weight:700;font-size:12px;">🧬 提取模式</div>
-            <div style="color:#718096;font-size:9px;margin-top:2px;">结构·权威·FAQ<br>可引用性因素</div>
+        <!-- 智中枢 Decision -->
+        <div style="text-align:center;min-width:130px;">
+          <div style="background:#2d2305;border:2px solid #f59e0b;border-radius:8px;padding:10px 8px;">
+            <div style="color:#f59e0b;font-weight:700;font-size:12px;">🎯 智中枢</div>
+            <div style="color:#fcd34d;font-size:9px;margin-top:2px;">决策+调度执行</div>
           </div>
         </div>
 
-        <div style="color:#f59e0b;font-size:16px;padding-top:12px;">→</div>
+        <div style="color:#f59e0b;font-size:14px;padding-top:14px;">→</div>
 
-        <!-- Targets -->
-        <div style="display:flex;flex-direction:column;gap:4px;">
-          <div style="background:#1e3a5f;border:1px solid #4a9eff;border-radius:6px;padding:4px 10px;display:flex;align-items:center;gap:6px;">
-            <span style="font-size:12px;">📚</span>
-            <span style="color:#90cdf4;font-size:10px;">智库：补充新短语</span>
+        <!-- Targets: ALL tools -->
+        <div style="display:flex;flex-direction:column;gap:3px;">
+          <div style="background:#1e3a5f;border:1px solid #4a9eff;border-radius:5px;padding:3px 10px;display:flex;align-items:center;gap:6px;">
+            <span style="font-size:11px;">📚</span>
+            <span style="color:#90cdf4;font-size:9px;">智库：扩展短语/填Gap</span>
           </div>
-          <div style="background:#1e3a5f;border:1px solid #4a9eff;border-radius:6px;padding:4px 10px;display:flex;align-items:center;gap:6px;">
-            <span style="font-size:12px;">✍️</span>
-            <span style="color:#90cdf4;font-size:10px;">智造：按引用模式生成</span>
+          <div style="background:#1e3a5f;border:1px solid #4a9eff;border-radius:5px;padding:3px 10px;display:flex;align-items:center;gap:6px;">
+            <span style="font-size:11px;">✍️</span>
+            <span style="color:#90cdf4;font-size:9px;">智造：按引用模式生成</span>
           </div>
-          <div style="background:#1a3328;border:1px solid #22c55e;border-radius:6px;padding:4px 10px;display:flex;align-items:center;gap:6px;">
-            <span style="font-size:12px;">🔧</span>
-            <span style="color:#86efac;font-size:10px;">智优：按引用特征评分</span>
+          <div style="background:#1a3328;border:1px solid #22c55e;border-radius:5px;padding:3px 10px;display:flex;align-items:center;gap:6px;">
+            <span style="font-size:11px;">🔧</span>
+            <span style="color:#86efac;font-size:9px;">智优：校准评分+重写</span>
+          </div>
+          <div style="background:#1a2332;border:1px solid #4a5568;border-radius:5px;padding:3px 10px;display:flex;align-items:center;gap:6px;">
+            <span style="font-size:11px;">📦</span>
+            <span style="color:#a0aec0;font-size:9px;">智布：调整输出格式</span>
+          </div>
+          <div style="background:#1a2332;border:1px solid #4a5568;border-radius:5px;padding:3px 10px;display:flex;align-items:center;gap:6px;">
+            <span style="font-size:11px;">📡</span>
+            <span style="color:#a0aec0;font-size:9px;">智传：优化分发渠道</span>
           </div>
         </div>
 
@@ -479,7 +487,7 @@ if page == "🏠 总览":
 
       <!-- Bottom insight -->
       <div style="text-align:center;margin-top:12px;padding:8px;background:#111820;border-radius:6px;">
-        <span style="color:#22c55e;font-size:12px;font-weight:600;">✨ 每轮循环 → 内容更匹配 AI 引用偏好 → 引用率持续提升</span>
+        <span style="color:#22c55e;font-size:11px;font-weight:600;">✨ 每轮循环：智析整合数据 → 智中枢决策调度 → 各工具迭代执行 → 引用率持续提升</span>
       </div>
 
     </div>
