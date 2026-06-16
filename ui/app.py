@@ -675,8 +675,8 @@ elif page == "📚 智库":
             live_path.parent.mkdir(parents=True, exist_ok=True)
             import shutil
             shutil.copy2(str(reuse_path), str(live_path))
-            st.success(f"{'Reused' if is_en else '已复用'}: {reuse_path.name}")
         st.session_state["reuse_zhiku_file"] = None
+        st.rerun()
 
     df_q = load_zhiku_live(selected_batch)
 
@@ -986,8 +986,8 @@ elif page == "✍️ 智造":
             live_path.parent.mkdir(parents=True, exist_ok=True)
             import shutil
             shutil.copy2(str(reuse_path), str(live_path))
-            st.success(f"{'Reused' if is_en else '已复用'}: {reuse_path.name}")
         st.session_state["reuse_zhizao_file"] = None
+        st.rerun()
 
     # Content display
     df_z = load_zhizao(selected_batch)
@@ -1192,8 +1192,8 @@ elif page == "🔧 智优":
             live_path.parent.mkdir(parents=True, exist_ok=True)
             import shutil
             shutil.copy2(str(reuse_path), str(live_path))
-            st.success(f"{'Reused' if is_en else '已复用'}: {reuse_path.name}")
         st.session_state["reuse_zhiyou_file"] = None
+        st.rerun()
 
     # One-click execution
     st.subheader("▶️ One-Click Full Optimization" if is_en else "▶️ 一键执行智优全流程")
@@ -1443,8 +1443,8 @@ elif page == "📦 智布":
             live_dir.mkdir(parents=True, exist_ok=True)
             import shutil
             shutil.copy2(str(reuse_path), str(live_dir / reuse_path.name))
-            st.success(f"{'Reused' if is_en else '已复用'}: {reuse_path.name}")
         st.session_state["reuse_zhibu_file"] = None
+        st.rerun()
 
     st.subheader("📋 Optimized Content from Optimization" if is_en else "📋 智优输入内容")
     df_opt_in = load_optimized(selected_batch)
