@@ -371,124 +371,139 @@ if page == "🏠 总览":
 
     import streamlit.components.v1 as components
     swimlane_html = '''
-    <div style="font-family:-apple-system,sans-serif;padding:20px;background:#0f1419;border-radius:12px;border:1px solid #2d3748;position:relative;">
+    <div style="font-family:-apple-system,sans-serif;padding:24px;background:#0f1419;border-radius:12px;border:1px solid #2d3748;position:relative;cursor:pointer;" onclick="this.requestFullscreen?this.requestFullscreen():this.webkitRequestFullscreen&&this.webkitRequestFullscreen()">
+
+      <!-- Click hint -->
+      <div style="position:absolute;top:8px;right:12px;color:#64748b;font-size:10px;">🔍 点击放大</div>
 
       <!-- LANE 1: Forward Pipeline -->
-      <div style="margin-bottom:8px;padding:4px 12px;background:#111820;border-radius:6px;">
-        <span style="color:#4a9eff;font-size:11px;font-weight:600;">▶ 正向流水线 (Content Pipeline)</span>
+      <div style="margin-bottom:10px;padding:5px 14px;background:#111820;border-radius:6px;">
+        <span style="color:#4a9eff;font-size:13px;font-weight:600;">▶ 正向流水线 (Content Pipeline)</span>
       </div>
 
-      <div style="display:flex;align-items:center;justify-content:center;gap:3px;padding:10px 0 16px 0;flex-wrap:nowrap;">
-        <div style="text-align:center;min-width:80px;">
-          <div style="background:#1e3a5f;border:2px solid #4a9eff;border-radius:8px;padding:8px 4px;">
-            <div style="font-size:15px;">📚</div>
-            <div style="color:#fff;font-weight:700;font-size:12px;">智库</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:4px;padding:12px 0 18px 0;flex-wrap:nowrap;">
+        <div style="text-align:center;min-width:90px;">
+          <div style="background:#1e3a5f;border:2px solid #4a9eff;border-radius:8px;padding:10px 6px;">
+            <div style="font-size:18px;">📚</div>
+            <div style="color:#fff;font-weight:700;font-size:14px;">智库</div>
           </div>
         </div>
-        <div style="color:#4a9eff;font-size:13px;">→</div>
-        <div style="text-align:center;min-width:80px;">
-          <div style="background:#1e3a5f;border:2px solid #4a9eff;border-radius:8px;padding:8px 4px;">
-            <div style="font-size:15px;">✍️</div>
-            <div style="color:#fff;font-weight:700;font-size:12px;">智造</div>
+        <div style="color:#4a9eff;font-size:15px;">→</div>
+        <div style="text-align:center;min-width:90px;">
+          <div style="background:#1e3a5f;border:2px solid #4a9eff;border-radius:8px;padding:10px 6px;">
+            <div style="font-size:18px;">✍️</div>
+            <div style="color:#fff;font-weight:700;font-size:14px;">智造</div>
           </div>
         </div>
-        <div style="color:#4a9eff;font-size:13px;">→</div>
-        <div style="text-align:center;min-width:80px;">
-          <div style="background:#1a3328;border:2px solid #22c55e;border-radius:8px;padding:8px 4px;">
-            <div style="font-size:15px;">🔧</div>
-            <div style="color:#fff;font-weight:700;font-size:12px;">智优</div>
+        <div style="color:#4a9eff;font-size:15px;">→</div>
+        <div style="text-align:center;min-width:90px;">
+          <div style="background:#1a3328;border:2px solid #22c55e;border-radius:8px;padding:10px 6px;">
+            <div style="font-size:18px;">🔧</div>
+            <div style="color:#fff;font-weight:700;font-size:14px;">智优</div>
           </div>
         </div>
-        <div style="color:#4a9eff;font-size:13px;">→</div>
-        <div style="text-align:center;min-width:80px;">
-          <div style="background:#1a2332;border:2px solid #4a5568;border-radius:8px;padding:8px 4px;">
-            <div style="font-size:15px;">📦</div>
-            <div style="color:#ccc;font-weight:700;font-size:12px;">智布</div>
+        <div style="color:#4a9eff;font-size:15px;">→</div>
+        <div style="text-align:center;min-width:90px;">
+          <div style="background:#1a2332;border:2px solid #4a5568;border-radius:8px;padding:10px 6px;">
+            <div style="font-size:18px;">📦</div>
+            <div style="color:#ccc;font-weight:700;font-size:14px;">智布</div>
           </div>
         </div>
-        <div style="color:#4a5568;font-size:13px;">→</div>
-        <div style="text-align:center;min-width:80px;">
-          <div style="background:#1a2332;border:2px solid #4a5568;border-radius:8px;padding:8px 4px;">
-            <div style="font-size:15px;">📡</div>
-            <div style="color:#ccc;font-weight:700;font-size:12px;">智传</div>
+        <div style="color:#4a5568;font-size:15px;">→</div>
+        <div style="text-align:center;min-width:90px;">
+          <div style="background:#1a2332;border:2px solid #4a5568;border-radius:8px;padding:10px 6px;">
+            <div style="font-size:18px;">📡</div>
+            <div style="color:#ccc;font-weight:700;font-size:14px;">智传</div>
           </div>
         </div>
-        <div style="color:#4a5568;font-size:13px;">→</div>
-        <div style="text-align:center;min-width:80px;">
-          <div style="background:#2d2305;border:2px solid #f59e0b;border-radius:8px;padding:8px 4px;">
-            <div style="font-size:15px;">📈</div>
-            <div style="color:#fff;font-weight:700;font-size:12px;">智析</div>
+        <div style="color:#4a5568;font-size:15px;">→</div>
+        <div style="text-align:center;min-width:90px;">
+          <div style="background:#2d2305;border:2px solid #f59e0b;border-radius:8px;padding:10px 6px;">
+            <div style="font-size:18px;">📈</div>
+            <div style="color:#fff;font-weight:700;font-size:14px;">智析</div>
           </div>
         </div>
-        <div style="color:#f59e0b;font-size:13px;">→</div>
-        <div style="text-align:center;min-width:80px;">
-          <div style="background:#2d2305;border:2px solid #f59e0b;border-radius:8px;padding:8px 4px;">
-            <div style="font-size:15px;">🎯</div>
-            <div style="color:#fff;font-weight:700;font-size:12px;">智中枢</div>
+        <div style="color:#f59e0b;font-size:15px;">→</div>
+        <div style="text-align:center;min-width:90px;">
+          <div style="background:#2d2305;border:2px solid #f59e0b;border-radius:8px;padding:10px 6px;">
+            <div style="font-size:18px;">🎯</div>
+            <div style="color:#fff;font-weight:700;font-size:14px;">智中枢</div>
           </div>
         </div>
       </div>
 
       <!-- DIVIDER -->
-      <div style="border-top:1px dashed #f59e0b;margin:4px 0 12px 0;"></div>
+      <div style="border-top:1px dashed #f59e0b;margin:6px 0 14px 0;"></div>
 
       <!-- LANE 2: Feedback Loop -->
-      <div style="margin-bottom:8px;padding:4px 12px;background:#1a1500;border-radius:6px;">
-        <span style="color:#f59e0b;font-size:11px;font-weight:600;">↩ 进化反馈 (Evolution Feedback)</span>
+      <div style="margin-bottom:10px;padding:5px 14px;background:#1a1500;border-radius:6px;">
+        <span style="color:#f59e0b;font-size:13px;font-weight:600;">↩ 进化反馈 (Evolution Feedback)</span>
       </div>
 
-      <div style="display:flex;align-items:flex-start;justify-content:center;gap:8px;padding:8px 0;flex-wrap:wrap;">
+      <div style="display:flex;align-items:flex-start;justify-content:center;gap:12px;padding:10px 0;flex-wrap:wrap;">
 
-        <!-- Source -->
-        <div style="text-align:center;min-width:130px;">
-          <div style="background:#2d2305;border:2px solid #f59e0b;border-radius:8px;padding:10px 8px;">
-            <div style="color:#f59e0b;font-weight:700;font-size:12px;">📈 智析</div>
-            <div style="color:#fcd34d;font-size:9px;margin-top:2px;">整合数据+引用模式<br>SEO/GEO Performance</div>
+        <!-- Source: 智析 -->
+        <div style="text-align:center;min-width:160px;">
+          <div style="background:#2d2305;border:2px solid #f59e0b;border-radius:8px;padding:12px 10px;">
+            <div style="color:#f59e0b;font-weight:700;font-size:14px;">📈 智析</div>
+            <div style="color:#fcd34d;font-size:11px;margin-top:6px;line-height:1.5;">
+              ① 智测验证结果<br>
+              ② SEO/SEM 关键词表现<br>
+              ③ GEO 短语转化数据<br>
+              ④ AI 引用模式分析
+            </div>
           </div>
         </div>
 
-        <div style="color:#f59e0b;font-size:14px;padding-top:14px;">→</div>
+        <div style="color:#f59e0b;font-size:18px;padding-top:30px;">→</div>
 
         <!-- 智中枢 Decision -->
-        <div style="text-align:center;min-width:130px;">
-          <div style="background:#2d2305;border:2px solid #f59e0b;border-radius:8px;padding:10px 8px;">
-            <div style="color:#f59e0b;font-weight:700;font-size:12px;">🎯 智中枢</div>
-            <div style="color:#fcd34d;font-size:9px;margin-top:2px;">决策+调度执行</div>
+        <div style="text-align:center;min-width:140px;">
+          <div style="background:#2d2305;border:2px solid #f59e0b;border-radius:8px;padding:12px 10px;">
+            <div style="color:#f59e0b;font-weight:700;font-size:14px;">🎯 智中枢</div>
+            <div style="color:#fcd34d;font-size:11px;margin-top:6px;line-height:1.5;">
+              基于数据决策<br>
+              调度所有工具
+            </div>
           </div>
         </div>
 
-        <div style="color:#f59e0b;font-size:14px;padding-top:14px;">→</div>
+        <div style="color:#f59e0b;font-size:18px;padding-top:30px;">→</div>
 
         <!-- Targets: ALL tools -->
-        <div style="display:flex;flex-direction:column;gap:3px;">
-          <div style="background:#1e3a5f;border:1px solid #4a9eff;border-radius:5px;padding:3px 10px;display:flex;align-items:center;gap:6px;">
-            <span style="font-size:11px;">📚</span>
-            <span style="color:#90cdf4;font-size:9px;">智库：扩展短语/填Gap</span>
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <div style="background:#1e3a5f;border:1px solid #4a9eff;border-radius:6px;padding:5px 12px;display:flex;align-items:center;gap:8px;">
+            <span style="font-size:14px;">📚</span>
+            <span style="color:#90cdf4;font-size:12px;">智库：扩展短语 / 填补Gap</span>
           </div>
-          <div style="background:#1e3a5f;border:1px solid #4a9eff;border-radius:5px;padding:3px 10px;display:flex;align-items:center;gap:6px;">
-            <span style="font-size:11px;">✍️</span>
-            <span style="color:#90cdf4;font-size:9px;">智造：按引用模式生成</span>
+          <div style="background:#1e3a5f;border:1px solid #4a9eff;border-radius:6px;padding:5px 12px;display:flex;align-items:center;gap:8px;">
+            <span style="font-size:14px;">✍️</span>
+            <span style="color:#90cdf4;font-size:12px;">智造：按引用模式生成内容</span>
           </div>
-          <div style="background:#1a3328;border:1px solid #22c55e;border-radius:5px;padding:3px 10px;display:flex;align-items:center;gap:6px;">
-            <span style="font-size:11px;">🔧</span>
-            <span style="color:#86efac;font-size:9px;">智优：校准评分+重写</span>
+          <div style="background:#1a3328;border:1px solid #22c55e;border-radius:6px;padding:5px 12px;display:flex;align-items:center;gap:8px;">
+            <span style="font-size:14px;">🔧</span>
+            <span style="color:#86efac;font-size:12px;">智优：校准评分 + 重写优化</span>
           </div>
-          <div style="background:#1a2332;border:1px solid #4a5568;border-radius:5px;padding:3px 10px;display:flex;align-items:center;gap:6px;">
-            <span style="font-size:11px;">📦</span>
-            <span style="color:#a0aec0;font-size:9px;">智布：调整输出格式</span>
+          <div style="background:#1a2332;border:1px solid #4a5568;border-radius:6px;padding:5px 12px;display:flex;align-items:center;gap:8px;">
+            <span style="font-size:14px;">📦</span>
+            <span style="color:#a0aec0;font-size:12px;">智布：调整输出格式策略</span>
           </div>
-          <div style="background:#1a2332;border:1px solid #4a5568;border-radius:5px;padding:3px 10px;display:flex;align-items:center;gap:6px;">
-            <span style="font-size:11px;">📡</span>
-            <span style="color:#a0aec0;font-size:9px;">智传：优化分发渠道</span>
+          <div style="background:#1a2332;border:1px solid #4a5568;border-radius:6px;padding:5px 12px;display:flex;align-items:center;gap:8px;">
+            <span style="font-size:14px;">📡</span>
+            <span style="color:#a0aec0;font-size:12px;">智传：优化分发渠道选择</span>
           </div>
         </div>
 
       </div>
 
       <!-- Bottom insight -->
-      <div style="text-align:center;margin-top:12px;padding:8px;background:#111820;border-radius:6px;">
-        <span style="color:#22c55e;font-size:11px;font-weight:600;">✨ 每轮循环：智析整合数据 → 智中枢决策调度 → 各工具迭代执行 → 引用率持续提升</span>
+      <div style="text-align:center;margin-top:14px;padding:10px;background:#111820;border-radius:6px;">
+        <span style="color:#22c55e;font-size:13px;font-weight:600;">✨ 每轮循环：智析整合全部数据 → 智中枢决策调度 → 各工具迭代执行 → 引用率持续提升</span>
       </div>
+
+    </div>
+    '''
+    components.html(swimlane_html, height=520)
 
     </div>
     '''
