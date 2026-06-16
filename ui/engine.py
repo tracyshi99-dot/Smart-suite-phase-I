@@ -31,7 +31,7 @@ MAX_TOKENS = 4096
 
 
 def get_client():
-    """Get Bedrock client - uses Streamlit secrets on cloud, local creds otherwise."""
+    """Get Bedrock client - fresh session each call to pick up rotated credentials."""
     try:
         import streamlit as st
         if hasattr(st, "secrets") and "aws" in st.secrets:
@@ -43,10 +43,11 @@ def get_client():
             )
     except Exception:
         pass
-    # Fallback to local credentials (SSO, env vars, etc.)
+    # Fallback to local credentials - create fresh session each time
     from botocore.config import Config
     config = Config(read_timeout=300, connect_timeout=10, retries={"max_attempts": 2})
-    return boto3.client("bedrock-runtime", region_name=REGION, config=config)
+    session = boto3.Session()  # Fresh session picks up latest creds from ~/.aws
+    return session.client("bedrock-runtime", region_name=REGION, config=config)
 
 
 def call_claude(system_prompt: str, user_prompt: str, max_tokens: int = MAX_TOKENS) -> str:
