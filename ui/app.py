@@ -486,7 +486,7 @@ if page == "🏠 总览":
           </div>
           <div style="background:#1a2332;border:1px solid #4a5568;border-radius:6px;padding:5px 12px;display:flex;align-items:center;gap:8px;">
             <span style="font-size:14px;">📦</span>
-            <span style="color:#a0aec0;font-size:12px;">智布：调整输出格式策略</span>
+            <span style="color:#a0aec0;font-size:12px;">智布：适配发布格式（JSON/Word/CMS）</span>
           </div>
           <div style="background:#1a2332;border:1px solid #4a5568;border-radius:6px;padding:5px 12px;display:flex;align-items:center;gap:8px;">
             <span style="font-size:14px;">📡</span>
@@ -518,7 +518,7 @@ if page == "🏠 总览":
         ("📚 智库", "Search Phrase Generation & Management" if is_en else "检索短语生成与管理", "Generate AI-native search phrases from SEO/SEM keywords or seed words, with auto-classification, dedup, and scoring" if is_en else "从 SEO/SEM 关键词或核心词根裂变生成 AI 原生检索短语，自动分类、去重、评分"),
         ("✍️ 智造", "Content Generation" if is_en else "内容生成", "AI auto-generates SEO+GEO dual-optimized long articles based on selected search phrases" if is_en else "基于选中的检索短语，AI 自动生成 SEO+GEO 双优化的长文章"),
         ("🔧 智优", "Content Optimization" if is_en else "内容优化", "One-click: AI scoring (5 dimensions) → rewrite optimization → compliance review" if is_en else "一键完成：AI 评分（5维度）→ 重写优化 → 合规审查"),
-        ("📦 智布", "Format & Publish" if is_en else "格式化发布", "Convert optimized content to JSON structured data and Word documents for CMS publishing" if is_en else "将优化后的内容转换为 JSON 结构化数据和 Word 文档，用于 CMS 发布"),
+        ("📦 智布", "Format & Publish" if is_en else "格式化发布", "Convert optimized content to platform-ready formats: JSON for CMS, Word for review, structured data for each publishing channel" if is_en else "将优化内容转换为各渠道可直接发布的格式：JSON 给 CMS 系统、Word 给人工审核、结构化数据适配不同发布平台"),
         ("📡 智传", "Content Distribution" if is_en else "内容分发", "Distribute content to various channels (website, third-party platforms, etc.) and track publishing status" if is_en else "将内容分发到各个渠道（官网、第三方平台等），追踪发布状态"),
         ("📈 智析", "Performance Analytics" if is_en else "效果分析", "Track GEO + WW Direct Reg Start trends, weekly/monthly/YTD data analysis, attribution analysis" if is_en else "追踪 GEO + WW Direct Reg Start 趋势，周度/月度/YTD 数据分析，归因判断"),
         ("🎯 智中枢", "Decision Engine" if is_en else "决策引擎", "Based on analytics data + 7 decision rules, auto-generate weekly action plans and priority recommendations" if is_en else "基于智析数据 + 7 条决策规则，自动生成周度行动计划和优先级建议"),
