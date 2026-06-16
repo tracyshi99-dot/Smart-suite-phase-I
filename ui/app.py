@@ -667,17 +667,6 @@ elif page == "📚 智库":
     # ─── ② 短语库 — 分类 & 校对 ───
     st.subheader("② Phrase Library — Classify & Proofread" if is_en else "② 短语库 — 分类 & 校对")
 
-    # Handle reuse: if user clicked reuse, copy that file to the live location
-    if st.session_state.get("reuse_zhiku_file"):
-        reuse_path = Path(st.session_state["reuse_zhiku_file"])
-        if reuse_path.exists():
-            live_path = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
-            live_path.parent.mkdir(parents=True, exist_ok=True)
-            import shutil
-            shutil.copy2(str(reuse_path), str(live_path))
-        st.session_state["reuse_zhiku_file"] = None
-        st.rerun()
-
     df_q = load_zhiku_live(selected_batch)
 
     if df_q.empty:
@@ -862,8 +851,12 @@ elif page == "📚 智库":
                     st.caption(f"📄 {f.name} · {size_kb:.1f}KB · 🕐 {mtime}")
                 with col_r:
                     if st.button("♻️ Reuse" if is_en else "♻️ 复用", key=f"reuse_zhiku_{f.name}"):
-                        st.session_state["reuse_zhiku_file"] = str(f)
-                        st.success(f"{'Selected for reuse' if is_en else '已选择复用'}: {f.name}")
+                        # Copy file to live location immediately
+                        live_path = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
+                        live_path.parent.mkdir(parents=True, exist_ok=True)
+                        import shutil
+                        shutil.copy2(str(f), str(live_path))
+                        st.rerun()
                 with col_d:
                     st.download_button("⬇️", f.read_bytes(), file_name=f.name, mime="text/csv", key=f"dl_{f.name}")
         else:
@@ -977,17 +970,6 @@ elif page == "✍️ 智造":
             st.error("engine module not ready" if is_en else "engine 模块未就绪")
 
     st.divider()
-
-    # Handle reuse: if user clicked reuse, copy that file to the live location
-    if st.session_state.get("reuse_zhizao_file"):
-        reuse_path = Path(st.session_state["reuse_zhizao_file"])
-        if reuse_path.exists():
-            live_path = OUTPUT_PATH / selected_batch / "02_zhizao" / "zhizao_draft_content.csv"
-            live_path.parent.mkdir(parents=True, exist_ok=True)
-            import shutil
-            shutil.copy2(str(reuse_path), str(live_path))
-        st.session_state["reuse_zhizao_file"] = None
-        st.rerun()
 
     # Content display
     df_z = load_zhizao(selected_batch)
@@ -1127,8 +1109,11 @@ elif page == "✍️ 智造":
                     st.caption(f"📄 {f.name} · {f.stat().st_size/1024:.1f}KB · 🕐 {mtime}")
                 with col_r:
                     if st.button("♻️ Reuse" if is_en else "♻️ 复用", key=f"reuse_zhizao_{f.name}"):
-                        st.session_state["reuse_zhizao_file"] = str(f)
-                        st.success(f"{'Selected for reuse' if is_en else '已选择复用'}: {f.name}")
+                        live_path = OUTPUT_PATH / selected_batch / "02_zhizao" / "zhizao_draft_content.csv"
+                        live_path.parent.mkdir(parents=True, exist_ok=True)
+                        import shutil
+                        shutil.copy2(str(f), str(live_path))
+                        st.rerun()
                 with col_d:
                     st.download_button("⬇️", f.read_bytes(), file_name=f.name, mime="text/csv", key=f"dl_zhizao_{f.name}")
         else:
@@ -1183,17 +1168,6 @@ elif page == "🔧 智优":
         st.caption("No content from Content Creation. Upload or run Content Creation first." if is_en else "暂无智造内容，请先上传或执行智造。")
 
     st.divider()
-
-    # Handle reuse: if user clicked reuse, copy that file to the live location
-    if st.session_state.get("reuse_zhiyou_file"):
-        reuse_path = Path(st.session_state["reuse_zhiyou_file"])
-        if reuse_path.exists():
-            live_path = OUTPUT_PATH / selected_batch / "03_zhiyou" / "zhiyou_optimized_content.csv"
-            live_path.parent.mkdir(parents=True, exist_ok=True)
-            import shutil
-            shutil.copy2(str(reuse_path), str(live_path))
-        st.session_state["reuse_zhiyou_file"] = None
-        st.rerun()
 
     # One-click execution
     st.subheader("▶️ One-Click Full Optimization" if is_en else "▶️ 一键执行智优全流程")
@@ -1401,8 +1375,11 @@ elif page == "🔧 智优":
                     st.caption(f"📄 {f.name} · {f.stat().st_size/1024:.1f}KB · 🕐 {mtime}")
                 with col_r:
                     if st.button("♻️ Reuse" if is_en else "♻️ 复用", key=f"reuse_zhiyou_{f.name}"):
-                        st.session_state["reuse_zhiyou_file"] = str(f)
-                        st.success(f"{'Selected for reuse' if is_en else '已选择复用'}: {f.name}")
+                        live_path = OUTPUT_PATH / selected_batch / "03_zhiyou" / "zhiyou_optimized_content.csv"
+                        live_path.parent.mkdir(parents=True, exist_ok=True)
+                        import shutil
+                        shutil.copy2(str(f), str(live_path))
+                        st.rerun()
                 with col_d:
                     st.download_button("⬇️", f.read_bytes(), file_name=f.name, mime="text/csv", key=f"dl_zhiyou_{f.name}")
         else:
@@ -1435,17 +1412,6 @@ elif page == "📦 智布":
                 st.error(f"{'Upload failed' if is_en else '上传失败'}: {e}")
 
     # --- Show incoming content from 智优 ---
-    # Handle reuse: if user clicked reuse on a zhibu history file
-    if st.session_state.get("reuse_zhibu_file"):
-        reuse_path = Path(st.session_state["reuse_zhibu_file"])
-        if reuse_path.exists():
-            live_dir = OUTPUT_PATH / selected_batch / "04_zhibu"
-            live_dir.mkdir(parents=True, exist_ok=True)
-            import shutil
-            shutil.copy2(str(reuse_path), str(live_dir / reuse_path.name))
-        st.session_state["reuse_zhibu_file"] = None
-        st.rerun()
-
     st.subheader("📋 Optimized Content from Optimization" if is_en else "📋 智优输入内容")
     df_opt_in = load_optimized(selected_batch)
     if not df_opt_in.empty:
@@ -1612,8 +1578,11 @@ elif page == "📦 智布":
                     st.caption(f"📄 {f.name} · {f.stat().st_size/1024:.1f}KB · 🕐 {mtime}")
                 with col_r:
                     if st.button("♻️ Reuse" if is_en else "♻️ 复用", key=f"reuse_zhibu_{f.name}"):
-                        st.session_state["reuse_zhibu_file"] = str(f)
-                        st.success(f"{'Selected for reuse' if is_en else '已选择复用'}: {f.name}")
+                        live_dir = OUTPUT_PATH / selected_batch / "04_zhibu"
+                        live_dir.mkdir(parents=True, exist_ok=True)
+                        import shutil
+                        shutil.copy2(str(f), str(live_dir / f.name))
+                        st.rerun()
                 with col_d:
                     mime = "application/json" if f.suffix == ".json" else "text/csv"
                     st.download_button("⬇️", f.read_bytes(), file_name=f.name, mime=mime, key=f"dl_zhibu_{f.name}")
@@ -1964,8 +1933,8 @@ elif page == "📈 智析":
                     st.caption(f"📄 {f.name} · {f.stat().st_size/1024:.1f}KB · 🕐 {mtime}")
                 with col_r:
                     if st.button("♻️ Reuse" if is_en else "♻️ 复用", key=f"reuse_zhixi_{f.name}"):
-                        st.session_state["reuse_zhixi_file"] = str(f)
-                        st.success(f"{'Selected for reuse' if is_en else '已选择复用'}: {f.name}")
+                        # For analytics, just mark as notification - no live file to restore to
+                        st.toast(f"{'Reused' if is_en else '已复用'}: {f.name}")
                 with col_d:
                     st.download_button("⬇️", f.read_bytes(), file_name=f.name, mime="text/csv", key=f"dl_zhixi_{f.name}")
         else:
