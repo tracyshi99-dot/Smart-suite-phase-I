@@ -583,7 +583,8 @@ elif page == "📚 智库":
                     with st.spinner("Expanding Source A..." if is_en else "源 A 裂变中..."):
                         result = run_zhiku(selected_batch, market, kw_per_batch)
                     if result["success"]:
-                        st.success(f"✅ +{result['query_count']} {'phrases' if is_en else '条'}")
+                        st.toast(f"✅ +{result['query_count']} {'phrases' if is_en else '条'}")
+                        st.rerun()
                     else:
                         st.error(result['error'])
                 except Exception as e:
@@ -609,7 +610,8 @@ elif page == "📚 智库":
                             if r.get("success"):
                                 total_gen += r.get("query_count", 0)
                     if total_gen > 0:
-                        st.success(f"✅ +{total_gen} {'phrases' if is_en else '条'}")
+                        st.toast(f"✅ +{total_gen} {'phrases' if is_en else '条'}")
+                        st.rerun()
                     else:
                         st.warning("No phrases generated" if is_en else "未生成短语")
                 except Exception as e:

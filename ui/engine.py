@@ -280,6 +280,16 @@ def run_zhiku(batch_id: str, market: str = "ALL", keyword_limit: int = 10,
     # Auto-fix CSV quoting
     _fix_csv_quoting(output_file)
 
+    # Dedup by ai_query column
+    try:
+        df_final = pd.read_csv(output_file, encoding="utf-8-sig", on_bad_lines="skip", engine="python")
+        if not df_final.empty and "ai_query" in df_final.columns:
+            before_count = len(df_final)
+            df_final = df_final.drop_duplicates(subset=["ai_query"], keep="first")
+            df_final.to_csv(output_file, index=False, encoding="utf-8-sig")
+    except Exception:
+        pass
+
     # Count results
     lines = [l for l in csv_content.strip().split("\n") if l.strip()]
     query_count = max(0, len(lines) - 1)
