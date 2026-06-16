@@ -708,14 +708,10 @@ elif page == "📚 智库":
                     output_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
                     df_q["is_selected"] = "TRUE"
                     df_q.to_csv(output_file, index=False, encoding="utf-8-sig")
-                    st.session_state["select_action"] = "不变"
-                    st.rerun()
                 elif select_action == "全不选":
                     output_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
                     df_q["is_selected"] = "FALSE"
                     df_q.to_csv(output_file, index=False, encoding="utf-8-sig")
-                    st.session_state["select_action"] = "不变"
-                    st.rerun()
 
             # Convert is_selected to boolean for checkbox display
             if "is_selected" in df_display.columns:
