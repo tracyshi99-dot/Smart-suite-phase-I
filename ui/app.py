@@ -447,10 +447,10 @@ if page == "🏠 总览":
           <div style="background:#2d2305;border:2px solid #f59e0b;border-radius:8px;padding:12px 10px;">
             <div style="color:#f59e0b;font-weight:700;font-size:14px;">📈 智析</div>
             <div style="color:#fcd34d;font-size:11px;margin-top:6px;line-height:1.5;">
-              ① 智测验证结果<br>
-              ② SEO/SEM 关键词表现<br>
-              ③ GEO 短语转化数据<br>
-              ④ AI 引用模式分析
+              ① AI引用验证：内容是否被提及/带链接<br>
+              ② SEO/SEM核心词实时表现变化<br>
+              ③ AI推荐的类似检索短语比对<br>
+              ④ 后端转化匹配：RegStart/Launch
             </div>
           </div>
         </div>
