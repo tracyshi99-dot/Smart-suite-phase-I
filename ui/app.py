@@ -505,10 +505,6 @@ if page == "🏠 总览":
     '''
     components.html(swimlane_html, height=520)
 
-    </div>
-    '''
-    components.html(swimlane_html, height=380)
-
     st.markdown("""
     **🎯 The key insight:** We don't guess what AI wants — we observe what it already cites, extract the pattern, and replicate it in our production pipeline. Every cycle makes the output more citable.
     """ if is_en else """
