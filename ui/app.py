@@ -701,17 +701,21 @@ elif page == "📚 智库":
         ] if c in df_display.columns]
 
         if edit_cols:
-            # Select all/none toggle
+            # Select all/none buttons
             if "is_selected" in df_display.columns:
-                select_action = st.radio("Select action" if is_en else "选中操作", ["不变", "全选", "全不选"], horizontal=True, key="select_action", label_visibility="collapsed")
-                if select_action == "全选":
-                    output_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
-                    df_q["is_selected"] = "TRUE"
-                    df_q.to_csv(output_file, index=False, encoding="utf-8-sig")
-                elif select_action == "全不选":
-                    output_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
-                    df_q["is_selected"] = "FALSE"
-                    df_q.to_csv(output_file, index=False, encoding="utf-8-sig")
+                col_sa, col_sn, col_sp = st.columns([1, 1, 6])
+                with col_sa:
+                    if st.button("✅ 全选" if not is_en else "✅ Select All", key="btn_select_all"):
+                        output_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
+                        df_q["is_selected"] = "TRUE"
+                        df_q.to_csv(output_file, index=False, encoding="utf-8-sig")
+                        st.rerun()
+                with col_sn:
+                    if st.button("⬜ 全不选" if not is_en else "⬜ Deselect All", key="btn_deselect_all"):
+                        output_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
+                        df_q["is_selected"] = "FALSE"
+                        df_q.to_csv(output_file, index=False, encoding="utf-8-sig")
+                        st.rerun()
 
             # Convert is_selected to boolean for checkbox display
             if "is_selected" in df_display.columns:
