@@ -356,10 +356,10 @@ if page == "🏠 总览":
     st.markdown("""
     Smart Suite is an **AI-driven GEO (Generative Engine Optimization) content pipeline tool**
     that helps the Amazon Global Selling team efficiently produce, optimize, and distribute content
-    that can be cited by AI search engines (ChatGPT, Perplexity, DeepSeek, etc.).
+    that can be cited by AI search engines (ChatGPT/SearchGPT, Gemini, Perplexity, Microsoft Copilot, DeepSeek, 豆包, Kimi, 腾讯元宝, 通义千问).
     """ if is_en else """
     Smart Suite 是一套 **AI 驱动的 GEO (Generative Engine Optimization) 内容流水线工具**，
-    帮助亚马逊全球开店团队高效生产、优化和分发能够被 AI 搜索引擎（ChatGPT、Perplexity、DeepSeek 等）引用的内容。
+    帮助亚马逊全球开店团队高效生产、优化和分发能够被 AI 搜索引擎（ChatGPT/SearchGPT、Gemini、Perplexity、Microsoft Copilot、DeepSeek、豆包、Kimi、腾讯元宝、通义千问）引用的内容。
     """)
 
     # ═══════════════════════════════════════════════════════════
