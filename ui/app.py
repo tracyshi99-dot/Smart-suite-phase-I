@@ -966,11 +966,11 @@ elif page == "✍️ 智造":
     if already_generated > 0 and remaining > 0:
         btn_label_z = f"🔄 {'Continue generating next' if is_en else '继续生成下一批'} {min(content_limit, remaining)} {'articles' if is_en else '篇'} ({already_generated}/{total_selected})"
     elif remaining == 0 and already_generated > 0:
-        btn_label_z = f"✅ {'All done' if is_en else '全部生成完毕'} ({already_generated}/{total_selected})"
+        btn_label_z = f"🔄 {'Regenerate' if is_en else '重新生成'} ({already_generated} {'done' if is_en else '篇已完成'})"
     else:
         btn_label_z = "🚀 Run Content Gen" if is_en else "🚀 执行智造"
 
-    if st.button(btn_label_z, type="primary", key="run_zhizao", disabled=(remaining == 0 and already_generated > 0)):
+    if st.button(btn_label_z, type="primary", key="run_zhizao"):
         try:
             from engine import run_zhizao
             progress_bar = st.progress(0)
