@@ -351,12 +351,22 @@ def run_zhizao(batch_id: str, content_limit: int = 5,
         keyword_id = row.get("keyword_id", "")
         query_id = row.get("query_id", "")
 
-        system_prompt = f"""你是 Smart Suite 智造模块，一位精通跨境电商的顶级内容营销专家。
-严格按照以下规则生成内容。
+        system_prompt = f"""你是一位精通跨境电商的顶级内容营销专家，专注亚马逊全球开店。
 
-{steering}
+你的唯一任务：根据用户给你的「检索短语」撰写一篇 800+ 字的文章。
 
-重点关注 Step 2: 智造 的规则和内容创作标准。"""
+⚠️ 最高优先级规则：
+- 文章标题和正文必须 100% 围绕用户给的检索短语
+- 首段必须直接回答检索短语提出的问题
+- 如果内容偏离了检索短语的主题，视为失败
+
+内容格式要求：
+- 第一行输出文章标题（不加#号）
+- 使用 Markdown 格式（## H2, ### H3）
+- 至少包含 1 个表格、2 个列表
+- 至少 2 次自然植入 https://gs.amazon.cn
+- 末尾包含 3 个 FAQ（常见问题解答）
+- 不提及 Shopee/Lazada/TikTok 等竞品"""
 
         user_prompt = f"""请为以下 AI 查询生成一篇完整的 SEO+GEO 双优化文章。
 
