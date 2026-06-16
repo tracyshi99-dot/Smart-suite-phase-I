@@ -1181,10 +1181,24 @@ elif page == "🔧 智优":
         if "confirmed" in df_incoming.columns:
             df_incoming["confirmed"] = df_incoming["confirmed"].astype(str).str.strip().str.upper().isin(["TRUE", "1", "YES"])
             df_incoming = df_incoming[df_incoming["confirmed"] == True].reset_index(drop=True)
-        display_cols_in = [c for c in ["title", "ai_query", "word_count"] if c in df_incoming.columns]
         if not df_incoming.empty:
-            st.dataframe(df_incoming[display_cols_in] if display_cols_in else df_incoming, use_container_width=True, hide_index=True)
-            st.caption(f"{len(df_incoming)} {'confirmed articles from Content Creation' if is_en else '篇已确认文章来自智造'}")
+            # Add include checkbox for zhiyou selection
+            if "include_zhiyou" not in df_incoming.columns:
+                df_incoming["include_zhiyou"] = True
+            display_cols_in = [c for c in ["title", "ai_query", "word_count", "include_zhiyou"] if c in df_incoming.columns]
+            edited_incoming = st.data_editor(
+                df_incoming[display_cols_in],
+                column_config={
+                    "title": st.column_config.TextColumn("Title" if is_en else "标题", disabled=True),
+                    "ai_query": st.column_config.TextColumn("Search Phrase" if is_en else "检索短语", disabled=True),
+                    "word_count": st.column_config.NumberColumn("Words" if is_en else "字数", disabled=True),
+                    "include_zhiyou": st.column_config.CheckboxColumn("Include" if is_en else "纳入优化"),
+                },
+                use_container_width=True, hide_index=True,
+                key="zhiyou_incoming_editor",
+            )
+            selected_count = edited_incoming["include_zhiyou"].sum() if "include_zhiyou" in edited_incoming.columns else len(df_incoming)
+            st.caption(f"{selected_count}/{len(df_incoming)} {'articles selected for optimization' if is_en else '篇已确认文章来自智造'}")
         else:
             st.caption("No confirmed articles in Content Creation. Go back to confirm some." if is_en else "智造中无已确认文章，请返回智造确认后再执行。")
     else:
