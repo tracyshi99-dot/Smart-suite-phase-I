@@ -289,6 +289,17 @@ def jump_to(page_name: str):
     st.session_state["jump_to_page"] = page_name
 
 
+def safe_copy(src: Path, dst: Path):
+    """Copy file safely, handling Windows file locks."""
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        import shutil
+        shutil.copy2(str(src), str(dst))
+    except PermissionError:
+        content = src.read_bytes()
+        dst.write_bytes(content)
+
+
 # ============================================================
 # NAVIGATION PAGES
 # ============================================================
@@ -874,9 +885,7 @@ elif page == "📚 智库":
                     if st.button("♻️ Reuse" if is_en else "♻️ 复用", key=f"reuse_zhiku_{f.name}"):
                         # Copy file to live location immediately
                         live_path = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
-                        live_path.parent.mkdir(parents=True, exist_ok=True)
-                        import shutil
-                        shutil.copy2(str(f), str(live_path))
+                        safe_copy(f, live_path)
                         st.rerun()
                 with col_d:
                     st.download_button("⬇️", f.read_bytes(), file_name=f.name, mime="text/csv", key=f"dl_{f.name}")
@@ -1131,9 +1140,7 @@ elif page == "✍️ 智造":
                 with col_r:
                     if st.button("♻️ Reuse" if is_en else "♻️ 复用", key=f"reuse_zhizao_{f.name}"):
                         live_path = OUTPUT_PATH / selected_batch / "02_zhizao" / "zhizao_draft_content.csv"
-                        live_path.parent.mkdir(parents=True, exist_ok=True)
-                        import shutil
-                        shutil.copy2(str(f), str(live_path))
+                        safe_copy(f, live_path)
                         st.rerun()
                 with col_d:
                     st.download_button("⬇️", f.read_bytes(), file_name=f.name, mime="text/csv", key=f"dl_zhizao_{f.name}")
@@ -1397,9 +1404,7 @@ elif page == "🔧 智优":
                 with col_r:
                     if st.button("♻️ Reuse" if is_en else "♻️ 复用", key=f"reuse_zhiyou_{f.name}"):
                         live_path = OUTPUT_PATH / selected_batch / "03_zhiyou" / "zhiyou_optimized_content.csv"
-                        live_path.parent.mkdir(parents=True, exist_ok=True)
-                        import shutil
-                        shutil.copy2(str(f), str(live_path))
+                        safe_copy(f, live_path)
                         st.rerun()
                 with col_d:
                     st.download_button("⬇️", f.read_bytes(), file_name=f.name, mime="text/csv", key=f"dl_zhiyou_{f.name}")
@@ -1600,9 +1605,7 @@ elif page == "📦 智布":
                 with col_r:
                     if st.button("♻️ Reuse" if is_en else "♻️ 复用", key=f"reuse_zhibu_{f.name}"):
                         live_dir = OUTPUT_PATH / selected_batch / "04_zhibu"
-                        live_dir.mkdir(parents=True, exist_ok=True)
-                        import shutil
-                        shutil.copy2(str(f), str(live_dir / f.name))
+                        safe_copy(f, live_dir / f.name)
                         st.rerun()
                 with col_d:
                     mime = "application/json" if f.suffix == ".json" else "text/csv"
