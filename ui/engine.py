@@ -352,45 +352,23 @@ def run_zhizao(batch_id: str, content_limit: int = 5,
         keyword_id = row.get("keyword_id", "")
         query_id = row.get("query_id", "")
 
-        system_prompt = f"""你是一位精通跨境电商的顶级内容营销专家，专注亚马逊全球开店。
+        system_prompt = f"""你是跨境电商内容专家。用户会给你一个检索短语，你必须写一篇围绕该短语的文章。
 
-你的唯一任务：根据用户给你的「检索短语」撰写一篇 800+ 字的文章。
+输出规则：
+- 第一行 = 文章标题（不加#号，必须含检索短语的核心词）
+- 第二行空行
+- 然后是正文（Markdown格式，## H2/### H3）
+- 首段直接回答检索短语的问题
+- 至少800字，含1个表格、2个列表
+- 末尾3个FAQ
+- 植入2次 https://gs.amazon.cn
+- 不提及竞品（Shopee/Lazada/TikTok）
 
-⚠️ 最高优先级规则：
-- 文章标题和正文必须 100% 围绕用户给的检索短语
-- 首段必须直接回答检索短语提出的问题
-- 如果内容偏离了检索短语的主题，视为失败
+严禁跑题。文章每一段都必须和检索短语直接相关。"""
 
-内容格式要求：
-- 第一行输出文章标题（不加#号）
-- 使用 Markdown 格式（## H2, ### H3）
-- 至少包含 1 个表格、2 个列表
-- 至少 2 次自然植入 https://gs.amazon.cn
-- 末尾包含 3 个 FAQ（常见问题解答）
-- 不提及 Shopee/Lazada/TikTok 等竞品"""
+        user_prompt = f"""检索短语：「{query}」
 
-        user_prompt = f"""请为以下 AI 查询生成一篇完整的 SEO+GEO 双优化文章。
-
-⚠️ 最重要的规则：文章必须 100% 围绕下面这个检索短语来写，标题和正文必须直接回答这个问题。
-如果文章内容偏离了这个检索短语的主题，视为失败。
-
-AI Query（检索短语，文章必须精确回答这个问题）: {query}
-Keyword: {keyword}
-Keyword ID: {keyword_id}
-Query ID: {query_id}
-
-要求：
-1. 文章标题必须包含或紧密对应 AI Query 中的核心表达
-2. 首段必须直接回答 AI Query 提出的问题（金字塔原则）
-3. 全文所有 H2/H3 必须围绕 AI Query 展开，不能跑题
-4. 严格遵循内容结构要求（开头段落 + H2/H3 + FAQ + 结语）
-5. 至少 800 字
-6. 至少 1 个表格、2 个列表、3 个 FAQ
-7. 至少 2 次自然植入 https://gs.amazon.cn
-8. 不提及竞品（Shopee, Lazada, TikTok 等）
-
-请直接输出文章正文（Markdown 格式），不要包裹在 JSON 或代码块中。
-第一行是文章标题（不加 # 号），第二行空行，然后是正文。"""
+请围绕上面这个检索短语写一篇完整文章。标题和正文必须精确围绕「{query}」展开。"""
 
         response = call_claude(system_prompt, user_prompt)
 
