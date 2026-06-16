@@ -1210,17 +1210,17 @@ elif page == "🔧 智优":
     st.subheader("▶️ One-Click Full Optimization" if is_en else "▶️ 一键执行智优全流程")
     st.markdown("Auto-execute in order: **Score → Rewrite → Compliance Review**" if is_en else "自动按顺序执行：**评分 → 重写 → 合规审查**")
 
-    # Show progress
+    # Show progress — use selected count from data_editor above
     df_opt_existing = load_optimized(selected_batch)
-    df_incoming_count = len(df_incoming) if not df_incoming.empty else 0
+    selected_for_opt = edited_incoming["include_zhiyou"].sum() if "edited_incoming" in dir() and "include_zhiyou" in edited_incoming.columns else (len(df_incoming) if not df_incoming.empty else 0)
     opt_done = len(df_opt_existing) if not df_opt_existing.empty else 0
 
-    if df_incoming_count > 0:
-        st.progress(min(1.0, opt_done / df_incoming_count), text=f"{'Optimized' if is_en else '已优化'} {opt_done}/{df_incoming_count} {'articles' if is_en else '篇'}")
+    if selected_for_opt > 0:
+        st.progress(min(1.0, opt_done / selected_for_opt), text=f"{'Optimized' if is_en else '已优化'} {opt_done}/{selected_for_opt} {'articles' if is_en else '篇'}")
 
-    if opt_done > 0 and opt_done < df_incoming_count:
-        btn_zhiyou = f"🔄 {'Continue optimizing remaining' if is_en else '继续优化剩余'} {df_incoming_count - opt_done} {'articles' if is_en else '篇'} ({opt_done}/{df_incoming_count})"
-    elif opt_done >= df_incoming_count and opt_done > 0:
+    if opt_done > 0 and opt_done < selected_for_opt:
+        btn_zhiyou = f"🔄 {'Continue optimizing remaining' if is_en else '继续优化剩余'} {selected_for_opt - opt_done} {'articles' if is_en else '篇'} ({opt_done}/{selected_for_opt})"
+    elif opt_done >= selected_for_opt and opt_done > 0:
         btn_zhiyou = f"🔄 {'Re-optimize' if is_en else '重新优化'} ({opt_done} {'done' if is_en else '篇已完成'})"
     else:
         btn_zhiyou = "🚀 One-Click Full Optimization" if is_en else "🚀 一键智优全流程"
