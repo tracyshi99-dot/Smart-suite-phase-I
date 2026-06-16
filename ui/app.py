@@ -1177,21 +1177,16 @@ elif page == "🔧 智优":
     st.subheader("📋 Content from Content Creation" if is_en else "📋 智造输入内容")
     df_incoming = load_zhizao(selected_batch)
     if not df_incoming.empty:
-        display_cols_in = [c for c in ["title", "ai_query", "word_count", "confirmed"] if c in df_incoming.columns]
-        if "confirmed" not in df_incoming.columns:
-            df_incoming["confirmed"] = True
-        st.data_editor(
-            df_incoming[display_cols_in].reset_index(drop=True) if display_cols_in else df_incoming,
-            column_config={
-                "title": st.column_config.TextColumn("Title" if is_en else "标题", disabled=True),
-                "ai_query": st.column_config.TextColumn("Search Phrase" if is_en else "检索短语", disabled=True),
-                "word_count": st.column_config.NumberColumn("Words" if is_en else "字数", disabled=True),
-                "confirmed": st.column_config.CheckboxColumn("Include" if is_en else "纳入优化"),
-            },
-            use_container_width=True, hide_index=True,
-            key="zhiyou_incoming_editor",
-        )
-        st.caption(f"{len(df_incoming)} {'articles from Content Creation' if is_en else '篇来自智造'}")
+        # Only show articles confirmed in 智造
+        if "confirmed" in df_incoming.columns:
+            df_incoming["confirmed"] = df_incoming["confirmed"].astype(str).str.strip().str.upper().isin(["TRUE", "1", "YES"])
+            df_incoming = df_incoming[df_incoming["confirmed"] == True].reset_index(drop=True)
+        display_cols_in = [c for c in ["title", "ai_query", "word_count"] if c in df_incoming.columns]
+        if not df_incoming.empty:
+            st.dataframe(df_incoming[display_cols_in] if display_cols_in else df_incoming, use_container_width=True, hide_index=True)
+            st.caption(f"{len(df_incoming)} {'confirmed articles from Content Creation' if is_en else '篇已确认文章来自智造'}")
+        else:
+            st.caption("No confirmed articles in Content Creation. Go back to confirm some." if is_en else "智造中无已确认文章，请返回智造确认后再执行。")
     else:
         st.caption("No content from Content Creation. Upload or run Content Creation first." if is_en else "暂无智造内容，请先上传或执行智造。")
 
