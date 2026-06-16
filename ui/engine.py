@@ -27,7 +27,7 @@ if not INPUT_PATH.exists():
 
 MODEL_ID = "anthropic.claude-3-sonnet-20240229-v1:0"
 REGION = "us-east-1"
-MAX_TOKENS = 8192
+MAX_TOKENS = 4096
 
 
 def get_client():
@@ -378,59 +378,46 @@ Query ID: {query_id}
 7. 至少 2 次自然植入 https://gs.amazon.cn
 8. 不提及竞品（Shopee, Lazada, TikTok 等）
 
-请输出 JSON 格式：
-{{
-  "content_id": "C_{keyword_id}_{idx+1:03d}",
-  "query_id": "{query_id}",
-  "keyword_id": "{keyword_id}",
-  "ai_query": "{query}",
-  "title": "文章标题",
-  "meta_title": "SEO标题(60字内)",
-  "meta_description": "SEO描述(120字内)",
-  "target_audience": "目标受众",
-  "content_objective": "内容目标",
-  "content_draft": "完整文章正文(Markdown格式)",
-  "faq_section": "FAQ部分",
-  "cta": "行动号召",
-  "geo_summary": "100字摘要+官网链接",
-  "word_count": 数字,
-  "version": "v1",
-  "created_at": "{timestamp()}"
-}}"""
+请直接输出文章正文（Markdown 格式），不要包裹在 JSON 或代码块中。
+第一行是文章标题（不加 # 号），第二行空行，然后是正文。"""
 
         response = call_claude(system_prompt, user_prompt)
 
-        # Parse JSON
-        try:
-            # Clean response
-            text = response.strip()
-            if text.startswith("```"):
-                text = "\n".join(text.split("\n")[1:])
-            if text.endswith("```"):
-                text = "\n".join(text.split("\n")[:-1])
-            # Try to find JSON object in response
-            json_start = text.find("{")
-            json_end = text.rfind("}") + 1
-            if json_start >= 0 and json_end > json_start:
-                text = text[json_start:json_end]
-            article = json.loads(text)
-            results.append(article)
-        except (json.JSONDecodeError, ValueError):
-            # Fallback: extract title from first ## heading or first line
-            import re
-            title_match = re.search(r'^##\s*(.+)', response, re.MULTILINE)
-            title = title_match.group(1).strip() if title_match else query[:50]
-            results.append({
-                "content_id": f"C_{keyword_id}_{idx+1:03d}",
-                "query_id": query_id,
-                "keyword_id": keyword_id,
-                "ai_query": query,
-                "title": title,
-                "content_draft": response,
-                "word_count": len(response),
-                "version": "v1",
-                "created_at": timestamp(),
-            })
+        # Parse response: first line = title, rest = content
+        import re
+        lines = response.strip().split("\n")
+        # Extract title (first non-empty line, strip any leading # or *)
+        title = ""
+        content_start = 0
+        for i, line in enumerate(lines):
+            stripped = line.strip().lstrip("#").lstrip("*").strip()
+            if stripped:
+                title = stripped
+                content_start = i + 1
+                break
+
+        content_body = "\n".join(lines[content_start:]).strip()
+
+        # Extract FAQ section if present
+        faq_match = re.search(r'(##\s*(?:常见问题|FAQ).+)', content_body, re.DOTALL | re.IGNORECASE)
+        faq_section = faq_match.group(1) if faq_match else ""
+
+        results.append({
+            "content_id": f"C_{keyword_id}_{idx+1:03d}",
+            "query_id": query_id,
+            "keyword_id": keyword_id,
+            "ai_query": query,
+            "title": title,
+            "meta_title": title[:60],
+            "meta_description": content_body[:120].replace("\n", " "),
+            "content_draft": content_body,
+            "faq_section": faq_section,
+            "cta": "立即前往亚马逊卖家平台注册：https://gs.amazon.cn",
+            "geo_summary": content_body[:100].replace("\n", " "),
+            "word_count": len(content_body),
+            "version": "v1",
+            "created_at": timestamp(),
+        })
 
     # Save as CSV
     df_out = pd.DataFrame(results)
