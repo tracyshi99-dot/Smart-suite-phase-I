@@ -538,62 +538,53 @@ def run_zhiyou_execute(batch_id: str, progress_callback=None) -> dict:
         draft = draft_row.iloc[0]
         score = score_row.iloc[0]
 
-        system_prompt = f"""你是 Smart Suite 智优执行模块。根据评分建议重写优化内容。
+        system_prompt = """你是内容优化专家。根据评分建议重写文章，使其更容易被AI搜索引擎引用。
 
-{steering}
+输出规则：
+- 第一行 = 优化后的文章标题（不加#号）
+- 第二行空行
+- 然后是优化后的完整正文（Markdown格式）
+- 必须围绕原始AI Query主题
+- 严禁跑题，严禁输出JSON"""
 
-重点关注 Step 3.5: 智优执行 的规则。"""
+        user_prompt = f"""请根据评分建议重写优化以下文章。
 
-        user_prompt = f"""请根据评分建议重写以下内容。
-
+原始AI Query（文章主题）: {draft.get('ai_query', '')}
 原始标题: {draft.get('title', '')}
-原始内容: {str(draft.get('content_draft', ''))[:3000]}
-AI Query: {draft.get('ai_query', '')}
+原始内容（前2000字）: {str(draft.get('content_draft', ''))[:2000]}
 
-评分结果:
-- intent_match: {score.get('intent_match_score', '')}
-- ai_readability: {score.get('ai_readability_score', '')}
-- authority: {score.get('authority_score', '')}
-- actionability: {score.get('actionability_score', '')}
-- differentiation: {score.get('differentiation_score', '')}
-- issues: {score.get('issues_found', '')}
-- suggestions: {score.get('optimization_suggestions', '')}
+评分问题: {score.get('issues_found', '')}
+优化建议: {score.get('optimization_suggestions', '')}
 
-请输出 JSON：
-{{
-  "content_id": "{cid}",
-  "query_id": "{draft.get('query_id', '')}",
-  "keyword_id": "{draft.get('keyword_id', '')}",
-  "ai_query": "{draft.get('ai_query', '')}",
-  "original_title": "{draft.get('title', '')}",
-  "optimized_title": "优化后标题",
-  "optimized_meta_title": "SEO标题",
-  "optimized_meta_description": "SEO描述",
-  "optimized_content": "完整重写文章(800-1500字,Markdown)",
-  "optimized_faq": "3个FAQ",
-  "optimized_cta": "CTA",
-  "optimized_geo_summary": "100字摘要+链接",
-  "word_count": 数字,
-  "table_count": 数字,
-  "list_count": 数字,
-  "link_count": 数字,
-  "changes_applied": "应用的优化列表",
-  "version": "v2",
-  "updated_at": "{timestamp()}"
-}}"""
+请直接输出优化后的完整文章（Markdown格式），第一行是标题。必须围绕「{draft.get('ai_query', '')}」这个主题。"""
 
         response = call_claude(system_prompt, user_prompt)
-        try:
-            text = response.strip()
-            if text.startswith("```"):
-                text = "\n".join(text.split("\n")[1:])
-            if text.endswith("```"):
-                text = "\n".join(text.split("\n")[:-1])
-            article = json.loads(text)
-            results.append(article)
-        except json.JSONDecodeError:
-            results.append({"content_id": cid, "optimized_content": response,
-                            "version": "v2", "updated_at": timestamp()})
+
+        # Parse: first line = title, rest = content
+        import re
+        lines = response.strip().split("\n")
+        opt_title = ""
+        content_start = 0
+        for li, line in enumerate(lines):
+            stripped = line.strip().lstrip("#").lstrip("*").strip()
+            if stripped:
+                opt_title = stripped
+                content_start = li + 1
+                break
+        opt_content = "\n".join(lines[content_start:]).strip()
+
+        results.append({
+            "content_id": cid,
+            "query_id": draft.get("query_id", ""),
+            "keyword_id": draft.get("keyword_id", ""),
+            "ai_query": draft.get("ai_query", ""),
+            "original_title": draft.get("title", ""),
+            "optimized_title": opt_title,
+            "optimized_content": opt_content,
+            "word_count": len(opt_content),
+            "version": "v2",
+            "updated_at": timestamp(),
+        })
 
     output_dir = OUTPUT_PATH / batch_id / "03_zhiyou"
     ensure_dir(output_dir)
