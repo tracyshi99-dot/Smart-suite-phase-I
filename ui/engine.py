@@ -15,12 +15,18 @@ OUTPUT_PATH = BASE_PATH / "output"
 INPUT_PATH = BASE_PATH / "input"
 STEERING_PATH = BASE_PATH / ".kiro" / "steering"
 
-# On cloud, use temp directory for output
+# On cloud, use temp directory for output (writable), seeded from demo_output
 import tempfile
+import shutil
 
 if not OUTPUT_PATH.exists():
-    OUTPUT_PATH = Path(tempfile.gettempdir()) / "smartsuite_output"
-    OUTPUT_PATH.mkdir(parents=True, exist_ok=True)
+    _WRITABLE_OUTPUT = Path(tempfile.gettempdir()) / "smartsuite_output"
+    _DEMO_SOURCE = Path(__file__).parent / "demo_output"
+    if _DEMO_SOURCE.exists() and not _WRITABLE_OUTPUT.exists():
+        shutil.copytree(_DEMO_SOURCE, _WRITABLE_OUTPUT)
+    elif not _WRITABLE_OUTPUT.exists():
+        _WRITABLE_OUTPUT.mkdir(parents=True, exist_ok=True)
+    OUTPUT_PATH = _WRITABLE_OUTPUT
 if not INPUT_PATH.exists():
     INPUT_PATH = Path(tempfile.gettempdir()) / "smartsuite_input"
     INPUT_PATH.mkdir(parents=True, exist_ok=True)

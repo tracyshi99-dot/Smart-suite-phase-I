@@ -26,15 +26,18 @@ METRICS_PATH = OUTPUT_PATH / "metrics"
 DEMO_MODE = not OUTPUT_PATH.exists()
 
 if DEMO_MODE:
-    _DEMO_OUTPUT = Path(__file__).parent / "demo_output"
-    if _DEMO_OUTPUT.exists():
-        OUTPUT_PATH = _DEMO_OUTPUT
-        METRICS_PATH = OUTPUT_PATH / "metrics"
+    # Use temp dir for writable output, copy demo data there
+    import shutil
+    _WRITABLE_OUTPUT = Path(tempfile.gettempdir()) / "smartsuite_output"
+    _DEMO_SOURCE = Path(__file__).parent / "demo_output"
+    if _DEMO_SOURCE.exists():
+        if not _WRITABLE_OUTPUT.exists():
+            shutil.copytree(_DEMO_SOURCE, _WRITABLE_OUTPUT)
+        OUTPUT_PATH = _WRITABLE_OUTPUT
     else:
-        _CLOUD_OUTPUT = Path(tempfile.gettempdir()) / "smartsuite_output"
-        _CLOUD_OUTPUT.mkdir(parents=True, exist_ok=True)
-        OUTPUT_PATH = _CLOUD_OUTPUT
-        METRICS_PATH = OUTPUT_PATH / "metrics"
+        _WRITABLE_OUTPUT.mkdir(parents=True, exist_ok=True)
+        OUTPUT_PATH = _WRITABLE_OUTPUT
+    METRICS_PATH = OUTPUT_PATH / "metrics"
     if not INPUT_PATH.exists():
         INPUT_PATH = Path(tempfile.gettempdir()) / "smartsuite_input"
         INPUT_PATH.mkdir(parents=True, exist_ok=True)
