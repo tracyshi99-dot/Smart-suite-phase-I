@@ -29,6 +29,65 @@ MODEL_ID = "anthropic.claude-3-sonnet-20240229-v1:0"
 REGION = "us-east-1"
 MAX_TOKENS = 4096
 
+# DeepSeek API config (fallback when AWS Bedrock is unavailable)
+DEEPSEEK_API_KEY = ""
+DEEPSEEK_MODEL = "deepseek-chat"
+DEEPSEEK_API_URL = "https://api.deepseek.com/chat/completions"
+
+
+def _get_deepseek_key():
+    """Get DeepSeek API key from multiple sources."""
+    global DEEPSEEK_API_KEY
+    if DEEPSEEK_API_KEY:
+        return DEEPSEEK_API_KEY
+    # Try Streamlit secrets first
+    try:
+        import streamlit as st
+        if hasattr(st, "secrets") and "deepseek" in st.secrets:
+            DEEPSEEK_API_KEY = st.secrets["deepseek"]["api_key"]
+            return DEEPSEEK_API_KEY
+    except Exception:
+        pass
+    # Try environment variable
+    import os
+    key = os.environ.get("DEEPSEEK_API_KEY", "")
+    if key:
+        DEEPSEEK_API_KEY = key
+        return DEEPSEEK_API_KEY
+    # Try .env file
+    env_path = Path(__file__).parent.parent / ".env"
+    if env_path.exists():
+        for line in env_path.read_text(encoding="utf-8").splitlines():
+            if line.startswith("DEEPSEEK_API_KEY="):
+                DEEPSEEK_API_KEY = line.split("=", 1)[1].strip()
+                return DEEPSEEK_API_KEY
+    return ""
+
+
+def _call_deepseek_llm(system_prompt: str, user_prompt: str, max_tokens: int = MAX_TOKENS) -> str:
+    """Call DeepSeek API as fallback LLM."""
+    import requests
+    key = _get_deepseek_key()
+    if not key:
+        raise RuntimeError("DeepSeek API Key 未配置。请在 .streamlit/secrets.toml 中添加 [deepseek] api_key。")
+    resp = requests.post(
+        DEEPSEEK_API_URL,
+        headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+        json={
+            "model": DEEPSEEK_MODEL,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            "max_tokens": max_tokens,
+            "temperature": 0.3,
+        },
+        timeout=120,
+    )
+    if resp.status_code == 200:
+        return resp.json()["choices"][0]["message"]["content"]
+    raise RuntimeError(f"DeepSeek API 错误: {resp.status_code} {resp.text[:300]}")
+
 
 def get_client():
     """Get Bedrock client - fresh session each call to pick up rotated credentials."""
@@ -51,15 +110,19 @@ def get_client():
 
 
 def call_claude(system_prompt: str, user_prompt: str, max_tokens: int = MAX_TOKENS) -> str:
-    """Call Claude 3.5 Sonnet via Bedrock Converse API."""
-    client = get_client()
-    response = client.converse(
-        modelId=MODEL_ID,
-        messages=[{"role": "user", "content": [{"text": user_prompt}]}],
-        system=[{"text": system_prompt}],
-        inferenceConfig={"maxTokens": max_tokens, "temperature": 0.3},
-    )
-    return response["output"]["message"]["content"][0]["text"]
+    """Call Claude 3.5 Sonnet via Bedrock. Falls back to DeepSeek if Bedrock unavailable."""
+    try:
+        client = get_client()
+        response = client.converse(
+            modelId=MODEL_ID,
+            messages=[{"role": "user", "content": [{"text": user_prompt}]}],
+            system=[{"text": system_prompt}],
+            inferenceConfig={"maxTokens": max_tokens, "temperature": 0.3},
+        )
+        return response["output"]["message"]["content"][0]["text"]
+    except Exception:
+        # Fallback to DeepSeek
+        return _call_deepseek_llm(system_prompt, user_prompt, max_tokens)
 
 
 def load_steering() -> str:
