@@ -126,7 +126,7 @@ keyword_id,keyword,query_id,ai_query,intent_type,query_type,priority_score,estim
 - priority_score: 1-5（与核心词相关性+商业价值综合评分）
 - estimated_volume: 预估月检索量（high/medium/low）
 - category: 从以下类别选最匹配的：跨境电商知识早知道|跨境电商行业入门了解|亚马逊商城基础情况了解|新手怎么注册亚马逊|亚马逊开店成本费用详解|亚马逊物流仓储科普|教你打造优质Listing|店铺运营提升全攻略|亚马逊广告基础知识大全|跨境电商选品方法及趋势
-- is_selected: TRUE
+- is_selected: FALSE
 - created_at: {timestamp()}
 
 重要：如果字段包含逗号必须用双引号包裹。直接输出CSV，不要代码块。"""
@@ -230,7 +230,7 @@ def run_zhiku(batch_id: str, market: str = "ALL", keyword_limit: int = 10,
 4. query_type: branded / generic / industry / conversion-oriented
 5. priority_score: 1-5
 6. category: 从以下类别选最匹配的一个：跨境电商知识早知道|跨境电商行业入门了解|亚马逊商城基础情况了解|新手怎么注册亚马逊|亚马逊开店成本费用详解|亚马逊物流仓储科普|教你打造优质Listing|店铺运营提升全攻略|亚马逊广告基础知识大全|跨境电商选品方法及趋势
-7. 只有高质量查询设 is_selected=TRUE
+7. 所有查询默认 is_selected=FALSE（由用户在界面手动选中）
 8. created_at 使用 {timestamp()}
 9. 如果字段包含逗号必须用双引号包裹
 10. 直接输出 CSV 内容，不要加任何解释文字或 markdown 代码块标记
@@ -241,7 +241,7 @@ def run_zhiku(batch_id: str, market: str = "ALL", keyword_limit: int = 10,
 - 不要生成纯事实性/百科类问题（如"XXX创始人是谁""XXX市值多少""XXX历史"）
 - 不要生成与卖家决策/行动无关的泛信息查询
 - 不要生成竞品平台相关的查询
-- is_selected=FALSE 的条件：与亚马逊开店卖家决策无关、纯百科知识、无法产出营销内容的短语"""
+- is_selected=FALSE 的条件：所有生成的短语默认为 FALSE，由用户在界面手动选中"""
 
     result = call_claude(system_prompt, user_prompt)
 
@@ -606,10 +606,13 @@ def run_zhiyou_compliance(batch_id: str, progress_callback=None) -> dict:
     steering = load_steering()
 
     opt_path = OUTPUT_PATH / batch_id / "03_zhiyou" / "zhiyou_optimized_content.csv"
-    if not opt_path.exists():
-        return {"success": False, "error": "请先执行智优执行 (Step 3.5)"}
+    if not opt_path.exists() or opt_path.stat().st_size < 10:
+        return {"success": False, "error": "请先执行智优执行 (Step 3.5) — 优化内容文件不存在或为空"}
 
-    df = pd.read_csv(opt_path, encoding="utf-8-sig")
+    try:
+        df = pd.read_csv(opt_path, encoding="utf-8-sig")
+    except Exception:
+        return {"success": False, "error": "优化内容文件格式错误或为空"}
     if df.empty:
         return {"success": False, "error": "优化内容为空"}
 
@@ -656,6 +659,64 @@ def run_zhiyou_compliance(batch_id: str, progress_callback=None) -> dict:
 
     if progress_callback:
         progress_callback(1.0, "合规审查完成 ✅")
+
+    # Auto-route Critical-5 articles to manual review queue
+    try:
+        CRITICAL_5_CATEGORIES = [19, 20, 21, 23, 24, 25]
+        CRITICAL_5_NAMES = {19: "新手怎么注册亚马逊", 20: "亚马逊开店成本费用详解", 21: "开店审核常见问题解答", 23: "欧洲增值税VAT介绍", 24: "其他站点税务要求", 25: "合规政策及操作流程"}
+        POC_MAP = {19: "murphy", 20: "joyce", 21: "eva_zheng", 23: "eva_zheng", 24: "eva_zheng", 25: "eva_zheng"}
+
+        # Read compliance result to check categories
+        df_comp = pd.read_csv(output_file, encoding="utf-8-sig")
+        # Try to match category from original data
+        df_orig = pd.read_csv(opt_path, encoding="utf-8-sig")
+
+        review_dir = OUTPUT_PATH / "review"
+        review_dir.mkdir(parents=True, exist_ok=True)
+        review_file = review_dir / "review_queue.csv"
+
+        if review_file.exists():
+            df_queue = pd.read_csv(review_file, encoding="utf-8-sig")
+        else:
+            df_queue = pd.DataFrame(columns=["content_id", "category_id", "category_name", "title", "content", "assigned_to", "status", "reviewer_notes", "submitted_at", "reviewed_at"])
+
+        routed_count = 0
+        for idx, row in df_comp.iterrows():
+            content_id = str(row.get("content_id", ""))
+            # Check if this article's category is Critical-5
+            orig_row = df_orig[df_orig["content_id"] == content_id] if "content_id" in df_orig.columns else pd.DataFrame()
+            if not orig_row.empty and "keyword_id" in orig_row.columns:
+                kw_id = str(orig_row.iloc[0].get("keyword_id", ""))
+                # Extract category number from keyword_id (e.g. KW_001 -> category 1)
+                try:
+                    cat_num = int(kw_id.split("_")[1]) if "_" in kw_id else 0
+                except (ValueError, IndexError):
+                    cat_num = 0
+
+                if cat_num in CRITICAL_5_CATEGORIES:
+                    # Check if not already in queue
+                    if content_id not in df_queue["content_id"].values:
+                        title = str(row.get("final_content", ""))[:50] if "final_content" in row.index else content_id
+                        content_text = str(row.get("final_content", ""))
+                        new_entry = {
+                            "content_id": content_id,
+                            "category_id": cat_num,
+                            "category_name": CRITICAL_5_NAMES.get(cat_num, f"Category {cat_num}"),
+                            "title": title,
+                            "content": content_text[:5000],
+                            "assigned_to": POC_MAP.get(cat_num, "eva_zheng"),
+                            "status": "PENDING",
+                            "reviewer_notes": "",
+                            "submitted_at": timestamp(),
+                            "reviewed_at": "",
+                        }
+                        df_queue = pd.concat([df_queue, pd.DataFrame([new_entry])], ignore_index=True)
+                        routed_count += 1
+
+        if routed_count > 0:
+            df_queue.to_csv(review_file, index=False, encoding="utf-8-sig")
+    except Exception:
+        pass  # Don't let routing errors break the main flow
 
     return {"success": True, "output_file": str(output_file)}
 
