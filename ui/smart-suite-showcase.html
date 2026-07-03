@@ -185,7 +185,7 @@ function render(){
           <h2>${t(tool.name)}</h2>
           <p class="sub">${t(tool.sub)}</p>
           <p class="desc">${t(tool.desc)}</p>
-          <a class="share" href="${tool.status==='dev'?'#'+tool.id:'http://rem-5cg31524zw.ant.amazon.com:8501/?tool='+tool.id}" ${tool.status==='dev'?'style="opacity:.5;pointer-events:none;margin-right:10px"':'target="_blank" style="margin-right:10px"'}>🚀 ${lang==='en'?(tool.status==='dev'?'Coming Soon':'Launch Tool'):(tool.status==='dev'?'即将上线':'启动工具')}</a>
+          <a class="share" href="${tool.status==='dev'?'#'+tool.id:'https://smart-suite-phase-i-jzvrqtgxpmvzkssfc3bnnw.streamlit.app/?tool='+tool.id}" ${tool.status==='dev'?'style="opacity:.5;pointer-events:none;margin-right:10px"':'target="_blank" style="margin-right:10px"'}>🚀 ${lang==='en'?(tool.status==='dev'?'Coming Soon':'Launch Tool'):(tool.status==='dev'?'即将上线':'启动工具')}</a>
           ${tool.status!=='dev'?'<button class="share" onclick="shareLink(\''+tool.id+'\')" style="background:none">🔗 '+(lang==='en'?'Share':'分享')+'</button>':''}
           <div class="caps">
             <h4>${lang==='en'?'CORE CAPABILITIES':'核心能力'}</h4>
@@ -207,7 +207,7 @@ function render(){
 }
 
 function shareLink(toolId){
-  const url = 'http://rem-5cg31524zw.ant.amazon.com:8501/?tool=' + toolId;
+  const url = 'https://smart-suite-phase-i-jzvrqtgxpmvzkssfc3bnnw.streamlit.app/?tool=' + toolId;
   navigator.clipboard.writeText(url).then(()=> showToast(lang==='en'? '🔗 Link copied: '+url : '🔗 链接已复制: '+url)).catch(()=>{
     const inp = document.createElement('textarea'); inp.value = url;
     document.body.appendChild(inp); inp.select(); document.execCommand('copy');
