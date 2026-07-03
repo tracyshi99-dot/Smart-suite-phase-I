@@ -1206,8 +1206,8 @@ elif _page_idx == 3:
             except Exception as e:
                 st.error(f"{'Upload failed' if is_en else '上传失败'}: {e}")
 
-    # --- Show selected phrases from 智库 (editable) ---
-    st.subheader("📋 Selected Phrases from Query Library" if is_en else "📋 智库已选中短语")
+    # --- Show selected phrases (editable) ---
+    st.subheader("📋 Selected Phrases" if is_en else "📋 智测选择短语")
     zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
     df_zhiku = load_csv_safe(zhiku_file) if zhiku_file.exists() else pd.DataFrame()
     if not df_zhiku.empty and "is_selected" in df_zhiku.columns:
