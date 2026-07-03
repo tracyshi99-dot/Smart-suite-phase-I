@@ -65,16 +65,16 @@ def _get_deepseek_key():
 
 
 def _call_deepseek_llm(system_prompt: str, user_prompt: str, max_tokens: int = MAX_TOKENS) -> str:
-    """Call DeepSeek API as fallback LLM."""
+    """Call Qianwen (通义千问) API as fallback LLM."""
     import requests
     key = _get_deepseek_key()
     if not key:
-        raise RuntimeError("DeepSeek API Key 未配置。请在 .streamlit/secrets.toml 中添加 [deepseek] api_key。")
+        raise RuntimeError("通义千问 API Key 未配置。请在 .streamlit/secrets.toml 中添加 [deepseek] api_key。")
     resp = requests.post(
-        DEEPSEEK_API_URL,
+        "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
         headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
         json={
-            "model": DEEPSEEK_MODEL,
+            "model": "qwen-plus",
             "messages": [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
@@ -86,7 +86,7 @@ def _call_deepseek_llm(system_prompt: str, user_prompt: str, max_tokens: int = M
     )
     if resp.status_code == 200:
         return resp.json()["choices"][0]["message"]["content"]
-    raise RuntimeError(f"DeepSeek API 错误: {resp.status_code} {resp.text[:300]}")
+    raise RuntimeError(f"通义千问 API 错误: {resp.status_code} {resp.text[:300]}")
 
 
 def get_client():
