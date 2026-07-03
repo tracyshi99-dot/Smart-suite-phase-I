@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Suite – AI-Powered GEO Content Intelligence</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0f;--card:#12131a;--card-h:#1a1b25;--bdr:#1e2030;--t1:#fff;--t2:#8892b0;--t3:#5a6380}
+html{scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Inter',sans-serif;background:var(--bg);color:var(--t1);min-height:100vh;line-height:1.6}
+.hdr{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,10,15,.88);backdrop-filter:blur(20px);border-bottom:1px solid var(--bdr);padding:10px 40px;display:flex;align-items:center;justify-content:space-between}
+.hdr-brand{display:flex;align-items:center;gap:14px}
+.hdr-logo{width:44px;height:44px;border-radius:50%;background:conic-gradient(from 200deg,#ff6b35,#e91e63,#9c27b0,#2196f3,#00bcd4,#4caf50,#ffeb3b,#ff6b35);display:flex;align-items:center;justify-content:center}
+.hdr-logo span{font-size:20px;font-weight:900;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+.hdr-title{font-size:19px;font-weight:700;background:linear-gradient(135deg,#ff6b35,#e91e63,#2196f3,#00bcd4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hdr-right{display:flex;align-items:center;gap:12px}
+.lang-btn{padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;background:rgba(255,255,255,.06);border:1px solid var(--bdr);color:var(--t2);cursor:pointer;transition:all .2s}
+.lang-btn:hover{background:rgba(255,255,255,.1);color:var(--t1)}
+.nav{display:flex;gap:3px;background:rgba(30,32,48,.8);border-radius:8px;padding:4px;border:1px solid var(--bdr)}
+.nav a{padding:7px 13px;border-radius:6px;font-size:12px;font-weight:500;color:var(--t2);text-decoration:none;transition:all .2s;white-space:nowrap}
+.nav a:hover{color:var(--t1);background:rgba(255,255,255,.05)}
+.nav a.active{background:linear-gradient(135deg,rgba(255,107,53,.2),rgba(233,30,99,.2));color:var(--t1)}
+.hero{padding:120px 40px 70px;text-align:center;max-width:900px;margin:0 auto}
+.hero h1{font-size:44px;font-weight:800;margin-bottom:14px;line-height:1.2}
+.hero .gt{background:linear-gradient(135deg,#ff6b35,#e91e63,#9c27b0,#2196f3,#00bcd4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{font-size:17px;color:var(--t2);max-width:650px;margin:0 auto 36px}
+.stats{display:flex;justify-content:center;gap:48px;margin-top:36px}
+.stat-v{font-size:30px;font-weight:700;background:linear-gradient(135deg,#00bcd4,#2196f3);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stat-l{font-size:12px;color:var(--t3);margin-top:4px}
+.sec{padding:80px 40px;max-width:1200px;margin:0 auto;border-top:1px solid var(--bdr);scroll-margin-top:75px}
+.sec-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:50px;align-items:start}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:500;background:rgba(255,255,255,.05);border:1px solid var(--bdr);color:var(--t3);margin-bottom:14px}
+.badge .dot{width:6px;height:6px;border-radius:50%;background:#4caf50}
+.sec h2{font-size:34px;font-weight:800;margin-bottom:4px}
+.sec .sub{font-size:14px;color:var(--t2);margin-bottom:18px;font-style:italic}
+.sec .desc{font-size:14px;color:var(--t2);line-height:1.7;margin-bottom:24px}
+.share{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:500;color:var(--t2);background:rgba(255,255,255,.04);border:1px solid var(--bdr);cursor:pointer;transition:all .2s}
+.share:hover{color:var(--t1);border-color:rgba(255,255,255,.15);background:rgba(255,255,255,.08)}
+.caps{margin-top:20px}
+.caps h4{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--t3);margin-bottom:10px}
+.cap{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--t2);margin-bottom:7px}
+.cap::before{content:'+';color:#00bcd4;font-weight:700;flex-shrink:0}
+.igrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.icard{background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:22px;transition:all .2s}
+.icard:hover{border-color:rgba(255,107,53,.3);background:var(--card-h)}
+.icard .iv{font-size:22px;font-weight:700;margin-bottom:4px}
+.icard .il{font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:.4px}
+.c-zhiku h2,.c-zhiku .iv{color:#ffa726}
+.c-zhizao h2,.c-zhizao .iv{color:#ffcc02}
+.c-zhiyou h2,.c-zhiyou .iv{color:#e91e63}
+.c-zhibu h2,.c-zhibu .iv{color:#29b6f6}
+.c-zhixi h2,.c-zhixi .iv{color:#ab47bc}
+.c-s3 h2,.c-s3 .iv{color:#42a5f5}
+.c-zhichuan h2,.c-zhichuan .iv{color:#26c6da}
+.c-zhishu h2{background:linear-gradient(135deg,#ff6b35,#e91e63,#2196f3);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.c-zhishu .iv{background:linear-gradient(135deg,#ff6b35,#e91e63);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+@media(max-width:768px){.sec-grid{grid-template-columns:1fr;gap:28px}.nav{display:none}.hero h1{font-size:30px}.stats{flex-wrap:wrap;gap:20px}.igrid{grid-template-columns:1fr}.hdr{padding:10px 16px}}
+</style>
+</head>
+<body>
+<header class="hdr">
+<div class="hdr-brand"><div class="hdr-logo"><span>智</span></div><span class="hdr-title">Smart Suite</span></div>
+<nav class="nav" id="nav"></nav>
+<div class="hdr-right"><button class="lang-btn" id="langBtn">中文</button></div>
+</header>
+<section class="hero">
+<h1 id="heroTitle">AI-Powered <span class="gt">Smart Suite</span></h1>
+<p id="heroDesc">From fragmented content workflows to AI-powered end-to-end GEO content intelligence, optimization, and performance tracking.</p>
+<div class="stats" id="heroStats"></div>
+</section>
+<main id="toolSections"></main>
+<footer style="padding:50px 40px;text-align:center;border-top:1px solid var(--bdr);color:var(--t3);font-size:13px">
+<p>Smart Suite – AI-Powered GEO Content Intelligence Platform</p>
+<p style="margin-top:6px">Built by GEO Team · Phase I · 2025–2026</p>
+</footer>
+<div id="toast" style="position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(0,188,212,.92);color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:500;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999"></div>
+<script>
+const DATA = {
+  heroDesc: {
+    en: "From fragmented content workflows to AI-powered end-to-end GEO content intelligence, optimization, and performance tracking.",
+    zh: "从碎片化内容工作流，到 AI 驱动的端到端 GEO 内容智能生产、优化与效果追踪。"
+  },
+  stats: [
+    {v:"9", en:"AI Tools", zh:"AI 工具"},
+    {v:"7+", en:"AI Search Platforms", zh:"主流 AI 检索平台"},
+    {v:"+65%", en:"YTD Reg Start YoY", zh:"YTD 注册开始 YoY"},
+    {v:"+8,400 bps", en:"Reg Start vs SSR Total Swing", zh:"Reg Start vs SSR 大盘逆转"}
+  ],
+  tools: [
+    {id:"zhiku", cls:"c-zhiku", name:{en:"智库 Prompt Intelligencer",zh:"智库 Prompt Intelligencer"},
+     sub:{en:"AI Search Phrase Discovery",zh:"AI 检索短语发现"},
+     desc:{en:"Connects to 7 mainstream AI search platforms (DeepSeek, Doubao, Kimi, Yuanbao, Qianwen, ChatGPT, Gemini) to capture real-time, high-precision search phrases. Analyzes actual user search behavior on AI engines to generate structured queries with high citation probability.",
+           zh:"对接 7 大主流 AI 检索平台（DeepSeek、豆包、Kimi、元宝、通义千问、ChatGPT、Gemini），获取实时性更强、相对精准的检索短语。通过分析真实用户在 AI 引擎上的搜索行为，生成高引用概率的结构化查询。"},
+     caps:{en:["Connects to 7 mainstream AI search platforms for real-time trend capture","Multi-intent query generation (informational / navigational / transactional / comparison)","Bilingual search phrase expansion covering CN + WW markets","Priority scoring engine (1-5) to filter high-value queries"],
+           zh:["对接 7 大主流 AI 检索平台，捕获实时检索趋势","基于用户意图分层的多维查询生成（信息/导航/交易/对比）","中英双语检索短语扩展，覆盖 CN + WW 市场","优先级评分引擎 (1-5)，筛选高价值查询"]},
+     impact:[{v:"7",en:"AI Platforms Connected",zh:"AI 平台对接"},{v:"Real-time",en:"Search Phrase Freshness",zh:"检索短语时效性"},{v:"3–5x",en:"Query Variants per Topic",zh:"每主题查询变体"},{v:"35",en:"Topic Categories Mapped",zh:"话题类别覆盖"}]
+    },
+    {id:"zhizao", cls:"c-zhizao", name:{en:"智造 Content Creator",zh:"智造 Content Creator"},
+     sub:{en:"AI-Optimized Content Generation",zh:"AI 优化内容生成"},
+     desc:{en:"Produces high-quality content at scale based on high-value search phrases from 智库. Each article is GEO-structured (direct answers, tables, FAQ) to maximize AI engine citation probability while maintaining traditional search visibility.",
+           zh:"基于智库输出的高价值检索短语，批量生成高质量内容。每篇文章均按 GEO 标准结构化（直接答案、表格、FAQ），最大化被 AI 引擎引用的概率，同时兼顾传统搜索引擎可见性。"},
+     caps:{en:["GEO-first content generation (structured tables + lists + FAQ)","Knowledge-base grounded writing (3PKC KMS) ensuring factual accuracy","Inverted pyramid: conclusion first for AI extraction","Automated brand link and authority citation insertion"],
+           zh:["GEO 优先的内容生成（结构化表格+列表+FAQ）","知识库驱动写作 (3PKC KMS)，确保事实准确","首段金字塔原则：先结论后展开，便于 AI 抽取","自动植入品牌链接与权威引用句式"]},
+     impact:[{v:"3hrs→10min",en:"Per Article Creation",zh:"单篇生成时间"},{v:"800–3000",en:"Words per Article",zh:"每篇字数"},{v:"100%",en:"GEO Structure Compliance",zh:"GEO 结构合规率"},{v:"100+/mo",en:"High-Quality Articles Monthly",zh:"每月高质量文章产出"}]
+    },
+    {id:"zhiyou", cls:"c-zhiyou", name:{en:"智优 Content Optimizer",zh:"智优 Content Optimizer"},
+     sub:{en:"AI Citation Scoring & Optimization",zh:"AI 引用评分与优化"},
+     desc:{en:"Scores content for AI citation probability across 5 dimensions, automatically rewrites weak sections based on score gaps, and ensures all content passes Amazon compliance checks before publishing.",
+           zh:"对已生成内容进行 AI 引用概率评分、自动重写优化和合规审查。通过 5 维度评分体系量化内容质量，基于评分差距自动改写薄弱环节，并确保所有内容通过亚马逊合规检查。"},
+     caps:{en:["5-dimension AI citation scoring (structure / authority / direct answer / coverage / citation)","Automated content rewriting based on score gaps","Amazon legal compliance checking & auto-correction","Before/after quality comparison tracking"],
+           zh:["5 维度 AI 引用概率评分（结构/权威/直答/覆盖/引用）","基于评分缺口的自动化内容重写","亚马逊法律合规检查 & 自动修正","优化前后质量对比追踪"]},
+     impact:[{v:"+25%",en:"Avg Citation Score Uplift",zh:"平均引用评分提升"},{v:"5 dim",en:"Scoring Dimensions",zh:"评分维度"},{v:"100%",en:"Compliance Pass Rate",zh:"合规通过率"},{v:"Auto",en:"Score → Rewrite → Verify",zh:"评分→重写→验证"}]
+    },
+    {id:"zhibu", cls:"c-zhibu", name:{en:"智布 Content Publisher",zh:"智布 Content Publisher"},
+     sub:{en:"Structured JSON Output for CMS",zh:"CMS 结构化 JSON 输出"},
+     desc:{en:"Converts optimized and compliance-checked content into LEGO CMS standard JSON format. Automates format conversion, metadata population, and structured output generation ready for publishing platforms.",
+           zh:"将优化并通过合规审查的内容转换为 LEGO CMS 标准 JSON 格式。自动化完成格式转换、元数据填充，生成可直接对接发布平台的结构化输出。"},
+     caps:{en:["LEGO CMS standard JSON format output","Automated metadata population (title / description / schema)","Full quality metrics embedding (word count, tables, links)","Batch processing with version tracking"],
+           zh:["LEGO CMS 标准 JSON 格式输出","元数据自动填充（title/description/schema）","完整质量指标嵌入（字数/表格/链接）","批量处理 + 版本追踪"]},
+     impact:[{v:"30→2 min",en:"Per Article Formatting",zh:"单篇格式化时间"},{v:"0 errors",en:"Format Accuracy",zh:"格式准确率"},{v:"Batch",en:"Multi-Article Processing",zh:"批量处理"},{v:"JSON",en:"CMS-Ready Output",zh:"CMS 就绪输出"}]
+    },
+    {id:"zhichuan", cls:"c-zhichuan", name:{en:"智传 Content Distributor",zh:"智传 Content Distributor"},
+     sub:{en:"Multi-Channel Automated Distribution",zh:"多渠道自动分发"},
+     status:"dev",
+     desc:{en:"Automates multi-channel content distribution across official website, blog, knowledge center, and third-party platforms. Handles scheduling, A/B variants, and cross-platform publishing workflows.",
+           zh:"自动化多渠道内容分发，覆盖官网、博客、知识中心及第三方平台。支持定时发布、A/B 变体管理和跨平台发布工作流。"},
+     caps:{en:["One-click multi-channel distribution (website / blog / knowledge center)","Scheduled publishing with timezone support","A/B content variant management","Cross-platform publishing workflow automation"],
+           zh:["多渠道一键分发（官网/博客/知识中心）","支持时区的定时发布","A/B 内容变体管理","跨平台发布工作流自动化"]},
+     impact:[{v:"TBD",en:"Channels Supported",zh:"支持渠道数"},{v:"Auto",en:"Scheduled Publishing",zh:"定时发布"},{v:"A/B",en:"Variant Testing",zh:"变体测试"},{v:"Multi",en:"Platform Integration",zh:"平台集成"}]
+    },
+    {id:"zhixi", cls:"c-zhixi", name:{en:"智析 Performance Analyzer",zh:"智析 Performance Analyzer"},
+     sub:{en:"Full-Channel Attribution & Reporting",zh:"全渠道归因与报表"},
+     desc:{en:"Tracks performance across all GEO channels with automated Weekly/Monthly/YTD reporting. Benchmarks against SSR total, quantifies GEO content contribution to business growth, and tracks AI citation rates and brand mentions.",
+           zh:"全渠道效果追踪与归因分析。自动汇总 GEO/Direct 多渠道 Reg Start、Clean Launch 数据，生成 Weekly/Monthly/YTD 多维报表，与 SSR 大盘对标，量化 GEO 内容对业务增长的贡献。"},
+     caps:{en:["Automated Weekly/Monthly/YTD multi-dimension reporting","Gap identification: pinpoint content gaps and underperforming channels","AI citation tracking: brand mention rate & official link appearance","Data-driven analysis with actionable optimization recommendations"],
+           zh:["Weekly/Monthly/YTD 多维度自动报表","Gap 识别：精准定位内容缺口与表现不佳的渠道","AI 引用追踪：品牌提及率 & 官网链接出现率","数据驱动的分析结果与可执行优化建议"]},
+     impact:[{v:"Real-time",en:"E2E Data Connection",zh:"端到端数据实时对接"},{v:"Input+Output",en:"Full Funnel Visibility",zh:"全漏斗 Input/Output 可视"},{v:"Actionable",en:"Insight & Opportunity Discovery",zh:"洞察与机会点发现"},{v:"Validated",en:"Input Effectiveness Tracking",zh:"验证哪些 Input 真实有效"}]
+    },
+    {id:"zhishu", cls:"c-zhishu", name:{en:"智中枢 Workflow Orchestrator",zh:"智中枢 Workflow Orchestrator"},
+     sub:{en:"End-to-End Pipeline Intelligence",zh:"端到端流水线智能"},
+     status:"dev",
+     desc:{en:"Central orchestration hub connecting 智库→智造→智优→智布→智析 into a complete pipeline. Built-in 7-rule decision engine automatically generates weekly action plans based on performance data changes, achieving full automation from phrase discovery to content publishing to performance tracking.",
+           zh:"全流程编排中心，串联智库→智造→智优→智布→智析完整链路。内置 7 条决策规则引擎，自动根据周度数据变化生成执行计划，实现从检索短语发现到内容发布到效果追踪的端到端自动化。"},
+     caps:{en:["End-to-end pipeline orchestration (Step 1→5 auto-chaining)","7-rule decision engine (growth acceleration / decline alert / gap filling)","Automated weekly action plan generation with priority ranking","Cross-module data flow coordination & exception handling"],
+           zh:["端到端流水线编排（Step 1→5 自动串联）","7 条决策规则引擎（增长加速/下降预警/Gap 补位）","周度自动生成执行计划与优先级排序","跨模块数据流协调与异常处理"]},
+     impact:[{v:"E2E",en:"Full Pipeline Automation",zh:"全流程自动化"},{v:"7 rules",en:"Decision Engine Active",zh:"决策引擎规则"},{v:"8 hrs/wk",en:"Manual Time Saved",zh:"每周节省人工"},{v:"Auto",en:"Weekly Action Plans",zh:"周度行动计划"}]
+    },
+    {id:"s3", cls:"c-s3", name:{en:"S3 Memory Keeper",zh:"S3 Memory Keeper"},
+     sub:{en:"Persistent Knowledge Storage Layer",zh:"持久化知识存储层"},
+     status:"dev",
+     desc:{en:"AWS S3-based persistent storage layer serving as the unified data foundation for all Smart Suite modules. All batch content, search phrases, scoring records, and publish history are version-controlled with cross-module data sharing.",
+           zh:"基于 AWS S3 的持久化知识存储层，为 Smart Suite 全模块提供统一的数据底座。所有批次内容、检索短语、评分记录、发布历史均版本化存储，支持跨模块数据共享与历史回溯。"},
+     caps:{en:["Unified storage for all modules (search phrases / content / scores / publishing)","Version-controlled content repository with full history rollback","Cross-module data flow synchronization","Batch archival & incremental retrieval"],
+           zh:["全模块数据统一存储（检索/内容/评分/发布）","版本化内容仓库，支持任意历史版本回溯","跨模块数据流自动同步","批次归档 & 增量检索"]},
+     impact:[{v:"∞",en:"Scalable Capacity",zh:"弹性扩展容量"},{v:"99.99%",en:"Durability SLA",zh:"持久性 SLA"},{v:"8 modules",en:"Data Interconnection",zh:"模块数据互通"},{v:"Versioned",en:"Full Audit Trail",zh:"完整审计追踪"}]
+    }
+  ]
+};
+
+let lang = 'en';
+function t(obj){ return typeof obj === 'string' ? obj : obj[lang]; }
+
+function render(){
+  // Hero
+  document.getElementById('heroTitle').innerHTML = '<span class="gt">Smart Suite</span>';
+  document.getElementById('heroDesc').textContent = t(DATA.heroDesc);
+  document.getElementById('heroStats').innerHTML = DATA.stats.map(s => 
+    `<div><div class="stat-v">${s.v}</div><div class="stat-l">${t(s)}</div></div>`).join('');
+  // Nav
+  const navLabels = {
+    en: {zhiku:"Prompt Intelligencer",zhizao:"Content Creator",zhiyou:"Content Optimizer",zhibu:"Publisher",zhichuan:"Distributor",zhixi:"Performance Analyzer",zhishu:"Orchestrator",s3:"S3 Memory"},
+    zh: {zhiku:"智库",zhizao:"智造",zhiyou:"智优",zhibu:"智布",zhichuan:"智传",zhixi:"智析",zhishu:"智中枢",s3:"S3"}
+  };
+  document.getElementById('nav').innerHTML = DATA.tools.map(tool => {
+    const label = navLabels[lang][tool.id] || tool.name.en.split(' ')[0];
+    return `<a href="#${tool.id}" data-tool="${tool.id}">${label}</a>`;
+  }).join('');
+  // Tool sections
+  document.getElementById('toolSections').innerHTML = DATA.tools.map(tool => `
+    <section class="sec ${tool.cls}" id="${tool.id}">
+      <div class="sec-grid">
+        <div>
+          <div class="badge">${tool.status==='dev'?'<span class="dot" style="background:#ffa726"></span> '+(lang==='en'?'In Development':'开发中'):'<span class="dot"></span> Production'}</div>
+          <h2>${t(tool.name)}</h2>
+          <p class="sub">${t(tool.sub)}</p>
+          <p class="desc">${t(tool.desc)}</p>
+          <a class="share" href="${tool.status==='dev'?'#'+tool.id:'http://rem-5cg31524zw.ant.amazon.com:8501/?tool='+tool.id}" ${tool.status==='dev'?'style="opacity:.5;pointer-events:none;margin-right:10px"':'target="_blank" style="margin-right:10px"'}>🚀 ${lang==='en'?(tool.status==='dev'?'Coming Soon':'Launch Tool'):(tool.status==='dev'?'即将上线':'启动工具')}</a>
+          ${tool.status!=='dev'?'<button class="share" onclick="shareLink(\''+tool.id+'\')" style="background:none">🔗 '+(lang==='en'?'Share':'分享')+'</button>':''}
+          <div class="caps">
+            <h4>${lang==='en'?'CORE CAPABILITIES':'核心能力'}</h4>
+            ${t(tool.caps).map(c=>`<div class="cap">${c}</div>`).join('')}
+          </div>
+        </div>
+        <div>
+          <p class="il" style="margin-bottom:12px">BUSINESS IMPACT</p>
+          <div class="igrid">
+            ${tool.impact.map(i=>`<div class="icard"><div class="iv">${i.v}</div><div class="il">${t(i)}</div></div>`).join('')}
+          </div>
+        </div>
+      </div>
+    </section>`).join('');
+  // Update lang button
+  document.getElementById('langBtn').textContent = lang === 'en' ? '中文' : 'English';
+  // Re-observe
+  observeSections();
+}
+
+function shareLink(toolId){
+  const url = 'http://rem-5cg31524zw.ant.amazon.com:8501/?tool=' + toolId;
+  navigator.clipboard.writeText(url).then(()=> showToast(lang==='en'? '🔗 Link copied: '+url : '🔗 链接已复制: '+url)).catch(()=>{
+    const inp = document.createElement('textarea'); inp.value = url;
+    document.body.appendChild(inp); inp.select(); document.execCommand('copy');
+    document.body.removeChild(inp);
+    showToast(lang==='en'? '🔗 Link copied!' : '🔗 链接已复制!');
+  });
+}
+function showToast(msg){
+  const el = document.getElementById('toast'); el.textContent = msg;
+  el.style.opacity = '1'; setTimeout(()=> el.style.opacity = '0', 2500);
+}
+function observeSections(){
+  const secs = document.querySelectorAll('.sec');
+  const pills = document.querySelectorAll('.nav a');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if(e.isIntersecting){
+      pills.forEach(p => p.classList.toggle('active', p.dataset.tool === e.target.id));
+    }});
+  }, {threshold:0.3, rootMargin:'-80px 0px 0px 0px'});
+  secs.forEach(s => obs.observe(s));
+}
+
+document.getElementById('langBtn').addEventListener('click', ()=>{
+  lang = lang === 'en' ? 'zh' : 'en'; render();
+  // Preserve scroll position
+});
+
+// Nav smooth scroll
+document.getElementById('nav').addEventListener('click', e => {
+  if(e.target.tagName === 'A'){ e.preventDefault();
+    const el = document.getElementById(e.target.dataset.tool);
+    if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+});
+
+// Initial render
+render();
+// Handle hash on load
+if(location.hash){
+  setTimeout(()=>{ const el = document.querySelector(location.hash);
+    if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+  }, 100);
+}
+</script>
+</body>
+</html>

@@ -453,7 +453,7 @@ with st.sidebar:
     st.caption("GEO Content Pipeline · Phase I" if is_en else "智系列 · GEO Content Pipeline · Phase I")
 
     if DEMO_MODE:
-        st.warning("🎬 Demo Mode" if is_en else "🎬 演示模式 — 仅展示，执行功能已禁用")
+        st.caption("🎬 Demo" if is_en else "🎬 演示模式")
     st.divider()
 
     # Select nav pages based on language
