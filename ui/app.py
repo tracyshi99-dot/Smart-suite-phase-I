@@ -31,8 +31,7 @@ if DEMO_MODE:
     _WRITABLE_OUTPUT = Path(tempfile.gettempdir()) / "smartsuite_output"
     _DEMO_SOURCE = Path(__file__).parent / "demo_output"
     if _DEMO_SOURCE.exists():
-        if not _WRITABLE_OUTPUT.exists():
-            shutil.copytree(_DEMO_SOURCE, _WRITABLE_OUTPUT)
+        shutil.copytree(_DEMO_SOURCE, _WRITABLE_OUTPUT, dirs_exist_ok=True)
         OUTPUT_PATH = _WRITABLE_OUTPUT
     else:
         _WRITABLE_OUTPUT.mkdir(parents=True, exist_ok=True)

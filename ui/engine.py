@@ -22,9 +22,9 @@ import shutil
 if not OUTPUT_PATH.exists():
     _WRITABLE_OUTPUT = Path(tempfile.gettempdir()) / "smartsuite_output"
     _DEMO_SOURCE = Path(__file__).parent / "demo_output"
-    if _DEMO_SOURCE.exists() and not _WRITABLE_OUTPUT.exists():
-        shutil.copytree(_DEMO_SOURCE, _WRITABLE_OUTPUT)
-    elif not _WRITABLE_OUTPUT.exists():
+    if _DEMO_SOURCE.exists():
+        shutil.copytree(_DEMO_SOURCE, _WRITABLE_OUTPUT, dirs_exist_ok=True)
+    else:
         _WRITABLE_OUTPUT.mkdir(parents=True, exist_ok=True)
     OUTPUT_PATH = _WRITABLE_OUTPUT
 if not INPUT_PATH.exists():
