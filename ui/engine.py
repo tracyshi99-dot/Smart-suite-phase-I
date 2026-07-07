@@ -513,6 +513,20 @@ def run_zhiyou_score(batch_id: str, progress_callback=None) -> dict:
     if df.empty:
         return {"success": False, "error": "智造输出为空"}
 
+    # Only process confirmed articles (if confirmed column exists)
+    if "confirmed" in df.columns:
+        df["confirmed"] = df["confirmed"].astype(str).str.strip().str.upper()
+        df = df[df["confirmed"].isin(["TRUE", "1", "YES"])]
+        if df.empty:
+            return {"success": False, "error": "没有已确认的文章，请先在智造中确认文章"}
+
+    # Only process articles marked for zhiyou (if include_zhiyou column exists)
+    if "include_zhiyou" in df.columns:
+        df["include_zhiyou"] = df["include_zhiyou"].astype(str).str.strip().str.upper()
+        df = df[df["include_zhiyou"].isin(["TRUE", "1", "YES"])]
+        if df.empty:
+            return {"success": False, "error": "没有纳入优化的文章"}
+
     if progress_callback:
         progress_callback(0.1, "正在评分...")
 
