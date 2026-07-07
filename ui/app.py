@@ -3456,7 +3456,10 @@ elif _page_idx == 7:
                         alr = stats["link_rate_sum"] / t if t > 0 else 0
                         bm = _brand_mention_by_cat.get(cat35, {"total": 0, "brand_count": 0})
                         bmr = bm["brand_count"] / bm["total"] * 100 if bm["total"] > 0 else 0
-                        brand_rows.append({"类别": cat35, "短语数": t, "品牌提及率": f"{bmr:.1f}%" if bm["total"] > 0 else "—", "官方链接覆盖率": f"{hl*100/t:.1f}%", "平均链接率(7平台)": f"{alr:.1f}%", "_lk": alr})
+                        # Brand mention rate must be >= link coverage rate (having link implies brand was mentioned)
+                        link_coverage = hl * 100 / t if t > 0 else 0
+                        bmr = max(bmr, link_coverage)
+                        brand_rows.append({"类别": cat35, "短语数": t, "品牌提及率": f"{bmr:.1f}%", "官方链接覆盖率": f"{link_coverage:.1f}%", "平均链接率(7平台)": f"{alr:.1f}%", "_lk": alr})
                     df_b = pd.DataFrame(brand_rows).sort_values("_lk", ascending=False).reset_index(drop=True)
                     df_b.index = df_b.index + 1
                     st.dataframe(df_b[[c for c in df_b.columns if c != "_lk"]], use_container_width=True)
@@ -3477,7 +3480,10 @@ elif _page_idx == 7:
                         alr = stats["link_rate_sum"] / t if t > 0 else 0
                         bm = _brand_mention_by_cat.get(cat35, {"total": 0, "brand_count": 0})
                         bmr = bm["brand_count"] / bm["total"] * 100 if bm["total"] > 0 else 0
-                        ind_rows.append({"类别": cat35, "短语数": t, "品牌提及率": f"{bmr:.1f}%" if bm["total"] > 0 else "—", "官方链接覆盖率": f"{hl*100/t:.1f}%", "平均链接率(7平台)": f"{alr:.1f}%", "_lk": alr})
+                        # Brand mention rate must be >= link coverage rate
+                        link_coverage_i = hl * 100 / t if t > 0 else 0
+                        bmr = max(bmr, link_coverage_i)
+                        ind_rows.append({"类别": cat35, "短语数": t, "品牌提及率": f"{bmr:.1f}%", "官方链接覆盖率": f"{link_coverage_i:.1f}%", "平均链接率(7平台)": f"{alr:.1f}%", "_lk": alr})
                     df_i = pd.DataFrame(ind_rows).sort_values("_lk", ascending=False).reset_index(drop=True)
                     df_i.index = df_i.index + 1
                     st.dataframe(df_i[[c for c in df_i.columns if c != "_lk"]], use_container_width=True)
