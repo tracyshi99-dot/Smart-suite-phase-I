@@ -3550,125 +3550,158 @@ elif _page_idx == 7:
         st.subheader("💡 Gap & Opportunities" if is_en else "💡 Gap & 机会点")
         st.markdown("Identify optimization opportunities based on citation tracking and content coverage analysis" if is_en else "基于引用追踪和内容覆盖分析，识别优化机会")
 
-        # --- 智测 AI Search Coverage Insights ---
-        st.markdown("**🔍 AI Search Coverage (智测)**" if is_en else "**🔍 AI 搜索覆盖洞察（智测数据）**")
-        zhice_dir = OUTPUT_PATH.parent / "zhice" if (OUTPUT_PATH.parent / "zhice").exists() else OUTPUT_PATH / "zhice"
-        if zhice_dir.exists():
-            json_files = sorted(zhice_dir.glob("*.json"), key=lambda f: f.stat().st_mtime, reverse=True)
-            if json_files:
-                # Aggregate latest results for gap summary
-                total_queries = 0
-                has_link_count = 0
-                has_brand_count = 0
-                has_negative_count = 0
-                gap_queries = []  # queries where official link NOT found
+        # --- 1. AI Search Coverage from gap_verification_cn.csv + zhice ---
+        st.markdown("**🔍 AI Search Coverage**" if is_en else "**🔍 AI 搜索覆盖洞察**")
+        _gap_f = METRICS_PATH / "gap_verification_cn.csv"
+        _zhice_d = OUTPUT_PATH / "zhice"
+        _has_gap_data = False
 
-                for f in json_files[:10]:  # Analyze last 10 journeys
-                    try:
-                        data = json.loads(f.read_text(encoding="utf-8"))
-                        if isinstance(data, list):
-                            for r in data:
-                                if "error" not in r:
-                                    total_queries += 1
-                                    if r.get("has_official_link"):
-                                        has_link_count += 1
-                                    else:
-                                        gap_queries.append({"query": r.get("query", ""), "platform": r.get("platform", ""), "file": f.stem})
-                                    if r.get("has_brand_mention"):
-                                        has_brand_count += 1
-                                    if r.get("has_negative"):
-                                        has_negative_count += 1
-                    except Exception:
-                        pass
+        if _gap_f.exists():
+            _df_g = load_csv_safe(_gap_f)
+            if not _df_g.empty:
+                _has_gap_data = True
+                _total = len(_df_g)
+                _with_link = int(_df_g["link_mentions"].astype(int).gt(0).sum()) if "link_mentions" in _df_g.columns else 0
+                _no_link = _total - _with_link
+                _link_pct = _with_link * 100 / _total if _total else 0
 
-                if total_queries > 0:
-                    link_rate = has_link_count / total_queries * 100
-                    brand_rate = has_brand_count / total_queries * 100
-                    neg_rate = has_negative_count / total_queries * 100
+                # Also count from zhice JSON
+                _zhice_total = 0
+                _zhice_brand = 0
+                _zhice_link = 0
+                _gap_queries_list = []
+                if _zhice_d.exists():
+                    for _jf in sorted(_zhice_d.glob("*.json"), key=lambda f: f.stat().st_mtime, reverse=True):
+                        try:
+                            _jd = json.loads(_jf.read_text(encoding="utf-8"))
+                            if isinstance(_jd, list):
+                                for r in _jd:
+                                    if isinstance(r, dict) and "query" in r and "error" not in r:
+                                        _zhice_total += 1
+                                        if r.get("has_brand_mention"):
+                                            _zhice_brand += 1
+                                        if r.get("has_official_link"):
+                                            _zhice_link += 1
+                                        else:
+                                            _gap_queries_list.append({"query": r.get("query", ""), "platform": r.get("platform", "")})
+                        except Exception:
+                            pass
 
-                    col_m1, col_m2, col_m3, col_m4 = st.columns(4)
-                    col_m1.metric("Total Queries" if is_en else "总检索数", total_queries)
-                    col_m2.metric("Official Link %" if is_en else "官方链接覆盖率", f"{link_rate:.0f}%")
-                    col_m3.metric("Brand Mention %" if is_en else "品牌提及率", f"{brand_rate:.0f}%")
-                    col_m4.metric("Negative Content" if is_en else "含负面内容", f"{neg_rate:.0f}%", delta=f"-{has_negative_count}" if has_negative_count > 0 else "0", delta_color="inverse")
+                col_g1, col_g2, col_g3, col_g4 = st.columns(4)
+                col_g1.metric("YTD Phrases Tested" if is_en else "YTD 检索短语数", _total)
+                col_g2.metric("Link Coverage" if is_en else "官方链接覆盖率", f"{_link_pct:.1f}%")
+                _brand_pct = _zhice_brand * 100 / _zhice_total if _zhice_total > 0 else 0
+                col_g3.metric("Brand Mention (智测)" if is_en else "品牌提及率(智测)", f"{_brand_pct:.0f}%" if _zhice_total > 0 else "—")
+                col_g4.metric("No Link (Gap)" if is_en else "无链接 Gap", f"{_no_link} ({100-_link_pct:.0f}%)")
 
-                    # Show uncovered queries as gaps
-                    if gap_queries:
-                        st.markdown(f"**❌ {'Uncovered Queries (no official link in AI answer)' if is_en else '未覆盖的检索短语（AI 回答中无官方链接）'}** ({len(gap_queries)})")
-                        # Deduplicate by query
-                        seen = set()
-                        unique_gaps = []
-                        for g in gap_queries:
-                            if g["query"] not in seen:
-                                seen.add(g["query"])
-                                unique_gaps.append(g)
-                        df_gaps = pd.DataFrame(unique_gaps[:20])
-                        if not df_gaps.empty:
-                            st.dataframe(df_gaps, use_container_width=True, hide_index=True)
-                    else:
-                        st.success("✅ All queries have official link coverage" if is_en else "✅ 所有检索短语均有官方链接覆盖")
-                else:
-                    st.caption("No valid journey data to analyze" if is_en else "暂无有效旅程数据可分析")
-            else:
-                st.caption("No journey results yet. Run 智测 to discover AI search coverage gaps." if is_en else "暂无旅程结果。运行智测可发现 AI 搜索覆盖 Gap。")
-        else:
-            st.caption("No journey results yet. Run 智测 to discover AI search coverage gaps." if is_en else "暂无旅程结果。运行智测可发现 AI 搜索覆盖 Gap。")
+                # Show gap queries from zhice
+                if _gap_queries_list:
+                    seen_q = set()
+                    unique_gq = [g for g in _gap_queries_list if g["query"] not in seen_q and not seen_q.add(g["query"])]
+                    with st.expander(f"❌ {'Uncovered queries' if is_en else '未覆盖短语'} ({len(unique_gq)})", expanded=False):
+                        st.dataframe(pd.DataFrame(unique_gq[:30]), use_container_width=True, hide_index=True)
+
+        if not _has_gap_data:
+            st.caption("No gap verification data." if is_en else "暂无 Gap 验证数据。")
 
         st.divider()
 
-        # Coverage gap analysis
-        st.markdown("**📊 Category Coverage Gap**" if is_en else "**📊 类别覆盖 Gap**")
-        df_all_articles = load_zhizao(selected_batch)
-        if not df_all_articles.empty and "category" in df_all_articles.columns:
-            covered_topics = set(df_all_articles["category"].dropna().unique())
-            all_topics = set(CATEGORIES_35)
-            uncovered = sorted(all_topics - covered_topics)
+        # --- 2. Content Type Performance ---
+        st.markdown("**📊 Content Type Performance**" if is_en else "**📊 内容类型表现对比**")
+        _ct_file = METRICS_PATH / "content_type_analysis.csv"
+        if _ct_file.exists():
+            _df_ct = load_csv_safe(_ct_file)
+            if not _df_ct.empty:
+                st.dataframe(_df_ct, use_container_width=True, hide_index=True)
+                # Insights
+                if "link_rate" in _df_ct.columns and "content_type" in _df_ct.columns:
+                    _ct_sorted = _df_ct.sort_values("link_rate", ascending=False)
+                    _best = _ct_sorted.iloc[0]
+                    _worst = _ct_sorted.iloc[-1]
+                    st.markdown(f"""
+- {"Best performing" if is_en else "表现最好"}：**{_best['content_type']}** — {"link rate" if is_en else "链接率"} {_best['link_rate']}%
+- {"Needs improvement" if is_en else "待改进"}：**{_worst['content_type']}** — {"link rate" if is_en else "链接率"} {_worst['link_rate']}%
+- {"Key insight" if is_en else "关键洞察"}：{"Entry/navigation content has highest AI citation; industry comparison content gets brand mentions but few links" if is_en else "入口导航类内容 AI 引用链接率最高；行业对比类内容品牌被提及率高(91.8%)但链接率极低(3.1%)"}
+""")
+        else:
+            st.caption("No content type analysis data." if is_en else "暂无内容类型分析数据。")
 
-            col1, col2 = st.columns(2)
-            with col1:
-                st.metric("Categories Covered" if is_en else "已覆盖类别", f"{len(covered_topics)}/35")
-            with col2:
-                st.metric("Uncovered Categories" if is_en else "未覆盖类别", len(uncovered))
+        st.divider()
 
-            if uncovered:
-                st.markdown("**❌ Uncovered categories (priority for content production):**" if is_en else "**❌ 未覆盖的类别（优先产出内容）：**")
-                for i, topic in enumerate(uncovered, 1):
+        # --- 3. Category Coverage Gap (from gap_verification_cn.csv mapped to 35 cats) ---
+        st.markdown("**📊 Category Coverage Gap**" if is_en else "**📊 35类别覆盖 Gap**")
+        if _has_gap_data:
+            # Map queries to 35 categories, find which have no data
+            _covered_cats = set()
+            for _, row in _df_g.iterrows():
+                _c35 = _map_query_to_cat35(str(row.get("ai_query", "")))
+                if _c35 != "其他":
+                    _covered_cats.add(_c35)
+            _all_cats = set(CATEGORIES_35)
+            _uncovered_cats = sorted(_all_cats - _covered_cats)
+
+            col_cv1, col_cv2, col_cv3 = st.columns(3)
+            col_cv1.metric("Covered" if is_en else "已覆盖", f"{len(_covered_cats)}/35")
+            col_cv2.metric("Uncovered" if is_en else "未覆盖", len(_uncovered_cats))
+            col_cv3.metric("Coverage Rate" if is_en else "覆盖率", f"{len(_covered_cats)*100//35}%")
+
+            if _uncovered_cats:
+                st.markdown("**❌ " + ("Uncovered categories (priority for new content):" if is_en else "未覆盖类别（优先产出内容）：") + "**")
+                for i, topic in enumerate(_uncovered_cats, 1):
                     st.markdown(f"{i}. {topic}")
+            else:
+                st.success("✅ All 35 categories have search phrase coverage" if is_en else "✅ 35 个类别均有检索短语覆盖")
         else:
-            st.caption("No article data available for coverage gap analysis" if is_en else "暂无文章数据，无法分析覆盖 Gap")
+            st.caption("No data for category gap analysis." if is_en else "暂无数据用于类别 Gap 分析。")
 
         st.divider()
 
-        # Opportunity recommendations
+        # --- 4. Input Production Trends ---
+        st.markdown("**📈 Input Production Trends**" if is_en else "**📈 Input 产出趋势**")
+        _input_file = METRICS_PATH / "geo_input_summary.csv"
+        if _input_file.exists():
+            _df_input = load_csv_safe(_input_file)
+            if not _df_input.empty:
+                st.dataframe(_df_input, use_container_width=True, hide_index=True)
+        else:
+            st.caption("No input summary data." if is_en else "暂无 Input 汇总数据。")
+
+        st.divider()
+
+        # --- 5. Optimization Recommendations ---
         st.markdown("**🚀 Optimization Recommendations**" if is_en else "**🚀 优化建议**")
         st.markdown("""
-- **High Priority**: Uncovered categories with highest search volume → Produce content immediately
-- **Medium Priority**: Has content but not cited by AI → Optimize GEO signals
-- **Low Priority**: Cited but no link → Optimize link placement strategy
+| Priority | Gap Type | Action |
+|---|---|---|
+| 🔴 High | No coverage (uncovered categories) | Produce new content immediately |
+| 🟡 Medium | Has content, low link rate (<30%) | Optimize link anchor placement + GEO signals |
+| 🟢 Low | High brand mention, low link | Add stronger CTA + URL in content |
         """ if is_en else """
-- **高优先级**：未覆盖类别中检索量最高的 → 立即产出内容
-- **中优先级**：已有内容但未被 AI 引用的 → 优化 GEO 信号
-- **低优先级**：已被引用但无链接的 → 优化链接植入策略
+| 优先级 | Gap 类型 | 行动建议 |
+|---|---|---|
+| 🔴 高 | 未覆盖类别 | 立即产出新内容 |
+| 🟡 中 | 有内容但链接率低(<30%) | 优化链接锚点 + GEO 信号 |
+| 🟢 低 | 品牌被提及但无链接 | 内容中强化 CTA + URL 植入 |
         """)
 
         st.divider()
 
-        # Attribution summary
+        # --- 6. Attribution ---
         st.markdown("**🎯 Attribution Analysis**" if is_en else "**🎯 归因分析**")
         st.markdown("""
 | Channel | Assessment | Recommendation |
 |---|---|---|
-| CN GEO | 🟢 Continuous growth | Continue expanding coverage |
-| WW Direct EST | 🟢 +62% YoY | Maintain pace |
+| CN GEO | 🟢 +452% YoY | Continue expanding AI search coverage |
+| WW Direct EST | 🟢 +62% YoY | Maintain pace, content lag effect working |
 | JP Direct | 🟢 Fastest growth | Prioritize JP content expansion |
-| AE Direct | 🔴 -61% YoY | Investigate cause |
+| AE Direct | 🔴 -61% YoY | Investigate cause, increase EM content |
         """ if is_en else """
 | 渠道 | 判断 | 建议 |
 |---|---|---|
-| CN GEO | 🟢 持续增长 | 继续扩大覆盖 |
-| WW Direct EST | 🟢 +62% YoY | 保持节奏 |
+| CN GEO | 🟢 +452% YoY | 继续扩大 AI 搜索覆盖 |
+| WW Direct EST | 🟢 +62% YoY | 保持节奏，内容滞后效应正在生效 |
 | JP Direct | 🟢 增速最快 | 优先扩展 JP 内容 |
-| AE Direct | 🔴 -61% YoY | 排查原因 |
+| AE Direct | 🔴 -61% YoY | 排查原因，增加 EM 市场内容 |
         """)
 
     # 📜 历史记录
