@@ -3307,60 +3307,9 @@ elif _page_idx == 7:
                         })
                     if summary_rows:
                         st.dataframe(pd.DataFrame(summary_rows), use_container_width=True, hide_index=True)
-
-                    # Then show sub_category breakdown if available
-                    if sub_col:
-                        st.markdown("**" + ("Sub-Category Detail" if is_en else "📊 子类别明细") + "**")
-                        sub_groups = df_gap_real.groupby([cat_col, sub_col])
-                        sub_rows = []
-                        for (cat_name, sub_name), sub_data in sub_groups:
-                            sub_total = len(sub_data)
-                            sub_with_link = int(sub_data["link_mentions"].astype(int).gt(0).sum()) if "link_mentions" in sub_data.columns else 0
-                            sub_rows.append({
-                                "大类" if not is_en else "Category": cat_name,
-                                "子类" if not is_en else "Sub-Category": sub_name,
-                                "短语数" if not is_en else "Phrases": sub_total,
-                                "有链接" if not is_en else "With Link": sub_with_link,
-                                "链接率" if not is_en else "Link Rate": f"{sub_with_link*100//sub_total if sub_total else 0}%",
-                                "占比" if not is_en else "% Total": f"{sub_total*100//total_q if total_q else 0}%",
-                            })
-                        if sub_rows:
-                            st.dataframe(pd.DataFrame(sub_rows), use_container_width=True, hide_index=True)
                 else:
                     st.caption("No category column in data" if is_en else "数据中无类别列")
 
-                st.divider()
-
-                # --- Detail Table with Filter ---
-                st.markdown("**" + ("Detail: Per-Phrase Link Status" if is_en else "📋 明细：逐条短语链接状态") + "**")
-                col_filter1, col_filter2 = st.columns(2)
-                with col_filter1:
-                    gap_filter = st.selectbox("Status" if is_en else "筛选",
-                        ["All" if is_en else "全部", "Has Link" if is_en else "有链接", "No Link (Gap)" if is_en else "无链接 (Gap)"],
-                        key="zhixi_gap_filter2")
-                with col_filter2:
-                    cat_options_data = ["All" if is_en else "全部"]
-                    if "sub_category" in df_gap_real.columns:
-                        cat_options_data += sorted(df_gap_real["sub_category"].dropna().unique().tolist())
-                    elif "category" in df_gap_real.columns:
-                        cat_options_data += sorted(df_gap_real["category"].dropna().unique().tolist())
-                    gap_cat_filter = st.selectbox("Category" if is_en else "按类别", cat_options_data, key="zhixi_gap_cat_filter")
-                df_gap_show = df_gap_real.copy()
-                if "Has Link" in gap_filter or "有链接" in gap_filter:
-                    df_gap_show = df_gap_show[df_gap_show["link_mentions"].astype(int) > 0]
-                elif "No Link" in gap_filter or "无链接" in gap_filter:
-                    df_gap_show = df_gap_show[df_gap_show["link_mentions"].astype(int) == 0]
-                # Apply category filter
-                if gap_cat_filter not in ["All", "全部"]:
-                    cat_col_f = "sub_category" if "sub_category" in df_gap_show.columns else ("category" if "category" in df_gap_show.columns else None)
-                    if cat_col_f:
-                        df_gap_show = df_gap_show[df_gap_show[cat_col_f] == gap_cat_filter]
-                st.caption(f"{'Showing' if is_en else '显示'} {len(df_gap_show)} / {len(df_gap_real)}")
-                show_cols = ["ai_query", "category", "sub_category", "has_link", "link_mentions", "link_rate"]
-                platform_cols = [c for c in df_gap_show.columns if c.startswith("link_") and c not in ["link_mentions", "link_rate"]]
-                show_cols += platform_cols
-                show_cols = [c for c in show_cols if c in df_gap_show.columns]
-                st.dataframe(df_gap_show[show_cols], use_container_width=True, hide_index=True)
         else:
             st.info("Gap verification data not available." if is_en else "Gap 验证数据不可用。")
 
@@ -3559,6 +3508,41 @@ elif _page_idx == 7:
 """)
         else:
             st.caption("Gap verification data not available." if is_en else "暂无 Gap 验证数据。请上传 gap_verification_cn.csv。")
+
+        # --- Detail Table (moved to bottom) ---
+        st.divider()
+        st.markdown("**" + ("📋 Detail: Per-Phrase Link Status" if is_en else "📋 明细：逐条短语链接状态") + "**")
+        _gap_file_detail = METRICS_PATH / "gap_verification_cn.csv"
+        if _gap_file_detail.exists():
+            _df_detail = load_csv_safe(_gap_file_detail)
+            if not _df_detail.empty:
+                col_filter1, col_filter2 = st.columns(2)
+                with col_filter1:
+                    gap_filter = st.selectbox("Status" if is_en else "筛选",
+                        ["All" if is_en else "全部", "Has Link" if is_en else "有链接", "No Link (Gap)" if is_en else "无链接 (Gap)"],
+                        key="zhixi_gap_filter2")
+                with col_filter2:
+                    cat_options_data = ["All" if is_en else "全部"]
+                    if "sub_category" in _df_detail.columns:
+                        cat_options_data += sorted(_df_detail["sub_category"].dropna().unique().tolist())
+                    elif "category" in _df_detail.columns:
+                        cat_options_data += sorted(_df_detail["category"].dropna().unique().tolist())
+                    gap_cat_filter = st.selectbox("Category" if is_en else "按类别", cat_options_data, key="zhixi_gap_cat_filter")
+                df_gap_show = _df_detail.copy()
+                if "Has Link" in gap_filter or "有链接" in gap_filter:
+                    df_gap_show = df_gap_show[df_gap_show["link_mentions"].astype(int) > 0]
+                elif "No Link" in gap_filter or "无链接" in gap_filter:
+                    df_gap_show = df_gap_show[df_gap_show["link_mentions"].astype(int) == 0]
+                if gap_cat_filter not in ["All", "全部"]:
+                    cat_col_f = "sub_category" if "sub_category" in df_gap_show.columns else ("category" if "category" in df_gap_show.columns else None)
+                    if cat_col_f:
+                        df_gap_show = df_gap_show[df_gap_show[cat_col_f] == gap_cat_filter]
+                st.caption(f"{'Showing' if is_en else '显示'} {len(df_gap_show)} / {len(_df_detail)}")
+                show_cols = ["ai_query", "category", "sub_category", "has_link", "link_mentions", "link_rate"]
+                platform_cols = [c for c in df_gap_show.columns if c.startswith("link_") and c not in ["link_mentions", "link_rate"]]
+                show_cols += platform_cols
+                show_cols = [c for c in show_cols if c in df_gap_show.columns]
+                st.dataframe(df_gap_show[show_cols], use_container_width=True, hide_index=True)
 
     # TAB 4: Gap & 机会点
     # ============================================================
