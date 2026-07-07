@@ -3679,9 +3679,9 @@ elif _page_idx == 7:
             col_cv3.metric("Coverage Rate" if is_en else "覆盖率", f"{len(_covered_cats)*100//35}%")
 
             if _uncovered_cats:
-                st.markdown("**❌ " + ("Uncovered categories (priority for new content):" if is_en else "未覆盖类别（优先产出内容）：") + "**")
-                for i, topic in enumerate(_uncovered_cats, 1):
-                    st.markdown(f"{i}. {topic}")
+                with st.expander(f"❌ {'Uncovered categories' if is_en else '未覆盖类别（优先产出内容）'} ({len(_uncovered_cats)})", expanded=False):
+                    for i, topic in enumerate(_uncovered_cats, 1):
+                        st.markdown(f"{i}. {topic}")
             else:
                 st.success("✅ All 35 categories have search phrase coverage" if is_en else "✅ 35 个类别均有检索短语覆盖")
         else:
