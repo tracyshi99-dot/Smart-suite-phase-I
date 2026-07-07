@@ -1,0 +1,192 @@
+{
+  "persona": {
+    "name": "深圳3C卖家张先生",
+    "background": "深圳3C配件卖家，35岁，年营收500万人民币，主做1688和京东，想开拓海外市场",
+    "goal": "想了解如何在亚马逊美国站开店，从注册到选品到运营的完整路径",
+    "language": "mixed (中英文)"
+  },
+  "platforms": [
+    "chatgpt",
+    "gemini",
+    "perplexity",
+    "deepseek",
+    "doubao",
+    "kimi",
+    "yuanbao",
+    "qianwen"
+  ],
+  "rounds": [
+    {
+      "round_num": 1,
+      "queries": {
+        "chatgpt": "how to sell on amazon US as Chinese seller",
+        "gemini": "how to sell on amazon US as Chinese seller",
+        "perplexity": "how to sell on amazon US as Chinese seller",
+        "deepseek": "想了解如何在亚马逊美国站开店",
+        "doubao": "想了解如何在亚马逊美国站开店",
+        "kimi": "想了解如何在亚马逊美国站开店",
+        "yuanbao": "想了解如何在亚马逊美国站开店",
+        "qianwen": "想了解如何在亚马逊美国站开店"
+      },
+      "results": {
+        "ChatGPT": {
+          "key_points": [
+            "注册亚马逊卖家账号是第一步",
+            "选品需要考虑市场需求和竞争情况",
+            "运营包括产品上架、订单处理、客户服务等"
+          ],
+          "sources": [
+            {
+              "title": "How to Sell on Amazon for Beginners",
+              "domain": "www.junglescout.com",
+              "url": "https://www.junglescout.com/blog/how-to-sell-on-amazon-for-beginners/",
+              "is_our_content": false
+            },
+            {
+              "title": "Amazon Seller Central",
+              "domain": "sellercentral.amazon.com",
+              "url": "https://sellercentral.amazon.com/",
+              "is_our_content": false
+            }
+          ],
+          "answer_style": "综合性回答,涵盖了主要步骤和注意事项。"
+        },
+        "Gemini": {
+          "key_points": [
+            "Register as an Amazon seller and create your product listings",
+            "Understand Amazon's fees, policies, and requirements for Chinese sellers",
+            "Manage inventory, shipping, customer service, and marketing for your products"
+          ],
+          "sources": [
+            {
+              "title": "Selling on Amazon for Chinese Sellers",
+              "domain": "sellercentral.amazon.com",
+              "url": "https://sellercentral.amazon.com/learn/courses?courseId=50",
+              "is_our_content": false
+            },
+            {
+              "title": "How to Sell on Amazon for Beginners",
+              "domain": "www.junglescout.com",
+              "url": "https://www.junglescout.com/blog/how-to-sell-on-amazon-for-beginners/",
+              "is_our_content": false
+            }
+          ],
+          "answer_style": "以列举要点的形式回答,内容简洁明了。"
+        },
+        "Perplexity": {
+          "key_points": [
+            "注册成为亚马逊卖家是第一步 (sellercentral.amazon.com)",
+            "选品时要考虑市场需求和竞争情况 (www.junglescout.com)",
+            "运营包括产品上架、订单处理、客户服务等 (sellercentral.amazon.com)"
+          ],
+          "sources": [
+            {
+              "title": "How to Sell on Amazon for Beginners",
+              "domain": "www.junglescout.com",
+              "url": "https://www.junglescout.com/blog/how-to-sell-on-amazon-for-beginners/",
+              "is_our_content": false
+            },
+            {
+              "title": "Amazon Seller Central",
+              "domain": "sellercentral.amazon.com",
+              "url": "https://sellercentral.amazon.com/",
+              "is_our_content": false
+            }
+          ],
+          "answer_style": "以引用形式回答,每个要点后面标注了出处。"
+        },
+        "DeepSeek": {
+          "key_points": [
+            "注册亚马逊卖家账号是第一步",
+            "选品需要考虑市场需求和竞争情况",
+            "运营包括产品上架、订单处理、客户服务等"
+          ],
+          "sources": [
+            {
+              "title": "How to Sell on Amazon for Beginners",
+              "domain": "www.junglescout.com",
+              "url": "https://www.junglescout.com/blog/how-to-sell-on-amazon-for-beginners/",
+              "is_our_content": false
+            },
+            {
+              "title": "Amazon Seller Central",
+              "domain": "sellercentral.amazon.com",
+              "url": "https://sellercentral.amazon.com/",
+              "is_our_content": false
+            }
+          ],
+          "answer_style": "逻辑性很强,将答案分成三个关键步骤。"
+        },
+        "豆包": {
+          "key_points": [
+            "注册亚马逊卖家账号",
+            "选择热销产品",
+            "上架产品并处理订单"
+          ],
+          "sources": [
+            {
+              "title": "如何在亚马逊开店卖货?",
+              "domain": "zhihu.com",
+              "url": "https://www.zhihu.com/question/21036037",
+              "is_our_content": false
+            }
+          ],
+          "answer_style": "回答简单直接,只列出了基本步骤。"
+        },
+        "Kimi": {
+          "key_points": [
+            "注册亚马逊卖家账号",
+            "选择适合的产品类目",
+            "了解亚马逊的运营规则"
+          ],
+          "sources": [
+            {
+              "title": "新手如何在亚马逊开店卖货?",
+              "domain": "www.sohu.com",
+              "url": "https://www.sohu.com/a/236337178_100106938",
+              "is_our_content": false
+            }
+          ],
+          "answer_style": "回答比较笼统,没有太多细节。"
+        },
+        "元宝": {
+          "key_points": [
+            "注册亚马逊卖家账号",
+            "选择热销产品",
+            "优化产品详情页"
+          ],
+          "sources": [
+            {
+              "title": "亚马逊开店卖家入门指南",
+              "domain": "gs.amazon.cn",
+              "url": "https://gs.amazon.cn/help/node/200988440",
+              "is_our_content": true
+            }
+          ],
+          "answer_style": "回答简单直接,引用了我们的内容。"
+        },
+        "千问": {
+          "key_points": [
+            "注册亚马逊卖家账号",
+            "选择适合的产品类目",
+            "了解亚马逊的运营规则"
+          ],
+          "sources": [
+            {
+              "title": "新手如何在亚马逊开店卖货?",
+              "domain": "www.sohu.com",
+              "url": "https://www.sohu.com/a/236337178_100106938",
+              "is_our_content": false
+            }
+          ],
+          "answer_style": "回答比较笼统,与Kimi平台类似。"
+        }
+      },
+      "timestamp": "2026-06-09T12:02:38.826261",
+      "key_findings": "本轮搜索主要涵盖了在亚马逊开店的基本流程,包括注册、选品和运营等关键步骤。但细节方面还有待进一步了解。",
+      "our_content_found": true,
+      "coverage_note": "我们的内容在本轮搜索中得到了一定覆盖,但还不够全面。"
+    }
+  ],
+  "generated_at": "2026-06-09T12:03:47.280295"
+}

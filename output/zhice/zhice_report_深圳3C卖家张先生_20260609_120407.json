@@ -1,0 +1,76 @@
+{
+  "overview": {
+    "total_rounds": 1,
+    "total_queries": 8,
+    "platforms_tested": [
+      "chatgpt",
+      "gemini",
+      "perplexity",
+      "deepseek",
+      "doubao",
+      "kimi",
+      "yuanbao",
+      "qianwen"
+    ],
+    "our_content_found_rounds": 1,
+    "overall_coverage_rate": "12.5%"
+  },
+  "coverage_analysis": {
+    "by_platform": {
+      "chatgpt": "回答全面,涵盖了主要步骤",
+      "gemini": "以列表形式回答,内容简洁明了",
+      "perplexity": "引用形式回答,标注了出处",
+      "deepseek": "逻辑分明,分为三个关键步骤",
+      "doubao": "只列出了基本步骤,过于简单",
+      "kimi": "回答比较笼统,缺乏细节",
+      "yuanbao": "引用了我们的内容,但过于简单",
+      "qianwen": "与kimi平台类似,回答笼统"
+    },
+    "uncovered_nodes": [
+      "亚马逊开店的具体费用",
+      "物流和供应链安排",
+      "营销推广技巧"
+    ],
+    "strong_nodes": [
+      "注册流程",
+      "选品建议",
+      "基本运营事项"
+    ]
+  },
+  "competitor_analysis": {
+    "frequent_sources": [
+      {
+        "domain": "www.junglescout.com",
+        "frequency": 3,
+        "content_type": "教程文章"
+      },
+      {
+        "domain": "sellercentral.amazon.com",
+        "frequency": 3,
+        "content_type": "官方指南"
+      }
+    ],
+    "competitor_strengths": [
+      "内容专业全面",
+      "官方渠道权威"
+    ]
+  },
+  "recommendations": {
+    "new_keywords": [
+      "亚马逊开店费用",
+      "亚马逊物流供应链",
+      "亚马逊卖家营销"
+    ],
+    "content_gaps": [
+      "缺少费用的具体数据",
+      "物流供应链操作指南",
+      "营销推广实操技巧"
+    ],
+    "optimization_priorities": [
+      "补充开店全流程内容",
+      "加强实操指导",
+      "优化内容组织结构"
+    ]
+  },
+  "summary": "本次检测发现我们在亚马逊开店入门知识方面的覆盖还不够全面,特别是在费用、物流和营销等实操环节缺乏指导。竞争对手的内容更加专业和权威。我们需要补充完整的开店流程内容,加强实操指导,优化内容组织以提高可读性。"
+}

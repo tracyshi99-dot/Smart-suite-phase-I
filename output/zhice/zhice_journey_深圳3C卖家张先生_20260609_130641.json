@@ -1,0 +1,359 @@
+{
+  "persona": {
+    "name": "深圳3C卖家张先生",
+    "background": "深圳3C配件卖家，35岁，年营收500万人民币，主做1688和京东，想开拓海外市场",
+    "goal": "想了解如何在亚马逊美国站开店，从注册到选品到运营的完整路径",
+    "language": "mixed (中英文)"
+  },
+  "platforms": [
+    "chatgpt",
+    "gemini",
+    "perplexity",
+    "deepseek",
+    "doubao",
+    "kimi",
+    "yuanbao",
+    "qianwen"
+  ],
+  "rounds": [
+    {
+      "round_num": 1,
+      "queries": {
+        "chatgpt": "想了解如何在亚马逊美国站开店",
+        "gemini": "想了解如何在亚马逊美国站开店",
+        "perplexity": "想了解如何在亚马逊美国站开店",
+        "deepseek": "想了解如何在亚马逊美国站开店",
+        "doubao": "想了解如何在亚马逊美国站开店",
+        "kimi": "想了解如何在亚马逊美国站开店",
+        "yuanbao": "想了解如何在亚马逊美国站开店",
+        "qianwen": "想了解如何在亚马逊美国站开店"
+      },
+      "results": {
+        "chatgpt": {
+          "full_answer": "作为一位深圳3C配件卖家,在亚马逊美国站开店是一个不错的选择来拓展海外市场。首先,你需要注册一个亚马逊卖家账户,并完成相关的身份验证。接下来,你需要熟悉亚马逊的政策和规则,包括产品上架要求、运费和税费等。同时,你也需要准备好产品图片、描述和其他必要信息。为了提高销量,你可以考虑使用亚马逊广告和优惠活动。此外,提供优质的客户服务也是非常重要的。总的来说,在亚马逊开店需要一定的准备工作,但潜力巨大,值得一试。",
+          "key_points": [
+            "注册亚马逊卖家账户",
+            "熟悉亚马逊政策和规则",
+            "准备产品信息和营销策略",
+            "提供优质客户服务"
+          ],
+          "sources": [
+            {
+              "title": "亚马逊卖家入门指南",
+              "domain": "gs.amazon.cn",
+              "url": "https://gs.amazon.cn/help/G201743550",
+              "is_our_content": true,
+              "relevance": "官方入门指南,涵盖了开店的基本流程"
+            },
+            {
+              "title": "如何在亚马逊上开店",
+              "domain": "zhuanlan.zhihu.com",
+              "url": "https://zhuanlan.zhihu.com/p/33582629",
+              "is_our_content": false,
+              "relevance": "第三方经验分享,提供了实用建议"
+            },
+            {
+              "title": "亚马逊卖家常见问题解答",
+              "domain": "gs.amazon.cn",
+              "url": "https://gs.amazon.cn/help/GFBBQXN5ZZFXZXMR",
+              "is_our_content": true,
+              "relevance": "官方FAQ,涵盖了开店过程中可能遇到的常见问题"
+            },
+            {
+              "title": "亚马逊广告入门指南",
+              "domain": "advertising.amazon.com",
+              "url": "https://advertising.amazon.com/resources/ad-guide",
+              "is_our_content": false,
+              "relevance": "介绍了亚马逊广告的种类和使用方法"
+            }
+          ]
+        },
+        "gemini": {
+          "full_answer": "作为一位深圳3C配件卖家,在亚马逊美国站开店是一个不错的选择来拓展海外市场。首先,你需要注册一个亚马逊卖家账户,并完成相关的身份验证。接下来,你需要熟悉亚马逊的政策和规则,包括产品上架要求、运费和税费等。同时,你也需要准备好产品图片、描述和其他必要信息。为了提高销量,你可以考虑使用亚马逊广告和优惠活动。此外,提供优质的客户服务也是非常重要的。总的来说,在亚马逊开店需要一定的准备工作,但潜力巨大,值得一试。",
+          "key_points": [
+            "注册亚马逊卖家账户",
+            "熟悉亚马逊政策和规则",
+            "准备产品信息和营销策略",
+            "提供优质客户服务"
+          ],
+          "sources": [
+            {
+              "title": "亚马逊卖家入门指南",
+              "domain": "gs.amazon.cn",
+              "url": "https://gs.amazon.cn/help/G201743550",
+              "is_our_content": true,
+              "relevance": "官方入门指南,涵盖了开店的基本流程"
+            },
+            {
+              "title": "如何在亚马逊上开店",
+              "domain": "zhuanlan.zhihu.com",
+              "url": "https://zhuanlan.zhihu.com/p/33582629",
+              "is_our_content": false,
+              "relevance": "第三方经验分享,提供了实用建议"
+            },
+            {
+              "title": "亚马逊卖家常见问题解答",
+              "domain": "gs.amazon.cn",
+              "url": "https://gs.amazon.cn/help/GFBBQXN5ZZFXZXMR",
+              "is_our_content": true,
+              "relevance": "官方FAQ,涵盖了开店过程中可能遇到的常见问题"
+            },
+            {
+              "title": "亚马逊广告入门指南",
+              "domain": "advertising.amazon.com",
+              "url": "https://advertising.amazon.com/resources/ad-guide",
+              "is_our_content": false,
+              "relevance": "介绍了亚马逊广告的种类和使用方法"
+            }
+          ]
+        },
+        "perplexity": {
+          "full_answer": "作为一个深圳3C配件卖家,在亚马逊美国站开店是一个不错的选择。首先,你需要注册一个亚马逊卖家账户,并选择合适的产品类目。接下来,你需要准备产品列表、图片、描述等信息,并设置合理的价格和运费。另外,你还需要了解亚马逊的政策和规则,比如退货、纠纷处理等。最后,你需要安排产品发货到亚马逊的仓库,或者使用亚马逊的FBA服务。总的来说,开店需要一定的准备工作,但只要做好充分准备,就能顺利开展业务。",
+          "key_points": [
+            "注册亚马逊卖家账户",
+            "准备产品信息",
+            "了解亚马逊政策",
+            "安排发货或使用FBA"
+          ],
+          "sources": [
+            {
+              "title": "如何在亚马逊开店卖家入门指南",
+              "domain": "gs.amazon.cn",
+              "url": "https://gs.amazon.cn/sellercentral/seller-university/course?courseId=200790680",
+              "is_our_content": true,
+              "relevance": "亚马逊官方卖家入门指南"
+            },
+            {
+              "title": "亚马逊卖家中心",
+              "domain": "sellercentral.amazon.com",
+              "url": "https://sellercentral.amazon.com/",
+              "is_our_content": false,
+              "relevance": "亚马逊卖家操作平台"
+            },
+            {
+              "title": "如何在亚马逊开店卖家指南",
+              "domain": "zhuanlan.zhihu.com",
+              "url": "https://zhuanlan.zhihu.com/p/22593286",
+              "is_our_content": false,
+              "relevance": "第三方卖家经验分享"
+            },
+            {
+              "title": "亚马逊FBA介绍",
+              "domain": "services.amazon.cn",
+              "url": "https://services.amazon.cn/services/fulfillment-by-amazon/features-benefits.html",
+              "is_our_content": true,
+              "relevance": "亚马逊FBA服务官方介绍"
+            }
+          ]
+        },
+        "deepseek": {
+          "full_answer": "作为一名深圳3C配件卖家,如果想在亚马逊美国站开店,你需要做好以下准备工作:首先注册一个亚马逊卖家账户,选择合适的产品类目。然后准备产品列表、图片、描述等信息,并设置合理的价格和运费。同时你需要了解亚马逊的各项政策,如退货、纠纷处理等规则。最后,安排将产品发货到亚马逊的仓库,或使用亚马逊的FBA服务。总之,开店需要一定的准备工作,但只要做好充分准备,就能顺利开展在亚马逊美国站的业务。",
+          "key_points": [
+            "注册亚马逊卖家账户",
+            "准备产品信息",
+            "了解亚马逊政策",
+            "安排发货或使用FBA"
+          ],
+          "sources": [
+            {
+              "title": "亚马逊卖家入门指南",
+              "domain": "gs.amazon.cn",
+              "url": "https://gs.amazon.cn/sellercentral/seller-university/course?courseId=200790680",
+              "is_our_content": true,
+              "relevance": "亚马逊官方卖家入门指南"
+            },
+            {
+              "title": "如何在亚马逊开店卖家指南",
+              "domain": "www.youxiashop.com",
+              "url": "https://www.youxiashop.com/amazon-seller-guide/",
+              "is_our_content": false,
+              "relevance": "第三方卖家经验分享"
+            },
+            {
+              "title": "亚马逊FBA运营指南",
+              "domain": "services.amazon.cn",
+              "url": "https://services.amazon.cn/services/fulfillment-by-amazon/features-benefits.html",
+              "is_our_content": true,
+              "relevance": "亚马逊FBA服务官方介绍"
+            },
+            {
+              "title": "亚马逊卖家政策",
+              "domain": "sellercentral.amazon.com",
+              "url": "https://sellercentral.amazon.com/gp/help/external/G200376520",
+              "is_our_content": false,
+              "relevance": "亚马逊卖家政策规则"
+            }
+          ]
+        },
+        "doubao": {
+          "full_answer": "作为一个深圳3C配件卖家,在亚马逊美国站开店是一个不错的选择。首先,您需要注册一个亚马逊卖家账户,并熟悉亚马逊的政策和要求。其次,您需要准备产品清单、图片、描述等上架资料。第三,您需要安排产品运输到亚马逊的仓库。最后,您需要投放广告、优化产品排名等运营工作。整个过程需要耐心和持续的努力,但潜在回报是巨大的。",
+          "key_points": [
+            "注册亚马逊卖家账户",
+            "准备上架资料",
+            "安排产品运输",
+            "运营推广优化"
+          ],
+          "sources": [
+            {
+              "title": "亚马逊卖家入门指南",
+              "domain": "gs.amazon.cn",
+              "url": "https://gs.amazon.cn/help/G201743480",
+              "is_our_content": true,
+              "relevance": "亚马逊官方入门指南"
+            },
+            {
+              "title": "如何在亚马逊开店卖家指南",
+              "domain": "zhuanlan.zhihu.com",
+              "url": "https://zhuanlan.zhihu.com/p/24669472",
+              "is_our_content": false,
+              "relevance": "第三方经验分享"
+            },
+            {
+              "title": "亚马逊卖家运营技巧",
+              "domain": "www.youxuanwang.com",
+              "url": "https://www.youxuanwang.com/archives/1649",
+              "is_our_content": false,
+              "relevance": "运营优化建议"
+            },
+            {
+              "title": "亚马逊广告投放指南",
+              "domain": "www.iamwiz.cn",
+              "url": "https://www.iamwiz.cn/amazon-ads/",
+              "is_our_content": false,
+              "relevance": "广告投放建议"
+            }
+          ]
+        },
+        "kimi": {
+          "full_answer": "作为一名深圳3C配件卖家,在亚马逊美国站开店是一个值得考虑的选择。首先,您需要注册成为亚马逊卖家,了解亚马逊的政策和要求。接下来,您需要准备好产品信息、图片、描述等上架资料。然后,您需要将产品运输到亚马逊的仓库。最后,您需要进行产品推广、优化排名等运营工作。整个过程需要耐心和持续的投入,但潜在回报是巨大的。",
+          "key_points": [
+            "注册亚马逊卖家账户",
+            "准备上架资料",
+            "安排产品运输",
+            "运营推广优化"
+          ],
+          "sources": [
+            {
+              "title": "亚马逊卖家入门指南",
+              "domain": "gs.amazon.cn",
+              "url": "https://gs.amazon.cn/help/G201743480",
+              "is_our_content": true,
+              "relevance": "亚马逊官方入门指南"
+            },
+            {
+              "title": "如何在亚马逊开店卖家指南",
+              "domain": "www.zhihu.com",
+              "url": "https://zhuanlan.zhihu.com/p/24669472",
+              "is_our_content": false,
+              "relevance": "第三方经验分享"
+            },
+            {
+              "title": "亚马逊卖家运营技巧",
+              "domain": "www.iamwiz.cn",
+              "url": "https://www.iamwiz.cn/amazon-seller-tips/",
+              "is_our_content": false,
+              "relevance": "运营优化建议"
+            },
+            {
+              "title": "亚马逊广告投放指南",
+              "domain": "www.youxuanwang.com",
+              "url": "https://www.youxuanwang.com/archives/1649",
+              "is_our_content": false,
+              "relevance": "广告投放建议"
+            }
+          ]
+        },
+        "yuanbao": {
+          "full_answer": "作为一个深圳3C配件卖家,在亚马逊美国站开店是一个不错的选择来拓展海外市场。首先,你需要注册一个亚马逊卖家账户,并完成相关的身份和税务信息验证。接下来,你需要熟悉亚马逊的政策和规则,比如产品上架要求、运费标准、退货政策等。同时,你也需要准备好产品的详细信息、高质量图片和关键词优化等。最后,你需要制定营销策略,如赞助广告、优惠活动等,以提高产品曝光率和销量。总的来说,开店需要耐心和持续投入,但潜力是巨大的。",
+          "key_points": [
+            "注册亚马逊卖家账户",
+            "熟悉亚马逊政策和规则",
+            "准备产品信息和优化",
+            "制定营销策略"
+          ],
+          "sources": [
+            {
+              "title": "亚马逊卖家入门指南",
+              "domain": "gs.amazon.cn",
+              "url": "https://gs.amazon.cn/sellercentral/guide",
+              "is_our_content": true,
+              "relevance": "官方入门指南"
+            },
+            {
+              "title": "如何在亚马逊开店卖家",
+              "domain": "zhuanlan.zhihu.com",
+              "url": "https://zhuanlan.zhihu.com/p/23636373",
+              "is_our_content": false,
+              "relevance": "第三方经验分享"
+            },
+            {
+              "title": "亚马逊卖家常见问题解答",
+              "domain": "www.amazon.com",
+              "url": "https://www.amazon.com/gp/help/customer/display.html",
+              "is_our_content": false,
+              "relevance": "官方问答"
+            },
+            {
+              "title": "亚马逊赞助广告优化技巧",
+              "domain": "gs.amazon.cn",
+              "url": "https://gs.amazon.cn/advertising/guide",
+              "is_our_content": true,
+              "relevance": "官方广告指南"
+            }
+          ]
+        },
+        "qianwen": {
+          "full_answer": "作为一名深圳3C配件卖家,如果想在亚马逊美国站开店,你需要做好充分的准备工作。首先,你需要注册一个亚马逊卖家账户,并完成相关的身份验证和税务设置。接下来,你需要熟悉亚马逊的各项政策和规则,如产品上架要求、运费标准、退货流程等,确保你的产品和运营符合规范。同时,你也需要准备好产品的详细信息、高质量图片以及关键词优化等,以提高产品在搜索结果中的排名和曝光率。最后,你需要制定营销策略,如赞助广告投放、优惠活动等,来吸引潜在买家并提高销量。总的来说,在亚马逊开店需要耐心和持续的投入,但潜力是巨大的。",
+          "key_points": [
+            "注册亚马逊卖家账户",
+            "熟悉亚马逊政策规则",
+            "优化产品信息和关键词",
+            "制定营销推广策略"
+          ],
+          "sources": [
+            {
+              "title": "亚马逊卖家入门指南",
+              "domain": "gs.amazon.cn",
+              "url": "https://gs.amazon.cn/sellercentral/guide",
+              "is_our_content": true,
+              "relevance": "官方入门指南"
+            },
+            {
+              "title": "如何成功在亚马逊开店",
+              "domain": "www.zhihu.com",
+              "url": "https://www.zhihu.com/question/22593572",
+              "is_our_content": false,
+              "relevance": "第三方经验分享"
+            },
+            {
+              "title": "亚马逊卖家学习中心",
+              "domain": "gs.amazon.cn",
+              "url": "https://gs.amazon.cn/sellercentral/learning",
+              "is_our_content": true,
+              "relevance": "官方学习资源"
+            },
+            {
+              "title": "亚马逊赞助广告优化指南",
+              "domain": "gs.amazon.cn",
+              "url": "https://gs.amazon.cn/advertising/guide",
+              "is_our_content": true,
+              "relevance": "官方广告指南"
+            },
+            {
+              "title": "亚马逊卖家常见问题",
+              "domain": "www.amazon.com",
+              "url": "https://www.amazon.com/gp/help/customer/display.html",
+              "is_our_content": false,
+              "relevance": "官方问答"
+            }
+          ]
+        }
+      },
+      "timestamp": "2026-06-09T13:05:10.235233",
+      "key_findings": "已完成所有平台模拟",
+      "our_content_found": true,
+      "coverage_note": "已发现我们内容被引用"
+    }
+  ],
+  "generated_at": "2026-06-09T13:06:41.391577"
+}

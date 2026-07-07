@@ -1,0 +1,77 @@
+{
+  "persona": {
+    "name": "深圳3C卖家张先生",
+    "background": "深圳3C配件卖家，35岁，年营收500万人民币，主做1688和京东，想开拓海外市场",
+    "goal": "想了解如何在亚马逊美国站开店，从注册到选品到运营的完整路径",
+    "language": "mixed (中英文)"
+  },
+  "platforms": [
+    "chatgpt",
+    "gemini",
+    "perplexity",
+    "deepseek",
+    "doubao",
+    "kimi",
+    "yuanbao",
+    "qianwen"
+  ],
+  "rounds": [
+    {
+      "round_num": 1,
+      "queries": {
+        "chatgpt": "how to sell on amazon US as Chinese seller",
+        "gemini": "how to sell on amazon US as Chinese seller",
+        "perplexity": "how to sell on amazon US as Chinese seller",
+        "deepseek": "想了解如何在亚马逊美国站开店",
+        "doubao": "想了解如何在亚马逊美国站开店",
+        "kimi": "想了解如何在亚马逊美国站开店",
+        "yuanbao": "想了解如何在亚马逊美国站开店",
+        "qianwen": "想了解如何在亚马逊美国站开店"
+      },
+      "results": {
+        "chatgpt": {
+          "status": "pending",
+          "key_points": [],
+          "sources": []
+        },
+        "gemini": {
+          "status": "pending",
+          "key_points": [],
+          "sources": []
+        },
+        "perplexity": {
+          "status": "pending",
+          "key_points": [],
+          "sources": []
+        },
+        "deepseek": {
+          "status": "pending",
+          "key_points": [],
+          "sources": []
+        },
+        "doubao": {
+          "status": "pending",
+          "key_points": [],
+          "sources": []
+        },
+        "kimi": {
+          "status": "pending",
+          "key_points": [],
+          "sources": []
+        },
+        "yuanbao": {
+          "status": "pending",
+          "key_points": [],
+          "sources": []
+        },
+        "qianwen": {
+          "status": "pending",
+          "key_points": [],
+          "sources": []
+        }
+      },
+      "timestamp": "2026-06-09T11:25:49.743293"
+    }
+  ],
+  "generated_at": "2026-06-09T11:27:49.021627"
+}

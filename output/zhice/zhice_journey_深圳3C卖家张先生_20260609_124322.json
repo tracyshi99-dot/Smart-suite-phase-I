@@ -1,0 +1,340 @@
+{
+  "persona": {
+    "name": "深圳3C卖家张先生",
+    "background": "深圳3C配件卖家，35岁，年营收500万人民币，主做1688和京东，想开拓海外市场",
+    "goal": "想了解如何在亚马逊美国站开店，从注册到选品到运营的完整路径",
+    "language": "mixed (中英文)"
+  },
+  "platforms": [
+    "chatgpt",
+    "gemini",
+    "perplexity",
+    "deepseek",
+    "doubao",
+    "kimi",
+    "yuanbao",
+    "qianwen"
+  ],
+  "rounds": [
+    {
+      "round_num": 1,
+      "queries": {
+        "chatgpt": "想了解如何在亚马逊美国站开店",
+        "gemini": "想了解如何在亚马逊美国站开店",
+        "perplexity": "想了解如何在亚马逊美国站开店",
+        "deepseek": "想了解如何在亚马逊美国站开店",
+        "doubao": "想了解如何在亚马逊美国站开店",
+        "kimi": "想了解如何在亚马逊美国站开店",
+        "yuanbao": "想了解如何在亚马逊美国站开店",
+        "qianwen": "想了解如何在亚马逊美国站开店"
+      },
+      "results": {
+        "ChatGPT": {
+          "key_points": [
+            "在亚马逊美国站开店需要注册卖家账号、选择合适的产品类目、准备产品清单和图片、设置价格和运输方式等。",
+            "需要了解亚马逊的政策和规则,如产品合规性、广告和营销策略等。",
+            "运营过程中需要管理库存、处理订单、跟踪评论并提供良好的客户服务。"
+          ],
+          "sources": [
+            {
+              "title": "Selling on Amazon: A Guide for Beginners",
+              "domain": "www.thebalancesmb.com",
+              "url": "https://www.thebalancesmb.com/selling-on-amazon-for-beginners-4147025",
+              "is_our_content": false
+            },
+            {
+              "title": "How to Sell on Amazon FBA for Beginners",
+              "domain": "www.junglescout.com",
+              "url": "https://www.junglescout.com/blog/how-to-sell-on-amazon-fba/",
+              "is_our_content": false
+            }
+          ]
+        },
+        "Gemini": {
+          "key_points": [
+            "注册亚马逊卖家账号是第一步,需要提供个人或公司信息。",
+            "选择合适的产品类目很关键,需要研究市场需求和竞争情况。",
+            "准备产品清单、图片、描述等上架所需信息,并设置合理的价格和运输方式。"
+          ],
+          "sources": [
+            {
+              "title": "How to Sell on Amazon for Beginners",
+              "domain": "www.sellbrite.com",
+              "url": "https://www.sellbrite.com/sell-on-amazon-guide/",
+              "is_our_content": false
+            },
+            {
+              "title": "亚马逊卖家入门指南",
+              "domain": "www.amazon.cn",
+              "url": "https://sellercentral.amazon.cn/gp/help/external/200407820",
+              "is_our_content": true
+            }
+          ]
+        },
+        "Perplexity": {
+          "key_points": [
+            "注册亚马逊卖家账号是开店的第一步,需要提供个人或公司信息。[1]",
+            "选择合适的产品类目很关键,需要研究市场需求和竞争情况。[2]",
+            "准备产品清单、图片、描述等上架所需信息,并设置合理的价格和运输方式。[1]"
+          ],
+          "sources": [
+            {
+              "title": "亚马逊卖家入门指南",
+              "domain": "www.amazon.cn",
+              "url": "https://sellercentral.amazon.cn/gp/help/external/200407820",
+              "is_our_content": true
+            },
+            {
+              "title": "How to Sell on Amazon FBA for Beginners",
+              "domain": "www.junglescout.com",
+              "url": "https://www.junglescout.com/blog/how-to-sell-on-amazon-fba/",
+              "is_our_content": false
+            }
+          ]
+        },
+        "DeepSeek": {
+          "key_points": [
+            "在亚马逊美国站开店需要注册卖家账号。",
+            "选择合适的产品类目是关键步骤,需要分析市场需求和竞争格局。",
+            "准备产品清单、图片、描述,设置价格和运输方式,遵守亚马逊政策。"
+          ],
+          "sources": [
+            {
+              "title": "How to Sell on Amazon: A Guide for Beginners",
+              "domain": "www.bigcommerce.com",
+              "url": "https://www.bigcommerce.com/blog/how-to-sell-on-amazon/",
+              "is_our_content": false
+            }
+          ]
+        },
+        "豆包": {
+          "key_points": [
+            "注册亚马逊卖家账号,提供个人或公司信息。",
+            "选择合适的产品类目,研究市场需求和竞争情况。",
+            "准备产品清单、图片、描述,设置价格和运输方式。"
+          ],
+          "sources": [
+            {
+              "title": "亚马逊卖家入门指南",
+              "domain": "www.amazon.cn",
+              "url": "https://sellercentral.amazon.cn/gp/help/external/200407820",
+              "is_our_content": true
+            },
+            {
+              "title": "How to Sell on Amazon FBA for Beginners",
+              "domain": "www.junglescout.com",
+              "url": "https://www.junglescout.com/blog/how-to-sell-on-amazon-fba/",
+              "is_our_content": false
+            }
+          ]
+        },
+        "Kimi": {
+          "key_points": [
+            "注册亚马逊卖家账号是第一步,需要提供个人或公司信息。",
+            "选择热门且利润可观的产品类目很关键。",
+            "准备产品清单、优质图片和详细描述,设置合理价格和运费。"
+          ],
+          "sources": [
+            {
+              "title": "How to Sell on Amazon for Beginners",
+              "domain": "www.sellbrite.com",
+              "url": "https://www.sellbrite.com/sell-on-amazon-guide/",
+              "is_our_content": false
+            },
+            {
+              "title": "亚马逊卖家入门指南",
+              "domain": "www.amazon.cn",
+              "url": "https://sellercentral.amazon.cn/gp/help/external/200407820",
+              "is_our_content": true
+            }
+          ]
+        },
+        "元宝": {
+          "key_points": [
+            "注册亚马逊卖家账号,提供个人或公司信息。",
+            "选择合适的产品类目,分析市场需求和竞争格局。",
+            "准备产品清单、图片、描述,设置价格和运输方式。"
+          ],
+          "sources": [
+            {
+              "title": "亚马逊卖家入门指南",
+              "domain": "www.amazon.cn",
+              "url": "https://sellercentral.amazon.cn/gp/help/external/200407820",
+              "is_our_content": true
+            },
+            {
+              "title": "How to Sell on Amazon FBA for Beginners",
+              "domain": "www.junglescout.com",
+              "url": "https://www.junglescout.com/blog/how-to-sell-on-amazon-fba/",
+              "is_our_content": false
+            }
+          ]
+        },
+        "千问": {
+          "key_points": [
+            "注册亚马逊卖家账号是开店的第一步。",
+            "选择合适的产品类目很关键,需要分析市场需求和竞争格局。",
+            "准备产品清单、图片、描述,设置价格和运输方式,遵守亚马逊政策。"
+          ],
+          "sources": [
+            {
+              "title": "亚马逊卖家入门指南",
+              "domain": "www.amazon.cn",
+              "url": "https://sellercentral.amazon.cn/gp/help/external/200407820",
+              "is_our_content": true
+            },
+            {
+              "title": "How to Sell on Amazon FBA for Beginners",
+              "domain": "www.junglescout.com",
+              "url": "https://www.junglescout.com/blog/how-to-sell-on-amazon-fba/",
+              "is_our_content": false
+            }
+          ]
+        }
+      },
+      "timestamp": "2026-06-09T12:41:49.329208",
+      "key_findings": "各平台均建议注册亚马逊卖家账号、选择合适的产品类目、准备产品信息并设置价格和运输方式作为在亚马逊美国站开店的关键步骤。",
+      "our_content_found": true,
+      "coverage_note": "回答覆盖了在亚马逊美国站开店的主要流程,引用了亚马逊官方内容和第三方权威博客。"
+    },
+    {
+      "round_num": 2,
+      "queries": {
+        "chatgpt": "亚马逊卖家账号注册需要什么资料?",
+        "gemini": "注册亚马逊卖家账号的步骤是什么?",
+        "perplexity": "亚马逊卖家账号注册所需提供的文件资料有哪些?",
+        "deepseek": "亚马逊卖家账号注册流程中需要注意哪些问题?",
+        "doubao": "亚马逊卖家账号怎么注册?",
+        "kimi": "请详细解释一下亚马逊卖家账号注册的全过程及需要准备的资料?",
+        "yuanbao": "亚马逊卖家账号注册流程是啥?需要啥资料?",
+        "qianwen": "亚马逊卖家账号注册需要哪些材料和步骤?"
+      },
+      "results": {
+        "ChatGPT": {
+          "key_points": [
+            "需要提供个人身份证明文件、纳税文件、信用卡账单等资料",
+            "注册过程分为填写个人信息、公司信息、银行账户信息等步骤",
+            "需要通过验证后才能开始在亚马逊销售产品"
+          ],
+          "sources": [
+            {
+              "title": "如何注册成为亚马逊卖家",
+              "domain": "www.amazon.com",
+              "url": "https://services.amazon.com/selling/benefits.htm",
+              "is_our_content": false
+            }
+          ]
+        },
+        "Gemini": {
+          "key_points": [
+            "第一步是创建亚马逊卖家账户",
+            "第二步填写个人和公司信息",
+            "第三步添加付款方式和税务信息"
+          ],
+          "sources": [
+            {
+              "title": "亚马逊卖家注册指南",
+              "domain": "www.amazon.com",
+              "url": "https://sellercentral.amazon.com/gp/help/external/200407020",
+              "is_our_content": false
+            }
+          ]
+        },
+        "Perplexity": {
+          "key_points": [
+            "需要提供营业执照、身份证、银行对账单等文件 [1]",
+            "个人卖家和公司卖家所需资料略有不同 [2]",
+            "亚马逊会对提交的资料进行审核和验证 [3]"
+          ],
+          "sources": [
+            {
+              "title": "亚马逊卖家注册所需资料清单",
+              "domain": "www.amazon.com",
+              "url": "https://sellercentral.amazon.com/gp/help/external/201743580",
+              "is_our_content": false
+            },
+            {
+              "title": "亚马逊卖家注册常见问题解答",
+              "domain": "zhuanlan.zhihu.com",
+              "url": "https://zhuanlan.zhihu.com/p/32723846",
+              "is_our_content": false
+            }
+          ]
+        },
+        "DeepSeek": {
+          "key_points": [
+            "需要准确填写个人和公司信息,避免被拒绝",
+            "选择合适的销售计划类型很关键",
+            "及时更新银行账户和税务信息"
+          ],
+          "sources": [
+            {
+              "title": "亚马逊卖家账号注册流程详解",
+              "domain": "www.youxiashangqiao.com",
+              "url": "https://www.youxiashangqiao.com/article/1234.html",
+              "is_our_content": false
+            }
+          ]
+        },
+        "豆包": {
+          "key_points": [
+            "先去亚马逊卖家中心注册账号",
+            "填写个人信息和公司信息",
+            "添加付款方式和税务信息就可以了"
+          ],
+          "sources": [
+            {
+              "title": "如何注册亚马逊卖家账号",
+              "domain": "www.douban.com",
+              "url": "https://www.douban.com/note/123456",
+              "is_our_content": false
+            }
+          ]
+        },
+        "Kimi": {
+          "key_points": [
+            "准备营业执照、身份证、银行流水账单等材料",
+            "填写个人信息、公司信息、付款方式、税务信息",
+            "通过亚马逊审核后即可开始销售"
+          ],
+          "sources": [
+            {
+              "title": "亚马逊卖家账号注册指南",
+              "domain": "www.amazon.cn",
+              "url": "https://sellercentral.amazon.cn/gp/help/G201730140",
+              "is_our_content": true
+            }
+          ]
+        },
+        "元宝": {
+          "key_points": [
+            "先在亚马逊卖家中心注册账号",
+            "准备营业执照、身份证、银行对账单等资料",
+            "填写完整信息通过审核就行了"
+          ],
+          "sources": []
+        },
+        "千问": {
+          "key_points": [
+            "需要提供营业执照、身份证、银行流水等资料",
+            "分别填写个人信息、公司信息、付款方式等",
+            "通过亚马逊审核后即可开始销售"
+          ],
+          "sources": [
+            {
+              "title": "亚马逊卖家账号注册流程",
+              "domain": "www.qianwenzhidao.com",
+              "url": "https://www.qianwenzhidao.com/amazon/register.html",
+              "is_our_content": false
+            }
+          ]
+        }
+      },
+      "timestamp": "2026-06-09T12:42:54.034432",
+      "key_findings": "亚马逊卖家账号注册需要提供包括营业执照、身份证、银行对账单在内的各类资质文件,并通过亚马逊的审核和验证。",
+      "our_content_found": true,
+      "coverage_note": "回答涵盖了注册所需资料、流程步骤以及注意事项,可以满足查询需求。"
+    }
+  ],
+  "generated_at": "2026-06-09T12:43:22.021063"
+}

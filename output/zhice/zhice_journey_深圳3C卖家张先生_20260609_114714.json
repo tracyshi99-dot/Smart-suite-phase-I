@@ -1,0 +1,180 @@
+{
+  "persona": {
+    "name": "深圳3C卖家张先生",
+    "background": "深圳3C配件卖家，35岁，年营收500万人民币，主做1688和京东，想开拓海外市场",
+    "goal": "想了解如何在亚马逊美国站开店，从注册到选品到运营的完整路径",
+    "language": "mixed (中英文)"
+  },
+  "platforms": [
+    "chatgpt",
+    "gemini",
+    "perplexity",
+    "deepseek",
+    "doubao",
+    "kimi",
+    "yuanbao",
+    "qianwen"
+  ],
+  "rounds": [
+    {
+      "round_num": 1,
+      "queries": {
+        "chatgpt": "how to sell on amazon US as Chinese seller",
+        "gemini": "how to sell on amazon US as Chinese seller",
+        "perplexity": "how to sell on amazon US as Chinese seller",
+        "deepseek": "想了解如何在亚马逊美国站开店",
+        "doubao": "想了解如何在亚马逊美国站开店",
+        "kimi": "想了解如何在亚马逊美国站开店",
+        "yuanbao": "想了解如何在亚马逊美国站开店",
+        "qianwen": "想了解如何在亚马逊美国站开店"
+      },
+      "results": {
+        "ChatGPT": {
+          "key_points": [
+            "在亚马逊美国站开店需要注册卖家账号并通过审核",
+            "选品时要考虑需求量、竞争情况和利润空间",
+            "运营包括上架产品、推广、客户服务等多个环节"
+          ],
+          "sources": [
+            {
+              "title": "How to Sell on Amazon for Beginners: A 9-Step Guide",
+              "domain": "www.junglescout.com",
+              "url": "https://www.junglescout.com/blog/how-to-sell-on-amazon-for-beginners/",
+              "is_our_content": false
+            },
+            {
+              "title": "Beginner's Guide to Selling on Amazon",
+              "domain": "www.bigcommerce.com",
+              "url": "https://www.bigcommerce.com/blog/selling-on-amazon/",
+              "is_our_content": false
+            }
+          ],
+          "answer_style": "综合性回答,涵盖了主要步骤和考虑因素,但缺乏细节指导。"
+        },
+        "Gemini": {
+          "key_points": [
+            "Register as an Amazon seller and get approved",
+            "Choose products with good demand and profit margins",
+            "Handle product listings, marketing, customer service etc."
+          ],
+          "sources": [
+            {
+              "title": "How to Sell on Amazon for Beginners",
+              "domain": "www.thebalancesmb.com",
+              "url": "https://www.thebalancesmb.com/how-to-sell-on-amazon-for-beginners-4580198",
+              "is_our_content": false
+            }
+          ],
+          "answer_style": "简洁实用的英文回答,涵盖了主要步骤,语言直白。"
+        },
+        "Perplexity": {
+          "key_points": [
+            "注册亚马逊卖家账号是第一步,需要提供公司和个人信息。",
+            "选品时要考虑需求量、利润空间、竞争程度等因素。参考 Jungle Scout 等工具。",
+            "运营包括上架产品、推广、客户服务等,可参考 Seller Central 帮助文档。"
+          ],
+          "sources": [
+            {
+              "title": "How to Sell on Amazon for Beginners",
+              "domain": "www.junglescout.com",
+              "url": "https://www.junglescout.com/blog/how-to-sell-on-amazon-for-beginners/",
+              "is_our_content": false
+            },
+            {
+              "title": "Selling on Amazon: A guide for beginners",
+              "domain": "sellercentral.amazon.com",
+              "url": "https://sellercentral.amazon.com/gp/help/external/200332470",
+              "is_our_content": true
+            }
+          ],
+          "answer_style": "回答详细,结合了多个权威来源,并给出了具体建议和工具推荐。"
+        },
+        "DeepSeek": {
+          "key_points": [
+            "注册亚马逊卖家账号是第一步,需要提供公司和个人信息进行审核。",
+            "选品时要考虑需求量、利润空间、竞争程度等因素,可借助数据分析工具。",
+            "运营包括上架产品、推广、客户服务等环节,需要遵守亚马逊政策。"
+          ],
+          "sources": [
+            {
+              "title": "Selling on Amazon: A guide for beginners",
+              "domain": "sellercentral.amazon.com",
+              "url": "https://sellercentral.amazon.com/gp/help/external/200332470",
+              "is_our_content": true
+            }
+          ],
+          "answer_style": "回答逻辑严谨,重点突出,语言简练,引用权威内容。"
+        },
+        "豆包": {
+          "key_points": [
+            "第一步是在亚马逊卖家平台注册开店",
+            "选品时要考虑产品受欢迎程度和利润空间",
+            "运营包括上架产品、推广、处理订单和评价等"
+          ],
+          "sources": [
+            {
+              "title": "如何在亚马逊开店卖东西?",
+              "domain": "zhihu.com",
+              "url": "https://www.zhihu.com/question/21623637",
+              "is_our_content": false
+            }
+          ],
+          "answer_style": "通俗易懂的回答,语言生动,但内容较为简单。"
+        },
+        "Kimi": {
+          "key_points": [
+            "注册亚马逊卖家账号",
+            "选择有需求且利润可观的产品",
+            "上架产品、推广、处理订单和评价"
+          ],
+          "sources": [
+            {
+              "title": "如何在亚马逊开店卖东西?",
+              "domain": "zhihu.com",
+              "url": "https://www.zhihu.com/question/21623637",
+              "is_our_content": false
+            }
+          ],
+          "answer_style": "非常简略的回答,只列出了主要步骤,缺乏细节说明。"
+        },
+        "元宝": {
+          "key_points": [
+            "先在亚马逊卖家中心注册账号",
+            "选择热销产品,利润空间大",
+            "上架产品、推广、处理订单和评价"
+          ],
+          "sources": [
+            {
+              "title": "如何在亚马逊开店卖东西?",
+              "domain": "zhihu.com",
+              "url": "https://www.zhihu.com/question/21623637",
+              "is_our_content": false
+            }
+          ],
+          "answer_style": "简单直白的回答,只罗列了基本步骤,缺乏深入解释。"
+        },
+        "千问": {
+          "key_points": [
+            "第一步是在亚马逊卖家中心注册账号",
+            "选品时要考虑产品热度和利润空间",
+            "运营包括上架产品、推广、处理订单等"
+          ],
+          "sources": [
+            {
+              "title": "如何在亚马逊开店卖东西?",
+              "domain": "zhihu.com",
+              "url": "https://www.zhihu.com/question/21623637",
+              "is_our_content": false
+            }
+          ],
+          "answer_style": "回答比较简单,只概括了主要步骤,缺少细节指导。"
+        }
+      },
+      "timestamp": "2026-06-09T11:46:14.554709",
+      "key_findings": "本轮搜索主要概括了在亚马逊美国站开店的基本流程,包括注册、选品、运营等环节,但缺乏对具体操作的深入指导。",
+      "our_content_found": true,
+      "coverage_note": "我们的内容在本轮搜索中得到了一定覆盖,但仍有提升空间。"
+    }
+  ],
+  "generated_at": "2026-06-09T11:47:14.054607"
+}

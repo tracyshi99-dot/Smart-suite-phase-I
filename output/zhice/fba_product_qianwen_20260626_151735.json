@@ -1,0 +1,102 @@
+[
+  {
+    "query": "亚马逊FBA是什么？中国卖家如何使用FBA？",
+    "platform": "qianwen",
+    "answer_length": 1760,
+    "has_official_link": false,
+    "has_brand_mention": false,
+    "has_amazon_cn": false,
+    "has_fba_official_link": false,
+    "answer_preview": "亚马逊FBA（Fulfillment by Amazon）是亚马逊提供的**仓储、拣货、包装、配送及售后服务一体化物流履约服务**。简单来说，卖家将商品提前发运至亚马逊运营中心（如美国、英国、日本等本地仓库），由亚马逊负责后续所有履约环节：接收订单→拣货→打包→贴单→发货→处理退货→客服支持等。\n\n✅ **核心优势**：  \n- 商品获得“Prime”标志，提升转化率（Prime会员更倾向购买带Prime标识的商品）；  \n- 享受亚马逊专业物流网络，配送更快（通常1–2日达）、更可靠；  \n- 节省自建仓储/客服/物流团队的人力与时间成本；  \n- 降低运营复杂度，专注选品、营销和供应链优化"
+  },
+  {
+    "query": "亚马逊FBA费用怎么算？仓储费和配送费多少？",
+    "platform": "qianwen",
+    "answer_length": 1669,
+    "has_official_link": false,
+    "has_brand_mention": false,
+    "has_amazon_cn": false,
+    "has_fba_official_link": false,
+    "answer_preview": "亚马逊FBA（Fulfillment by Amazon）费用由多个部分组成，具体金额**因商品尺寸/重量、销售时段（旺季/非旺季）、发货国家（如美国站、加拿大站、欧洲站等）、是否为服装类/危险品等特殊品类而异**。以下以**美国站（US）2024年最新标准（2024年生效）** 为主进行说明（数据来源：Amazon Seller Central 官方2024年费用公告，截至2024年7月更新），并附关键计算逻辑和注意事项：\n\n---\n\n### ✅ 一、核心费用构成（美国站FBA）\n| 费用类型       | 说明 | 计算方式与示例（标准尺寸、非服装类） |\n|--------------"
+  },
+  {
+    "query": "FBA发货流程是什么？从中国发到亚马逊仓库",
+    "platform": "qianwen",
+    "answer_length": 1753,
+    "has_official_link": false,
+    "has_brand_mention": false,
+    "has_amazon_cn": false,
+    "has_fba_official_link": false,
+    "answer_preview": "FBA（Fulfillment by Amazon）发货流程（从中国发往亚马逊美国/加拿大/欧洲等海外仓）是一套标准化但需严格合规的操作流程，涉及多个环节和多方协作。以下是**以中国卖家向美国FBA仓库发货为例**的完整、实用流程（适用于新手及进阶卖家），并附关键注意事项：\n\n---\n\n### ✅ 一、发货前准备阶段（核心：合规+计划）\n\n| 步骤 | 说明 | 关键要点 |\n|------|------|-----------|\n| **1. 创建货件（Ship Plan）** | 在Seller Central后台 → Inventory → Manage Inventory → “Sen"
+  },
+  {
+    "query": "FBA和FBM有什么区别？哪个更适合新手？",
+    "platform": "qianwen",
+    "answer_length": 1846,
+    "has_official_link": false,
+    "has_brand_mention": false,
+    "has_amazon_cn": false,
+    "has_fba_official_link": false,
+    "answer_preview": "FBA（Fulfillment by Amazon）和FBM（Fulfillment by Merchant）是亚马逊平台上两种主流的订单履约方式，核心区别在于**谁来负责仓储、打包、发货、客服及退货处理**。以下是详细对比及新手建议：\n\n✅ 一、核心区别对比表：\n\n| 维度             | FBA（亚马逊物流）                              | FBM（自发货/卖家自履约）                     |\n|------------------|-----------------------------------------------|"
+  },
+  {
+    "query": "亚马逊FBA头程物流怎么选？海运还是空运？",
+    "platform": "qianwen",
+    "answer_length": 1662,
+    "has_official_link": false,
+    "has_brand_mention": false,
+    "has_amazon_cn": false,
+    "has_fba_official_link": false,
+    "answer_preview": "选择亚马逊FBA头程物流（即从中国工厂/仓库运至亚马逊美国/欧洲等海外运营中心的国际运输）时，**海运 vs 空运不是非此即彼的选择，而是需根据产品特性、销售节奏、资金状况和供应链目标综合权衡的战略决策**。以下是系统化对比与实操建议：\n\n---\n\n### ✅ 一、核心维度对比（以美西/美东FBA为例）\n\n| 维度                | 海运（整柜 FCL / 拼箱 LCL）       | 空运（快递/空派）                 |\n|---------------------|-----------------------------------|---------"
+  },
+  {
+    "query": "FBA库存管理技巧有哪些？如何避免长期仓储费？",
+    "platform": "qianwen",
+    "answer_length": 1831,
+    "has_official_link": false,
+    "has_brand_mention": false,
+    "has_amazon_cn": false,
+    "has_fba_official_link": false,
+    "answer_preview": "FBA（Fulfillment by Amazon）库存管理是亚马逊卖家运营的核心环节，科学的库存管理不仅能提升周转率、降低仓储成本，还能避免断货或积压风险。以下是实用、可落地的FBA库存管理技巧，并重点详解**如何有效避免长期仓储费（Long-Term Storage Fees, LTSF）**：\n\n---\n\n### ✅ 一、核心FBA库存管理技巧\n\n#### 1. **精细化库存预测与补货计划**\n- 使用工具（如Jungle Scout、Helium 10、SellerBoard 或亚马逊「库存绩效指标（IPI）」报告）分析历史销售趋势、季节性波动、转化率、广告ACoS等数据。\n- 设置"
+  },
+  {
+    "query": "亚马逊FBA退货政策是什么？退货率高怎么办？",
+    "platform": "qianwen",
+    "answer_length": 1720,
+    "has_official_link": false,
+    "has_brand_mention": false,
+    "has_amazon_cn": false,
+    "has_fba_official_link": false,
+    "answer_preview": "亚马逊FBA（Fulfillment by Amazon）的退货政策以消费者体验为核心，对卖家具有强制性和统一性。以下是关键要点及高退货率应对策略，供您系统化参考：\n\n---\n\n### 一、亚马逊FBA核心退货政策（2024年最新要点）\n\n| 项目 | 具体规定 | 说明 |\n|--------|-----------|------|\n| **退货窗口期** | 标准为**30天**（自配送完成日起） | 部分品类可延长：服装/鞋靴/珠宝/家居等可达**90天**；部分第三方卖家可设置更长（需符合类目规则） |\n| **退货原因分类** | ✅ 买家无理由退货（Most Common）<br>"
+  },
+  {
+    "query": "FBA标签要求是什么？FNSKU怎么贴？",
+    "platform": "qianwen",
+    "answer_length": 1670,
+    "has_official_link": false,
+    "has_brand_mention": false,
+    "has_amazon_cn": false,
+    "has_fba_official_link": false,
+    "answer_preview": "FBA（Fulfillment by Amazon）标签要求和FNSKU贴标是亚马逊物流入仓的关键环节，不合规会导致拒收、延误上架甚至额外费用。以下是截至2024年最新、权威的实操要求（依据Amazon Seller Central官方指南及FBA政策更新）：\n\n---\n\n✅ 一、FBA标签核心要求（必须同时满足）\n\n| 项目 | 具体要求 | 注意事项 |\n|------|----------|----------|\n| **1. 标签类型** | ✅ 必须使用 **FNSKU标签**（非UPC/ASIN条码）<br>❌ 禁止使用：UPC、EAN、ISBN、ASIN条码（除非是品牌备案后启用"
+  },
+  {
+    "query": "亚马逊FBA轻小商品计划是什么？",
+    "platform": "qianwen",
+    "answer_length": 1354,
+    "has_official_link": false,
+    "has_brand_mention": false,
+    "has_amazon_cn": false,
+    "has_fba_official_link": false,
+    "answer_preview": "亚马逊FBA轻小商品计划（FBA Small and Light，简称S&L）是亚马逊为**体积小、重量轻、价格较低**的商品推出的一项专属物流与配送计划，旨在帮助卖家以更低的履约成本销售高周转、低价位的日常消费品（如手机配件、文具、美妆小样、厨房小工具等），同时为买家提供**免费配送（免运费）和快速送达**体验。\n\n⚠️ 重要提示：该计划已于 **2023年6月28日全球正式终止**（包括美国、英国、德国、法国、意大利、西班牙、日本等所有运营站点）。亚马逊官方宣布停止接收新注册，并于2023年10月31日起全面下线该计划。\n\n---\n\n✅ 曾经的核心特点（历史回顾，供参考）：\n\n1. **准"
+  },
+  {
+    "query": "中国卖家用FBA需要注意什么？常见坑有哪些？",
+    "platform": "qianwen",
+    "answer_length": 1684,
+    "has_official_link": false,
+    "has_brand_mention": false,
+    "has_amazon_cn": false,
+    "has_fba_official_link": false,
+    "answer_preview": "中国卖家使用亚马逊FBA（Fulfillment by Amazon）是主流出海方式，但实操中存在大量隐性风险和“踩坑点”。以下从**合规、物流、运营、财务、风控**五大维度系统梳理关键注意事项及高频“坑”，并附实用避坑建议：\n\n---\n\n### 一、核心注意事项（必须前置确认）\n\n| 类别 | 关键事项 | 说明 |\n|--------|-----------|------|\n| **✅ 账号安全** | • 必须用真实、唯一、未关联的营业执照（个体户/公司均可，但需与收款账户一致）<br>• 法人身份证+银行卡+手机号+邮箱+地址需高度独立，避免与已有账号共用设备/IP/浏览器痕迹 | 关"
+  }
+]

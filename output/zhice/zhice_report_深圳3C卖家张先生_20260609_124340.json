@@ -1,0 +1,85 @@
+{
+  "overview": {
+    "total_rounds": 1,
+    "total_queries": 8,
+    "platforms_tested": [
+      "chatgpt",
+      "gemini",
+      "perplexity",
+      "deepseek",
+      "doubao",
+      "kimi",
+      "yuanbao",
+      "qianwen"
+    ],
+    "our_content_found_rounds": 1,
+    "overall_coverage_rate": "87.5%"
+  },
+  "coverage_analysis": {
+    "by_platform": {
+      "chatgpt": "覆盖了开店的主要步骤,但缺少一些细节",
+      "gemini": "覆盖了开店的关键步骤和要点",
+      "perplexity": "覆盖了开店的关键步骤和要点",
+      "deepseek": "覆盖了开店的主要步骤,但缺少一些细节",
+      "doubao": "覆盖了开店的关键步骤和要点",
+      "kimi": "覆盖了开店的关键步骤和要点",
+      "yuanbao": "覆盖了开店的关键步骤和要点",
+      "qianwen": "覆盖了开店的主要步骤,但缺少一些细节"
+    },
+    "uncovered_nodes": [
+      "亚马逊政策和规则",
+      "广告和营销策略",
+      "库存管理",
+      "订单处理",
+      "客户服务"
+    ],
+    "strong_nodes": [
+      "注册卖家账号",
+      "选择产品类目",
+      "准备产品信息",
+      "设置价格和运输"
+    ]
+  },
+  "competitor_analysis": {
+    "frequent_sources": [
+      {
+        "domain": "www.amazon.cn",
+        "frequency": 5,
+        "content_type": "官方指南"
+      },
+      {
+        "domain": "www.junglescout.com",
+        "frequency": 3,
+        "content_type": "第三方教程"
+      },
+      {
+        "domain": "www.sellbrite.com",
+        "frequency": 2,
+        "content_type": "第三方教程"
+      }
+    ],
+    "competitor_strengths": [
+      "官方指南权威全面",
+      "第三方教程实操性强"
+    ]
+  },
+  "recommendations": {
+    "new_keywords": [
+      "亚马逊政策",
+      "营销策略",
+      "库存管理",
+      "订单处理",
+      "客户服务"
+    ],
+    "content_gaps": [
+      "缺少对亚马逊政策规则的解读",
+      "缺少运营实操技巧和案例"
+    ],
+    "optimization_priorities": [
+      "补充亚马逊政策规则内容",
+      "增加运营实操技巧和案例",
+      "优化关键词覆盖"
+    ]
+  },
+  "summary": "本次检测覆盖了亚马逊开店的主要步骤,但在政策规则、运营技巧等方面存在内容缺口。官方指南和第三方教程是主要竞品,建议补充缺失内容,优化关键词覆盖,提高实操性和全面性。"
+}

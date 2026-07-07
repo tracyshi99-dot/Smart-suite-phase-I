@@ -1,0 +1,48 @@
+{
+  "cited_content_patterns": {
+    "structural_patterns": [
+      "标题简洁明了,直接回答用户问题",
+      "内容分为清晰的步骤和小节,使用列表和子标题",
+      "段落长度适中,信息量高",
+      "包含图片和视频等多媒体辅助说明"
+    ],
+    "authority_signals": [
+      "来自亚马逊官方网站和知名第三方博客",
+      "作者或网站有相关专业背景和经验",
+      "内容有最新更新时间",
+      "引用了数据、统计和专家观点"
+    ],
+    "citability_factors": [
+      "有独立可摘取的事实、数据、建议等",
+      "使用FAQ结构回答常见问题",
+      "有明确的步骤总结和操作指南"
+    ]
+  },
+  "competitor_strengths": [
+    {
+      "domain": "junglescout.com",
+      "strength": "内容生动形象,多案例和实操视角",
+      "lesson": "增加实例案例,更贴近读者场景"
+    },
+    {
+      "domain": "thefulltilt.com",
+      "strength": "语言风格轻松生动,容易被理解",
+      "lesson": "内容语言通俗易懂,避免过多专有名词"
+    }
+  ],
+  "recommendations_for_zhizao": {
+    "title_format": "标题直接回答用户问题,如'如何在亚马逊开店'",
+    "content_structure": "分为清晰步骤,如注册、选品、运营等,每步骤一节",
+    "opening_paragraph": "开篇概括全文内容,让读者一目了然",
+    "data_usage": "适当引入数据、案例、专家观点增加权威性",
+    "faq_strategy": "收集常见问题,以FAQ形式回答",
+    "summary_block": "文末总结主要步骤和要点"
+  },
+  "recommendations_for_zhiyou": {
+    "scoring_adjustments": "提高标题质量、内容结构、FAQ设计的权重",
+    "rewrite_focus": "优化标题和开篇段,增强可读性和引用性",
+    "geo_signals_to_add": "增加关键词密度、添加Schema标记"
+  },
+  "sample_structure": "# 如何在亚马逊开店卖家入门指南\n\n这是一份面向初学者的开店指南,涵盖了从注册到选品到运营的全流程。\n\n## 第一步:注册亚马逊卖家账号\n\n1. ...\n2. ...\n\n### 常见问题\n\n- 问题1\n- 问题2\n\n## 第二步:选品策略\n\n...\n\n## 第三步:运营管理\n\n...\n\n### 小结\n\n1. ...\n2. ...\n3. ...",
+  "summary": "被引用内容需要结构清晰、信息密集、包含权威信号和可摘取要素。我们应该学习优秀案例的标题设计、内容组织和FAQ设计,并加强GEO优化。"
+}

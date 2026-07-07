@@ -1,0 +1,74 @@
+{
+  "overview": {
+    "total_rounds": 1,
+    "total_queries": 8,
+    "platforms_tested": [
+      "chatgpt",
+      "gemini",
+      "perplexity",
+      "deepseek",
+      "doubao",
+      "kimi",
+      "yuanbao",
+      "qianwen"
+    ],
+    "our_content_found_rounds": 2,
+    "overall_coverage_rate": "75%"
+  },
+  "coverage_analysis": {
+    "by_platform": {
+      "chatgpt": "回答比较全面,涵盖了开店的主要环节",
+      "gemini": "回答比较全面,涵盖了开店的主要环节",
+      "perplexity": "回答比较全面,涵盖了开店的主要环节",
+      "deepseek": "回答比较全面,涵盖了开店的主要环节",
+      "doubao": "回答比较简单,只涉及了部分关键点",
+      "kimi": "作为官方内容,回答比较全面",
+      "yuanbao": "回答比较简单,只涉及了部分关键点",
+      "qianwen": "作为官方内容,回答比较全面"
+    },
+    "uncovered_nodes": [
+      "具体的运营技巧",
+      "物流和关税细节"
+    ],
+    "strong_nodes": [
+      "注册账号",
+      "选品策略",
+      "营销推广"
+    ]
+  },
+  "competitor_analysis": {
+    "frequent_sources": [
+      {
+        "domain": "www.junglescout.com",
+        "frequency": 3,
+        "content_type": "教程文章"
+      },
+      {
+        "domain": "www.zhihu.com",
+        "frequency": 2,
+        "content_type": "问答内容"
+      }
+    ],
+    "competitor_strengths": [
+      "内容全面",
+      "实操性强",
+      "案例分析"
+    ]
+  },
+  "recommendations": {
+    "new_keywords": [
+      "亚马逊开店运营技巧",
+      "亚马逊物流税费",
+      "亚马逊选品实操"
+    ],
+    "content_gaps": [
+      "缺乏针对性的运营建议",
+      "缺少物流税费等实操细节"
+    ],
+    "optimization_priorities": [
+      "补充运营技巧类内容",
+      "增加实操案例和数据支持"
+    ]
+  },
+  "summary": "总的来说,各平台对于如何在亚马逊美国站开店的回答覆盖了注册账号、选品和营销推广等主要环节,但在具体运营技巧和物流税费等细节方面还有不足。竞争对手的内容更加全面和实操性强,我们需要补充运营技巧类内容,增加实操案例分析,并加强数据支持,以提高内容的针对性和实用性。"
+}

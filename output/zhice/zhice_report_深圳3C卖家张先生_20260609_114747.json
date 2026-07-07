@@ -1,0 +1,81 @@
+{
+  "overview": {
+    "total_rounds": 1,
+    "total_queries": 8,
+    "platforms_tested": [
+      "chatgpt",
+      "gemini",
+      "perplexity",
+      "deepseek",
+      "doubao",
+      "kimi",
+      "yuanbao",
+      "qianwen"
+    ],
+    "our_content_found_rounds": 1,
+    "overall_coverage_rate": "50%"
+  },
+  "coverage_analysis": {
+    "by_platform": {
+      "chatgpt": "回答比较全面但缺乏细节指导",
+      "gemini": "简洁实用但内容较为简单",
+      "perplexity": "结合多个权威来源,内容详实",
+      "deepseek": "回答逻辑严谨,重点突出",
+      "doubao": "通俗易懂但内容较为简单",
+      "kimi": "非常简略,只列出主要步骤",
+      "yuanbao": "简单直白,缺乏深入解释",
+      "qianwen": "回答比较简单,缺少细节指导"
+    },
+    "uncovered_nodes": [
+      "注册账号的具体流程",
+      "选品数据分析工具使用",
+      "运营中的具体策略"
+    ],
+    "strong_nodes": [
+      "基本流程概述",
+      "需要考虑的主要因素"
+    ]
+  },
+  "competitor_analysis": {
+    "frequent_sources": [
+      {
+        "domain": "www.junglescout.com",
+        "frequency": 2,
+        "content_type": "专业导航"
+      },
+      {
+        "domain": "sellercentral.amazon.com",
+        "frequency": 2,
+        "content_type": "官方指南"
+      },
+      {
+        "domain": "zhihu.com",
+        "frequency": 4,
+        "content_type": "社区问答"
+      }
+    ],
+    "competitor_strengths": [
+      "内容专业全面",
+      "官方渠道权威",
+      "通俗易懂案例多"
+    ]
+  },
+  "recommendations": {
+    "new_keywords": [
+      "亚马逊卖家注册流程",
+      "亚马逊选品数据分析",
+      "亚马逊运营技巧"
+    ],
+    "content_gaps": [
+      "注册账号的具体步骤指南",
+      "选品数据分析工具使用教程",
+      "运营中的实操技巧分享"
+    ],
+    "optimization_priorities": [
+      "完善注册和选品内容",
+      "增加运营实操指南",
+      "优化内容质量和深度"
+    ]
+  },
+  "summary": "本次检测发现我们的内容在概述亚马逊开店基本流程方面有一定覆盖,但在注册、选品、运营等具体环节的指导上仍显不足。竞品的优势在于内容更专业全面或通俗易懂。我们需要补充这些细节内容,提高内容质量和深度,以提升整体覆盖率。"
+}

@@ -1,0 +1,76 @@
+{
+  "overview": {
+    "total_rounds": 1,
+    "total_queries": 8,
+    "platforms_tested": [
+      "chatgpt",
+      "gemini",
+      "perplexity",
+      "deepseek",
+      "doubao",
+      "kimi",
+      "yuanbao",
+      "qianwen"
+    ],
+    "our_content_found_rounds": 1,
+    "overall_coverage_rate": "80%"
+  },
+  "coverage_analysis": {
+    "by_platform": {
+      "chatgpt": "涵盖了主要开店步骤,但缺少细节",
+      "gemini": "涵盖了主要开店步骤,但缺少细节",
+      "perplexity": "涵盖了主要开店步骤,并引用了外部资源",
+      "deepseek": "涵盖了主要开店步骤,但缺少细节",
+      "doubao": "涵盖了主要开店步骤,但缺少细节",
+      "kimi": "涵盖了主要开店步骤,并引用了我们的内容",
+      "yuanbao": "涵盖了主要开店步骤,但缺少细节",
+      "qianwen": "涵盖了主要开店步骤,并引用了我们的内容"
+    },
+    "uncovered_nodes": [
+      "具体操作流程",
+      "费用结构",
+      "物流要求"
+    ],
+    "strong_nodes": [
+      "注册账号",
+      "选品",
+      "营销策略"
+    ]
+  },
+  "competitor_analysis": {
+    "frequent_sources": [
+      {
+        "domain": "www.junglescout.com",
+        "frequency": 3,
+        "content_type": "博客文章"
+      },
+      {
+        "domain": "www.zhihu.com",
+        "frequency": 2,
+        "content_type": "问答社区"
+      }
+    ],
+    "competitor_strengths": [
+      "内容全面",
+      "操作性强",
+      "案例分析"
+    ]
+  },
+  "recommendations": {
+    "new_keywords": [
+      "亚马逊开店费用",
+      "亚马逊物流要求",
+      "亚马逊开店操作流程"
+    ],
+    "content_gaps": [
+      "缺少对费用和物流的详细介绍",
+      "缺少分步操作指南"
+    ],
+    "optimization_priorities": [
+      "补充开店全流程内容",
+      "增加案例分析",
+      "优化内容排版和可读性"
+    ]
+  },
+  "summary": "总的来说,各平台对于如何在亚马逊美国站开店的主要步骤有较好的覆盖,但在具体操作细节、费用结构和物流要求等方面还有不足。我们的内容在部分平台得到引用,但仍有提升空间。需要补充全流程内容、增加案例分析,并优化内容呈现形式,以提高用户体验。"
+}
