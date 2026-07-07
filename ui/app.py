@@ -3364,6 +3364,185 @@ elif _page_idx == 7:
         else:
             st.info("Gap verification data not available." if is_en else "Gap 验证数据不可用。")
 
+        # --- Category AI Citation Analysis (from zhice journey data) ---
+        st.divider()
+        st.markdown("""<div style="background:#1a1d2e;border:1px solid #2a2f4a;border-radius:12px;padding:20px;margin:8px 0;">
+            <h3 style="color:#ab47bc;font-size:18px;font-weight:700;margin:0 0 8px;">📊 """ + ("Category AI Citation Ranking" if is_en else "35 类别 AI 引用概率排名") + """</h3>
+            <p style="color:#8892b0;font-size:12px;margin:0;">""" + ("Analysis: Which categories are most likely to be cited by AI platforms based on historical data" if is_en else "基于智测历史数据分析：哪些内容类别最容易被 AI 平台抓取引用") + """</p>
+        </div>""", unsafe_allow_html=True)
+
+        # Load zhice data and zhiku category mapping
+        _zhice_dir = OUTPUT_PATH.parent / "zhice" if (OUTPUT_PATH.parent / "zhice").exists() else OUTPUT_PATH / "zhice"
+        _zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
+
+        # Build query -> category mapping from zhiku
+        query_cat_map = {}
+        if _zhiku_file.exists():
+            _df_zhiku = load_csv_safe(_zhiku_file)
+            if not _df_zhiku.empty and "ai_query" in _df_zhiku.columns and "category" in _df_zhiku.columns:
+                for _, row in _df_zhiku.iterrows():
+                    q = str(row.get("ai_query", "")).strip()
+                    cat = str(row.get("category", "")).strip()
+                    if q and cat:
+                        query_cat_map[q] = cat
+
+        # Aggregate zhice results by category
+        cat_stats = {}  # {category: {"total": n, "brand_mention": n, "official_link": n, "amazon_cn": n}}
+        if _zhice_dir.exists():
+            _json_files = sorted(_zhice_dir.glob("*.json"), key=lambda f: f.stat().st_mtime, reverse=True)
+            for _jf in _json_files:
+                try:
+                    _data = json.loads(_jf.read_text(encoding="utf-8"))
+                    if isinstance(_data, list):
+                        for item in _data:
+                            if isinstance(item, dict) and "query" in item and "error" not in item:
+                                _query = item.get("query", "").strip()
+                                # Try to match category
+                                _cat = query_cat_map.get(_query, "")
+                                if not _cat:
+                                    # Fuzzy match: check if query contains category keywords
+                                    for q_key, cat_val in query_cat_map.items():
+                                        if q_key in _query or _query in q_key:
+                                            _cat = cat_val
+                                            break
+                                if not _cat:
+                                    # Infer category from query content
+                                    _q_lower = _query.lower()
+                                    if "注册" in _q_lower or "开店" in _q_lower or "register" in _q_lower:
+                                        _cat = "新手怎么注册亚马逊"
+                                    elif "FBA" in _query or "物流" in _q_lower or "仓储" in _q_lower:
+                                        _cat = "亚马逊物流仓储科普"
+                                    elif "费用" in _q_lower or "成本" in _q_lower or "多少钱" in _q_lower:
+                                        _cat = "亚马逊开店成本费用详解"
+                                    elif "选品" in _q_lower or "品类" in _q_lower or "product" in _q_lower:
+                                        _cat = "跨境电商选品方法及趋势"
+                                    elif "广告" in _q_lower or "推广" in _q_lower or "PPC" in _q_lower:
+                                        _cat = "亚马逊广告基础知识大全"
+                                    elif "listing" in _q_lower or "上架" in _q_lower:
+                                        _cat = "教你打造优质Listing"
+                                    elif "运营" in _q_lower or "店铺" in _q_lower:
+                                        _cat = "店铺运营提升全攻略"
+                                    elif "VAT" in _query or "税" in _q_lower:
+                                        _cat = "欧洲增值税VAT介绍"
+                                    elif "品牌" in _q_lower or "brand" in _q_lower:
+                                        _cat = "如何做好品牌营销"
+                                    elif "北美" in _q_lower or "美国站" in _q_lower:
+                                        _cat = "北美站点情况及选品思路"
+                                    elif "欧洲" in _q_lower:
+                                        _cat = "欧洲站点情况及选品思路"
+                                    elif "日本" in _q_lower:
+                                        _cat = "日本站点情况及选品思路"
+                                    elif "跨境电商" in _q_lower:
+                                        _cat = "跨境电商知识早知道"
+                                    else:
+                                        _cat = "未分类"
+
+                                if _cat not in cat_stats:
+                                    cat_stats[_cat] = {"total": 0, "brand_mention": 0, "official_link": 0, "amazon_cn": 0}
+                                cat_stats[_cat]["total"] += 1
+                                if item.get("has_brand_mention"):
+                                    cat_stats[_cat]["brand_mention"] += 1
+                                if item.get("has_official_link"):
+                                    cat_stats[_cat]["official_link"] += 1
+                                if item.get("has_amazon_cn"):
+                                    cat_stats[_cat]["amazon_cn"] += 1
+                    elif isinstance(_data, dict) and "rounds" in _data:
+                        # Journey format
+                        for _round in _data.get("rounds", []):
+                            _results = _round.get("results", {})
+                            for _platform, _pdata in _results.items():
+                                if isinstance(_pdata, dict):
+                                    _sources = _pdata.get("sources", [])
+                                    _our_count = sum(1 for s in _sources if s.get("is_our_content"))
+                                    # Use round queries to infer category
+                                    _round_queries = _round.get("queries", {})
+                                    for _rq in _round_queries.values():
+                                        _rq_str = str(_rq).strip()
+                                        _r_cat = query_cat_map.get(_rq_str, "")
+                                        if not _r_cat:
+                                            for q_key, cat_val in query_cat_map.items():
+                                                if q_key in _rq_str or _rq_str in q_key:
+                                                    _r_cat = cat_val
+                                                    break
+                                        if _r_cat:
+                                            if _r_cat not in cat_stats:
+                                                cat_stats[_r_cat] = {"total": 0, "brand_mention": 0, "official_link": 0, "amazon_cn": 0}
+                                            cat_stats[_r_cat]["total"] += 1
+                                            if _our_count > 0:
+                                                cat_stats[_r_cat]["official_link"] += 1
+                                                cat_stats[_r_cat]["brand_mention"] += 1
+                                            break
+                except Exception:
+                    pass
+
+        if cat_stats:
+            # Build ranking dataframe
+            ranking_rows = []
+            for cat_name, stats in cat_stats.items():
+                total = stats["total"]
+                brand = stats["brand_mention"]
+                link = stats["official_link"]
+                cn = stats["amazon_cn"]
+                brand_rate = brand / total * 100 if total > 0 else 0
+                link_rate = link / total * 100 if total > 0 else 0
+                # AI citation probability = weighted score
+                citation_score = brand_rate * 0.4 + link_rate * 0.6
+                ranking_rows.append({
+                    "类别" if not is_en else "Category": cat_name,
+                    "检索数" if not is_en else "Queries": total,
+                    "品牌提及次数" if not is_en else "Brand Mentions": brand,
+                    "品牌提及率" if not is_en else "Brand Rate": f"{brand_rate:.1f}%",
+                    "官方链接次数" if not is_en else "Link Count": link,
+                    "官方链接率" if not is_en else "Link Rate": f"{link_rate:.1f}%",
+                    "AI引用概率" if not is_en else "Citation Score": f"{citation_score:.1f}%",
+                    "_score": citation_score,  # for sorting
+                })
+
+            df_ranking = pd.DataFrame(ranking_rows).sort_values("_score", ascending=False).reset_index(drop=True)
+            df_ranking.index = df_ranking.index + 1  # 1-based ranking
+
+            # Summary metrics
+            top3 = df_ranking.head(3)
+            bottom3 = df_ranking.tail(3)
+            rc1, rc2, rc3 = st.columns(3)
+            rc1.metric("Categories Analyzed" if is_en else "已分析类别数", len(df_ranking))
+            rc2.metric("Total Queries" if is_en else "总检索测试数", sum(s["total"] for s in cat_stats.values()))
+            avg_score = df_ranking["_score"].mean()
+            rc3.metric("Avg Citation Score" if is_en else "平均引用概率", f"{avg_score:.1f}%")
+
+            st.divider()
+
+            # Top performers
+            st.markdown("**🏆 " + ("Top Categories – Highest AI Citation Probability" if is_en else "最易被 AI 引用的类别 TOP") + "**")
+            display_cols = [c for c in df_ranking.columns if c != "_score"]
+            st.dataframe(df_ranking[display_cols].head(10), use_container_width=True)
+
+            # Bottom performers
+            st.markdown("**⚠️ " + ("Categories Needing Improvement – Lowest Citation Probability" if is_en else "引用概率最低的类别（优化空间最大）") + "**")
+            st.dataframe(df_ranking[display_cols].tail(5).iloc[::-1], use_container_width=True)
+
+            # Bar chart visualization
+            st.divider()
+            st.markdown("**📈 " + ("Citation Probability by Category" if is_en else "各类别 AI 引用概率分布") + "**")
+            chart_df = df_ranking[["类别" if not is_en else "Category", "_score"]].copy()
+            chart_df.columns = ["category", "score"]
+            chart_df = chart_df.sort_values("score", ascending=True)  # ascending for horizontal bar
+            st.bar_chart(chart_df.set_index("category"), horizontal=True, height=max(400, len(chart_df) * 28))
+
+            # Insights
+            st.divider()
+            st.markdown("**💡 " + ("Key Insights" if is_en else "关键洞察") + "**")
+            if len(ranking_rows) >= 3:
+                top_cats = [r["类别" if not is_en else "Category"] for r in sorted(ranking_rows, key=lambda x: x["_score"], reverse=True)[:3]]
+                bottom_cats = [r["类别" if not is_en else "Category"] for r in sorted(ranking_rows, key=lambda x: x["_score"])[:3]]
+                st.markdown(f"""
+- {'Most cited categories' if is_en else '最容易被 AI 引用的类别'}：**{', '.join(top_cats)}**
+- {'Least cited categories' if is_en else '最不容易被引用的类别'}：**{', '.join(bottom_cats)}**
+- {'Recommendation' if is_en else '建议'}：{'Focus content production on high-citation categories to maximize ROI; improve content quality in low-citation categories' if is_en else '优先在高引用率类别产出更多内容以最大化 ROI；对低引用率类别优化内容质量和结构'}
+""")
+        else:
+            st.caption("No zhice journey data available for category analysis. Run AI verification first." if is_en else "暂无智测旅程数据可供类别分析。请先执行 AI 验证。")
+
     # TAB 4: Gap & 机会点
     # ============================================================
     with tab_gap:
