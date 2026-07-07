@@ -503,7 +503,13 @@ def run_zhiyou_score(batch_id: str, progress_callback=None) -> dict:
     if not zhizao_path.exists():
         return {"success": False, "error": "请先执行智造 (Step 2)"}
 
-    df = pd.read_csv(zhizao_path, encoding="utf-8-sig")
+    try:
+        df = pd.read_csv(zhizao_path, encoding="utf-8-sig", on_bad_lines="skip")
+    except Exception:
+        try:
+            df = pd.read_csv(zhizao_path, encoding="utf-8-sig", on_bad_lines="skip", engine="python")
+        except Exception as e:
+            return {"success": False, "error": f"读取智造文件失败: {str(e)}"}
     if df.empty:
         return {"success": False, "error": "智造输出为空"}
 
@@ -579,10 +585,20 @@ def run_zhiyou_execute(batch_id: str, progress_callback=None) -> dict:
     if not zhizao_path.exists():
         return {"success": False, "error": "智造输出不存在"}
 
-    df_score = pd.read_csv(scorecard_path, encoding="utf-8-sig")
-    df_draft = pd.read_csv(zhizao_path, encoding="utf-8-sig")
-
-    # Process all scored content (don't block on approval — rewrite all to improve)
+    try:
+        df_score = pd.read_csv(scorecard_path, encoding="utf-8-sig", on_bad_lines="skip")
+    except Exception:
+        try:
+            df_score = pd.read_csv(scorecard_path, encoding="utf-8-sig", on_bad_lines="skip", engine="python")
+        except Exception as e:
+            return {"success": False, "error": f"读取评分卡失败: {str(e)}"}
+    try:
+        df_draft = pd.read_csv(zhizao_path, encoding="utf-8-sig", on_bad_lines="skip")
+    except Exception:
+        try:
+            df_draft = pd.read_csv(zhizao_path, encoding="utf-8-sig", on_bad_lines="skip", engine="python")
+        except Exception as e:
+            return {"success": False, "error": f"读取智造文件失败: {str(e)}"}
     if "content_id" in df_score.columns:
         approved_ids = df_score["content_id"].tolist()
     else:
@@ -679,9 +695,12 @@ def run_zhiyou_compliance(batch_id: str, progress_callback=None) -> dict:
         return {"success": False, "error": "请先执行智优执行 (Step 3.5) — 优化内容文件不存在或为空"}
 
     try:
-        df = pd.read_csv(opt_path, encoding="utf-8-sig")
+        df = pd.read_csv(opt_path, encoding="utf-8-sig", on_bad_lines="skip")
     except Exception:
-        return {"success": False, "error": "优化内容文件格式错误或为空"}
+        try:
+            df = pd.read_csv(opt_path, encoding="utf-8-sig", on_bad_lines="skip", engine="python")
+        except Exception:
+            return {"success": False, "error": "优化内容文件格式错误或为空"}
     if df.empty:
         return {"success": False, "error": "优化内容为空"}
 
@@ -736,9 +755,9 @@ def run_zhiyou_compliance(batch_id: str, progress_callback=None) -> dict:
         POC_MAP = {19: "murphy", 20: "joyce", 21: "eva_zheng", 23: "eva_zheng", 24: "eva_zheng", 25: "eva_zheng"}
 
         # Read compliance result to check categories
-        df_comp = pd.read_csv(output_file, encoding="utf-8-sig")
+        df_comp = pd.read_csv(output_file, encoding="utf-8-sig", on_bad_lines="skip")
         # Try to match category from original data
-        df_orig = pd.read_csv(opt_path, encoding="utf-8-sig")
+        df_orig = pd.read_csv(opt_path, encoding="utf-8-sig", on_bad_lines="skip")
 
         review_dir = OUTPUT_PATH / "review"
         review_dir.mkdir(parents=True, exist_ok=True)
@@ -803,8 +822,17 @@ def run_zhibu(batch_id: str, progress_callback=None) -> dict:
     if not opt_path.exists():
         return {"success": False, "error": "请先执行智优执行 (Step 3.5)"}
 
-    df_opt = pd.read_csv(opt_path, encoding="utf-8-sig")
-    df_score = pd.read_csv(score_path, encoding="utf-8-sig") if score_path.exists() else pd.DataFrame()
+    try:
+        df_opt = pd.read_csv(opt_path, encoding="utf-8-sig", on_bad_lines="skip")
+    except Exception:
+        try:
+            df_opt = pd.read_csv(opt_path, encoding="utf-8-sig", on_bad_lines="skip", engine="python")
+        except Exception as e:
+            return {"success": False, "error": f"读取优化内容失败: {str(e)}"}
+    try:
+        df_score = pd.read_csv(score_path, encoding="utf-8-sig", on_bad_lines="skip") if score_path.exists() else pd.DataFrame()
+    except Exception:
+        df_score = pd.DataFrame()
 
     if df_opt.empty:
         return {"success": False, "error": "优化内容为空"}
