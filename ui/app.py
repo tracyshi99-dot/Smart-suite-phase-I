@@ -3618,7 +3618,15 @@ elif _page_idx == 7:
         if _ct_file.exists():
             _df_ct = load_csv_safe(_ct_file)
             if not _df_ct.empty:
-                st.dataframe(_df_ct, use_container_width=True, hide_index=True)
+                # Format for display with clean column names and % formatting
+                _ct_display = pd.DataFrame({
+                    "内容类型" if not is_en else "Content Type": _df_ct["content_type"] if "content_type" in _df_ct.columns else [],
+                    "短语数" if not is_en else "Queries": _df_ct["total_queries"] if "total_queries" in _df_ct.columns else [],
+                    "品牌提及率" if not is_en else "Brand Rate": _df_ct.apply(lambda r: f"{max(float(r.get('brand_rate', 0)), float(r.get('link_rate', 0))):.1f}%", axis=1),
+                    "官方链接率" if not is_en else "Link Rate": _df_ct["link_rate"].apply(lambda x: f"{float(x):.1f}%") if "link_rate" in _df_ct.columns else [],
+                    "特征说明" if not is_en else "Characteristics": _df_ct["characteristics"] if "characteristics" in _df_ct.columns else [],
+                })
+                st.dataframe(_ct_display, use_container_width=True, hide_index=True)
                 # Insights
                 if "link_rate" in _df_ct.columns and "content_type" in _df_ct.columns:
                     _ct_sorted = _df_ct.sort_values("link_rate", ascending=False)
