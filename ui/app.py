@@ -3727,14 +3727,12 @@ elif _page_idx == 7:
 | CN GEO | 🟢 +452% YoY | Continue expanding AI search coverage |
 | WW Direct EST | 🟢 +62% YoY | Maintain pace, content lag effect working |
 | JP Direct | 🟢 Fastest growth | Prioritize JP content expansion |
-| AE Direct | 🔴 -61% YoY | Investigate cause, increase EM content |
         """ if is_en else """
 | 渠道 | 判断 | 建议 |
 |---|---|---|
 | CN GEO | 🟢 +452% YoY | 继续扩大 AI 搜索覆盖 |
 | WW Direct EST | 🟢 +62% YoY | 保持节奏，内容滞后效应正在生效 |
 | JP Direct | 🟢 增速最快 | 优先扩展 JP 内容 |
-| AE Direct | 🔴 -61% YoY | 排查原因，增加 EM 市场内容 |
         """)
 
     # 📜 历史记录
