@@ -1166,10 +1166,33 @@ elif _page_idx == 2:
     # History
     with st.expander("📜 History" if is_en else "📜 历史记录"):
         if zhice_dir.exists():
+            col_hist, col_clear_hist = st.columns([4, 1])
+            with col_clear_hist:
+                if st.button("🗑️ Clear All" if is_en else "🗑️ 清空全部", key="clear_zhice_history"):
+                    # Delete gap results, queue files, and journey files
+                    deleted = 0
+                    for pattern in ["gap_result_*.csv", "zhiku_verify_queue_*.json", "*.json"]:
+                        for f in zhice_dir.glob(pattern):
+                            f.unlink()
+                            deleted += 1
+                    # Clear session state
+                    if "zhice_gap_results" in st.session_state:
+                        del st.session_state["zhice_gap_results"]
+                    st.success(f"{'Cleared' if is_en else '已清空'} {deleted} {'files' if is_en else '个文件'}")
+                    st.rerun()
             files = sorted(zhice_dir.glob("gap_result_*.csv"), key=lambda f: f.stat().st_mtime, reverse=True)
-            for f in files[:10]:
-                mtime = datetime.fromtimestamp(f.stat().st_mtime).strftime("%Y-%m-%d %H:%M")
-                st.caption(f"📄 {f.name} · {mtime}")
+            if files:
+                for f in files[:10]:
+                    mtime = datetime.fromtimestamp(f.stat().st_mtime).strftime("%Y-%m-%d %H:%M")
+                    col_f, col_del = st.columns([5, 1])
+                    with col_f:
+                        st.caption(f"📄 {f.name} · {mtime}")
+                    with col_del:
+                        if st.button("🗑️", key=f"del_zhice_{f.name}"):
+                            f.unlink()
+                            st.rerun()
+            else:
+                st.caption("No history" if is_en else "暂无历史")
         else:
             st.caption("No history" if is_en else "暂无历史")
 
