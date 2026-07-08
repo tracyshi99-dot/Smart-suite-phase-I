@@ -452,8 +452,161 @@ def create_display_df(data, col_names, section_type="absolute"):
 # MAIN UI
 # ============================================================
 
+from pathlib import Path
+import plotly.graph_objects as go
+
+BASE_PATH = Path(__file__).parent.parent
+METRICS_PATH = BASE_PATH / "output" / "metrics"
+
 st.title("📊 Mario-GEO 数据提取工具")
 st.caption("从 SSR Funnel Metrics (Sheet 1) 提取 GEO + Direct 汇总数据 (Sheet 2 格式)")
+
+# ============================================================
+# AUTO-LOAD: Sheet2 format data (Y2026 vs Y2025 with YoY)
+# ============================================================
+_s2_rs_file = METRICS_PATH / "geo_sheet2_regstart.csv"
+_s2_cl_file = METRICS_PATH / "geo_sheet2_cleanlaunch.csv"
+_s2_conv_file = METRICS_PATH / "geo_sheet2_conversion.csv"
+
+if _s2_rs_file.exists() and _s2_cl_file.exists() and _s2_conv_file.exists():
+    _s2_rs = pd.read_csv(_s2_rs_file, encoding="utf-8-sig")
+    _s2_cl = pd.read_csv(_s2_cl_file, encoding="utf-8-sig")
+    _s2_conv = pd.read_csv(_s2_conv_file, encoding="utf-8-sig")
+
+    st.divider()
+    st.subheader("📊 Sheet 2 — GEO + Direct Summary (Y2026 vs Y2025)")
+
+    # KPI Row
+    _rs_ytd_2026 = _s2_rs[(_s2_rs["Channel"] == "GEO") & (_s2_rs["Type"] == "Actual")]
+    _rs_direct_ytd = _s2_rs[(_s2_rs["Channel"] == "WW Website Direct") & (_s2_rs["Type"] == "Actual")]
+    _cl_ytd_2026 = _s2_cl[(_s2_cl["Channel"] == "GEO") & (_s2_cl["Type"] == "Actual")]
+    _cl_direct_ytd = _s2_cl[(_s2_cl["Channel"] == "WW Website Direct") & (_s2_cl["Type"] == "Actual")]
+
+    k1, k2, k3, k4 = st.columns(4)
+    with k1:
+        geo_rs = int(_rs_ytd_2026.iloc[0]["YTD"]) if not _rs_ytd_2026.empty and pd.notna(_rs_ytd_2026.iloc[0]["YTD"]) else 0
+        geo_yoy = _s2_rs[(_s2_rs["Channel"] == "GEO") & (_s2_rs["Type"] == "YoY")]
+        geo_yoy_val = geo_yoy.iloc[0]["YTD"] if not geo_yoy.empty and pd.notna(geo_yoy.iloc[0]["YTD"]) else 0
+        st.metric("GEO Regstart YTD", f"{geo_rs:,}", f"+{geo_yoy_val:.0%}")
+    with k2:
+        direct_rs = int(_rs_direct_ytd.iloc[0]["YTD"]) if not _rs_direct_ytd.empty and pd.notna(_rs_direct_ytd.iloc[0]["YTD"]) else 0
+        direct_yoy = _s2_rs[(_s2_rs["Channel"] == "WW Website Direct") & (_s2_rs["Type"] == "YoY")]
+        direct_yoy_val = direct_yoy.iloc[0]["YTD"] if not direct_yoy.empty and pd.notna(direct_yoy.iloc[0]["YTD"]) else 0
+        st.metric("WW Direct Regstart YTD", f"{direct_rs:,}", f"+{direct_yoy_val:.0%}")
+    with k3:
+        cl_total = 0
+        if not _cl_ytd_2026.empty and pd.notna(_cl_ytd_2026.iloc[0]["YTD"]):
+            cl_total += int(_cl_ytd_2026.iloc[0]["YTD"])
+        if not _cl_direct_ytd.empty and pd.notna(_cl_direct_ytd.iloc[0]["YTD"]):
+            cl_total += int(_cl_direct_ytd.iloc[0]["YTD"])
+        st.metric("Clean Launch Total YTD", f"{cl_total:,}")
+    with k4:
+        total_rs = geo_rs + direct_rs
+        conv_rate = cl_total / total_rs if total_rs > 0 else 0
+        st.metric("Conversion Rate", f"{conv_rate:.1%}")
+
+    # Tabs matching Sheet2 sections
+    _s2_tab_rs, _s2_tab_cl, _s2_tab_conv, _s2_tab_trend = st.tabs([
+        "📈 Regstart (#1-9)", "🚀 Clean Launch (#10-18)", "📊 Conversion (#19-27)", "📉 Trends"
+    ])
+
+    _period_cols = ["Jan", "Feb", "Mar", "Apr", "May", "Q1", "Q2", "YTD"]
+
+    def _fmt_sheet2(df, is_rate=False):
+        """Format Sheet2 data for display."""
+        display = df[["#", "Channel", "Year", "Type"] + [c for c in _period_cols if c in df.columns]].copy()
+        for col in _period_cols:
+            if col in display.columns:
+                def fmt_val(row):
+                    val = row[col]
+                    if pd.isna(val):
+                        return "-"
+                    tp = row["Type"]
+                    if tp == "YoY":
+                        return f"{val:+.1%}"
+                    elif tp == "Rate":
+                        return f"{val:.1%}"
+                    elif tp == "BPS Change":
+                        return f"{int(val):+,} bps"
+                    else:
+                        if abs(val) >= 1:
+                            return f"{int(val):,}"
+                        return f"{val:.1%}" if abs(val) < 1 else str(val)
+                display[col] = display.apply(fmt_val, axis=1)
+        return display
+
+    with _s2_tab_rs:
+        st.markdown("**Regstart — Y2026 Actual / Y2025 PY / YoY**")
+        st.dataframe(_fmt_sheet2(_s2_rs), use_container_width=True, hide_index=True, height=700)
+
+    with _s2_tab_cl:
+        st.markdown("**Clean Launch — Y2026 Actual / Y2025 PY / YoY**")
+        st.dataframe(_fmt_sheet2(_s2_cl), use_container_width=True, hide_index=True, height=700)
+
+    with _s2_tab_conv:
+        st.markdown("**Regstart → Clean Launch Conversion — Y2026 Rate / Y2025 Rate / BPS Change**")
+        st.dataframe(_fmt_sheet2(_s2_conv, is_rate=True), use_container_width=True, hide_index=True, height=700)
+
+    with _s2_tab_trend:
+        st.markdown("**Monthly Trend — Regstart (Y2026 vs Y2025)**")
+        _mlabels = ["Jan", "Feb", "Mar", "Apr", "May"]
+
+        # GEO + WW Direct combined
+        fig1 = go.Figure()
+        for label, color, dash in [("GEO", "#fbbf24", None), ("WW Website Direct", "#4a9eff", None)]:
+            row = _s2_rs[(_s2_rs["Channel"] == label) & (_s2_rs["Type"] == "Actual")]
+            if not row.empty:
+                vals = [float(row.iloc[0][m]) if pd.notna(row.iloc[0][m]) else 0 for m in _mlabels]
+                fig1.add_trace(go.Scatter(x=_mlabels, y=vals, mode="lines+markers",
+                                          name=f"{label} (2026)", line=dict(color=color, width=2)))
+            row_py = _s2_rs[(_s2_rs["Channel"] == label) & (_s2_rs["Type"] == "PY")]
+            if not row_py.empty:
+                vals_py = [float(row_py.iloc[0][m]) if pd.notna(row_py.iloc[0][m]) else 0 for m in _mlabels]
+                fig1.add_trace(go.Scatter(x=_mlabels, y=vals_py, mode="lines+markers",
+                                          name=f"{label} (2025)", line=dict(color=color, width=1, dash="dash")))
+        fig1.update_layout(height=380, margin=dict(l=0, r=0, t=30, b=0), yaxis_title="Reg Starts",
+                           legend=dict(orientation="h", y=-0.2), hovermode="x unified")
+        st.plotly_chart(fig1, use_container_width=True)
+
+        # Clean Launch trend
+        st.markdown("**Monthly Trend — Clean Launch (Y2026 vs Y2025)**")
+        fig2 = go.Figure()
+        for label, color in [("GEO", "#22c55e"), ("WW Website Direct", "#06b6d4")]:
+            row = _s2_cl[(_s2_cl["Channel"] == label) & (_s2_cl["Type"] == "Actual")]
+            if not row.empty:
+                vals = [float(row.iloc[0][m]) if pd.notna(row.iloc[0][m]) else 0 for m in _mlabels]
+                fig2.add_trace(go.Scatter(x=_mlabels, y=vals, mode="lines+markers",
+                                          name=f"{label} (2026)", line=dict(color=color, width=2)))
+            row_py = _s2_cl[(_s2_cl["Channel"] == label) & (_s2_cl["Type"] == "PY")]
+            if not row_py.empty:
+                vals_py = [float(row_py.iloc[0][m]) if pd.notna(row_py.iloc[0][m]) else 0 for m in _mlabels]
+                fig2.add_trace(go.Scatter(x=_mlabels, y=vals_py, mode="lines+markers",
+                                          name=f"{label} (2025)", line=dict(color=color, width=1, dash="dash")))
+        fig2.update_layout(height=350, margin=dict(l=0, r=0, t=30, b=0), yaxis_title="Clean Launches",
+                           legend=dict(orientation="h", y=-0.2), hovermode="x unified")
+        st.plotly_chart(fig2, use_container_width=True)
+
+        # Conversion Rate trend
+        st.markdown("**Monthly Trend — Conversion Rate (Y2026 vs Y2025)**")
+        fig3 = go.Figure()
+        for label, color in [("GEO", "#fbbf24"), ("WW Website Direct", "#4a9eff"),
+                             ("NA Website (Direct)", "#a78bfa"), ("EU Website (Direct)", "#f87171"),
+                             ("JP Website (Direct)", "#22c55e")]:
+            row = _s2_conv[(_s2_conv["Channel"] == label) & (_s2_conv["Type"] == "Rate") & (_s2_conv["Year"] == "Y2026")]
+            if not row.empty:
+                vals = [float(row.iloc[0][m]) * 100 if pd.notna(row.iloc[0][m]) else None for m in _mlabels]
+                fig3.add_trace(go.Scatter(x=_mlabels, y=vals, mode="lines+markers",
+                                          name=f"{label} (2026)", line=dict(color=color, width=2)))
+            row_py = _s2_conv[(_s2_conv["Channel"] == label) & (_s2_conv["Type"] == "Rate") & (_s2_conv["Year"] == "Y2025")]
+            if not row_py.empty:
+                vals_py = [float(row_py.iloc[0][m]) * 100 if pd.notna(row_py.iloc[0][m]) else None for m in _mlabels]
+                fig3.add_trace(go.Scatter(x=_mlabels, y=vals_py, mode="lines+markers",
+                                          name=f"{label} (2025)", line=dict(color=color, width=1, dash="dash")))
+        fig3.update_layout(height=380, margin=dict(l=0, r=0, t=30, b=0), yaxis_title="Conversion %",
+                           legend=dict(orientation="h", y=-0.25), hovermode="x unified")
+        st.plotly_chart(fig3, use_container_width=True)
+
+    st.divider()
 
 st.divider()
 

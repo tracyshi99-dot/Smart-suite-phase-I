@@ -891,9 +891,9 @@ elif page == t("nav_metrics"):
 
     st.divider()
 
-    # --- Tabs: Weekly / Monthly / YTD / Input / Learnings & Opportunities ---
-    tab_weekly, tab_monthly, tab_ytd, tab_input, tab_learnings = st.tabs([
-        "📅 Weekly", "📆 Monthly", "📊 YTD", "📥 Input", "💡 Learnings & Opp"
+    # --- Tabs: Weekly / Monthly / YTD / RS vs CL / Input / Learnings & Opportunities ---
+    tab_weekly, tab_monthly, tab_ytd, tab_rs_cl_roa, tab_input, tab_learnings = st.tabs([
+        "📅 Weekly", "📆 Monthly", "📊 YTD", "📈 RS vs CL", "📥 Input", "💡 Learnings & Opp"
     ])
 
     # ---- TAB: Weekly ----
@@ -969,6 +969,84 @@ elif page == t("nav_metrics"):
             "JP YTD": [1237, "~1K", "~800", "~600", "~500", "~400", "~350", 174],
         })
         st.dataframe(funnel_data, use_container_width=True, hide_index=True)
+
+    # ---- TAB: RS vs CL (Full Year) ----
+    with tab_rs_cl_roa:
+        st.subheader("📈 Reg Start vs Clean Launch – 2025 Full Year")
+        st.caption("Monthly breakdown with YoY comparison and conversion rate trends")
+
+        _rs_file_roa = METRICS_DIR / "geo_regstart_full.csv"
+        _cl_file_roa = METRICS_DIR / "geo_cleanlaunch_full.csv"
+        _conv_file_roa = METRICS_DIR / "geo_conversion_full.csv"
+
+        if _rs_file_roa.exists() and _cl_file_roa.exists() and _conv_file_roa.exists():
+            _df_rs_roa = load_csv_safe(_rs_file_roa)
+            _df_cl_roa = load_csv_safe(_cl_file_roa)
+            _df_conv_roa = load_csv_safe(_conv_file_roa)
+
+            # KPI row
+            _rs_t_row = _df_rs_roa[(_df_rs_roa["Channel"] == "Total") & (_df_rs_roa["Type"] == "Actual")]
+            _cl_t_row = _df_cl_roa[(_df_cl_roa["Channel"] == "Total") & (_df_cl_roa["Type"] == "Actual")]
+            _rs_py_roa = _df_rs_roa[(_df_rs_roa["Channel"] == "Total") & (_df_rs_roa["Type"] == "PY")]
+            _cl_py_roa = _df_cl_roa[(_df_cl_roa["Channel"] == "Total") & (_df_cl_roa["Type"] == "PY")]
+
+            c1, c2, c3, c4 = st.columns(4)
+            with c1:
+                _rv = int(_rs_t_row.iloc[0]["2025_Total"]) if not _rs_t_row.empty else 0
+                _rp = int(_rs_py_roa.iloc[0]["2025_Total"]) if not _rs_py_roa.empty else 0
+                st.metric("Reg Start YTD", f"{_rv:,}", f"+{(_rv-_rp)/_rp:.0%}" if _rp else "N/A")
+            with c2:
+                _cv = int(_cl_t_row.iloc[0]["2025_Total"]) if not _cl_t_row.empty else 0
+                _cp = int(_cl_py_roa.iloc[0]["2025_Total"]) if not _cl_py_roa.empty else 0
+                st.metric("Clean Launch YTD", f"{_cv:,}", f"+{(_cv-_cp)/_cp:.0%}" if _cp else "N/A")
+            with c3:
+                _cr = _cv / _rv if _rv > 0 else 0
+                st.metric("Conversion Rate", f"{_cr:.1%}")
+            with c4:
+                _cr_py = _cp / _rp if _rp > 0 else 0
+                st.metric("Conv. vs PY", f"{(_cr - _cr_py):+.1%}", f"PY: {_cr_py:.1%}")
+
+            st.divider()
+
+            # Monthly trend chart
+            _mcols_roa = [c for c in _df_rs_roa.columns if c.startswith("2025_M")]
+            _mlabels_roa = ["Jan", "Feb", "Mar", "Apr", "May"]
+
+            # Reg Start + Clean Launch for Total channel
+            fig_roa = go.Figure()
+            if not _rs_t_row.empty:
+                rs_vals = [float(_rs_t_row.iloc[0][c]) if pd.notna(_rs_t_row.iloc[0][c]) else 0 for c in _mcols_roa]
+                fig_roa.add_trace(go.Bar(name="Reg Start", x=_mlabels_roa, y=rs_vals, marker_color="#4a9eff"))
+            if not _cl_t_row.empty:
+                cl_vals = [float(_cl_t_row.iloc[0][c]) if pd.notna(_cl_t_row.iloc[0][c]) else 0 for c in _mcols_roa]
+                fig_roa.add_trace(go.Bar(name="Clean Launch", x=_mlabels_roa, y=cl_vals, marker_color="#22c55e"))
+
+            fig_roa.update_layout(barmode="group", height=320, margin=dict(l=0, r=0, t=30, b=0),
+                                  yaxis_title="Count", legend=dict(orientation="h", y=-0.2))
+            st.plotly_chart(fig_roa, use_container_width=True)
+
+            # Conversion trend
+            st.markdown("**Conversion Rate Trend (by Channel)**")
+            fig_conv_roa = go.Figure()
+            for _, row in _df_conv_roa.iterrows():
+                vals = [float(row[c]) * 100 if pd.notna(row[c]) else 0 for c in _mcols_roa]
+                fig_conv_roa.add_trace(go.Scatter(
+                    x=_mlabels_roa, y=vals, mode="lines+markers", name=row["Channel"]
+                ))
+            fig_conv_roa.update_layout(height=300, margin=dict(l=0, r=0, t=30, b=0),
+                                       yaxis_title="Conversion %", legend=dict(orientation="h", y=-0.2))
+            st.plotly_chart(fig_conv_roa, use_container_width=True)
+
+            # Data tables
+            with st.expander("📋 Full Data Tables"):
+                st.markdown("**Reg Start**")
+                st.dataframe(_df_rs_roa, use_container_width=True, hide_index=True)
+                st.markdown("**Clean Launch**")
+                st.dataframe(_df_cl_roa, use_container_width=True, hide_index=True)
+                st.markdown("**Conversion Rate**")
+                st.dataframe(_df_conv_roa, use_container_width=True, hide_index=True)
+        else:
+            st.warning("⚠️ Full year data not found. Expected: geo_regstart_full.csv, geo_cleanlaunch_full.csv, geo_conversion_full.csv in output/metrics/")
 
     # ---- TAB: Input ----
     with tab_input:

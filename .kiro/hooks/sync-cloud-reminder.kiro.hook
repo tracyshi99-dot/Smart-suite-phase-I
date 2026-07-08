@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "name": "Sync to Cloud Reminder",
+  "description": "After agent completes a task that modifies ui/app.py or output/metrics files, remind user to run sync_to_cloud.ps1 to update the Streamlit Cloud demo",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "ui/app.py",
+      "output/metrics/*.csv",
+      "ui/engine.py"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "The file that was just edited affects the Streamlit Cloud demo. Remind the user: \"记得运行 .\\sync_to_cloud.ps1 同步到 Cloud demo。\" Keep it brief, one line only."
+  }
+}

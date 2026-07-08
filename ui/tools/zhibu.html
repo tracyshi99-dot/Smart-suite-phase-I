@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智布&智传 Publisher & Distributor – Smart Suite</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0a0f;color:#fff;min-height:100vh;padding:0}
+.top{background:rgba(10,10,15,.92);border-bottom:1px solid #1e2030;padding:14px 40px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;backdrop-filter:blur(16px)}
+.top-left{display:flex;align-items:center;gap:12px}
+.top-left a{color:#8892b0;text-decoration:none;font-size:14px;display:flex;align-items:center;gap:6px;transition:color .2s}
+.top-left a:hover{color:#fff}
+.top-logo{width:36px;height:36px;border-radius:50%;background:conic-gradient(from 200deg,#ff6b35,#e91e63,#9c27b0,#2196f3,#00bcd4,#4caf50,#ffeb3b,#ff6b35);display:flex;align-items:center;justify-content:center}
+.top-logo span{font-size:16px;font-weight:900;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5)}
+.lang-btn{padding:5px 12px;border-radius:5px;font-size:11px;font-weight:600;background:rgba(255,255,255,.06);border:1px solid #1e2030;color:#8892b0;cursor:pointer}
+.lang-btn:hover{background:rgba(255,255,255,.1);color:#fff}
+.container{max-width:900px;margin:0 auto;padding:40px}
+.icon-row{font-size:48px;margin-bottom:16px}
+h1{font-size:36px;font-weight:800;color:#29b6f6;margin-bottom:4px}
+.subtitle{font-size:16px;color:#8892b0;margin-bottom:20px;font-style:italic}
+.desc{font-size:15px;color:#8892b0;line-height:1.7;margin-bottom:32px;max-width:700px}
+.section-title{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:#5a6380;margin:32px 0 14px;border-bottom:1px solid #1e2030;padding-bottom:8px}
+.prompt-card{background:#12131a;border:1px solid #1e2030;border-radius:10px;padding:16px 20px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;transition:all .2s}
+.prompt-card:hover{border-color:rgba(255,255,255,.1);background:#1a1b25}
+.prompt-label{font-size:12px;color:#5a6380;margin-bottom:4px}
+.prompt-cmd{font-size:14px;color:#e0e0e0;font-family:'Cascadia Code','Fira Code',monospace}
+.copy-btn{padding:6px 14px;border-radius:6px;font-size:12px;font-weight:500;background:rgba(255,255,255,.06);border:1px solid #1e2030;color:#8892b0;cursor:pointer;transition:all .2s;white-space:nowrap}
+.copy-btn:hover{background:rgba(255,255,255,.12);color:#fff}
+.io-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:8px}
+.io-card{background:#12131a;border:1px solid #1e2030;border-radius:10px;padding:16px}
+.io-card h4{font-size:11px;text-transform:uppercase;color:#5a6380;margin-bottom:8px;letter-spacing:.5px}
+.io-card p{font-size:13px;color:#8892b0;font-family:monospace;word-break:break-all}
+.steps{list-style:none;counter-reset:step}
+.steps li{counter-increment:step;display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;font-size:14px;color:#8892b0}
+.steps li::before{content:counter(step);min-width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid #1e2030;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#5a6380;flex-shrink:0}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(0,188,212,.9);color:#fff;padding:10px 22px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:99}
+.toast.show{opacity:1}
+@media(max-width:768px){.container{padding:24px 16px}.io-grid{grid-template-columns:1fr}h1{font-size:28px}}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="top-left">
+    <a href="../smart-suite-showcase.html">← Back</a>
+    <div class="top-logo"><span>智</span></div>
+  </div>
+  <button class="lang-btn" onclick="toggleLang()">中文</button>
+</div>
+<div class="container">
+  <div class="icon-row">☁️</div>
+  <h1 id="toolName">智布&智传 Publisher & Distributor</h1>
+  <p class="subtitle" id="toolSub">Publisher & Distributor</p>
+  <p class="desc" id="toolDesc">Converts optimized content into LEGO CMS JSON format and enables one-click multi-channel distribution.</p>
+
+  <div class="section-title" data-en="USE IN KIRO" data-zh="在 KIRO 中使用">USE IN KIRO</div>
+  <div class="prompt-card" style="border-color:rgba(0,188,212,.3);background:rgba(0,188,212,.05)">
+    <div>
+      <div class="prompt-label" style="color:#00bcd4">Reference this steering file in Kiro chat:</div>
+      <div class="prompt-cmd" style="color:#00e5ff">#File .kiro/steering/tool-zhibu.md</div>
+    </div>
+    <button class="copy-btn" onclick="copyCmd(this)">Copy</button>
+  </div>
+  <div class="prompt-card" style="border-color:rgba(171,71,188,.3);background:rgba(171,71,188,.05);margin-top:6px">
+    <div>
+      <div class="prompt-label" style="color:#ab47bc">Or open directly in Smart Suite Dashboard:</div>
+      <div class="prompt-cmd"><a href="http://rem-5cg31524zw.ant.amazon.com:8501/?tool=zhibu" target="_blank" style="color:#ce93d8;text-decoration:none">http://rem-5cg31524zw.ant.amazon.com:8501/?tool=zhibu</a></div>
+    </div>
+    <button class="copy-btn" onclick="copyCmd(this)">Copy</button>
+  </div>
+
+  <div class="section-title" data-en="QUICK START PROMPTS" data-zh="快速启动指令">QUICK START PROMPTS</div>
+    <div class="prompt-card">
+    <div><div class="prompt-label">Generate JSON</div><div class="prompt-cmd">执行智布 batch_004，生成JSON</div></div>
+    <button class="copy-btn" onclick="copyCmd(this)">Copy</button>
+  </div>
+  <div class="prompt-card">
+    <div><div class="prompt-label">Full Publish</div><div class="prompt-cmd">执行智布 batch_004，生成JSON并发布</div></div>
+    <button class="copy-btn" onclick="copyCmd(this)">Copy</button>
+  </div>
+
+
+  <div class="section-title" data-en="INPUT / OUTPUT" data-zh="输入 / 输出">INPUT / OUTPUT</div>
+  <div class="io-grid">
+    <div class="io-card"><h4>Input</h4><p>output/{batch_id}/03_zhiyou/zhiyou_optimized_content.csv</p></div>
+    <div class="io-card"><h4>Output</h4><p>output/{batch_id}/04_zhibu/zhibu_output.json</p></div>
+  </div>
+
+  <div class="section-title" data-en="HOW IT WORKS" data-zh="工作流程">HOW IT WORKS</div>
+  <ol class="steps" id="steps">
+    <li>Loads optimized content from 智优</li>
+    <li>Converts to LEGO CMS JSON structure</li>
+    <li>Populates metadata fields automatically</li>
+    <li>Ready for multi-channel publishing</li>
+  </ol>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+let lang='en';
+const data = {
+  name_en: "智布&智传 Publisher & Distributor",
+  name_zh: "智布&智传 Publisher & Distributor",
+  sub_en: "Publisher & Distributor",
+  sub_zh: "将优化后的内容转换为 LEGO CMS 标准 JSON 格式...",
+  desc_en: "Converts optimized content into LEGO CMS JSON format and enables one-click multi-channel distribution.",
+  desc_zh: "将优化后的内容转换为 LEGO CMS 标准 JSON 格式，支持一键多渠道分发。",
+  steps_en: ["Loads optimized content from \u667a\u4f18", "Converts to LEGO CMS JSON structure", "Populates metadata fields automatically", "Ready for multi-channel publishing"],
+  steps_zh: ["加载智优输出的优化内容", "转换为 LEGO CMS JSON 结构", "自动填充元数据字段", "就绪多渠道发布"]
+};
+function toggleLang(){
+  lang = lang==='en'?'zh':'en';
+  document.querySelector('.lang-btn').textContent = lang==='en'?'中文':'English';
+  document.getElementById('toolDesc').textContent = data['desc_'+lang];
+  document.getElementById('toolSub').textContent = data['sub_'+lang];
+  document.querySelectorAll('.section-title').forEach(el=>{el.textContent=el.dataset[lang]||el.textContent});
+  const steps = document.getElementById('steps');
+  steps.innerHTML = data['steps_'+lang].map(s=>'<li>'+s+'</li>').join('');
+  document.querySelectorAll('.copy-btn').forEach(b=>{b.textContent=lang==='en'?'Copy':'复制'});
+}
+function copyCmd(el){
+  const cmd = el.closest('.prompt-card').querySelector('.prompt-cmd').textContent;
+  navigator.clipboard.writeText(cmd).then(()=>showToast(lang==='en'?'Copied!':'已复制!')).catch(()=>{
+    const t=document.createElement('textarea');t.value=cmd;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);showToast(lang==='en'?'Copied!':'已复制!');
+  });
+}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000)}
+</script>
+</body>
+</html>

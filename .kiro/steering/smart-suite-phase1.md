@@ -499,6 +499,16 @@ overall_score = (intent_match * 0.30) + (ai_readability * 0.20) + (authority * 0
 - 只有 PASS 和 FIXED 的内容才能进入 Step 4
 - Save output locally
 
+**Auto-Routing to Manual Review (Critical-5 Categories):**
+After compliance check completes for ALL content (PASS/FIXED):
+- Critical-5 categories: #19, #20, #21, #23, #24, #25
+- Critical-5 articles automatically submit to `output/review/review_queue.csv` for POC review
+- POC reviews at: `http://rem-5cg31524zw.ant.amazon.com:8502/?reviewer={poc_name}`
+- After POC approves → content returns to 智优's ready pool
+- Critical 3-4 articles wait in ready pool (no manual review needed)
+- User proceeds to Step 4 ONLY when ALL articles are ready (Critical 3-4 auto-passed + Critical 5 POC-approved)
+- 智优 page shows unified "Next Step → 智布" button when all reviews complete
+
 ---
 ### Step 4: 智布 (Zhibu) – JSON Formatting
 
@@ -692,6 +702,11 @@ IF our YoY < SSR benchmark YoY
 THEN → Underperforming, need strategy review
 ACTION: Generate gap analysis, recommend new keyword angles
 PRIORITY: Critical
+
+BPS Calculation: (Our YoY% - SSR YoY%) × 100
+Example: Our +65% vs SSR -19% = +84 ppts = +8,400 bps
+Target: Maintain positive BPS every month
+Alert: If weekly BPS < 0 for 2+ consecutive weeks → Escalate
 ```
 
 ### Rule 7: Input-Output Lag Check（投入产出滞后检查）

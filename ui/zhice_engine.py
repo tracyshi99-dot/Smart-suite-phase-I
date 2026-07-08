@@ -166,11 +166,40 @@ _load_env()
 
 
 def _call_openai(query: str) -> dict:
-    """Call OpenAI ChatGPT API."""
+    """Call OpenAI ChatGPT API with web search enabled for real-time results."""
     import requests
     key = os.environ.get("OPENAI_API_KEY", "")
     if not key:
         return {"full_answer": "OpenAI API Key 未配置", "key_points": [], "sources": []}
+
+    # Try with web_search tool first (for real-time search results)
+    try:
+        resp = requests.post(
+            "https://api.openai.com/v1/chat/completions",
+            headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+            json={
+                "model": "gpt-4o",
+                "messages": [{"role": "user", "content": query}],
+                "tools": [{"type": "web_search"}],
+                "max_tokens": 2048,
+                "temperature": 0.7,
+            },
+            timeout=90,
+        )
+        if resp.status_code == 200:
+            data = resp.json()
+            answer = data["choices"][0]["message"]["content"]
+            # Extract sources from annotations if available
+            sources = []
+            annotations = data["choices"][0]["message"].get("annotations", [])
+            for ann in annotations:
+                if ann.get("type") == "url_citation":
+                    sources.append(ann.get("url", ""))
+            return {"full_answer": answer, "key_points": [], "sources": sources, "_real": True, "_web_search": True}
+    except Exception:
+        pass
+
+    # Fallback: without web_search
     resp = requests.post(
         "https://api.openai.com/v1/chat/completions",
         headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
@@ -184,7 +213,7 @@ def _call_openai(query: str) -> dict:
     )
     if resp.status_code == 200:
         answer = resp.json()["choices"][0]["message"]["content"]
-        return {"full_answer": answer, "key_points": [], "sources": [], "_real": True}
+        return {"full_answer": answer, "key_points": [], "sources": [], "_real": True, "_web_search": False}
     return {"full_answer": f"OpenAI API 错误: {resp.status_code} {resp.text[:200]}", "key_points": [], "sources": []}
 
 
@@ -736,3 +765,108 @@ def analyze_cited_content(journey_data: dict) -> dict:
     report["_saved_path"] = str(report_path)
     report["success"] = True
     return report
+
+
+def run_zhice_journey(persona_name: str, persona_goal: str, platforms: list, rounds: int = 5) -> dict:
+    """Run a complete zhice journey simulation from the UI.
+    
+    Args:
+        persona_name: User persona name
+        persona_goal: What the user wants to achieve
+        platforms: List of platform codes (e.g. ['qianwen', 'chatgpt'])
+        rounds: Number of search rounds to simulate
+    
+    Returns:
+        dict with 'success', 'summary', 'results', etc.
+    """
+    _load_env()
+    
+    results = []
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    
+    # Generate search queries based on the persona goal
+    try:
+        queries = generate_round_queries(
+            persona_goal=persona_goal,
+            platforms=platforms,
+            round_num=1,
+            previous_results=None,
+        )
+    except Exception:
+        # Fallback: use the goal directly as a query
+        queries = {p: persona_goal for p in platforms}
+    
+    # Run searches across platforms
+    for round_num in range(1, rounds + 1):
+        round_results = {"round_num": round_num, "queries": queries, "results": {}}
+        
+        for platform in platforms:
+            query = queries.get(platform, persona_goal)
+            api_func = REAL_API_MAP.get(platform)
+            
+            if api_func:
+                try:
+                    r = api_func(query)
+                    answer = r.get("full_answer", "")
+                    has_gs = "gs.amazon" in answer.lower() or "globalselling" in answer.lower()
+                    has_brand = "全球开店" in answer or "Global Selling" in answer
+                    
+                    round_results["results"][platform] = {
+                        "query": query,
+                        "answer_length": len(answer),
+                        "has_official_link": has_gs,
+                        "has_brand_mention": has_brand,
+                        "answer_preview": answer[:300],
+                        "sources": r.get("sources", []),
+                    }
+                except Exception as e:
+                    round_results["results"][platform] = {"error": str(e)}
+            else:
+                round_results["results"][platform] = {"error": f"No API for {platform}"}
+        
+        results.append(round_results)
+        
+        # Generate next round queries based on results (simplified)
+        if round_num < rounds:
+            queries = {p: f"{persona_goal} (follow-up {round_num+1})" for p in platforms}
+    
+    # Save results
+    output = {
+        "persona_name": persona_name,
+        "persona_goal": persona_goal,
+        "platforms": platforms,
+        "rounds": rounds,
+        "timestamp": timestamp,
+        "results": results,
+    }
+    
+    # Summary
+    total_queries = sum(len(r["results"]) for r in results)
+    with_link = sum(
+        1 for r in results 
+        for p_result in r["results"].values() 
+        if p_result.get("has_official_link")
+    )
+    with_brand = sum(
+        1 for r in results 
+        for p_result in r["results"].values() 
+        if p_result.get("has_brand_mention")
+    )
+    
+    output["summary"] = {
+        "total_queries": total_queries,
+        "with_official_link": with_link,
+        "with_brand_mention": with_brand,
+        "coverage_rate": f"{with_link*100//total_queries if total_queries else 0}%",
+        "platforms_tested": platforms,
+    }
+    
+    # Save to file
+    ZHICE_OUTPUT.mkdir(parents=True, exist_ok=True)
+    safe_name = persona_name.replace(" ", "_")[:20]
+    out_file = ZHICE_OUTPUT / f"journey_{safe_name}_{timestamp}.json"
+    out_file.write_text(json.dumps(output, ensure_ascii=False, indent=2), encoding="utf-8")
+    
+    output["success"] = True
+    output["_saved_path"] = str(out_file)
+    return output
