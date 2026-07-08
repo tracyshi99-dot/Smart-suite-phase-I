@@ -42,7 +42,7 @@ DEEPSEEK_API_URL = "https://api.deepseek.com/chat/completions"
 
 
 def _get_deepseek_key():
-    """Get DeepSeek API key from multiple sources."""
+    """Get DashScope (Qianwen) API key from multiple sources."""
     global DEEPSEEK_API_KEY
     if DEEPSEEK_API_KEY:
         return DEEPSEEK_API_KEY
@@ -54,9 +54,9 @@ def _get_deepseek_key():
             return DEEPSEEK_API_KEY
     except Exception:
         pass
-    # Try environment variable
+    # Try environment variable (DASHSCOPE_API_KEY takes priority)
     import os
-    key = os.environ.get("DEEPSEEK_API_KEY", "")
+    key = os.environ.get("DASHSCOPE_API_KEY", "") or os.environ.get("DEEPSEEK_API_KEY", "")
     if key:
         DEEPSEEK_API_KEY = key
         return DEEPSEEK_API_KEY
@@ -64,7 +64,7 @@ def _get_deepseek_key():
     env_path = Path(__file__).parent.parent / ".env"
     if env_path.exists():
         for line in env_path.read_text(encoding="utf-8").splitlines():
-            if line.startswith("DEEPSEEK_API_KEY="):
+            if line.startswith("DASHSCOPE_API_KEY=") or line.startswith("DEEPSEEK_API_KEY="):
                 DEEPSEEK_API_KEY = line.split("=", 1)[1].strip()
                 return DEEPSEEK_API_KEY
     return ""
@@ -116,7 +116,7 @@ def get_client():
 
 
 def call_claude(system_prompt: str, user_prompt: str, max_tokens: int = MAX_TOKENS) -> str:
-    """Call Claude 3.5 Sonnet via Bedrock. Falls back to DeepSeek if Bedrock unavailable."""
+    """Call Claude 3.5 Sonnet via Bedrock. Falls back to Qianwen if Bedrock unavailable."""
     try:
         client = get_client()
         response = client.converse(
@@ -126,9 +126,18 @@ def call_claude(system_prompt: str, user_prompt: str, max_tokens: int = MAX_TOKE
             inferenceConfig={"maxTokens": max_tokens, "temperature": 0.3},
         )
         return response["output"]["message"]["content"][0]["text"]
-    except Exception:
-        # Fallback to DeepSeek
-        return _call_deepseek_llm(system_prompt, user_prompt, max_tokens)
+    except Exception as e:
+        # Fallback to Qianwen
+        try:
+            return _call_deepseek_llm(system_prompt, user_prompt, max_tokens)
+        except Exception as e2:
+            raise RuntimeError(f"Bedrock 和通义千问均失败。Bedrock: {str(e)[:100]} | 千问: {str(e2)[:100]}")
+
+
+def call_bedrock_claude(prompt: str, max_tokens: int = MAX_TOKENS) -> str:
+    """Simplified single-prompt interface for Bedrock Claude. Used by reverse recall and zhiyu."""
+    system_prompt = "You are a helpful AI assistant specialized in cross-border e-commerce and Amazon seller topics."
+    return call_claude(system_prompt, prompt, max_tokens)
 
 
 def load_steering() -> str:
