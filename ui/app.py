@@ -3111,7 +3111,7 @@ elif _page_idx == 7:
 
         # 官网链接提及 + 官网链接提及率（按月）
         st.markdown("**📊 官网链接提及 & 官网链接提及率（按月）**")
-        st.caption("官网链接提及 = AI平台应答中直接展示 gs.amazon.cn 官方链接")
+        st.caption("官网链接提及 = AI平台应答中直接展示亚马逊官方链接（含 gs.amazon.cn、sell.amazon.com、sellercentral.amazon.com 等）")
         df_link_monthly = pd.DataFrame({
             "指标": ["品牌词投放量", "官网链接提及(Total)", "官网链接提及率"],
             "Jan": [1188, 720, "60.61%"],
