@@ -1595,7 +1595,8 @@ elif _page_idx == 4:
                 st.metric("Articles Scored" if is_en else "评分文章数", len(df_sc))
             with col2:
                 if "overall_score" in df_sc.columns:
-                    st.metric("Avg Score" if is_en else "平均总分", f"{df_sc['overall_score'].mean():.2f}/5")
+                    avg_score = pd.to_numeric(df_sc['overall_score'], errors='coerce').mean()
+                    st.metric("Avg Score" if is_en else "平均总分", f"{avg_score:.2f}/5" if pd.notna(avg_score) else "N/A")
             with col3:
                 if "is_approved" in df_sc.columns:
                     approved = df_sc[df_sc["is_approved"].astype(str).str.upper() == "TRUE"].shape[0]
@@ -1604,7 +1605,7 @@ elif _page_idx == 4:
             # Radar chart
             score_cols = [c for c in df_sc.columns if c.endswith("_score") and c != "overall_score"]
             if score_cols:
-                avg_scores = df_sc[score_cols].mean()
+                avg_scores = df_sc[score_cols].apply(pd.to_numeric, errors='coerce').mean()
                 labels = [c.replace("_score", "").replace("_", " ").title() for c in score_cols]
                 fig_r = go.Figure()
                 fig_r.add_trace(go.Scatterpolar(
