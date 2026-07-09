@@ -423,9 +423,10 @@ def run_zhiku(batch_id: str, market: str = "ALL", keyword_limit: int = 10,
 # STEP 2: 智造
 # ============================================================
 def run_zhizao(batch_id: str, content_limit: int = 5,
-               progress_callback=None, template_id: str = "none") -> dict:
+               progress_callback=None, template_id: str = "auto") -> dict:
     """Execute Step 2: Generate draft content for selected queries.
-    template_id: 'none' (from scratch), 'registration', 'fees', 'logistics', 'advertising', 'listing'
+    template_id: 'auto' (detect from query), 'none' (from scratch),
+                 'registration', 'fees', 'logistics', 'advertising', 'listing'
     """
     steering = load_steering()
 
@@ -547,8 +548,26 @@ def run_zhizao(batch_id: str, content_limit: int = 5,
 
         # Add template structure if selected
         template_instruction = ""
-        if template_id != "none" and template_id in TEMPLATES:
-            template_instruction = f"\n\n{TEMPLATES[template_id]}\n\n请严格按照上述模板结构生成内容，每个部分都必须有内容。"
+        actual_template = template_id
+
+        # Auto-detect template from query content
+        if template_id == "auto":
+            query_lower = query.lower()
+            if any(kw in query_lower for kw in ["注册", "开店", "开户", "register", "sign up", "create account", "申请", "审核", "đăng ký", "등록"]):
+                actual_template = "registration"
+            elif any(kw in query_lower for kw in ["费用", "成本", "多少钱", "价格", "收费", "佣金", "cost", "fee", "price", "how much", "chi phí", "비용"]):
+                actual_template = "fees"
+            elif any(kw in query_lower for kw in ["物流", "仓储", "fba", "fbm", "发货", "配送", "运费", "shipping", "fulfillment", "warehouse", "vận chuyển", "물류", "배송"]):
+                actual_template = "logistics"
+            elif any(kw in query_lower for kw in ["广告", "推广", "ppc", "cpc", "acos", "sponsor", "advertis", "营销", "引流", "quảng cáo", "광고"]):
+                actual_template = "advertising"
+            elif any(kw in query_lower for kw in ["listing", "标题", "图片", "关键词", "a+", "详情页", "五点", "bullet", "seo", "优化listing", "tối ưu", "리스팅"]):
+                actual_template = "listing"
+            else:
+                actual_template = "none"
+
+        if actual_template != "none" and actual_template in TEMPLATES:
+            template_instruction = f"\n\n{TEMPLATES[actual_template]}\n\n请严格按照上述模板结构生成内容，每个部分都必须有内容。"
 
         user_prompt = f"""检索短语：「{query}」
 {template_instruction}

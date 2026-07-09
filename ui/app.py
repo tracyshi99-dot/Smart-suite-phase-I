@@ -560,7 +560,8 @@ elif _page_idx == 1:
             e2e_content_limit = st.number_input("Articles" if is_en else "文章数", 1, 20, 5, key="e2e_content_limit")
         with col_e2e_3:
             e2e_template_options = {
-                "none": "Auto-detect" if is_en else "自动（无模板）",
+                "auto": "Auto-detect" if is_en else "智能匹配",
+                "none": "No template" if is_en else "无模板",
                 "registration": "Registration" if is_en else "注册流程",
                 "fees": "Fees" if is_en else "费用成本",
                 "logistics": "Logistics" if is_en else "物流仓储",
@@ -1352,6 +1353,7 @@ elif _page_idx == 3:
 
     # Template selection
     template_options = {
+        "auto": "🤖 Auto-detect (智能匹配)" if is_en else "🤖 智能匹配（根据短语自动选模板）",
         "none": "🆓 From Scratch (自由生成)" if is_en else "🆓 自由生成（无模板）",
         "registration": "📋 Registration Flow (注册流程)" if is_en else "📋 注册流程模板",
         "fees": "💰 Fees & Costs (费用成本)" if is_en else "💰 费用成本模板",
@@ -1360,13 +1362,15 @@ elif _page_idx == 3:
         "listing": "🏷️ Listing Optimization (Listing优化)" if is_en else "🏷️ Listing优化模板",
     }
     selected_template = st.selectbox(
-        "Content Template" if is_en else "内容模板（AI按模板结构填充，更快更一致）",
+        "Content Template" if is_en else "内容模板",
         options=list(template_options.keys()),
         format_func=lambda x: template_options[x],
         key="zhizao_template",
     )
-    if selected_template != "none":
-        st.caption("✅ Template mode: AI will follow pre-defined structure, generating faster and more consistent content." if is_en else "✅ 模板模式：AI 按预设结构填充内容，生成更快、格式更统一。")
+    if selected_template == "auto":
+        st.caption("🤖 Auto mode: template is matched per query based on keywords (注册→注册模板, 费用→费用模板, etc.)" if is_en else "🤖 智能模式：根据每条短语的关键词自动匹配最佳模板（注册→注册模板，费用→费用模板，物流→物流模板...）")
+    elif selected_template != "none":
+        st.caption("✅ Fixed template: all articles use the same structure." if is_en else "✅ 固定模板：所有文章使用同一结构。")
 
     remaining = max(0, total_selected - already_generated)
     if already_generated > 0 and remaining > 0:
