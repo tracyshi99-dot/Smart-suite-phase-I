@@ -423,8 +423,10 @@ def run_zhiku(batch_id: str, market: str = "ALL", keyword_limit: int = 10,
 # STEP 2: 智造
 # ============================================================
 def run_zhizao(batch_id: str, content_limit: int = 5,
-               progress_callback=None) -> dict:
-    """Execute Step 2: Generate draft content for selected queries."""
+               progress_callback=None, template_id: str = "none") -> dict:
+    """Execute Step 2: Generate draft content for selected queries.
+    template_id: 'none' (from scratch), 'registration', 'fees', 'logistics', 'advertising', 'listing'
+    """
     steering = load_steering()
 
     # Load zhiku output
@@ -447,6 +449,74 @@ def run_zhizao(batch_id: str, content_limit: int = 5,
     output_dir = OUTPUT_PATH / batch_id / "02_zhizao"
     ensure_dir(output_dir)
 
+    # Content templates — pre-defined structures for common topics
+    TEMPLATES = {
+        "registration": """## 文章结构模板（注册流程类）
+请严格按照以下结构填充内容：
+
+1. **开篇直答**（100字）：直接回答"如何注册"
+2. **注册前准备**（150字）：需要的材料清单（表格形式）
+3. **注册步骤详解**（300字）：分步骤说明（编号列表）
+4. **常见审核问题**（150字）：审核失败原因+解决方案
+5. **注册后下一步**（100字）：注册成功后的行动指引
+6. **FAQ**（3个问答）
+7. **CTA**：引导访问 https://gs.amazon.cn
+
+必须包含：1个材料清单表格 + 1个步骤编号列表 + 1个费用对比列表""",
+
+        "fees": """## 文章结构模板（费用成本类）
+请严格按照以下结构填充内容：
+
+1. **开篇直答**（80字）：一句话总结费用范围
+2. **费用总览表**（200字）：所有费用项的表格（费用类型/金额/频率/说明）
+3. **各项费用详解**（300字）：逐项解释每笔费用
+4. **费用计算示例**（150字）：用具体数字举例月度/年度总费用
+5. **省钱技巧**（100字）：降低费用的方法（列表形式）
+6. **FAQ**（3个问答）
+7. **CTA**：引导访问 https://gs.amazon.cn
+
+必须包含：1个费用总览表格 + 1个计算示例列表 + 1个省钱技巧列表""",
+
+        "logistics": """## 文章结构模板（物流仓储类）
+请严格按照以下结构填充内容：
+
+1. **开篇直答**（80字）：FBA vs FBM 核心区别
+2. **物流方案对比表**（200字）：FBA/FBM/第三方的优劣势表格
+3. **FBA 详细流程**（250字）：从发货到入仓的步骤
+4. **费用结构**（150字）：仓储费+配送费的计算方式
+5. **常见问题与解决**（100字）：丢件/延迟/退货处理
+6. **FAQ**（3个问答）
+7. **CTA**：引导访问 https://gs.amazon.cn
+
+必须包含：1个方案对比表格 + 1个流程步骤列表 + 1个费用结构列表""",
+
+        "advertising": """## 文章结构模板（广告推广类）
+请严格按照以下结构填充内容：
+
+1. **开篇直答**（80字）：广告类型概述和预期效果
+2. **广告类型对比表**（200字）：SP/SB/SD 三种广告的对比表格
+3. **新手广告策略**（250字）：从0到1的广告启动步骤
+4. **预算分配建议**（150字）：不同阶段的预算分配方案
+5. **优化技巧**（100字）：提升 ACOS 的实操建议（列表形式）
+6. **FAQ**（3个问答）
+7. **CTA**：引导访问 https://gs.amazon.cn
+
+必须包含：1个广告类型对比表格 + 1个策略步骤列表 + 1个优化技巧列表""",
+
+        "listing": """## 文章结构模板（Listing优化类）
+请严格按照以下结构填充内容：
+
+1. **开篇直答**（80字）：优质Listing的核心要素
+2. **Listing要素评分表**（200字）：各要素重要性+评分标准的表格
+3. **标题优化公式**（150字）：标题结构公式+好坏示例
+4. **图片与A+内容**（200字）：图片要求+A+内容制作要点
+5. **关键词策略**（100字）：前台/后台关键词布局
+6. **FAQ**（3个问答）
+7. **CTA**：引导访问 https://gs.amazon.cn
+
+必须包含：1个要素评分表格 + 1个标题公式列表 + 1个关键词布局列表""",
+    }
+
     results = []
     total = len(df_q)
 
@@ -460,6 +530,7 @@ def run_zhizao(batch_id: str, content_limit: int = 5,
         keyword_id = row.get("keyword_id", "")
         query_id = row.get("query_id", "")
 
+        # Base system prompt
         system_prompt = f"""你是跨境电商内容专家。用户会给你一个检索短语，你必须写一篇围绕该短语的文章。
 
 输出规则：
@@ -474,8 +545,13 @@ def run_zhizao(batch_id: str, content_limit: int = 5,
 
 严禁跑题。文章每一段都必须和检索短语直接相关。"""
 
-        user_prompt = f"""检索短语：「{query}」
+        # Add template structure if selected
+        template_instruction = ""
+        if template_id != "none" and template_id in TEMPLATES:
+            template_instruction = f"\n\n{TEMPLATES[template_id]}\n\n请严格按照上述模板结构生成内容，每个部分都必须有内容。"
 
+        user_prompt = f"""检索短语：「{query}」
+{template_instruction}
 请围绕上面这个检索短语写一篇完整文章。标题和正文必须精确围绕「{query}」展开。"""
 
         response = call_claude(system_prompt, user_prompt)

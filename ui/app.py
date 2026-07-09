@@ -547,6 +547,57 @@ elif _page_idx == 1:
     sc3.metric("Categories" if is_en else "覆盖类别", df_zhiku_all["category"].dropna().nunique() if not df_zhiku_all.empty and "category" in df_zhiku_all.columns else 0)
     sc4.metric("Sources" if is_en else "来源数", df_zhiku_all["source"].dropna().nunique() if not df_zhiku_all.empty and "source" in df_zhiku_all.columns else 0)
 
+    # ============================================================
+    # 🚀 一键全流程 (End-to-End)
+    # ============================================================
+    with st.expander("🚀 One-Click Full Pipeline (Keywords → Word Doc)" if is_en else "🚀 一键全流程（关键词 → Word 文档）", expanded=False):
+        st.caption("Run all steps automatically: 智库 → 智造 → 智优 → 合规 → 智布" if is_en else "自动执行全部步骤：智库裂变 → 智造生成 → 智优评分+重写 → 合规审查 → 智布导出")
+
+        col_e2e_1, col_e2e_2, col_e2e_3 = st.columns(3)
+        with col_e2e_1:
+            e2e_kw_limit = st.number_input("Keywords" if is_en else "关键词数", 1, 50, 10, key="e2e_kw_limit")
+        with col_e2e_2:
+            e2e_content_limit = st.number_input("Articles" if is_en else "文章数", 1, 20, 5, key="e2e_content_limit")
+        with col_e2e_3:
+            e2e_template_options = {
+                "none": "Auto-detect" if is_en else "自动（无模板）",
+                "registration": "Registration" if is_en else "注册流程",
+                "fees": "Fees" if is_en else "费用成本",
+                "logistics": "Logistics" if is_en else "物流仓储",
+                "advertising": "Advertising" if is_en else "广告推广",
+                "listing": "Listing" if is_en else "Listing优化",
+            }
+            e2e_template = st.selectbox("Template" if is_en else "模板", list(e2e_template_options.keys()), format_func=lambda x: e2e_template_options[x], key="e2e_template")
+
+        if st.button("🚀 Execute Full Pipeline" if is_en else "🚀 开始一键全流程", type="primary", key="btn_e2e"):
+            try:
+                from engine import run_full_pipeline
+                e2e_progress = st.progress(0)
+                e2e_status = st.empty()
+
+                def e2e_callback(pct, msg):
+                    e2e_progress.progress(min(1.0, max(0.0, pct)))
+                    e2e_status.text(msg)
+
+                with st.spinner("Running full pipeline..." if is_en else "正在执行全流程..."):
+                    result = run_full_pipeline(
+                        selected_batch,
+                        market="ALL",
+                        keyword_limit=e2e_kw_limit,
+                        content_limit=e2e_content_limit,
+                        progress_callback=e2e_callback,
+                    )
+
+                if result.get("success"):
+                    st.success("✅ Full pipeline completed! Check each step for results." if is_en else "✅ 全流程执行完毕！请查看各步骤的输出结果。")
+                    st.balloons()
+                else:
+                    stopped = result.get("stopped_at", "Unknown")
+                    error = result.get("error", "")
+                    st.error(f"❌ Stopped at: {stopped} — {error}")
+            except Exception as e:
+                st.error(f"Error: {str(e)}")
+
     st.divider()
 
     # ============================================================
@@ -1299,6 +1350,24 @@ elif _page_idx == 3:
 
     content_limit = st.number_input("Articles per batch" if is_en else "每批生成文章数", 1, 20, 5, key="zhizao_limit")
 
+    # Template selection
+    template_options = {
+        "none": "🆓 From Scratch (自由生成)" if is_en else "🆓 自由生成（无模板）",
+        "registration": "📋 Registration Flow (注册流程)" if is_en else "📋 注册流程模板",
+        "fees": "💰 Fees & Costs (费用成本)" if is_en else "💰 费用成本模板",
+        "logistics": "📦 Logistics & FBA (物流仓储)" if is_en else "📦 物流仓储模板",
+        "advertising": "📢 Advertising (广告推广)" if is_en else "📢 广告推广模板",
+        "listing": "🏷️ Listing Optimization (Listing优化)" if is_en else "🏷️ Listing优化模板",
+    }
+    selected_template = st.selectbox(
+        "Content Template" if is_en else "内容模板（AI按模板结构填充，更快更一致）",
+        options=list(template_options.keys()),
+        format_func=lambda x: template_options[x],
+        key="zhizao_template",
+    )
+    if selected_template != "none":
+        st.caption("✅ Template mode: AI will follow pre-defined structure, generating faster and more consistent content." if is_en else "✅ 模板模式：AI 按预设结构填充内容，生成更快、格式更统一。")
+
     remaining = max(0, total_selected - already_generated)
     if already_generated > 0 and remaining > 0:
         btn_label_z = f"🔄 {'Continue generating next' if is_en else '继续生成下一批'} {min(content_limit, remaining)} {'articles' if is_en else '篇'} ({already_generated}/{total_selected})"
@@ -1318,7 +1387,7 @@ elif _page_idx == 3:
                 status_text.text(msg)
 
             with st.spinner("Calling Bedrock Claude to generate content..." if is_en else "正在调用 Bedrock Claude 生成内容..."):
-                result = run_zhizao(selected_batch, content_limit, update_progress_z)
+                result = run_zhizao(selected_batch, content_limit, update_progress_z, selected_template)
 
             if result["success"]:
                 st.success(f"✅ +{result['articles_generated']} {'articles' if is_en else '篇'}")
