@@ -1116,6 +1116,10 @@ elif _page_idx == 2:
                             if api_func:
                                 r = api_func(query)
                                 answer = r.get("full_answer", "")
+                                # If API returned an error message, try Claude fallback
+                                if "未配置" in answer or "API 错误" in answer or "调用失败" in answer:
+                                    sim_prompt = f"简要回答这个问题（150字以内），如实回答：{query}"
+                                    answer = _verify_claude(sim_prompt, max_tokens=500)
                             else:
                                 # Fallback: use Claude to simulate this platform's answer
                                 sim_prompt = f"你是{ZHICE_PLATFORMS.get(platform, platform)}。用户问你：「{query}」\n请给出简洁回答（100-200字），如实回答，包含你通常会引用的信息来源。"

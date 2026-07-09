@@ -243,6 +243,14 @@ def _call_deepseek(query: str) -> dict:
     """Call DeepSeek API (OpenAI-compatible)."""
     import requests
     key = os.environ.get("DEEPSEEK_API_KEY", "")
+    # Also try .env file
+    if not key:
+        env_path = Path(__file__).parent.parent / ".env"
+        if env_path.exists():
+            for line in env_path.read_text(encoding="utf-8").splitlines():
+                if line.startswith("DEEPSEEK_API_KEY="):
+                    key = line.split("=", 1)[1].strip()
+                    break
     if not key:
         return {"full_answer": "DeepSeek API Key 未配置", "key_points": [], "sources": []}
     resp = requests.post(
@@ -266,6 +274,21 @@ def _call_qianwen(query: str) -> dict:
     """Call Alibaba Qianwen (通义千问) via DashScope API."""
     import requests
     key = os.environ.get("DASHSCOPE_API_KEY", "")
+    # Also try Streamlit secrets and .env file
+    if not key:
+        try:
+            import streamlit as st
+            if hasattr(st, "secrets") and "deepseek" in st.secrets:
+                key = st.secrets["deepseek"]["api_key"]
+        except Exception:
+            pass
+    if not key:
+        env_path = Path(__file__).parent.parent / ".env"
+        if env_path.exists():
+            for line in env_path.read_text(encoding="utf-8").splitlines():
+                if line.startswith("DASHSCOPE_API_KEY="):
+                    key = line.split("=", 1)[1].strip()
+                    break
     if not key:
         return {"full_answer": "千问 API Key 未配置", "key_points": [], "sources": []}
     resp = requests.post(
