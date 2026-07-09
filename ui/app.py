@@ -2027,6 +2027,52 @@ elif _page_idx == 4:
                 st.success(f"✅ {len(review_rows)} articles submitted to POC review queue" if is_en else f"✅ {len(review_rows)} 篇已提交到 POC 审核队列")
             st.info("💡 POC reviewers: open **localhost:8502** to review and approve articles." if is_en else "💡 POC 审核人：请打开 **localhost:8502** 查看和审批文章。")
 
+        # --- Inline Quick Approve (works on Cloud without 8502) ---
+        pending_for_approve = df_opt[(df_opt["needs_poc_review"] == True) & (df_opt["poc_approved"] == False)]
+        if len(pending_for_approve) > 0:
+            st.divider()
+            st.markdown("**🔍 Quick Review & Approve**" if is_en else "**🔍 快速审核 & 审批（无需 8502）**")
+            st.caption("Review content below and approve/reject directly." if is_en else "直接在下方审核内容并审批，无需打开独立审核界面。")
+
+            content_col_r = "optimized_content" if "optimized_content" in pending_for_approve.columns else "content_draft"
+            title_col_r = "optimized_title" if "optimized_title" in pending_for_approve.columns else "title"
+
+            for idx, row in pending_for_approve.iterrows():
+                art_title = str(row.get(title_col_r, f"Article {idx}"))
+                with st.expander(f"⏳ {art_title}", expanded=False):
+                    st.caption(f"Content ID: {row.get('content_id', '')} | Category: {row.get('category', 'N/A')}")
+                    art_content = str(row.get(content_col_r, ""))
+                    st.text_area("Content Preview" if is_en else "内容预览", value=art_content[:3000], height=200, key=f"poc_preview_{idx}", disabled=True)
+
+                    col_approve, col_reject = st.columns(2)
+                    with col_approve:
+                        if st.button("✅ Approve" if is_en else "✅ 审批通过", key=f"poc_approve_{idx}", type="primary"):
+                            df_opt.at[idx, "poc_approved"] = True
+                            opt_file = OUTPUT_PATH / selected_batch / "03_zhiyou" / "zhiyou_optimized_content.csv"
+                            df_opt.to_csv(opt_file, index=False, encoding="utf-8-sig")
+                            # Also update review queue if exists
+                            rq_file = OUTPUT_PATH / "review" / "review_queue.csv"
+                            if rq_file.exists():
+                                rq_df = load_csv_safe(rq_file)
+                                if not rq_df.empty and "content_id" in rq_df.columns:
+                                    cid = row.get("content_id", "")
+                                    rq_df.loc[rq_df["content_id"] == cid, "status"] = "APPROVED"
+                                    rq_df.loc[rq_df["content_id"] == cid, "reviewed_at"] = datetime.now().isoformat()
+                                    for str_col in ["status", "reviewer_notes", "reviewed_at"]:
+                                        if str_col in rq_df.columns:
+                                            rq_df[str_col] = rq_df[str_col].astype(str).replace("nan", "")
+                                    rq_df.to_csv(rq_file, index=False, encoding="utf-8-sig")
+                            st.success(f"✅ Approved: {art_title[:30]}")
+                            st.rerun()
+                    with col_reject:
+                        if st.button("❌ Reject" if is_en else "❌ 驳回", key=f"poc_reject_{idx}"):
+                            df_opt.at[idx, "poc_approved"] = False
+                            df_opt.at[idx, "needs_poc_review"] = False  # Remove from review queue
+                            opt_file = OUTPUT_PATH / selected_batch / "03_zhiyou" / "zhiyou_optimized_content.csv"
+                            df_opt.to_csv(opt_file, index=False, encoding="utf-8-sig")
+                            st.warning(f"❌ Rejected: {art_title[:30]}")
+                            st.rerun()
+
         # Check if all reviews complete
         all_reviewed = (pending == 0) if needs_review > 0 else True
         if not all_reviewed:
