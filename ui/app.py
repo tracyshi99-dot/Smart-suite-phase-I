@@ -1901,7 +1901,12 @@ elif _page_idx == 4:
 
     # --- POC Review Section ---
     st.divider()
-    st.subheader("🔒 POC Review" if is_en else "🔒 POC 人工审核")
+    col_poc_title, col_poc_refresh = st.columns([4, 1])
+    with col_poc_title:
+        st.subheader("🔒 POC Review" if is_en else "🔒 POC 人工审核")
+    with col_poc_refresh:
+        if st.button("🔄 Refresh Status" if is_en else "🔄 刷新审批状态", key="refresh_poc_status"):
+            st.rerun()
 
     # Critical-5 categories that require POC review
     CRITICAL_5_CATEGORIES = ["新手怎么注册亚马逊", "亚马逊开店成本费用详解", "开店审核常见问题解答",

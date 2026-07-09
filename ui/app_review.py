@@ -281,9 +281,13 @@ else:
             col_a, col_r, col_s = st.columns([1, 1, 3])
             with col_a:
                 if st.button("✅ Approve", key=f"approve_{idx}", type="primary"):
+                    # Ensure string columns don't have float64 dtype issues
+                    for str_col in ["status", "reviewer_notes", "reviewed_at", "content"]:
+                        if str_col in df_queue.columns:
+                            df_queue[str_col] = df_queue[str_col].astype(str).replace("nan", "")
                     df_queue.loc[idx, "status"] = "APPROVED"
                     df_queue.loc[idx, "content"] = edited_content
-                    df_queue.loc[idx, "reviewer_notes"] = notes
+                    df_queue.loc[idx, "reviewer_notes"] = notes if notes else ""
                     df_queue.loc[idx, "reviewed_at"] = datetime.now().isoformat()
                     save_review_queue(df_queue)
                     log_review_action(row["content_id"], reviewer, "APPROVED", notes)
@@ -291,8 +295,11 @@ else:
                     st.rerun()
             with col_r:
                 if st.button("❌ Reject", key=f"reject_{idx}"):
+                    for str_col in ["status", "reviewer_notes", "reviewed_at"]:
+                        if str_col in df_queue.columns:
+                            df_queue[str_col] = df_queue[str_col].astype(str).replace("nan", "")
                     df_queue.loc[idx, "status"] = "REJECTED"
-                    df_queue.loc[idx, "reviewer_notes"] = notes
+                    df_queue.loc[idx, "reviewer_notes"] = notes if notes else ""
                     df_queue.loc[idx, "reviewed_at"] = datetime.now().isoformat()
                     save_review_queue(df_queue)
                     log_review_action(row["content_id"], reviewer, "REJECTED", notes)
