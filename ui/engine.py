@@ -115,8 +115,38 @@ def get_client():
     return session.client("bedrock-runtime", region_name=REGION, config=config)
 
 
+def _is_cloud_environment() -> bool:
+    """Detect if running on Streamlit Cloud (no local AWS credentials available)."""
+    import os
+    # Streamlit Cloud sets STREAMLIT_SHARING_MODE or lacks ~/.aws/credentials
+    if os.environ.get("STREAMLIT_SHARING_MODE"):
+        return True
+    # Check if AWS credentials file exists (local dev has it, Cloud doesn't)
+    aws_creds = Path.home() / ".aws" / "credentials"
+    if not aws_creds.exists():
+        return True
+    # Also check if aws section is configured in streamlit secrets (explicit Cloud config)
+    try:
+        import streamlit as st
+        if hasattr(st, "secrets") and "aws" not in st.secrets:
+            # No AWS secrets configured and we're likely on Cloud
+            if os.environ.get("HOME", "").startswith("/mount") or not aws_creds.exists():
+                return True
+    except Exception:
+        pass
+    return False
+
+
 def call_claude(system_prompt: str, user_prompt: str, max_tokens: int = MAX_TOKENS) -> str:
-    """Call Claude 3.5 Sonnet via Bedrock. Falls back to Qianwen if Bedrock unavailable."""
+    """Call Claude via Bedrock (local) or Qianwen (Cloud). Auto-detects environment."""
+    # On Streamlit Cloud: use Qianwen directly (no Bedrock credentials available)
+    if _is_cloud_environment():
+        try:
+            return _call_deepseek_llm(system_prompt, user_prompt, max_tokens)
+        except Exception as e:
+            raise RuntimeError(f"通义千问调用失败（Cloud 模式）: {str(e)[:200]}")
+
+    # Local environment: try Bedrock first, fallback to Qianwen
     try:
         client = get_client()
         response = client.converse(
