@@ -1923,9 +1923,12 @@ elif _page_idx == 4:
         if "poc_approved" not in df_opt.columns:
             df_opt["poc_approved"] = False
 
-        # Ensure bool types
-        df_opt["needs_poc_review"] = df_opt["needs_poc_review"].astype(bool)
-        df_opt["poc_approved"] = df_opt["poc_approved"].astype(bool)
+        # Ensure bool types (handle string 'True'/'False' from CSV)
+        for bcol in ["needs_poc_review", "poc_approved"]:
+            if bcol in df_opt.columns:
+                df_opt[bcol] = df_opt[bcol].astype(str).str.strip().str.upper().map(
+                    {"TRUE": True, "FALSE": False, "1": True, "0": False, "YES": True, "NO": False}
+                ).fillna(False)
 
         # Show review status — sync from review_queue.csv if available
         review_file = OUTPUT_PATH / "review" / "review_queue.csv"
@@ -1933,11 +1936,13 @@ elif _page_idx == 4:
             df_review = load_csv_safe(review_file)
             if not df_review.empty and "status" in df_review.columns and "content_id" in df_review.columns:
                 # Sync approved status back to df_opt
-                approved_ids = df_review[df_review["status"] == "APPROVED"]["content_id"].tolist()
+                approved_ids = df_review[df_review["status"].astype(str).str.upper() == "APPROVED"]["content_id"].tolist()
                 if approved_ids and "content_id" in df_opt.columns:
-                    df_opt.loc[df_opt["content_id"].isin(approved_ids), "poc_approved"] = True
-                    opt_file = OUTPUT_PATH / selected_batch / "03_zhiyou" / "zhiyou_optimized_content.csv"
-                    df_opt.to_csv(opt_file, index=False, encoding="utf-8-sig")
+                    changed = df_opt["content_id"].isin(approved_ids) & (~df_opt["poc_approved"])
+                    if changed.any():
+                        df_opt.loc[changed, "poc_approved"] = True
+                        opt_file = OUTPUT_PATH / selected_batch / "03_zhiyou" / "zhiyou_optimized_content.csv"
+                        df_opt.to_csv(opt_file, index=False, encoding="utf-8-sig")
 
         needs_review = df_opt["needs_poc_review"].sum()
         approved = df_opt[df_opt["needs_poc_review"] == True]["poc_approved"].sum()
