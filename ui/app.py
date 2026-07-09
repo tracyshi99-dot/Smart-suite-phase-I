@@ -976,7 +976,16 @@ elif _page_idx == 1:
             all_files.sort(key=lambda f: f.stat().st_mtime, reverse=True)
             for f in all_files[:10]:
                 mtime = datetime.fromtimestamp(f.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S")
-                st.caption(f"📄 {f.name} · {f.stat().st_size/1024:.1f}KB · 🕐 {mtime}")
+                col_i, col_r, col_d = st.columns([3, 1, 1])
+                with col_i:
+                    st.caption(f"📄 {f.name} · {f.stat().st_size/1024:.1f}KB · 🕐 {mtime}")
+                with col_r:
+                    if st.button("♻️ Reuse" if is_en else "♻️ 复用", key=f"reuse_zhiku_{f.name}"):
+                        live_path = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
+                        safe_copy(f, live_path)
+                        st.rerun()
+                with col_d:
+                    st.download_button("⬇️", f.read_bytes(), file_name=f.name, mime="text/csv", key=f"dl_zhiku_{f.name}")
         else:
             st.caption("No history" if is_en else "暂无历史")
 
@@ -1181,12 +1190,30 @@ elif _page_idx == 2:
                     st.success(f"{'Cleared' if is_en else '已清空'} {deleted} {'files' if is_en else '个文件'}")
                     st.rerun()
             files = sorted(zhice_dir.glob("gap_result_*.csv"), key=lambda f: f.stat().st_mtime, reverse=True)
-            if files:
-                for f in files[:10]:
+            journey_files = sorted(zhice_dir.glob("*.json"), key=lambda f: f.stat().st_mtime, reverse=True)
+            all_zhice_files = files + journey_files
+            if all_zhice_files:
+                for f in all_zhice_files[:10]:
                     mtime = datetime.fromtimestamp(f.stat().st_mtime).strftime("%Y-%m-%d %H:%M")
-                    col_f, col_del = st.columns([5, 1])
+                    col_f, col_r, col_del = st.columns([3, 1, 1])
                     with col_f:
                         st.caption(f"📄 {f.name} · {mtime}")
+                    with col_r:
+                        if st.button("♻️ Reuse" if is_en else "♻️ 复用", key=f"reuse_zhice_{f.name}"):
+                            # For gap results, copy to the active gap result
+                            if f.suffix == ".csv":
+                                live_path = zhice_dir / "gap_result_latest.csv"
+                                safe_copy(f, live_path)
+                            else:
+                                # For journey JSON files, load into session state
+                                import json
+                                try:
+                                    journey_data = json.loads(f.read_text(encoding="utf-8"))
+                                    st.session_state["zhice_reuse_journey"] = journey_data
+                                    st.success(f"{'Loaded journey' if is_en else '已加载旅程'}: {f.name}")
+                                except Exception:
+                                    pass
+                            st.rerun()
                     with col_del:
                         if st.button("🗑️", key=f"del_zhice_{f.name}"):
                             f.unlink()
@@ -4007,15 +4034,26 @@ elif _page_idx == 7:
                 st.markdown(f"**{'Forecast History' if is_en else '预测历史'}** ({len(json_files)} {'forecasts' if is_en else '条预测'})")
                 for f in json_files[:5]:
                     mtime = datetime.fromtimestamp(f.stat().st_mtime).strftime("%Y-%m-%d %H:%M")
-                    with st.expander(f"📄 {f.stem} · {mtime}"):
-                        try:
-                            data = json.loads(f.read_text(encoding="utf-8"))
-                            if isinstance(data, dict):
-                                st.json(data)
-                            else:
-                                st.write(data)
-                        except Exception:
-                            st.caption("Unable to parse" if is_en else "无法解析")
+                    col_fh, col_fr = st.columns([4, 1])
+                    with col_fh:
+                        with st.expander(f"📄 {f.stem} · {mtime}"):
+                            try:
+                                data = json.loads(f.read_text(encoding="utf-8"))
+                                if isinstance(data, dict):
+                                    st.json(data)
+                                else:
+                                    st.write(data)
+                            except Exception:
+                                st.caption("Unable to parse" if is_en else "无法解析")
+                    with col_fr:
+                        if st.button("♻️ Reuse" if is_en else "♻️ 复用", key=f"reuse_zhiyu_{f.name}"):
+                            try:
+                                data = json.loads(f.read_text(encoding="utf-8"))
+                                st.session_state["zhiyu_reuse_data"] = data
+                                st.toast(f"{'Loaded forecast' if is_en else '已加载预测'}: {f.stem}")
+                            except Exception:
+                                st.error("Failed to load" if is_en else "加载失败")
+                            st.rerun()
             else:
                 st.caption("No forecast results yet" if is_en else "暂无预测结果")
         else:
