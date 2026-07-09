@@ -423,10 +423,12 @@ def run_zhiku(batch_id: str, market: str = "ALL", keyword_limit: int = 10,
 # STEP 2: 智造
 # ============================================================
 def run_zhizao(batch_id: str, content_limit: int = 5,
-               progress_callback=None, template_id: str = "auto") -> dict:
+               progress_callback=None, template_id: str = "auto",
+               reuse_template: dict = None) -> dict:
     """Execute Step 2: Generate draft content for selected queries.
     template_id: 'auto' (detect from query), 'none' (from scratch),
                  'registration', 'fees', 'logistics', 'advertising', 'listing'
+    reuse_template: dict with 'content' key — previously saved article to adapt
     """
     steering = load_steering()
 
@@ -572,6 +574,27 @@ def run_zhizao(batch_id: str, content_limit: int = 5,
         user_prompt = f"""检索短语：「{query}」
 {template_instruction}
 请围绕上面这个检索短语写一篇完整文章。标题和正文必须精确围绕「{query}」展开。"""
+
+        # If reuse_template is provided, use adaptation mode
+        if reuse_template and reuse_template.get("content"):
+            base_content = reuse_template["content"][:3000]
+            base_query = reuse_template.get("source_query", "")
+            user_prompt = f"""检索短语：「{query}」
+
+以下是一篇已有的优质参考文章（原短语：「{base_query}」）：
+---
+{base_content}
+---
+
+请基于上面的参考文章，针对新检索短语「{query}」进行改写调整：
+1. 保留文章的整体结构和格式
+2. 将所有内容重新围绕「{query}」展开
+3. 替换不相关的细节，补充与新短语相关的信息
+4. 确保标题包含「{query}」的核心词
+5. 保留表格、列表、FAQ的结构
+6. 确保链接 https://gs.amazon.cn 保留
+
+输出：第一行=新标题（不加#），然后空行，然后是完整正文。"""
 
         response = call_claude(system_prompt, user_prompt)
 

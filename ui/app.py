@@ -1391,7 +1391,8 @@ elif _page_idx == 3:
                 status_text.text(msg)
 
             with st.spinner("Calling Bedrock Claude to generate content..." if is_en else "正在调用 Bedrock Claude 生成内容..."):
-                result = run_zhizao(selected_batch, content_limit, update_progress_z, selected_template)
+                reuse_tpl = st.session_state.get("reuse_template", None)
+                result = run_zhizao(selected_batch, content_limit, update_progress_z, selected_template, reuse_tpl)
 
             if result["success"]:
                 st.success(f"✅ +{result['articles_generated']} {'articles' if is_en else '篇'}")
@@ -1473,6 +1474,26 @@ elif _page_idx == 3:
                             df_z.at[idx, "content_draft"] = edited_content
                             df_z.at[idx, "word_count"] = len(edited_content)
                             content_changed = True
+
+                        # Save as template button
+                        if st.button("💾 Save as Template" if is_en else "💾 保存为模板", key=f"save_tpl_{idx}"):
+                            tpl_dir = BASE_PATH / "templates"
+                            tpl_dir.mkdir(parents=True, exist_ok=True)
+                            tpl_name = str(row.get("ai_query", f"template_{idx}"))[:50].strip()
+                            tpl_file = tpl_dir / f"{tpl_name}.json"
+                            import json as _json
+                            tpl_data = {
+                                "name": tpl_name,
+                                "source_query": str(row.get("ai_query", "")),
+                                "title": str(row.get("title", "")),
+                                "content": edited_content if edited_content != original else original,
+                                "category": str(row.get("category", "")),
+                                "word_count": len(edited_content if edited_content != original else original),
+                                "created_from": f"{selected_batch}/{row.get('content_id', '')}",
+                                "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                            }
+                            tpl_file.write_text(_json.dumps(tpl_data, ensure_ascii=False, indent=2), encoding="utf-8")
+                            st.success(f"✅ {'Saved to template library' if is_en else '已保存到模板库'}: {tpl_name}")
             # Auto-save if any content changed
             if content_changed:
                 df_z.to_csv(zhizao_file, index=False, encoding="utf-8-sig")
@@ -1549,6 +1570,51 @@ elif _page_idx == 3:
                     st.download_button("⬇️", f.read_bytes(), file_name=f.name, mime="text/csv", key=f"dl_zhizao_{f.name}")
         else:
             st.caption("No history" if is_en else "暂无历史")
+
+    # 📚 Template Library
+    with st.expander("📚 Template Library" if is_en else "📚 模板库（已保存的文章模板）"):
+        tpl_dir = BASE_PATH / "templates"
+        if tpl_dir.exists():
+            tpl_files = sorted(tpl_dir.glob("*.json"), key=lambda f: f.stat().st_mtime, reverse=True)
+        else:
+            tpl_files = []
+
+        if tpl_files:
+            st.caption(f"{len(tpl_files)} {'templates saved' if is_en else '个模板已保存'}")
+            for tf in tpl_files:
+                try:
+                    tpl_data = json.loads(tf.read_text(encoding="utf-8"))
+                    tpl_name = tpl_data.get("name", tf.stem)
+                    tpl_title = tpl_data.get("title", "")
+                    tpl_wc = tpl_data.get("word_count", 0)
+                    tpl_created = tpl_data.get("created_at", "")
+
+                    col_t1, col_t2, col_t3, col_t4 = st.columns([3, 1, 1, 1])
+                    with col_t1:
+                        st.caption(f"📄 **{tpl_name}** — {tpl_title[:40]} ({tpl_wc} chars)")
+                    with col_t2:
+                        st.caption(f"🕐 {tpl_created[:10]}")
+                    with col_t3:
+                        if st.button("♻️ Use" if is_en else "♻️ 复用", key=f"use_tpl_{tf.name}"):
+                            # Load template into session state for reuse
+                            st.session_state["reuse_template"] = tpl_data
+                            st.success(f"{'Template loaded! Go to Generate Content and it will be used as base.' if is_en else '模板已加载！生成内容时将以此为基础进行调整。'}")
+                    with col_t4:
+                        if st.button("🗑️", key=f"del_tpl_{tf.name}"):
+                            tf.unlink()
+                            st.rerun()
+                except Exception:
+                    continue
+
+            # Show loaded template notice
+            if "reuse_template" in st.session_state:
+                tpl = st.session_state["reuse_template"]
+                st.info(f"{'Active template' if is_en else '当前加载模板'}: **{tpl.get('name', '')}** — {'AI will adapt this content to new queries' if is_en else 'AI 将在此基础上针对新短语调整内容'}")
+                if st.button("❌ Clear loaded template" if is_en else "❌ 取消模板复用", key="clear_loaded_tpl"):
+                    del st.session_state["reuse_template"]
+                    st.rerun()
+        else:
+            st.caption("No templates saved yet. Generate content first, then save articles as templates." if is_en else "暂无模板。先生成内容，然后在文章预览中点击「保存为模板」。")
 
 
 # ============================================================
