@@ -26,16 +26,16 @@ METRICS_PATH = OUTPUT_PATH / "metrics"
 DEMO_MODE = not OUTPUT_PATH.exists()
 
 if DEMO_MODE:
-    # Use temp dir for writable output, copy demo data there
+    # Use temp dir for writable output, copy demo data there (only once)
     import shutil
     _WRITABLE_OUTPUT = Path(tempfile.gettempdir()) / "smartsuite_output"
     _DEMO_SOURCE = Path(__file__).parent / "demo_output"
-    if _DEMO_SOURCE.exists():
-        shutil.copytree(_DEMO_SOURCE, _WRITABLE_OUTPUT, dirs_exist_ok=True)
-        OUTPUT_PATH = _WRITABLE_OUTPUT
-    else:
-        _WRITABLE_OUTPUT.mkdir(parents=True, exist_ok=True)
-        OUTPUT_PATH = _WRITABLE_OUTPUT
+    if not _WRITABLE_OUTPUT.exists():  # Only copy on first run
+        if _DEMO_SOURCE.exists():
+            shutil.copytree(_DEMO_SOURCE, _WRITABLE_OUTPUT, dirs_exist_ok=True)
+        else:
+            _WRITABLE_OUTPUT.mkdir(parents=True, exist_ok=True)
+    OUTPUT_PATH = _WRITABLE_OUTPUT
     METRICS_PATH = OUTPUT_PATH / "metrics"
     if not INPUT_PATH.exists():
         INPUT_PATH = Path(tempfile.gettempdir()) / "smartsuite_input"
@@ -47,6 +47,15 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+# --- Keep-alive: prevent Streamlit Cloud from sleeping ---
+# Hidden JS ping every 5 minutes keeps the WebSocket alive
+st.markdown("""<script>
+setInterval(function(){
+    // Ping the app to keep Streamlit Cloud from sleeping
+    fetch(window.location.href, {method: 'HEAD'}).catch(()=>{});
+}, 300000);
+</script>""", unsafe_allow_html=True)
 
 # --- Custom CSS ---
 st.markdown("""
