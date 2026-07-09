@@ -259,10 +259,10 @@ def _call_deepseek(query: str) -> dict:
         json={
             "model": "deepseek-chat",
             "messages": [{"role": "user", "content": query}],
-            "max_tokens": 1024,
+            "max_tokens": 300,
             "temperature": 0.7,
         },
-        timeout=60,
+        timeout=30,
     )
     if resp.status_code == 200:
         answer = resp.json()["choices"][0]["message"]["content"]
@@ -297,10 +297,10 @@ def _call_qianwen(query: str) -> dict:
         json={
             "model": "qwen-plus",
             "messages": [{"role": "user", "content": query}],
-            "max_tokens": 1024,
+            "max_tokens": 300,
             "temperature": 0.7,
         },
-        timeout=60,
+        timeout=30,
     )
     if resp.status_code == 200:
         answer = resp.json()["choices"][0]["message"]["content"]

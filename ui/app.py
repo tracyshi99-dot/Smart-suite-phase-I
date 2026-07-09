@@ -1118,17 +1118,14 @@ elif _page_idx == 2:
                                 answer = r.get("full_answer", "")
                                 # If API returned an error message, try Claude fallback
                                 if "未配置" in answer or "API 错误" in answer or "调用失败" in answer:
-                                    sim_prompt = f"简要回答这个问题（150字以内），如实回答：{query}"
-                                    answer = _verify_claude(sim_prompt, max_tokens=500)
+                                    sim_prompt = f"50字以内简答：{query}"
+                                    answer = _verify_claude(sim_prompt, max_tokens=150)
                             else:
-                                # Fallback: use Claude to simulate this platform's answer
-                                sim_prompt = f"你是{ZHICE_PLATFORMS.get(platform, platform)}。用户问你：「{query}」\n请给出简洁回答（100-200字），如实回答，包含你通常会引用的信息来源。"
-                                answer = _verify_claude(sim_prompt, max_tokens=500)
+                                sim_prompt = f"50字以内简答：{query}"
+                                answer = _verify_claude(sim_prompt, max_tokens=150)
                         except Exception:
-                            # Last resort: simulate with basic Claude
                             try:
-                                sim_prompt = f"简要回答这个问题（100字以内）：{query}"
-                                answer = _verify_claude(sim_prompt, max_tokens=300)
+                                answer = _verify_claude(f"50字以内简答：{query}", max_tokens=150)
                             except Exception:
                                 answer = ""
 
@@ -1137,7 +1134,6 @@ elif _page_idx == 2:
                         results.append({"ai_query": query, "platform": platform, "has_brand_mention": has_brand, "has_official_link": has_link})
                         done += 1
                         progress.progress(done / total)
-                        _time.sleep(0.3)
                 # Aggregate per query
                 df_results = pd.DataFrame(results)
                 gap_summary = []
