@@ -1895,9 +1895,12 @@ elif _page_idx == 4:
             confirmed_count = df_confirm["confirmed"].sum()
             st.markdown(f"**{'Confirmed' if is_en else '已确认'} {confirmed_count} / {len(df_confirm)} {'articles' if is_en else '篇'}**")
 
-            # Auto-save confirmation
-            df_opt["confirmed"] = df_confirm["confirmed"].values
-            df_opt.to_csv(opt_file, index=False, encoding="utf-8-sig")
+            # Only save if user actually changed confirmation status
+            new_confirmed = df_confirm["confirmed"].values
+            old_confirmed = df_opt["confirmed"].values if "confirmed" in df_opt.columns else [True] * len(df_opt)
+            if not all(a == b for a, b in zip(new_confirmed, old_confirmed)):
+                df_opt["confirmed"] = new_confirmed
+                df_opt.to_csv(opt_file, index=False, encoding="utf-8-sig")
 
     # --- POC Review Section ---
     st.divider()
