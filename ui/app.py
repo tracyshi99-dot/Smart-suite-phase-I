@@ -48,15 +48,6 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# --- Keep-alive: prevent Streamlit Cloud from sleeping ---
-# Hidden JS ping every 5 minutes keeps the WebSocket alive
-st.markdown("""<script>
-setInterval(function(){
-    // Ping the app to keep Streamlit Cloud from sleeping
-    fetch(window.location.href, {method: 'HEAD'}).catch(()=>{});
-}, 300000);
-</script>""", unsafe_allow_html=True)
-
 # --- Custom CSS ---
 st.markdown("""
 <style>
