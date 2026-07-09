@@ -87,7 +87,6 @@ PIPELINE_STEPS = [
 
 def render_pipeline_flow(current_step_id: str, batch_id: str = ""):
     """Render pipeline flow matching showcase design: current step bright with its color, rest dimmed."""
-    import streamlit.components.v1 as components
 
     colors = {"zhiku": "#ffa726", "zhice": "#00bcd4", "zhizao": "#ffcc02", "zhiyou": "#e91e63",
               "zhibu": "#29b6f6", "zhichuan": "#26c6da", "zhixi": "#ab47bc", "zhongshu": "#ff6b35"}
@@ -113,7 +112,7 @@ def render_pipeline_flow(current_step_id: str, batch_id: str = ""):
             cards_html += f'<div style="color:{arrow_color};font-size:16px;font-weight:700;">&#10132;</div>'
 
     html = f'''<div style="display:flex;align-items:center;justify-content:center;gap:4px;padding:12px;margin:8px 0;background:#1a1d2e;border-radius:10px;border:1px solid #2a2f4a;flex-wrap:nowrap;overflow-x:auto;">{cards_html}</div>'''
-    components.html(html, height=55, scrolling=False)
+    st.html(html)
 
 
 # --- 35 Categories ---
@@ -513,7 +512,6 @@ with st.sidebar:
 # PAGE: 总览
 # ============================================================
 if _page_idx == 0:
-    import streamlit.components.v1 as components
     # Load EN or ZH version based on sidebar language
     if is_en:
         wiki_path = Path(__file__).parent / "smart-suite-wiki.html"
@@ -523,7 +521,7 @@ if _page_idx == 0:
             wiki_path = Path(__file__).parent / "smart-suite-wiki.html"
     if wiki_path.exists():
         wiki_html = wiki_path.read_text(encoding="utf-8")
-        components.html(wiki_html, height=4200, scrolling=True)
+        st.html(wiki_html)
     else:
         st.title("🏠 Smart Suite Overview" if is_en else "🏠 Smart Suite 总览")
         st.warning("smart-suite-wiki.html not found")
