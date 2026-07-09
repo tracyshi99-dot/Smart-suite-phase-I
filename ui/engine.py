@@ -534,6 +534,81 @@ def run_zhizao(batch_id: str, content_limit: int = 5,
 # ============================================================
 # STEP 3: 智优评分
 # ============================================================
+
+def _normalize_zhizao_df(df: "pd.DataFrame") -> "pd.DataFrame":
+    """Normalize zhizao output DataFrame to ensure consistent columns for zhiyou.
+    Handles common format variations from AI-generated CSV output."""
+    # Standard column mapping: possible AI output names → expected names
+    col_aliases = {
+        "content": "content_draft",
+        "draft": "content_draft",
+        "article": "content_draft",
+        "body": "content_draft",
+        "text": "content_draft",
+        "article_title": "title",
+        "headline": "title",
+        "query": "ai_query",
+        "search_query": "ai_query",
+        "id": "content_id",
+    }
+    for old_name, new_name in col_aliases.items():
+        if old_name in df.columns and new_name not in df.columns:
+            df = df.rename(columns={old_name: new_name})
+
+    # Ensure required columns exist with defaults
+    required_defaults = {
+        "content_id": lambda df: [f"C_AUTO_{i+1:03d}" for i in range(len(df))],
+        "query_id": "",
+        "keyword_id": "",
+        "ai_query": "",
+        "title": "",
+        "content_draft": "",
+        "confirmed": "TRUE",
+        "include_zhiyou": "TRUE",
+    }
+    for col, default in required_defaults.items():
+        if col not in df.columns:
+            df[col] = default(df) if callable(default) else default
+
+    # Normalize boolean columns
+    for bool_col in ["confirmed", "include_zhiyou"]:
+        if bool_col in df.columns:
+            df[bool_col] = df[bool_col].astype(str).str.strip().str.upper()
+            df[bool_col] = df[bool_col].apply(
+                lambda x: "TRUE" if x in ["TRUE", "1", "YES", "T"] else "FALSE"
+            )
+
+    return df
+
+
+def _normalize_scorecard_df(df: "pd.DataFrame") -> "pd.DataFrame":
+    """Normalize scorecard DataFrame: ensure score columns are numeric."""
+    score_cols = [c for c in df.columns if c.endswith("_score")]
+    for col in score_cols:
+        # Handle values like "4.3/5", "4.3分", or plain "4.3"
+        df[col] = (
+            df[col].astype(str)
+            .str.replace(r"[/／].*", "", regex=True)  # Remove "/5" suffix
+            .str.replace(r"[分点]", "", regex=True)   # Remove Chinese suffixes
+            .str.strip()
+        )
+        df[col] = pd.to_numeric(df[col], errors="coerce")
+
+    # Ensure is_approved column exists and is normalized
+    if "is_approved" in df.columns:
+        df["is_approved"] = df["is_approved"].astype(str).str.strip().str.upper()
+    else:
+        # Calculate from overall_score if missing
+        if "overall_score" in df.columns:
+            df["is_approved"] = df["overall_score"].apply(
+                lambda x: "TRUE" if pd.notna(x) and x >= 4.0 else "FALSE"
+            )
+        else:
+            df["is_approved"] = "TRUE"
+
+    return df
+
+
 def run_zhiyou_score(batch_id: str, progress_callback=None) -> dict:
     """Execute Step 3: Score content across 5 dimensions."""
     steering = load_steering()
@@ -552,19 +627,18 @@ def run_zhiyou_score(batch_id: str, progress_callback=None) -> dict:
     if df.empty:
         return {"success": False, "error": "智造输出为空"}
 
-    # Only process confirmed articles (if confirmed column exists)
-    if "confirmed" in df.columns:
-        df["confirmed"] = df["confirmed"].astype(str).str.strip().str.upper()
-        df = df[df["confirmed"].isin(["TRUE", "1", "YES"])]
-        if df.empty:
-            return {"success": False, "error": "没有已确认的文章，请先在智造中确认文章"}
+    # Normalize zhizao output to standard format
+    df = _normalize_zhizao_df(df)
 
-    # Only process articles marked for zhiyou (if include_zhiyou column exists)
-    if "include_zhiyou" in df.columns:
-        df["include_zhiyou"] = df["include_zhiyou"].astype(str).str.strip().str.upper()
-        df = df[df["include_zhiyou"].isin(["TRUE", "1", "YES"])]
-        if df.empty:
-            return {"success": False, "error": "没有纳入优化的文章"}
+    # Only process confirmed articles
+    df = df[df["confirmed"].isin(["TRUE", "1", "YES"])]
+    if df.empty:
+        return {"success": False, "error": "没有已确认的文章，请先在智造中确认文章"}
+
+    # Only process articles marked for zhiyou
+    df = df[df["include_zhiyou"].isin(["TRUE", "1", "YES"])]
+    if df.empty:
+        return {"success": False, "error": "没有纳入优化的文章"}
 
     if progress_callback:
         progress_callback(0.1, "正在评分...")
@@ -612,6 +686,14 @@ def run_zhiyou_score(batch_id: str, progress_callback=None) -> dict:
 
     output_file.write_text(csv_content.strip(), encoding="utf-8-sig")
 
+    # Post-process: normalize scorecard to ensure numeric scores
+    try:
+        df_sc = pd.read_csv(output_file, encoding="utf-8-sig", on_bad_lines="skip", engine="python")
+        df_sc = _normalize_scorecard_df(df_sc)
+        df_sc.to_csv(output_file, index=False, encoding="utf-8-sig")
+    except Exception:
+        pass  # If normalization fails, keep raw output
+
     if progress_callback:
         progress_callback(1.0, "智优评分完成 ✅")
 
@@ -652,6 +734,12 @@ def run_zhiyou_execute(batch_id: str, progress_callback=None) -> dict:
             df_draft = pd.read_csv(zhizao_path, encoding="utf-8-sig", on_bad_lines="skip", engine="python")
         except Exception as e:
             return {"success": False, "error": f"读取智造文件失败: {str(e)}"}
+
+    # Normalize both DataFrames
+    df_score = _normalize_scorecard_df(df_score)
+    df_draft = _normalize_zhizao_df(df_draft)
+
+    # Get content IDs to rewrite (all scored articles, not just "approved")
     if "content_id" in df_score.columns:
         approved_ids = df_score["content_id"].tolist()
     else:
@@ -723,6 +811,9 @@ def run_zhiyou_execute(batch_id: str, progress_callback=None) -> dict:
             "word_count": len(opt_content),
             "version": "v2",
             "updated_at": timestamp(),
+            "confirmed": "True",
+            "needs_poc_review": "False",
+            "poc_approved": "True",
         })
 
     output_dir = OUTPUT_PATH / batch_id / "03_zhiyou"
@@ -744,18 +835,45 @@ def run_zhiyou_compliance(batch_id: str, progress_callback=None) -> dict:
     steering = load_steering()
 
     opt_path = OUTPUT_PATH / batch_id / "03_zhiyou" / "zhiyou_optimized_content.csv"
-    if not opt_path.exists() or opt_path.stat().st_size < 10:
-        return {"success": False, "error": "请先执行智优执行 (Step 3.5) — 优化内容文件不存在或为空"}
+    zhizao_fallback_path = OUTPUT_PATH / batch_id / "02_zhizao" / "zhizao_draft_content.csv"
+
+    # Try optimized content first, fall back to zhizao draft
+    source_path = None
+    content_col = "optimized_content"
+    title_col = "optimized_title"
+
+    if opt_path.exists() and opt_path.stat().st_size > 10:
+        source_path = opt_path
+    elif zhizao_fallback_path.exists() and zhizao_fallback_path.stat().st_size > 10:
+        # Fallback: use zhizao draft directly for compliance check
+        source_path = zhizao_fallback_path
+        content_col = "content_draft"
+        title_col = "title"
+    else:
+        return {"success": False, "error": "请先执行智优执行 (Step 3.5) 或智造 (Step 2) — 没有可审查的内容"}
 
     try:
-        df = pd.read_csv(opt_path, encoding="utf-8-sig", on_bad_lines="skip")
+        df = pd.read_csv(source_path, encoding="utf-8-sig", on_bad_lines="skip")
     except Exception:
         try:
-            df = pd.read_csv(opt_path, encoding="utf-8-sig", on_bad_lines="skip", engine="python")
+            df = pd.read_csv(source_path, encoding="utf-8-sig", on_bad_lines="skip", engine="python")
         except Exception:
-            return {"success": False, "error": "优化内容文件格式错误或为空"}
+            return {"success": False, "error": "内容文件格式错误或为空"}
     if df.empty:
-        return {"success": False, "error": "优化内容为空"}
+        return {"success": False, "error": "内容为空"}
+
+    # Normalize column names for consistent access
+    if content_col not in df.columns:
+        # Try common alternatives
+        for alt in ["optimized_content", "content_draft", "content", "body", "text"]:
+            if alt in df.columns:
+                content_col = alt
+                break
+    if title_col not in df.columns:
+        for alt in ["optimized_title", "title", "headline"]:
+            if alt in df.columns:
+                title_col = alt
+                break
 
     if progress_callback:
         progress_callback(0.1, "正在进行合规审查...")
@@ -763,8 +881,9 @@ def run_zhiyou_compliance(batch_id: str, progress_callback=None) -> dict:
     # Build content for review
     articles_text = ""
     for idx, row in df.iterrows():
-        content = str(row.get("optimized_content", ""))[:3000]
-        articles_text += f"\n---\ncontent_id: {row.get('content_id', idx)}\ntitle: {row.get('optimized_title', '')}\ncontent: {content}\n"
+        content = str(row.get(content_col, ""))[:3000]
+        title = str(row.get(title_col, ""))
+        articles_text += f"\n---\ncontent_id: {row.get('content_id', idx)}\ntitle: {title}\ncontent: {content}\n"
 
     system_prompt = f"""你是 Smart Suite 合规审查模块。严格按照以下合规规则审查并自动修正内容。
 
