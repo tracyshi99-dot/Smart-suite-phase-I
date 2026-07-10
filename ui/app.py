@@ -547,6 +547,18 @@ elif _page_idx == 1:
     sc3.metric("Categories" if is_en else "覆盖类别", df_zhiku_all["category"].dropna().nunique() if not df_zhiku_all.empty and "category" in df_zhiku_all.columns else 0)
     sc4.metric("Sources" if is_en else "来源数", df_zhiku_all["source"].dropna().nunique() if not df_zhiku_all.empty and "source" in df_zhiku_all.columns else 0)
 
+    # Clear current content (archive to history)
+    if total_phrases > 0:
+        if st.button("🗑️ Clear Current & Archive" if is_en else "🗑️ 清空当前内容（归档到历史）", key="clear_zhiku_current"):
+            zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
+            if zhiku_file.exists():
+                archive_dir = OUTPUT_PATH / selected_batch / "01_zhiku" / "archive"
+                archive_dir.mkdir(parents=True, exist_ok=True)
+                ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+                zhiku_file.rename(archive_dir / f"zhiku_ai_queries_{ts}.csv")
+                st.success("✅ Archived to history. Page is now empty." if is_en else "✅ 已归档到历史记录，当前页面已清空。")
+                st.rerun()
+
     # ============================================================
     # 🚀 一键全流程 (End-to-End)
     # ============================================================
@@ -1004,18 +1016,6 @@ elif _page_idx == 1:
     # History
     with st.expander("📜 History" if is_en else "📜 历史记录"):
         batch_path = OUTPUT_PATH / selected_batch / "01_zhiku"
-        col_hist, col_clear = st.columns([4, 1])
-        with col_clear:
-            if st.button("🗑️ Clear All" if is_en else "🗑️ 清空全部", key="clear_zhiku_hist"):
-                if batch_path.exists():
-                    for f in batch_path.glob("*.csv"):
-                        f.unlink()
-                    archive_path = batch_path / "archive"
-                    if archive_path.exists():
-                        for f in archive_path.glob("*.csv"):
-                            f.unlink()
-                st.success("Cleared" if is_en else "已清空")
-                st.rerun()
         all_files = []
         if batch_path.exists():
             all_files.extend([f for f in batch_path.glob("*.csv")])
@@ -1023,6 +1023,20 @@ elif _page_idx == 1:
             if archive_path.exists():
                 all_files.extend([f for f in archive_path.glob("*.csv")])
         if all_files:
+            col_hist_title, col_hist_clear = st.columns([4, 1])
+            with col_hist_title:
+                st.caption(f"{len(all_files)} files")
+            with col_hist_clear:
+                if st.button("🗑️ Clear All" if is_en else "🗑️ 清空全部", key="clear_zhiku_hist"):
+                    if batch_path.exists():
+                        for f in batch_path.glob("*.csv"):
+                            f.unlink()
+                        archive_path = batch_path / "archive"
+                        if archive_path.exists():
+                            for f in archive_path.glob("*.csv"):
+                                f.unlink()
+                    st.success("Cleared" if is_en else "已清空")
+                    st.rerun()
             all_files.sort(key=lambda f: f.stat().st_mtime, reverse=True)
             for f in all_files[:10]:
                 mtime = datetime.fromtimestamp(f.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S")
@@ -1438,6 +1452,17 @@ elif _page_idx == 3:
             if "version" in df_z.columns:
                 st.metric("Version" if is_en else "版本", df_z["version"].iloc[0] if len(df_z) > 0 else "N/A")
 
+        # Clear current content (archive to history)
+        if st.button("🗑️ Clear Current & Archive" if is_en else "🗑️ 清空当前内容（归档到历史）", key="clear_zhizao_current"):
+            zhizao_file = OUTPUT_PATH / selected_batch / "02_zhizao" / "zhizao_draft_content.csv"
+            if zhizao_file.exists():
+                archive_dir = OUTPUT_PATH / selected_batch / "02_zhizao" / "archive"
+                archive_dir.mkdir(parents=True, exist_ok=True)
+                ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+                zhizao_file.rename(archive_dir / f"zhizao_draft_content_{ts}.csv")
+                st.success("✅ Archived" if is_en else "✅ 已归档到历史")
+                st.rerun()
+
         display_cols = [c for c in ["content_id", "ai_query", "title", "word_count", "version"]
                        if c in df_z.columns]
         if display_cols:
@@ -1848,6 +1873,18 @@ elif _page_idx == 4:
     df_opt = load_optimized(selected_batch)
     if not df_opt.empty:
         st.subheader(f"📖 {'Optimized Article Preview & Edit' if is_en else '优化后文章预览 & 编辑'}（{len(df_opt)} {'articles' if is_en else '篇'}）")
+
+        # Clear current content (archive to history)
+        if st.button("🗑️ Clear Current & Archive" if is_en else "🗑️ 清空当前内容（归档到历史）", key="clear_zhiyou_current"):
+            zhiyou_dir = OUTPUT_PATH / selected_batch / "03_zhiyou"
+            archive_dir = zhiyou_dir / "archive"
+            archive_dir.mkdir(parents=True, exist_ok=True)
+            ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+            for csv_file in zhiyou_dir.glob("*.csv"):
+                csv_file.rename(archive_dir / f"{csv_file.stem}_{ts}{csv_file.suffix}")
+            st.success("✅ Archived" if is_en else "✅ 已归档到历史")
+            st.rerun()
+
         st.caption("Edit optimized articles below, changes auto-saved" if is_en else "可直接编辑优化后的文章内容，修改自动保存")
 
         opt_file = OUTPUT_PATH / selected_batch / "03_zhiyou" / "zhiyou_optimized_content.csv"
