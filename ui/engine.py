@@ -858,10 +858,14 @@ def run_zhiyou_execute(batch_id: str, progress_callback=None) -> dict:
     df_draft = _normalize_zhizao_df(df_draft)
 
     # Get content IDs to rewrite (all scored articles, not just "approved")
-    if "content_id" in df_score.columns:
-        approved_ids = df_score["content_id"].tolist()
+    if "content_id" in df_score.columns and not df_score["content_id"].dropna().empty:
+        approved_ids = df_score["content_id"].dropna().tolist()
+    elif "content_id" in df_draft.columns and not df_draft["content_id"].dropna().empty:
+        approved_ids = df_draft["content_id"].dropna().tolist()
     else:
-        approved_ids = df_draft["content_id"].tolist() if "content_id" in df_draft.columns else []
+        # Fallback: generate IDs and use all drafts
+        approved_ids = [f"C_AUTO_{i+1:03d}" for i in range(len(df_draft))]
+        df_draft["content_id"] = approved_ids
 
     if not approved_ids:
         return {"success": False, "error": "没有可重写的内容"}
@@ -874,9 +878,15 @@ def run_zhiyou_execute(batch_id: str, progress_callback=None) -> dict:
             progress_callback((i + 1) / (total + 1), f"正在重写第 {i+1}/{total} 篇...")
 
         draft_row = df_draft[df_draft["content_id"] == cid]
-        score_row = df_score[df_score["content_id"] == cid]
+        score_row = df_score[df_score["content_id"] == cid] if "content_id" in df_score.columns else pd.DataFrame()
 
-        if draft_row.empty or score_row.empty:
+        # If no match by content_id, try matching by index
+        if draft_row.empty and i < len(df_draft):
+            draft_row = df_draft.iloc[[i]]
+        if score_row.empty and i < len(df_score):
+            score_row = df_score.iloc[[i]]
+
+        if draft_row.empty:
             continue
 
         draft = draft_row.iloc[0]
