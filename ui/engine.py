@@ -890,7 +890,7 @@ def run_zhiyou_execute(batch_id: str, progress_callback=None) -> dict:
             continue
 
         draft = draft_row.iloc[0]
-        score = score_row.iloc[0]
+        score = score_row.iloc[0] if not score_row.empty else pd.Series({"issues_found": "", "optimization_suggestions": "请优化内容结构、增加权威性和可操作性"})
 
         system_prompt = """你是内容优化专家。根据评分建议重写文章，使其更容易被AI搜索引擎引用。
 
