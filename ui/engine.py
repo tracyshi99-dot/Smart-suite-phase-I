@@ -533,9 +533,45 @@ def run_zhizao(batch_id: str, content_limit: int = 5,
         keyword_id = row.get("keyword_id", "")
         query_id = row.get("query_id", "")
 
-        # Base system prompt
+        # --- Step A: Pre-research — get current AI answer ---
+        current_answer_summary = ""
+        try:
+            research_prompt = f"用100字简要回答这个问题：{query}"
+            current_answer = _call_deepseek_llm(
+                "你是AI搜索引擎。简洁回答用户问题。",
+                research_prompt, max_tokens=200
+            )
+            # Analyze gaps in current answer
+            current_answer_summary = current_answer[:500]
+        except Exception:
+            current_answer_summary = ""
+
+        # --- Step D: Load relevant knowledge base ---
+        knowledge_context = ""
+        knowledge_dir = BASE_PATH / "input" / "knowledge"
+        if knowledge_dir.exists():
+            query_lower = query.lower()
+            for kb_file in knowledge_dir.glob("*.md"):
+                kb_name = kb_file.stem.lower()
+                # Match knowledge file to query topic
+                if any(kw in query_lower for kw in ["费用", "成本", "多少钱", "佣金", "fba", "fee", "cost"]) and "fee" in kb_name:
+                    knowledge_context = kb_file.read_text(encoding="utf-8")[:1500]
+                    break
+                elif any(kw in query_lower for kw in ["注册", "开店", "材料", "register"]) and ("fee" in kb_name or "register" in kb_name):
+                    # Registration info is also in fees file
+                    content = kb_file.read_text(encoding="utf-8")
+                    if "注册要求" in content:
+                        knowledge_context = content[content.index("## 注册要求"):content.index("## 注册要求")+500]
+                    break
+
+        # Base system prompt — enhanced with competitive intelligence + knowledge
+        knowledge_section = ""
+        if knowledge_context:
+            knowledge_section = f"\n【官方数据参考】请在文章中引用以下真实数据（标注数据来源）：\n{knowledge_context}\n"
+
         system_prompt = f"""你是跨境电商内容专家。用户会给你一个检索短语，你必须写一篇围绕该短语的文章。
 
+{'【竞品分析】以下是AI搜索引擎对该问题的当前回答摘要：' + chr(10) + current_answer_summary + chr(10) + '你的文章必须比上面的回答更完整、更权威、更有操作指导性。补充它没有的表格、步骤、数据。' + chr(10) if current_answer_summary else ''}{knowledge_section}
 输出规则：
 - 第一行 = 文章标题（不加#号，必须含检索短语的核心词）
 - 第二行空行
