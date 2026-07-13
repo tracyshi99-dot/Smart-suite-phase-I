@@ -621,10 +621,11 @@ elif _page_idx == 1:
         <p style="color:#8892b0;font-size:12px;margin:0;">""" + ("3 input modes: AI auto / Upload CSV / Manual input" if is_en else "三种输入模式：AI 自动 / 上传 CSV / 手动输入") + """</p>
     </div>""", unsafe_allow_html=True)
 
-    tab_p1, tab_p2, tab_p3 = st.tabs([
+    tab_p1, tab_p2, tab_p3, tab_p4 = st.tabs([
         "⭐ P1 Core (95-90%)" if is_en else "⭐ P1 核心来源 (95-90%)",
         "⭐ P2 Secondary (85-75%)" if is_en else "⭐ P2 次核心 (85-75%)",
         "P3 Expand (60%)" if is_en else "P3 兜底扩写 (60%)",
+        "🧠 P4 Persona Predict" if is_en else "🧠 P4 画像推演",
     ])
 
     # --- P1 核心来源 ---
@@ -843,6 +844,78 @@ elif _page_idx == 1:
                             st.rerun()
                     except Exception as e:
                         st.error(str(e))
+
+    # --- P4 画像推演 ---
+    with tab_p4:
+        st.caption("Based on persona matrix (identity × site × topic), predict search queries by priority." if is_en else "基于客户画像矩阵（身份 × 站点 × 话题），按优先级推演潜在检索短语。")
+
+        # Controls
+        col_p4_1, col_p4_2, col_p4_3 = st.columns(3)
+        with col_p4_1:
+            p4_level = st.selectbox(
+                "Priority Level" if is_en else "优先级",
+                ["P0", "P1", "P2", "ALL"],
+                key="p4_priority_level",
+            )
+        with col_p4_2:
+            p4_max = st.number_input("Max Queries" if is_en else "最大生成数", 10, 200, 50, key="p4_max_queries")
+        with col_p4_3:
+            # Load matrix for site options
+            try:
+                from zhiku_predictor import load_persona_matrix
+                _matrix = load_persona_matrix()
+                _all_sites = _matrix.get("兴趣画像", {}).get("站点", {}).get("params", [])
+                _all_topics = _matrix.get("兴趣画像", {}).get("内容分类", {}).get("params", [])
+            except Exception:
+                _all_sites = ["北美站", "欧洲站", "日本站"]
+                _all_topics = ["新手指南", "选品", "物流仓储"]
+
+        col_p4_sites, col_p4_topics = st.columns(2)
+        with col_p4_sites:
+            p4_sites = st.multiselect("Target Sites" if is_en else "目标站点", _all_sites, default=_all_sites[:3], key="p4_sites")
+        with col_p4_topics:
+            p4_topics = st.multiselect("Target Topics" if is_en else "目标话题", _all_topics, default=_all_topics[:5], key="p4_topics")
+
+        # Run prediction
+        if st.button("🧠 Run Persona Prediction" if is_en else "🧠 执行画像推演", type="primary", key="btn_p4_predict"):
+            try:
+                from zhiku_predictor import run_persona_prediction, export_to_zhiku
+                with st.spinner("Predicting..." if is_en else "推演中..."):
+                    result = run_persona_prediction(
+                        priority_level=p4_level,
+                        max_queries=p4_max,
+                        target_sites=p4_sites if p4_sites else None,
+                        target_topics=p4_topics if p4_topics else None,
+                    )
+                if result["success"]:
+                    predictions = result.get("predictions", [])
+                    st.success(f"✅ Generated {len(predictions)} predicted queries" if is_en else f"✅ 推演生成 {len(predictions)} 条检索短语")
+
+                    # Show distribution
+                    dist = result.get("priority_distribution", {})
+                    dc1, dc2, dc3 = st.columns(3)
+                    dc1.metric("P0 (Core)", dist.get("P0", 0))
+                    dc2.metric("P1 (Important)", dist.get("P1", 0))
+                    dc3.metric("P2 (Long-tail)", dist.get("P2", 0))
+
+                    # Show results table
+                    if predictions:
+                        df_pred = pd.DataFrame(predictions)
+                        show_cols = [c for c in ["ai_query", "identity", "site", "topic", "priority_score", "estimated_volume", "priority_level"] if c in df_pred.columns]
+                        st.dataframe(df_pred[show_cols], use_container_width=True, hide_index=True)
+
+                        # Export to zhiku button
+                        if st.button("📤 Export to Query Library & Send to Verify" if is_en else "📤 导入智库 & 送智测验证", key="btn_p4_export"):
+                            export_result = export_to_zhiku(predictions, selected_batch)
+                            if export_result["success"]:
+                                st.success(f"✅ {export_result['exported']} queries exported to zhiku" if is_en else f"✅ {export_result['exported']} 条已导入智库")
+                                st.rerun()
+                            else:
+                                st.error(export_result.get("error", "Export failed"))
+                else:
+                    st.warning(result.get("error", "No results"))
+            except Exception as e:
+                st.error(f"Error: {str(e)}")
 
     st.divider()
 
