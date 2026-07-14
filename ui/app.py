@@ -1392,16 +1392,31 @@ elif _page_idx == 2:
         if "competitor_gap" in df_gap_display.columns and df_gap_display["competitor_gap"].any():
             st.warning(f"⚠️ {comp_gap_count} queries where competitors appear but Amazon does NOT. These are high-priority opportunities!" if is_en else f"⚠️ {comp_gap_count} 条短语中竞品被提及但亚马逊未被提及 — 这些是最高优先级的机会！")
 
+        # Highlight negative sentiment
+        if "sentiment" in df_gap_display.columns:
+            neg_count = len(df_gap_display[df_gap_display["sentiment"].astype(str).str.contains("消极")])
+            if neg_count > 0:
+                st.warning(f"⚠️ {neg_count} queries with negative AI tone (门槛高/风险大). Need positive content to counter." if is_en else f"⚠️ {neg_count} 条短语的 AI 回答偏消极（强调门槛/风险），需要产出积极正面内容覆盖。")
+
         # Editable selection
         if "to_produce" not in df_gap_display.columns:
-            # Auto-select: competitor gaps get priority
+            # Auto-select: competitor gaps + full gaps + negative sentiment get priority
             if "competitor_gap" in df_gap_display.columns:
                 df_gap_display["to_produce"] = df_gap_display.apply(
-                    lambda r: True if r.get("competitor_gap") else (r.get("gap_status") in ["full_gap", "partial_gap"]),
+                    lambda r: True if r.get("competitor_gap") else (
+                        True if "消极" in str(r.get("sentiment", "")) else (
+                            r.get("gap_status") in ["full_gap", "partial_gap"]
+                        )
+                    ),
                     axis=1
                 )
             else:
-                df_gap_display["to_produce"] = df_gap_display["gap_status"].apply(lambda x: x in ["full_gap", "partial_gap"]) if "gap_status" in df_gap_display.columns else True
+                df_gap_display["to_produce"] = df_gap_display.apply(
+                    lambda r: True if "消极" in str(r.get("sentiment", "")) else (
+                        r.get("gap_status") in ["full_gap", "partial_gap"]
+                    ),
+                    axis=1
+                ) if "gap_status" in df_gap_display.columns else True
 
         show_cols = [c for c in ["ai_query", "gap_status", "has_brand_mention", "has_official_link", "sentiment", "competitors", "competitor_gap", "to_produce"] if c in df_gap_display.columns]
         if show_cols:
