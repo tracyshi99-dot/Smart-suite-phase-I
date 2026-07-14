@@ -1235,10 +1235,27 @@ elif _page_idx == 2:
                         answer_lower = answer.lower()
                         competitors_found = [name for name, kws in COMPETITOR_KEYWORDS.items() if any(kw in answer_lower for kw in kws)]
 
+                        # Sentiment analysis: positive vs negative tone about selling on Amazon
+                        POSITIVE_KEYWORDS = ["机会", "优势", "简单", "容易", "推荐", "值得", "利润", "增长", "成功",
+                                             "opportunity", "easy", "recommend", "profitable", "growth",
+                                             "便捷", "高效", "支持", "帮助", "适合", "前景"]
+                        NEGATIVE_KEYWORDS = ["风险", "难", "门槛", "亏损", "复杂", "竞争激烈", "封号", "侵权",
+                                             "difficult", "risk", "complex", "competitive", "banned",
+                                             "骗局", "不建议", "谨慎", "失败", "淘汰", "内卷"]
+                        pos_count = sum(1 for kw in POSITIVE_KEYWORDS if kw in answer_lower)
+                        neg_count = sum(1 for kw in NEGATIVE_KEYWORDS if kw in answer_lower)
+                        if pos_count > neg_count:
+                            sentiment = "positive"
+                        elif neg_count > pos_count:
+                            sentiment = "negative"
+                        else:
+                            sentiment = "neutral"
+
                         results.append({
                             "ai_query": query, "platform": platform,
                             "has_brand_mention": has_brand, "has_official_link": has_link,
                             "competitors_mentioned": ", ".join(competitors_found) if competitors_found else "",
+                            "sentiment": sentiment,
                         })
                         done += 1
                         progress.progress(done / total)
@@ -1267,11 +1284,23 @@ elif _page_idx == 2:
                     # Priority boost: if competitors present but we're not → high priority gap
                     competitor_gap = len(unique_competitors) > 0 and brand_count == 0
 
+                    # Aggregate sentiment
+                    sentiments = q_data["sentiment"].tolist() if "sentiment" in q_data.columns else []
+                    pos = sentiments.count("positive")
+                    neg = sentiments.count("negative")
+                    if pos > neg:
+                        overall_sentiment = "😊 积极"
+                    elif neg > pos:
+                        overall_sentiment = "⚠️ 消极"
+                    else:
+                        overall_sentiment = "😐 中性"
+
                     gap_summary.append({
                         "ai_query": q, "gap_status": gap_status,
                         "has_brand_mention": brand_count > 0, "has_official_link": link_count > 0,
                         "competitors": ", ".join(unique_competitors) if unique_competitors else "—",
                         "competitor_gap": competitor_gap,
+                        "sentiment": overall_sentiment,
                         "platforms_tested": total_p,
                     })
                 df_gap = pd.DataFrame(gap_summary)
@@ -1292,6 +1321,7 @@ elif _page_idx == 2:
                         "has_brand_mention": row_g.get("has_brand_mention", False),
                         "has_official_link": row_g.get("has_official_link", False),
                         "gap_status": row_g.get("gap_status", ""),
+                        "sentiment": row_g.get("sentiment", ""),
                         "competitors": row_g.get("competitors", ""),
                         "competitor_gap": row_g.get("competitor_gap", False),
                         "platforms_tested": row_g.get("platforms_tested", 0),
@@ -1364,12 +1394,13 @@ elif _page_idx == 2:
             else:
                 df_gap_display["to_produce"] = df_gap_display["gap_status"].apply(lambda x: x in ["full_gap", "partial_gap"]) if "gap_status" in df_gap_display.columns else True
 
-        show_cols = [c for c in ["ai_query", "gap_status", "has_brand_mention", "has_official_link", "competitors", "competitor_gap", "to_produce"] if c in df_gap_display.columns]
+        show_cols = [c for c in ["ai_query", "gap_status", "has_brand_mention", "has_official_link", "sentiment", "competitors", "competitor_gap", "to_produce"] if c in df_gap_display.columns]
         if show_cols:
             col_config = {
                 "to_produce": st.column_config.CheckboxColumn("→ Produce" if is_en else "→ 生产"),
                 "competitor_gap": st.column_config.CheckboxColumn("🔥 Comp Gap", disabled=True),
                 "competitors": st.column_config.TextColumn("Competitors" if is_en else "竞品出现"),
+                "sentiment": st.column_config.TextColumn("Tone" if is_en else "内容情感"),
             }
             edited_gap = st.data_editor(df_gap_display[show_cols], column_config=col_config, use_container_width=True, hide_index=True, key="zhice_gap_editor")
             produce_count = edited_gap["to_produce"].sum() if "to_produce" in edited_gap.columns else 0
