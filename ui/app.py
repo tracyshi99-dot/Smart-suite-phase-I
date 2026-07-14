@@ -1418,36 +1418,49 @@ elif _page_idx == 2:
             if not df_track.empty and "date" in df_track.columns:
                 # Summary: brand mention rate over time
                 df_track["has_brand_mention"] = df_track["has_brand_mention"].astype(str).str.upper().isin(["TRUE", "1"])
+                df_track["has_official_link"] = df_track["has_official_link"].astype(str).str.upper().isin(["TRUE", "1"]) if "has_official_link" in df_track.columns else False
                 by_date = df_track.groupby("date").agg(
                     total=("ai_query", "count"),
                     brand_mentions=("has_brand_mention", "sum"),
+                    link_mentions=("has_official_link", "sum"),
                 ).reset_index()
                 by_date["brand_rate"] = (by_date["brand_mentions"] / by_date["total"] * 100).round(1)
+                by_date["link_rate"] = (by_date["link_mentions"] / by_date["total"] * 100).round(1)
 
                 # Show metrics
-                tc1, tc2, tc3 = st.columns(3)
+                tc1, tc2, tc3, tc4 = st.columns(4)
                 tc1.metric("Total Checks" if is_en else "总验证次数", len(df_track))
                 tc2.metric("Unique Queries" if is_en else "不重复短语", df_track["ai_query"].nunique())
-                latest_rate = by_date["brand_rate"].iloc[-1] if len(by_date) > 0 else 0
-                tc3.metric("Latest Brand Rate" if is_en else "最新品牌提及率", f"{latest_rate}%")
+                latest_brand_rate = by_date["brand_rate"].iloc[-1] if len(by_date) > 0 else 0
+                tc3.metric("Brand Mention Rate" if is_en else "品牌提及率", f"{latest_brand_rate}%")
+                latest_link_rate = by_date["link_rate"].iloc[-1] if len(by_date) > 0 else 0
+                tc4.metric("Official Link Rate" if is_en else "官网链接显示率", f"{latest_link_rate}%")
 
-                # Trend chart
+                # Trend chart (both lines)
                 if len(by_date) > 1:
-                    fig_track = px.line(by_date, x="date", y="brand_rate",
-                                       title="Brand Mention Rate Over Time" if is_en else "品牌提及率变化趋势",
-                                       labels={"date": "Date", "brand_rate": "Brand Rate %"})
-                    fig_track.update_layout(height=250, margin=dict(l=0, r=0, t=30, b=0))
+                    fig_track = go.Figure()
+                    fig_track.add_trace(go.Scatter(x=by_date["date"], y=by_date["brand_rate"], name="Brand Rate" if is_en else "品牌提及率", line=dict(color="#00bcd4")))
+                    fig_track.add_trace(go.Scatter(x=by_date["date"], y=by_date["link_rate"], name="Link Rate" if is_en else "官网链接率", line=dict(color="#ffa726")))
+                    fig_track.update_layout(
+                        title="Brand & Link Rate Over Time" if is_en else "品牌提及率 & 官网链接率变化趋势",
+                        height=250, margin=dict(l=0, r=0, t=30, b=0),
+                        yaxis_title="%", xaxis_title="Date",
+                    )
                     st.plotly_chart(fig_track, use_container_width=True)
 
-                # Per-query tracking
-                st.caption("Per-query history:" if is_en else "单条短语追踪：")
+                # Per-query tracking (brand + link)
+                st.caption("Per-query history (🟢=Brand ✅, 🔗=Link ✅):" if is_en else "单条短语追踪（🟢=品牌提及, 🔗=官网链接）：")
                 query_history = df_track.groupby(["ai_query", "date"]).agg(
                     brand=("has_brand_mention", "any"),
+                    link=("has_official_link", "any"),
                 ).reset_index()
-                # Pivot: queries as rows, dates as columns
+                # Combine brand+link into single display
+                query_history["status"] = query_history.apply(
+                    lambda r: "🟢🔗" if r["brand"] and r["link"] else ("🟢" if r["brand"] else ("🔗" if r["link"] else "❌")), axis=1
+                )
                 if "date" in query_history.columns:
-                    pivot = query_history.pivot_table(index="ai_query", columns="date", values="brand", aggfunc="first")
-                    pivot = pivot.fillna("—").replace({True: "✅", False: "❌"})
+                    pivot = query_history.pivot_table(index="ai_query", columns="date", values="status", aggfunc="first")
+                    pivot = pivot.fillna("—")
                     st.dataframe(pivot, use_container_width=True)
             else:
                 st.caption("No tracking data yet. Run verification to start tracking." if is_en else "暂无追踪数据。执行验证后开始追踪。")
