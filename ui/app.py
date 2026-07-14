@@ -3192,6 +3192,131 @@ elif _page_idx == 7:
     with tab_input:
         st.subheader("📥 GEO 效果追踪 & 内容产出" if is_en else "📥 GEO 效果追踪 & 内容产出")
 
+        # --- Auto Input Activity Statistics (from output folder) ---
+        st.markdown("**📊 Auto Input Stats (from pipeline output)**" if is_en else "**📊 自动统计（来自流水线产出）**")
+        st.caption("Automatically calculated from output files. No manual input needed." if is_en else "自动从 output 文件夹统计，无需手动填写。")
+
+        # Calculate stats across all batches
+        _total_phrases = 0
+        _total_articles = 0
+        _total_optimized = 0
+        _total_published = 0
+        _total_zhice_verified = 0
+        _batches_with_data = 0
+
+        if OUTPUT_PATH.exists():
+            for batch_dir in OUTPUT_PATH.iterdir():
+                if batch_dir.is_dir() and batch_dir.name.startswith("batch_"):
+                    _batches_with_data += 1
+                    # Count zhiku phrases
+                    zhiku_f = batch_dir / "01_zhiku" / "zhiku_ai_queries.csv"
+                    if zhiku_f.exists():
+                        try:
+                            _df = pd.read_csv(zhiku_f, encoding="utf-8-sig", on_bad_lines="skip")
+                            _total_phrases += len(_df)
+                        except Exception:
+                            pass
+                    # Count zhizao articles
+                    zhizao_f = batch_dir / "02_zhizao" / "zhizao_draft_content.csv"
+                    if zhizao_f.exists():
+                        try:
+                            _df = pd.read_csv(zhizao_f, encoding="utf-8-sig", on_bad_lines="skip")
+                            _total_articles += len(_df)
+                        except Exception:
+                            pass
+                    # Count optimized
+                    opt_f = batch_dir / "03_zhiyou" / "zhiyou_optimized_content.csv"
+                    if opt_f.exists():
+                        try:
+                            _df = pd.read_csv(opt_f, encoding="utf-8-sig", on_bad_lines="skip")
+                            _total_optimized += len(_df)
+                        except Exception:
+                            pass
+                    # Count published (zhibu)
+                    zhibu_dir = batch_dir / "04_zhibu"
+                    if zhibu_dir.exists():
+                        _total_published += len(list(zhibu_dir.glob("*.json"))) + len(list(zhibu_dir.glob("*.docx")))
+
+            # Count zhice verified
+            zhice_dir = OUTPUT_PATH.parent / "zhice"
+            if zhice_dir.exists():
+                _total_zhice_verified += len(list(zhice_dir.glob("*.json")))
+
+        ac1, ac2, ac3, ac4, ac5 = st.columns(5)
+        ac1.metric("Total Phrases" if is_en else "总短语数", _total_phrases)
+        ac2.metric("Articles Created" if is_en else "已生成文章", _total_articles)
+        ac3.metric("Optimized" if is_en else "已优化", _total_optimized)
+        ac4.metric("Published" if is_en else "已发布", _total_published)
+        ac5.metric("Verified" if is_en else "已验证", _total_zhice_verified)
+
+        st.caption(f"{'Across' if is_en else '统计范围'}: {_batches_with_data} {'batches' if is_en else '个 batch'}")
+
+        # --- One-Click Weekly Report ---
+        st.divider()
+        st.markdown("**📋 One-Click Weekly Report**" if is_en else "**📋 一键生成周报**")
+        if st.button("📋 Generate Weekly Report" if is_en else "📋 生成本周报告", type="primary", key="btn_gen_weekly_report"):
+            try:
+                from engine import call_claude
+                # Gather all metrics
+                df_weekly = get_weekly_metrics()
+                df_ytd = get_ytd_metrics()
+
+                report_data = f"""本周 Smart Suite 数据汇总：
+
+Output Metrics（周度）:
+{df_weekly.tail(4).to_string() if not df_weekly.empty else 'N/A'}
+
+YTD Summary:
+{df_ytd.to_string() if not df_ytd.empty else 'N/A'}
+
+Input Activities（自动统计）:
+- 总短语数: {_total_phrases}
+- 已生成文章: {_total_articles}
+- 已优化: {_total_optimized}
+- 已发布: {_total_published}
+- 已验证: {_total_zhice_verified}
+- 覆盖 batch 数: {_batches_with_data}
+"""
+
+                report_prompt = f"""基于以下数据，生成一份 Smart Suite 周报（Markdown 格式）：
+
+{report_data}
+
+报告结构：
+1. Executive Summary（一行判断：POSITIVE/NEUTRAL/NEGATIVE + 关键发现）
+2. Output Metrics（周度趋势表 + WoW 变化）
+3. Input Activities（本周产出统计）
+4. Attribution（归因分析：什么驱动了变化）
+5. Gaps & Opportunities（Top 3 差距 + Top 3 机会）
+6. Next Week Actions（下周行动项）
+
+规则：
+- 数据不要编造，只用提供的数据
+- 用 ↑ ↓ → 表示趋势
+- WoW 下降超过 20% 要标注 ⚠️
+"""
+                with st.spinner("Generating report..." if is_en else "正在生成周报..."):
+                    report = call_claude("你是 GEO 业务分析师。", report_prompt, max_tokens=2000)
+
+                st.markdown(report)
+
+                # Save report
+                report_dir = METRICS_PATH
+                report_dir.mkdir(parents=True, exist_ok=True)
+                ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+                report_file = report_dir / f"weekly_report_{ts}.md"
+                report_file.write_text(report, encoding="utf-8")
+                st.success(f"✅ Report saved: {report_file.name}")
+
+                # Download button
+                st.download_button("📥 Download Report" if is_en else "📥 下载报告",
+                                   report.encode("utf-8"), file_name=f"weekly_report_{ts}.md",
+                                   mime="text/markdown")
+            except Exception as e:
+                st.error(f"Error: {str(e)}")
+
+        st.divider()
+
         # --- GEO效果追踪 Upload & Display ---
         geo_input_file = METRICS_PATH / "geo_input_summary.csv"
         geo_platform_file = METRICS_PATH / "geo_input_platform.csv"
