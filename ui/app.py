@@ -3378,6 +3378,25 @@ elif _page_idx == 7:
         # --- One-Click Weekly Report ---
         st.divider()
         st.markdown("**📋 One-Click Weekly Report**" if is_en else "**📋 一键生成周报**")
+
+        # Auto-Attribution display
+        try:
+            from zhixi_attribution import get_input_activity_by_week, generate_attribution, generate_action_items
+            _activities = get_input_activity_by_week()
+            _df_w = get_weekly_metrics()
+            _attributions = generate_attribution(_df_w, _activities)
+            _actions = generate_action_items(_df_w, _activities)
+
+            with st.expander("🔍 Auto-Attribution (归因分析)" if is_en else "🔍 自动归因分析", expanded=True):
+                for attr in _attributions:
+                    st.markdown(f"- {attr}")
+                st.divider()
+                st.markdown("**Next Week Actions:**" if is_en else "**下周行动项：**")
+                for act in _actions:
+                    st.markdown(f"- {act}")
+        except Exception:
+            pass
+
         if st.button("📋 Generate Weekly Report" if is_en else "📋 生成本周报告", type="primary", key="btn_gen_weekly_report"):
             try:
                 from engine import call_claude
@@ -3438,6 +3457,39 @@ Input Activities（自动统计）:
                                    mime="text/markdown")
             except Exception as e:
                 st.error(f"Error: {str(e)}")
+
+        # --- Prompt Re-run Dashboard ---
+        st.divider()
+        st.markdown("**🔄 Prompt Re-run Dashboard**" if is_en else "**🔄 发布后效果追踪（Pre vs Post）**")
+        st.caption("Compare brand mention before and after content publication." if is_en else "对比内容发布前后的品牌提及率变化，衡量 GEO 效果。")
+
+        try:
+            from zhixi_attribution import get_published_queries, compare_pre_post_verification
+            _pub_queries = get_published_queries()
+            if _pub_queries:
+                st.caption(f"{len(_pub_queries)} published queries found" if is_en else f"发现 {len(_pub_queries)} 条已发布短语")
+                _zhice_dir = OUTPUT_PATH.parent / "zhice"
+                _tracking_f = _zhice_dir / "prompt_tracking_history.csv" if _zhice_dir.exists() else None
+                if _tracking_f and _tracking_f.exists():
+                    df_compare = compare_pre_post_verification(_tracking_f, _pub_queries)
+                    if not df_compare.empty:
+                        # Summary
+                        improved = len(df_compare[df_compare["improvement"] == "✅ 提升"])
+                        maintained = len(df_compare[df_compare["improvement"] == "➡️ 维持"])
+                        declined = len(df_compare[df_compare["improvement"] == "❌ 下降"])
+                        rc1, rc2, rc3 = st.columns(3)
+                        rc1.metric("✅ Improved" if is_en else "✅ 提升", improved)
+                        rc2.metric("➡️ Maintained" if is_en else "➡️ 维持", maintained)
+                        rc3.metric("❌ Declined" if is_en else "❌ 下降", declined)
+                        st.dataframe(df_compare, use_container_width=True, hide_index=True)
+                    else:
+                        st.caption("Need at least 2 verification runs for the same queries to compare." if is_en else "需要对同一批短语运行至少 2 次验证才能对比效果。")
+                else:
+                    st.caption("No tracking history yet. Run zhice verification first." if is_en else "暂无追踪数据。请先运行智测验证。")
+            else:
+                st.caption("No published content yet. Complete the pipeline (智布) to track GEO effect." if is_en else "暂无已发布内容。完成智布发布后可追踪 GEO 效果。")
+        except Exception:
+            st.caption("Attribution module not available." if is_en else "归因模块不可用。")
 
         st.divider()
 

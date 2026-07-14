@@ -420,6 +420,54 @@ def run_zhiku(batch_id: str, market: str = "ALL", keyword_limit: int = 10,
 
 
 # ============================================================
+# STEP 2: 智造 - Content Brief Generation
+# ============================================================
+def generate_content_brief(query: str, current_ai_answer: str = "", knowledge: str = "") -> dict:
+    """Generate a content brief before full article generation.
+    Returns structured brief that guides article creation."""
+    brief_prompt = f"""为以下 AI 检索短语生成一份内容生产简报（Content Brief）。
+
+检索短语：「{query}」
+
+{'当前 AI 回答摘要：' + current_ai_answer[:300] if current_ai_answer else ''}
+{'可引用的官方数据：' + knowledge[:500] if knowledge else ''}
+
+请输出 JSON 格式的 Content Brief：
+{{
+  "target_query": "检索短语",
+  "search_intent": "用户搜索意图分析（为什么问这个问题）",
+  "target_audience": "目标受众（谁会搜这个）",
+  "content_angle": "内容切入角度（怎么比现有回答更好）",
+  "must_cover_points": ["必须覆盖的要点1", "要点2", "要点3", "要点4", "要点5"],
+  "differentiation": "与现有 AI 回答的差异化方向",
+  "recommended_structure": ["开篇直答", "第二段建议", "第三段建议", "FAQ"],
+  "data_to_cite": ["需要引用的数据点1", "数据点2"],
+  "target_word_count": 1000,
+  "seo_keywords": ["核心关键词1", "关键词2", "关键词3"]
+}}
+
+只输出 JSON，不要其他文字。"""
+
+    try:
+        result = call_claude("你是内容策略专家。输出纯 JSON。", brief_prompt, max_tokens=800)
+        # Parse JSON
+        import re
+        text = result.strip()
+        if text.startswith("```"):
+            text = "\n".join(text.split("\n")[1:])
+        if text.endswith("```"):
+            text = "\n".join(text.split("\n")[:-1])
+        m = re.search(r'\{[\s\S]*\}', text)
+        if m:
+            import json
+            return json.loads(m.group())
+    except Exception:
+        pass
+
+    return {"target_query": query, "must_cover_points": [], "recommended_structure": []}
+
+
+# ============================================================
 # STEP 2: 智造
 # ============================================================
 def run_zhizao(batch_id: str, content_limit: int = 5,
