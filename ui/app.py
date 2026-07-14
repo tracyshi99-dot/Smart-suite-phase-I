@@ -1276,11 +1276,35 @@ elif _page_idx == 2:
                     })
                 df_gap = pd.DataFrame(gap_summary)
                 st.session_state["zhice_gap_results"] = df_gap
-                # Save
+                # Save gap result
                 zhice_dir.mkdir(parents=True, exist_ok=True)
                 ts = datetime.now().strftime('%Y%m%d_%H%M%S')
                 df_gap.to_csv(zhice_dir / f"gap_result_{ts}.csv", index=False, encoding="utf-8-sig")
-                st.success(f"✅ Verification complete!" if is_en else f"✅ 验证完成！")
+
+                # --- Prompt Tracking History: append to cumulative tracking file ---
+                tracking_file = zhice_dir / "prompt_tracking_history.csv"
+                tracking_rows = []
+                for _, row_g in df_gap.iterrows():
+                    tracking_rows.append({
+                        "date": datetime.now().strftime("%Y-%m-%d"),
+                        "timestamp": ts,
+                        "ai_query": row_g.get("ai_query", ""),
+                        "has_brand_mention": row_g.get("has_brand_mention", False),
+                        "has_official_link": row_g.get("has_official_link", False),
+                        "gap_status": row_g.get("gap_status", ""),
+                        "competitors": row_g.get("competitors", ""),
+                        "competitor_gap": row_g.get("competitor_gap", False),
+                        "platforms_tested": row_g.get("platforms_tested", 0),
+                    })
+                df_tracking_new = pd.DataFrame(tracking_rows)
+                if tracking_file.exists():
+                    df_tracking_existing = pd.read_csv(tracking_file, encoding="utf-8-sig")
+                    df_tracking_all = pd.concat([df_tracking_existing, df_tracking_new], ignore_index=True)
+                else:
+                    df_tracking_all = df_tracking_new
+                df_tracking_all.to_csv(tracking_file, index=False, encoding="utf-8-sig")
+
+                st.success(f"✅ Verification complete! History tracked." if is_en else f"✅ 验证完成！已记录追踪历史。")
                 st.rerun()
             except ImportError:
                 st.error("zhice_engine not available. Use manual upload instead." if is_en else "zhice_engine 不可用，请手动上传结果。")
@@ -1385,6 +1409,50 @@ elif _page_idx == 2:
                 st.rerun()
     else:
         st.caption("No gap results yet. Execute verification above or upload results." if is_en else "暂无 Gap 结果。请执行验证或上传结果。")
+
+    # --- Prompt Tracking Trends ---
+    with st.expander("📈 Prompt Tracking History" if is_en else "📈 短语追踪历史（品牌提及率变化）", expanded=False):
+        tracking_file = zhice_dir / "prompt_tracking_history.csv" if zhice_dir.exists() else None
+        if tracking_file and tracking_file.exists():
+            df_track = load_csv_safe(tracking_file)
+            if not df_track.empty and "date" in df_track.columns:
+                # Summary: brand mention rate over time
+                df_track["has_brand_mention"] = df_track["has_brand_mention"].astype(str).str.upper().isin(["TRUE", "1"])
+                by_date = df_track.groupby("date").agg(
+                    total=("ai_query", "count"),
+                    brand_mentions=("has_brand_mention", "sum"),
+                ).reset_index()
+                by_date["brand_rate"] = (by_date["brand_mentions"] / by_date["total"] * 100).round(1)
+
+                # Show metrics
+                tc1, tc2, tc3 = st.columns(3)
+                tc1.metric("Total Checks" if is_en else "总验证次数", len(df_track))
+                tc2.metric("Unique Queries" if is_en else "不重复短语", df_track["ai_query"].nunique())
+                latest_rate = by_date["brand_rate"].iloc[-1] if len(by_date) > 0 else 0
+                tc3.metric("Latest Brand Rate" if is_en else "最新品牌提及率", f"{latest_rate}%")
+
+                # Trend chart
+                if len(by_date) > 1:
+                    fig_track = px.line(by_date, x="date", y="brand_rate",
+                                       title="Brand Mention Rate Over Time" if is_en else "品牌提及率变化趋势",
+                                       labels={"date": "Date", "brand_rate": "Brand Rate %"})
+                    fig_track.update_layout(height=250, margin=dict(l=0, r=0, t=30, b=0))
+                    st.plotly_chart(fig_track, use_container_width=True)
+
+                # Per-query tracking
+                st.caption("Per-query history:" if is_en else "单条短语追踪：")
+                query_history = df_track.groupby(["ai_query", "date"]).agg(
+                    brand=("has_brand_mention", "any"),
+                ).reset_index()
+                # Pivot: queries as rows, dates as columns
+                if "date" in query_history.columns:
+                    pivot = query_history.pivot_table(index="ai_query", columns="date", values="brand", aggfunc="first")
+                    pivot = pivot.fillna("—").replace({True: "✅", False: "❌"})
+                    st.dataframe(pivot, use_container_width=True)
+            else:
+                st.caption("No tracking data yet. Run verification to start tracking." if is_en else "暂无追踪数据。执行验证后开始追踪。")
+        else:
+            st.caption("No tracking data yet. Run verification to start tracking." if is_en else "暂无追踪数据。执行验证后开始追踪。")
 
     # History
     with st.expander("📜 History" if is_en else "📜 历史记录"):
