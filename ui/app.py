@@ -1195,6 +1195,18 @@ elif _page_idx == 2:
                     "アマゾン", "아마존",
                 ]
 
+                # Competitor detection keywords
+                COMPETITOR_KEYWORDS = {
+                    "Shopee": ["shopee", "虾皮"],
+                    "Lazada": ["lazada"],
+                    "TikTok Shop": ["tiktok shop", "tiktok", "抖音电商"],
+                    "Alibaba": ["alibaba", "阿里巴巴", "1688", "速卖通", "aliexpress"],
+                    "eBay": ["ebay"],
+                    "Walmart": ["walmart", "沃尔玛"],
+                    "Temu": ["temu", "拼多多跨境"],
+                    "Shopify": ["shopify"],
+                }
+
                 for query in queue_phrases:
                     for platform in selected_platforms:
                         api_func = REAL_API_MAP.get(platform)
@@ -1218,7 +1230,16 @@ elif _page_idx == 2:
 
                         has_brand = any(kw in answer for kw in BRAND_KEYWORDS)
                         has_link = "amazon" in answer.lower() or "gs.amazon" in answer.lower() or "sell.amazon" in answer.lower()
-                        results.append({"ai_query": query, "platform": platform, "has_brand_mention": has_brand, "has_official_link": has_link})
+
+                        # Detect competitors mentioned
+                        answer_lower = answer.lower()
+                        competitors_found = [name for name, kws in COMPETITOR_KEYWORDS.items() if any(kw in answer_lower for kw in kws)]
+
+                        results.append({
+                            "ai_query": query, "platform": platform,
+                            "has_brand_mention": has_brand, "has_official_link": has_link,
+                            "competitors_mentioned": ", ".join(competitors_found) if competitors_found else "",
+                        })
                         done += 1
                         progress.progress(done / total)
                 # Aggregate per query
@@ -1229,13 +1250,30 @@ elif _page_idx == 2:
                     brand_count = q_data["has_brand_mention"].sum()
                     link_count = q_data["has_official_link"].sum()
                     total_p = len(q_data)
+                    # Aggregate competitors
+                    all_competitors = []
+                    for c_str in q_data["competitors_mentioned"].dropna():
+                        if c_str:
+                            all_competitors.extend([c.strip() for c in c_str.split(",")])
+                    unique_competitors = list(set(all_competitors))
+
                     if brand_count > 0 and link_count > 0:
                         gap_status = "covered"
                     elif brand_count > 0 or link_count > 0:
                         gap_status = "partial_gap"
                     else:
                         gap_status = "full_gap"
-                    gap_summary.append({"ai_query": q, "gap_status": gap_status, "has_brand_mention": brand_count > 0, "has_official_link": link_count > 0, "platforms_tested": total_p})
+
+                    # Priority boost: if competitors present but we're not → high priority gap
+                    competitor_gap = len(unique_competitors) > 0 and brand_count == 0
+
+                    gap_summary.append({
+                        "ai_query": q, "gap_status": gap_status,
+                        "has_brand_mention": brand_count > 0, "has_official_link": link_count > 0,
+                        "competitors": ", ".join(unique_competitors) if unique_competitors else "—",
+                        "competitor_gap": competitor_gap,
+                        "platforms_tested": total_p,
+                    })
                 df_gap = pd.DataFrame(gap_summary)
                 st.session_state["zhice_gap_results"] = df_gap
                 # Save
@@ -1278,19 +1316,37 @@ elif _page_idx == 2:
     if not df_gap_display.empty:
         # Summary metrics
         if "gap_status" in df_gap_display.columns:
-            gc1, gc2, gc3, gc4 = st.columns(4)
+            gc1, gc2, gc3, gc4, gc5 = st.columns(5)
             gc1.metric("Total" if is_en else "总计", len(df_gap_display))
             gc2.metric("✅ Covered" if is_en else "✅ 已覆盖", len(df_gap_display[df_gap_display["gap_status"] == "covered"]))
             gc3.metric("⚠️ Partial", len(df_gap_display[df_gap_display["gap_status"] == "partial_gap"]))
             gc4.metric("❌ Full Gap", len(df_gap_display[df_gap_display["gap_status"] == "full_gap"]))
+            # Competitor gap: competitors mentioned but Amazon not
+            comp_gap_count = len(df_gap_display[df_gap_display["competitor_gap"] == True]) if "competitor_gap" in df_gap_display.columns else 0
+            gc5.metric("🔥 Competitor Gap" if is_en else "🔥 竞品覆盖我们未覆盖", comp_gap_count)
+
+        # Highlight competitor gaps
+        if "competitor_gap" in df_gap_display.columns and df_gap_display["competitor_gap"].any():
+            st.warning(f"⚠️ {comp_gap_count} queries where competitors appear but Amazon does NOT. These are high-priority opportunities!" if is_en else f"⚠️ {comp_gap_count} 条短语中竞品被提及但亚马逊未被提及 — 这些是最高优先级的机会！")
 
         # Editable selection
         if "to_produce" not in df_gap_display.columns:
-            df_gap_display["to_produce"] = df_gap_display["gap_status"].apply(lambda x: x in ["full_gap", "partial_gap"]) if "gap_status" in df_gap_display.columns else True
+            # Auto-select: competitor gaps get priority
+            if "competitor_gap" in df_gap_display.columns:
+                df_gap_display["to_produce"] = df_gap_display.apply(
+                    lambda r: True if r.get("competitor_gap") else (r.get("gap_status") in ["full_gap", "partial_gap"]),
+                    axis=1
+                )
+            else:
+                df_gap_display["to_produce"] = df_gap_display["gap_status"].apply(lambda x: x in ["full_gap", "partial_gap"]) if "gap_status" in df_gap_display.columns else True
 
-        show_cols = [c for c in ["ai_query", "gap_status", "has_brand_mention", "has_official_link", "to_produce"] if c in df_gap_display.columns]
+        show_cols = [c for c in ["ai_query", "gap_status", "has_brand_mention", "has_official_link", "competitors", "competitor_gap", "to_produce"] if c in df_gap_display.columns]
         if show_cols:
-            col_config = {"to_produce": st.column_config.CheckboxColumn("→ Produce" if is_en else "→ 生产")}
+            col_config = {
+                "to_produce": st.column_config.CheckboxColumn("→ Produce" if is_en else "→ 生产"),
+                "competitor_gap": st.column_config.CheckboxColumn("🔥 Comp Gap", disabled=True),
+                "competitors": st.column_config.TextColumn("Competitors" if is_en else "竞品出现"),
+            }
             edited_gap = st.data_editor(df_gap_display[show_cols], column_config=col_config, use_container_width=True, hide_index=True, key="zhice_gap_editor")
             produce_count = edited_gap["to_produce"].sum() if "to_produce" in edited_gap.columns else 0
             st.caption(f"{'Selected for production' if is_en else '选中进入智造'}: {produce_count}")
