@@ -551,18 +551,41 @@ def run_zhizao(batch_id: str, content_limit: int = 5,
         knowledge_dir = BASE_PATH / "input" / "knowledge"
         if knowledge_dir.exists():
             query_lower = query.lower()
-            for kb_file in knowledge_dir.glob("*.md"):
-                kb_name = kb_file.stem.lower()
-                # Match knowledge file to query topic
-                if any(kw in query_lower for kw in ["费用", "成本", "多少钱", "佣金", "fba", "fee", "cost"]) and "fee" in kb_name:
-                    knowledge_context = kb_file.read_text(encoding="utf-8")[:1500]
-                    break
-                elif any(kw in query_lower for kw in ["注册", "开店", "材料", "register"]) and ("fee" in kb_name or "register" in kb_name):
-                    # Registration info is also in fees file
-                    content = kb_file.read_text(encoding="utf-8")
-                    if "注册要求" in content:
-                        knowledge_context = content[content.index("## 注册要求"):content.index("## 注册要求")+500]
-                    break
+            category = row.get("category", "")
+
+            # Method 1: Match by category field (most accurate)
+            if category:
+                for kb_file in knowledge_dir.glob("cat_*.md"):
+                    if category in kb_file.name:
+                        knowledge_context = kb_file.read_text(encoding="utf-8")[:1500]
+                        break
+
+            # Method 2: Match by query keywords (fallback)
+            if not knowledge_context:
+                keyword_to_cat = {
+                    "注册": "cat_19", "开店": "cat_19", "开户": "cat_19",
+                    "费用": "cat_20", "成本": "cat_20", "多少钱": "cat_20", "佣金": "cat_20",
+                    "审核": "cat_21", "二审": "cat_21",
+                    "物流": "cat_22", "仓储": "cat_22", "fba": "cat_22", "发货": "cat_22",
+                    "vat": "cat_23", "增值税": "cat_23",
+                    "税务": "cat_24", "税": "cat_24",
+                    "合规": "cat_25", "政策": "cat_25",
+                    "listing": "cat_26", "标题": "cat_26", "图片": "cat_26",
+                    "品牌": "cat_27", "brand": "cat_27",
+                    "运营": "cat_28", "店铺": "cat_28",
+                    "广告": "cat_31", "ppc": "cat_31", "推广": "cat_31",
+                    "选品": "cat_11", "品类": "cat_12",
+                    "北美": "cat_15", "美国": "cat_15",
+                    "欧洲": "cat_16", "英国": "cat_16", "德国": "cat_16",
+                    "日本": "cat_17",
+                    "旺季": "cat_34", "prime day": "cat_34", "黑五": "cat_34",
+                }
+                for kw, cat_prefix in keyword_to_cat.items():
+                    if kw in query_lower:
+                        for kb_file in knowledge_dir.glob(f"{cat_prefix}_*.md"):
+                            knowledge_context = kb_file.read_text(encoding="utf-8")[:1500]
+                            break
+                        break
 
         # Base system prompt — enhanced with competitive intelligence + knowledge
         knowledge_section = ""
