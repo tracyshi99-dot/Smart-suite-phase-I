@@ -1367,6 +1367,15 @@ elif _page_idx == 2:
         if gap_files:
             df_gap_display = load_csv_safe(gap_files[0])
 
+    # Ensure compatibility: add missing columns for old data
+    if not df_gap_display.empty:
+        if "sentiment" not in df_gap_display.columns:
+            df_gap_display["sentiment"] = "😐 未检测"
+        if "competitors" not in df_gap_display.columns:
+            df_gap_display["competitors"] = "—"
+        if "competitor_gap" not in df_gap_display.columns:
+            df_gap_display["competitor_gap"] = False
+
     if not df_gap_display.empty:
         # Summary metrics
         if "gap_status" in df_gap_display.columns:
