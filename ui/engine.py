@@ -523,11 +523,9 @@ def run_zhizao(batch_id: str, content_limit: int = 5,
     results = []
     total = len(df_q)
 
-    for idx, row in df_q.iterrows():
-        if progress_callback:
-            progress_callback((idx + 1) / (total + 1),
-                              f"正在生成第 {idx+1}/{total} 篇内容...")
-
+    # --- Helper function for single article generation (enables parallelism) ---
+    def _generate_single_article(idx_row_tuple):
+        idx, row = idx_row_tuple
         query = row.get("ai_query", "")
         keyword = row.get("keyword", "")
         keyword_id = row.get("keyword_id", "")
@@ -541,7 +539,6 @@ def run_zhizao(batch_id: str, content_limit: int = 5,
                 "你是AI搜索引擎。简洁回答用户问题。",
                 research_prompt, max_tokens=200
             )
-            # Analyze gaps in current answer
             current_answer_summary = current_answer[:500]
         except Exception:
             current_answer_summary = ""
@@ -553,14 +550,12 @@ def run_zhizao(batch_id: str, content_limit: int = 5,
             query_lower = query.lower()
             category = row.get("category", "")
 
-            # Method 1: Match by category field (most accurate)
             if category:
                 for kb_file in knowledge_dir.glob("cat_*.md"):
                     if category in kb_file.name:
                         knowledge_context = kb_file.read_text(encoding="utf-8")[:1500]
                         break
 
-            # Method 2: Match by query keywords (fallback)
             if not knowledge_context:
                 keyword_to_cat = {
                     "注册": "cat_19", "开店": "cat_19", "开户": "cat_19",
@@ -587,7 +582,6 @@ def run_zhizao(batch_id: str, content_limit: int = 5,
                             break
                         break
 
-        # Base system prompt — enhanced with competitive intelligence + knowledge
         knowledge_section = ""
         if knowledge_context:
             knowledge_section = f"\n【官方数据参考】请在文章中引用以下真实数据（标注数据来源）：\n{knowledge_context}\n"
@@ -607,11 +601,9 @@ def run_zhizao(batch_id: str, content_limit: int = 5,
 
 严禁跑题。文章每一段都必须和检索短语直接相关。"""
 
-        # Add template structure if selected
+        # Template detection and instruction
         template_instruction = ""
         actual_template = template_id
-
-        # Auto-detect template from query content
         if template_id == "auto":
             query_lower = query.lower()
             if any(kw in query_lower for kw in ["注册", "开店", "开户", "register", "sign up", "create account", "申请", "审核", "đăng ký", "등록"]):
@@ -657,10 +649,9 @@ def run_zhizao(batch_id: str, content_limit: int = 5,
 
         response = call_claude(system_prompt, user_prompt)
 
-        # Parse response: first line = title, rest = content
+        # Parse response
         import re
         lines = response.strip().split("\n")
-        # Extract title (first non-empty line, strip any leading # or *)
         title = ""
         content_start = 0
         for i, line in enumerate(lines):
@@ -671,12 +662,10 @@ def run_zhizao(batch_id: str, content_limit: int = 5,
                 break
 
         content_body = "\n".join(lines[content_start:]).strip()
-
-        # Extract FAQ section if present
         faq_match = re.search(r'(##\s*(?:常见问题|FAQ).+)', content_body, re.DOTALL | re.IGNORECASE)
         faq_section = faq_match.group(1) if faq_match else ""
 
-        results.append({
+        return {
             "content_id": f"C_{keyword_id}_{idx+1:03d}",
             "query_id": query_id,
             "keyword_id": keyword_id,
@@ -691,7 +680,33 @@ def run_zhizao(batch_id: str, content_limit: int = 5,
             "word_count": len(content_body),
             "version": "v1",
             "created_at": timestamp(),
-        })
+        }
+
+    # --- Execute in parallel (3 concurrent workers) ---
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    MAX_WORKERS = 3  # 3 parallel API calls
+    items = list(df_q.iterrows())
+
+    if progress_callback:
+        progress_callback(0.05, f"正在并行生成 {total} 篇内容（{MAX_WORKERS} 并发）...")
+
+    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        futures = {executor.submit(_generate_single_article, item): item[0] for item in items}
+        completed = 0
+        for future in as_completed(futures):
+            try:
+                result = future.result()
+                results.append(result)
+            except Exception as e:
+                # Skip failed articles but continue others
+                pass
+            completed += 1
+            if progress_callback:
+                progress_callback(completed / total, f"已完成 {completed}/{total} 篇...")
+
+    # Sort results by content_id to maintain order
+    results.sort(key=lambda x: x.get("content_id", ""))
 
     # Save as CSV
     df_out = pd.DataFrame(results)
