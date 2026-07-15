@@ -899,9 +899,17 @@ elif _page_idx == 1:
                     dc2.metric("P1 (Important)", dist.get("P1", 0))
                     dc3.metric("P2 (Long-tail)", dist.get("P2", 0))
 
-                    # Show results table
-                    if predictions:
+                    # Show results table — load from cumulative master file
+                    master_file = OUTPUT_PATH / "zhiku_predictions" / "predictions_master.csv"
+                    if master_file.exists():
+                        df_pred = pd.read_csv(master_file, encoding="utf-8-sig")
+                    elif predictions:
                         df_pred = pd.DataFrame(predictions)
+                    else:
+                        df_pred = pd.DataFrame()
+
+                    if not df_pred.empty:
+                        st.caption(f"Showing all {len(df_pred)} cumulative predictions" if is_en else f"显示全部 {len(df_pred)} 条累计推演短语")
                         show_cols = [c for c in ["ai_query", "identity", "site", "topic", "priority_score", "estimated_volume", "priority_level"] if c in df_pred.columns]
                         st.dataframe(df_pred[show_cols], use_container_width=True, hide_index=True)
 
