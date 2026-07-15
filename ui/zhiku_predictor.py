@@ -305,21 +305,36 @@ def run_persona_prediction(
     if progress_callback:
         progress_callback(0.9, "保存结果...")
 
-    # Save to output
+    # Save to output (cumulative: append to master file + save timestamped copy)
     if unique_predictions:
         df = pd.DataFrame(unique_predictions)
         output_dir = OUTPUT_PATH / "zhiku_predictions"
         output_dir.mkdir(parents=True, exist_ok=True)
+
+        # Save timestamped copy (for history)
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         output_file = output_dir / f"predicted_{priority_level}_{ts}.csv"
         df.to_csv(output_file, index=False, encoding="utf-8-sig")
 
+        # Append to cumulative master file (deduplicated)
+        master_file = output_dir / "predictions_master.csv"
+        if master_file.exists():
+            df_master = pd.read_csv(master_file, encoding="utf-8-sig")
+            df_combined = pd.concat([df_master, df], ignore_index=True)
+            df_combined = df_combined.drop_duplicates(subset=["ai_query"], keep="last")
+            df_combined.to_csv(master_file, index=False, encoding="utf-8-sig")
+            total_in_master = len(df_combined)
+        else:
+            df.to_csv(master_file, index=False, encoding="utf-8-sig")
+            total_in_master = len(df)
+
         if progress_callback:
-            progress_callback(1.0, f"推演完成 ✅ {len(unique_predictions)} 条")
+            progress_callback(1.0, f"推演完成 ✅ 本次 +{len(unique_predictions)} 条，累计 {total_in_master} 条")
 
         return {
             "success": True,
             "total_generated": len(unique_predictions),
+            "total_cumulative": total_in_master,
             "priority_distribution": {
                 "P0": len([p for p in unique_predictions if p["priority_level"] == "P0"]),
                 "P1": len([p for p in unique_predictions if p["priority_level"] == "P1"]),

@@ -889,7 +889,8 @@ elif _page_idx == 1:
                     )
                 if result["success"]:
                     predictions = result.get("predictions", [])
-                    st.success(f"✅ Generated {len(predictions)} predicted queries" if is_en else f"✅ 推演生成 {len(predictions)} 条检索短语")
+                    cumulative = result.get("total_cumulative", len(predictions))
+                    st.success(f"✅ +{len(predictions)} this run, {cumulative} total cumulative" if is_en else f"✅ 本次 +{len(predictions)} 条，累计 {cumulative} 条（自动去重叠加）")
 
                     # Show distribution
                     dist = result.get("priority_distribution", {})
