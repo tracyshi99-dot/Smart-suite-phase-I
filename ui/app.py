@@ -997,89 +997,133 @@ elif _page_idx == 1:
 
     df_q = load_zhiku_live(selected_batch)
     if not df_q.empty:
-        # Filters
-        col_f1, col_f2 = st.columns(2)
-        with col_f1:
-            filter_options = ["All" if is_en else "全部", "✅ Selected" if is_en else "✅ 已选中", "⬜ Not selected" if is_en else "⬜ 未选中"]
-            if "source" in df_q.columns:
-                filter_options += sorted(df_q["source"].dropna().unique().tolist())
-            sel_filter = st.selectbox("Filter" if is_en else "筛选", filter_options, key="zhiku_filter")
-        with col_f2:
-            if "category" in df_q.columns:
-                cat_options = ["All" if is_en else "全部"] + sorted(df_q["category"].dropna().unique().tolist())
-                cat_filter = st.selectbox("Category" if is_en else "类别", cat_options, key="zhiku_cat_filter")
+        # Split by source type
+        if "source" in df_q.columns:
+            predicted_mask = df_q["source"].astype(str).str.contains("predicted|zhiyu", case=False, na=False)
+            df_collected = df_q[~predicted_mask].copy()
+            df_predicted = df_q[predicted_mask].copy()
+        else:
+            df_collected = df_q.copy()
+            df_predicted = pd.DataFrame()
+
+        # Show counts
+        col_src1, col_src2 = st.columns(2)
+        col_src1.metric("🎯 Tracked (已追踪到)" if is_en else "🎯 已追踪到", len(df_collected))
+        col_src2.metric("🔮 Predicted (预估推演)" if is_en else "🔮 预估推演", len(df_predicted))
+
+        # Tabbed view
+        tab_collected, tab_predicted, tab_all = st.tabs([
+            f"🎯 Tracked ({len(df_collected)})" if is_en else f"🎯 已追踪到 ({len(df_collected)})",
+            f"🔮 Predicted ({len(df_predicted)})" if is_en else f"🔮 预估推演 ({len(df_predicted)})",
+            f"📋 All ({len(df_q)})" if is_en else f"📋 全部 ({len(df_q)})",
+        ])
+
+        with tab_collected:
+            st.caption("From real channels: SEO/SEM keywords, AI dropdown suggestions, reverse recall, community Q&A, manual input." if is_en else "来自真实渠道：SEO/SEM 关键词裂变、AI 平台下拉联想、逆向召回、社区原生提问、手动录入。")
+            if not df_collected.empty:
+                edit_cols_c = [c for c in ["ai_query", "category", "source", "priority_score", "is_selected"] if c in df_collected.columns]
+                if edit_cols_c:
+                    if "is_selected" in df_collected.columns:
+                        df_collected["is_selected"] = df_collected["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])
+                    st.dataframe(df_collected[edit_cols_c], use_container_width=True, hide_index=True)
             else:
-                cat_filter = "全部"
+                st.caption("No tracked phrases yet. Use P1/P2/P3 tabs above to add from real channels." if is_en else "暂无已追踪短语。请通过上方 P1/P2/P3 来源添加。")
 
-        # Apply filters
-        df_display = df_q.copy()
-        if sel_filter in ["✅ Selected", "✅ 已选中"] and "is_selected" in df_display.columns:
-            df_display = df_display[df_display["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])]
-        elif sel_filter in ["⬜ Not selected", "⬜ 未选中"] and "is_selected" in df_display.columns:
-            df_display = df_display[~df_display["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])]
-        elif sel_filter not in ["All", "全部", "✅ Selected", "✅ 已选中", "⬜ Not selected", "⬜ 未选中"] and "source" in df_display.columns:
-            df_display = df_display[df_display["source"] == sel_filter]
-        if cat_filter not in ["All", "全部"] and "category" in df_display.columns:
-            df_display = df_display[df_display["category"] == cat_filter]
+        with tab_predicted:
+            st.caption("AI-predicted based on persona matrix × lifecycle × site × topic. Need verification before production." if is_en else "基于画像矩阵 × 生命周期 × 站点 × 话题推演预估。进入生产前需通过智测验证。")
+            if not df_predicted.empty:
+                edit_cols_p = [c for c in ["ai_query", "category", "source", "priority_score", "estimated_volume", "is_selected"] if c in df_predicted.columns]
+                if edit_cols_p:
+                    if "is_selected" in df_predicted.columns:
+                        df_predicted["is_selected"] = df_predicted["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])
+                    st.dataframe(df_predicted[edit_cols_p], use_container_width=True, hide_index=True)
+            else:
+                st.caption("No predicted phrases yet. Use P4 Persona Prediction tab to generate." if is_en else "暂无预估短语。请通过 P4 画像推演生成。")
 
-        # Bulk actions
-        col_sa, col_sn, col_count = st.columns([1, 1, 4])
-        with col_sa:
-            if st.button("✅ Select All" if is_en else "✅ 全选", key="btn_sel_all"):
-                zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
-                df_q["is_selected"] = df_q["is_selected"].astype(str)
-                df_q.loc[df_display.index, "is_selected"] = "TRUE"
-                df_q.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
-                st.rerun()
-        with col_sn:
-            if st.button("⬜ Deselect All" if is_en else "⬜ 全不选", key="btn_desel_all"):
-                zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
-                df_q["is_selected"] = df_q["is_selected"].astype(str)
-                df_q.loc[df_display.index, "is_selected"] = "FALSE"
-                df_q.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
-                st.rerun()
-        with col_count:
-            sel_now = df_display[df_display["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])].shape[0] if "is_selected" in df_display.columns else 0
-            st.caption(f"{'Showing' if is_en else '显示'} {len(df_display)} | {'Selected' if is_en else '选中'} {sel_now}")
+        with tab_all:
+            # Filters
+            col_f1, col_f2 = st.columns(2)
+            with col_f1:
+                filter_options = ["All" if is_en else "全部", "✅ Selected" if is_en else "✅ 已选中", "⬜ Not selected" if is_en else "⬜ 未选中"]
+                if "source" in df_q.columns:
+                    filter_options += sorted(df_q["source"].dropna().unique().tolist())
+                sel_filter = st.selectbox("Filter" if is_en else "筛选", filter_options, key="zhiku_filter")
+            with col_f2:
+                if "category" in df_q.columns:
+                    cat_options = ["All" if is_en else "全部"] + sorted(df_q["category"].dropna().unique().tolist())
+                    cat_filter = st.selectbox("Category" if is_en else "类别", cat_options, key="zhiku_cat_filter")
+                else:
+                    cat_filter = "全部"
 
-        # Editable table
-        edit_cols = [c for c in ["ai_query", "category", "source", "priority_score", "is_selected"] if c in df_display.columns]
-        if edit_cols:
-            column_config = {}
-            if "category" in df_display.columns:
-                column_config["category"] = st.column_config.SelectboxColumn("Category" if is_en else "类别", options=CATEGORIES_35)
-            if "is_selected" in df_display.columns:
-                df_display["is_selected"] = df_display["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])
-                column_config["is_selected"] = st.column_config.CheckboxColumn("Sel" if is_en else "选")
-            if "source" in df_display.columns:
-                column_config["source"] = st.column_config.TextColumn("Source" if is_en else "来源", disabled=True)
+            # Apply filters
+            df_display = df_q.copy()
+            if sel_filter in ["✅ Selected", "✅ 已选中"] and "is_selected" in df_display.columns:
+                df_display = df_display[df_display["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])]
+            elif sel_filter in ["⬜ Not selected", "⬜ 未选中"] and "is_selected" in df_display.columns:
+                df_display = df_display[~df_display["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])]
+            elif sel_filter not in ["All", "全部", "✅ Selected", "✅ 已选中", "⬜ Not selected", "⬜ 未选中"] and "source" in df_display.columns:
+                df_display = df_display[df_display["source"] == sel_filter]
+            if cat_filter not in ["All", "全部"] and "category" in df_display.columns:
+                df_display = df_display[df_display["category"] == cat_filter]
 
-            edited_df = st.data_editor(df_display[edit_cols], column_config=column_config, use_container_width=True, hide_index=True, num_rows="dynamic", key="zhiku_editor_new")
-
-            # Save button — saves checkbox edits to file
-            if st.button("💾 Save Edits" if is_en else "💾 保存编辑", key="btn_save_edits"):
-                zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
-                try:
-                    # Ensure is_selected is string type in df_q before assignment
-                    if "is_selected" in df_q.columns:
-                        df_q["is_selected"] = df_q["is_selected"].astype(str)
-                    for col in edit_cols:
-                        if col in edited_df.columns and col in df_q.columns:
-                            if col == "is_selected":
-                                vals = edited_df[col].apply(lambda x: "TRUE" if x else "FALSE").values
-                                df_q.loc[df_display.index[:len(vals)], col] = vals
-                            else:
-                                vals = edited_df[col].values
-                                df_q.loc[df_display.index[:len(vals)], col] = vals
+            # Bulk actions
+            col_sa, col_sn, col_count = st.columns([1, 1, 4])
+            with col_sa:
+                if st.button("✅ Select All" if is_en else "✅ 全选", key="btn_sel_all"):
+                    zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
+                    df_q["is_selected"] = df_q["is_selected"].astype(str)
+                    df_q.loc[df_display.index, "is_selected"] = "TRUE"
                     df_q.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
-                    st.success("✅ Saved" if is_en else "✅ 已保存")
                     st.rerun()
-                except Exception as e:
-                    st.error(str(e))
+            with col_sn:
+                if st.button("⬜ Deselect All" if is_en else "⬜ 全不选", key="btn_desel_all"):
+                    zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
+                    df_q["is_selected"] = df_q["is_selected"].astype(str)
+                    df_q.loc[df_display.index, "is_selected"] = "FALSE"
+                    df_q.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
+                    st.rerun()
+            with col_count:
+                sel_now = df_display[df_display["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])].shape[0] if "is_selected" in df_display.columns else 0
+                st.caption(f"{'Showing' if is_en else '显示'} {len(df_display)} | {'Selected' if is_en else '选中'} {sel_now}")
 
-        # Export
-        csv_export = df_display.to_csv(index=False).encode("utf-8-sig")
-        st.download_button("📥 Export CSV" if is_en else "📥 导出 CSV", csv_export, file_name=f"zhiku_{selected_batch}.csv", mime="text/csv")
+            # Editable table
+            edit_cols = [c for c in ["ai_query", "category", "source", "priority_score", "is_selected"] if c in df_display.columns]
+            if edit_cols:
+                column_config = {}
+                if "category" in df_display.columns:
+                    column_config["category"] = st.column_config.SelectboxColumn("Category" if is_en else "类别", options=CATEGORIES_35)
+                if "is_selected" in df_display.columns:
+                    df_display["is_selected"] = df_display["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])
+                    column_config["is_selected"] = st.column_config.CheckboxColumn("Sel" if is_en else "选")
+                if "source" in df_display.columns:
+                    column_config["source"] = st.column_config.TextColumn("Source" if is_en else "来源", disabled=True)
+
+                edited_df = st.data_editor(df_display[edit_cols], column_config=column_config, use_container_width=True, hide_index=True, num_rows="dynamic", key="zhiku_editor_new")
+
+                # Save button — saves checkbox edits to file
+                if st.button("💾 Save Edits" if is_en else "💾 保存编辑", key="btn_save_edits"):
+                    zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
+                    try:
+                        # Ensure is_selected is string type in df_q before assignment
+                        if "is_selected" in df_q.columns:
+                            df_q["is_selected"] = df_q["is_selected"].astype(str)
+                        for col in edit_cols:
+                            if col in edited_df.columns and col in df_q.columns:
+                                if col == "is_selected":
+                                    vals = edited_df[col].apply(lambda x: "TRUE" if x else "FALSE").values
+                                    df_q.loc[df_display.index[:len(vals)], col] = vals
+                                else:
+                                    vals = edited_df[col].values
+                                    df_q.loc[df_display.index[:len(vals)], col] = vals
+                        df_q.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
+                        st.success("✅ Saved" if is_en else "✅ 已保存")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(str(e))
+
+            # Export
+            csv_export = df_display.to_csv(index=False).encode("utf-8-sig")
+            st.download_button("📥 Export CSV" if is_en else "📥 导出 CSV", csv_export, file_name=f"zhiku_{selected_batch}.csv", mime="text/csv")
     else:
         st.caption("No phrases yet." if is_en else "暂无短语。")
 
