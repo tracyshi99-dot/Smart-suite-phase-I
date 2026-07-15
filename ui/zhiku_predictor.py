@@ -299,6 +299,20 @@ def run_persona_prediction(
     unique_predictions.extend(ai_expanded)
     unique_predictions.sort(key=lambda x: (-x["priority_score"], -x["estimated_volume"]))
 
+    # Exclude queries already in zhiku (only show truly new ones)
+    zhiku_file = OUTPUT_PATH / "batch_003" / "01_zhiku" / "zhiku_ai_queries.csv"
+    existing_queries = set()
+    if zhiku_file.exists():
+        try:
+            df_existing = pd.read_csv(zhiku_file, encoding="utf-8-sig", on_bad_lines="skip")
+            if "ai_query" in df_existing.columns:
+                existing_queries = set(df_existing["ai_query"].dropna().str.strip().str.lower().tolist())
+        except Exception:
+            pass
+
+    if existing_queries:
+        unique_predictions = [p for p in unique_predictions if p["ai_query"].strip().lower() not in existing_queries]
+
     # Limit output
     unique_predictions = unique_predictions[:max_queries]
 
