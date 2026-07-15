@@ -936,7 +936,12 @@ elif _page_idx == 1:
                                 _all_preds = predictions
                             export_result = export_to_zhiku(_all_preds, selected_batch)
                             if export_result["success"]:
-                                st.success(f"✅ {export_result['exported']} queries exported to zhiku" if is_en else f"✅ {export_result['exported']} 条已导入智库")
+                                added = export_result['exported']
+                                total = export_result.get('total_in_zhiku', added)
+                                if added > 0:
+                                    st.success(f"✅ +{added} new queries added to zhiku (total now: {total})" if is_en else f"✅ 新增 {added} 条到智库（智库总量: {total}）")
+                                else:
+                                    st.info(f"All {total} queries already in zhiku (no duplicates added)" if is_en else f"全部短语已存在智库中（共 {total} 条，无新增）")
                                 st.rerun()
                             else:
                                 st.error(export_result.get("error", "Export failed"))

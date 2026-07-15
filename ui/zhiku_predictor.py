@@ -381,18 +381,24 @@ def export_to_zhiku(predictions: list, batch_id: str = "batch_003") -> dict:
 
     df_new = pd.DataFrame(zhiku_rows)
 
-    # Append to existing
+    # Append to existing (deduplicate)
     if zhiku_file.exists():
         existing = pd.read_csv(zhiku_file, encoding="utf-8-sig")
+        before_count = len(existing)
         merged = pd.concat([existing, df_new], ignore_index=True)
         if "ai_query" in merged.columns:
             merged = merged.drop_duplicates(subset=["ai_query"], keep="first")
         merged.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
+        after_count = len(merged)
+        actually_added = after_count - before_count
     else:
         df_new.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
+        actually_added = len(df_new)
+        after_count = len(df_new)
 
     return {
         "success": True,
-        "exported": len(zhiku_rows),
+        "exported": actually_added,
+        "total_in_zhiku": after_count,
         "file": str(zhiku_file),
     }
