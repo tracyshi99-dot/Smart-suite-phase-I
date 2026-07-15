@@ -925,9 +925,16 @@ elif _page_idx == 1:
                         show_cols = [c for c in ["ai_query", "identity", "site", "topic", "priority_score", "estimated_volume", "priority_level"] if c in df_pred.columns]
                         st.dataframe(df_pred[show_cols], use_container_width=True, hide_index=True)
 
-                        # Export to zhiku button
+                        # Export to zhiku button — exports ALL cumulative predictions
                         if st.button("📤 Export to Query Library & Send to Verify" if is_en else "📤 导入智库 & 送智测验证", key="btn_p4_export"):
-                            export_result = export_to_zhiku(predictions, selected_batch)
+                            # Load from master file for full cumulative export
+                            _master_f = OUTPUT_PATH / "zhiku_predictions" / "predictions_master.csv"
+                            if _master_f.exists():
+                                _df_m = pd.read_csv(_master_f, encoding="utf-8-sig")
+                                _all_preds = _df_m.to_dict("records")
+                            else:
+                                _all_preds = predictions
+                            export_result = export_to_zhiku(_all_preds, selected_batch)
                             if export_result["success"]:
                                 st.success(f"✅ {export_result['exported']} queries exported to zhiku" if is_en else f"✅ {export_result['exported']} 条已导入智库")
                                 st.rerun()
