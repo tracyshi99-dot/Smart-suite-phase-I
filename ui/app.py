@@ -892,12 +892,24 @@ elif _page_idx == 1:
                     cumulative = result.get("total_cumulative", len(predictions))
                     st.success(f"✅ +{len(predictions)} this run, {cumulative} total cumulative" if is_en else f"✅ 本次 +{len(predictions)} 条，累计 {cumulative} 条（自动去重叠加）")
 
-                    # Show distribution
-                    dist = result.get("priority_distribution", {})
+                    # Show cumulative distribution from master file
+                    master_file = OUTPUT_PATH / "zhiku_predictions" / "predictions_master.csv"
+                    if master_file.exists():
+                        _df_master = pd.read_csv(master_file, encoding="utf-8-sig")
+                        if "priority_level" in _df_master.columns:
+                            cum_p0 = len(_df_master[_df_master["priority_level"] == "P0"])
+                            cum_p1 = len(_df_master[_df_master["priority_level"] == "P1"])
+                            cum_p2 = len(_df_master[_df_master["priority_level"] == "P2"])
+                        else:
+                            cum_p0, cum_p1, cum_p2 = len(_df_master), 0, 0
+                    else:
+                        dist = result.get("priority_distribution", {})
+                        cum_p0, cum_p1, cum_p2 = dist.get("P0", 0), dist.get("P1", 0), dist.get("P2", 0)
+
                     dc1, dc2, dc3 = st.columns(3)
-                    dc1.metric("P0 (Core)", dist.get("P0", 0))
-                    dc2.metric("P1 (Important)", dist.get("P1", 0))
-                    dc3.metric("P2 (Long-tail)", dist.get("P2", 0))
+                    dc1.metric("P0 (Core)", cum_p0)
+                    dc2.metric("P1 (Important)", cum_p1)
+                    dc3.metric("P2 (Long-tail)", cum_p2)
 
                     # Show results table — load from cumulative master file
                     master_file = OUTPUT_PATH / "zhiku_predictions" / "predictions_master.csv"
