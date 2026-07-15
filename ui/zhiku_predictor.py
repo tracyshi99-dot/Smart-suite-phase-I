@@ -182,34 +182,51 @@ def run_persona_prediction(
                 if priority_level != "ALL" and p_level != priority_level:
                     continue
 
-                # Generate queries from templates
-                for template in stage_templates[:3]:  # Max 3 templates per combination
-                    query = generate_query_from_template(
-                        template, identity, topic, site
-                    )
-                    if len(query) > 5:  # Valid query
-                        all_predictions.append({
-                            "ai_query": query,
-                            "identity": identity,
-                            "lifecycle_stage": stage,
-                            "site": site,
-                            "topic": topic,
-                            "priority_score": priority,
-                            "estimated_volume": volume,
-                            "priority_level": p_level,
-                            "source": f"predicted_{p_level.lower()}",
-                            "is_selected": "FALSE",
-                            "verified": "FALSE",
-                            "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                        })
+                # For P0: expand with enterprise types + delivery methods
+                # For P1/P2: use simple defaults (faster)
+                if p_level == "P0":
+                    ent_list = [e for e in enterprises
+                                if base.get("企业类型", {}).get("priority_weight", {}).get(e, 0) >= 4]
+                    dlv_list = [d for d in deliveries
+                                if base.get("计划发货方式", {}).get("priority_weight", {}).get(d, 0) >= 4]
+                    if not ent_list:
+                        ent_list = ["中国卖家"]
+                    if not dlv_list:
+                        dlv_list = ["FBA"]
+                else:
+                    ent_list = [""]
+                    dlv_list = [""]
+
+                for enterprise in ent_list:
+                    for delivery in dlv_list:
+                        for template in stage_templates:
+                            query = generate_query_from_template(
+                                template, identity, topic, site, enterprise, delivery
+                            )
+                            if len(query) > 5:
+                                all_predictions.append({
+                                    "ai_query": query,
+                                    "identity": identity,
+                                    "lifecycle_stage": stage,
+                                    "site": site,
+                                    "topic": topic,
+                                    "priority_score": priority,
+                                    "estimated_volume": volume,
+                                    "priority_level": p_level,
+                                    "source": f"predicted_{p_level.lower()}",
+                                    "is_selected": "FALSE",
+                                    "verified": "FALSE",
+                                    "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                                })
 
     if progress_callback:
-        progress_callback(0.7, "排序与去重...")
+        progress_callback(0.5, "规则推演完成，开始 AI 扩展裂变...")
 
-    # Sort by priority (descending) then volume (descending)
+    # --- AI Expansion: take top seeds and generate variants ---
+    # Sort first, then expand top N seeds
     all_predictions.sort(key=lambda x: (-x["priority_score"], -x["estimated_volume"]))
 
-    # Deduplicate by ai_query
+    # Deduplicate
     seen_queries = set()
     unique_predictions = []
     for p in all_predictions:
@@ -217,6 +234,70 @@ def run_persona_prediction(
         if q_normalized not in seen_queries:
             seen_queries.add(q_normalized)
             unique_predictions.append(p)
+
+    # AI expansion: take top seeds and generate 3 variants each
+    ai_expanded = []
+    seeds_to_expand = unique_predictions[:min(20, len(unique_predictions))]  # Expand top 20
+
+    if seeds_to_expand and progress_callback:
+        progress_callback(0.6, f"AI 扩展 {len(seeds_to_expand)} 条种子短语...")
+
+    if seeds_to_expand:
+        try:
+            from engine import call_claude
+            # Batch expand: send 10 seeds at a time
+            batch_size = 10
+            for batch_start in range(0, len(seeds_to_expand), batch_size):
+                batch = seeds_to_expand[batch_start:batch_start + batch_size]
+                seed_list = "\n".join([f"- {s['ai_query']}" for s in batch])
+
+                expand_prompt = f"""以下是一组 AI 检索短语种子。请为每条种子生成 3 个口语化变体（用户可能的不同表达方式）。
+
+种子短语：
+{seed_list}
+
+要求：
+- 每条种子生成 3 个变体
+- 变体必须保持相同语义但不同表达
+- 模拟真实用户在 AI 搜索引擎的口语化提问
+- 格式：每行一条，前面标序号（1.1, 1.2, 1.3, 2.1, 2.2...）
+- 只输出短语，不要其他解释"""
+
+                try:
+                    result = call_claude("你是 AI 搜索短语裂变专家。", expand_prompt, max_tokens=1000)
+                    # Parse expanded queries
+                    for line in result.strip().split("\n"):
+                        line = line.strip().lstrip("0123456789.-、） ").strip()
+                        if len(line) > 5 and line not in seen_queries:
+                            seen_queries.add(line.lower())
+                            # Inherit priority from nearest seed
+                            seed_idx = min(batch_start, len(seeds_to_expand) - 1)
+                            parent = seeds_to_expand[seed_idx] if seed_idx < len(batch) else batch[0]
+                            ai_expanded.append({
+                                "ai_query": line,
+                                "identity": parent["identity"],
+                                "lifecycle_stage": parent["lifecycle_stage"],
+                                "site": parent["site"],
+                                "topic": parent["topic"],
+                                "priority_score": parent["priority_score"] - 0.1,  # Slightly lower than seed
+                                "estimated_volume": int(parent["estimated_volume"] * 0.8),
+                                "priority_level": parent["priority_level"],
+                                "source": f"predicted_{parent['priority_level'].lower()}_ai_expanded",
+                                "is_selected": "FALSE",
+                                "verified": "FALSE",
+                                "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                            })
+                except Exception:
+                    pass  # AI expansion is best-effort
+
+                if progress_callback:
+                    progress_callback(0.6 + 0.2 * (batch_start / len(seeds_to_expand)), "AI 扩展中...")
+        except ImportError:
+            pass  # No engine available, skip AI expansion
+
+    # Merge: original + AI expanded
+    unique_predictions.extend(ai_expanded)
+    unique_predictions.sort(key=lambda x: (-x["priority_score"], -x["estimated_volume"]))
 
     # Limit output
     unique_predictions = unique_predictions[:max_queries]
