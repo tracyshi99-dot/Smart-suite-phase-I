@@ -1734,7 +1734,10 @@ elif _page_idx == 3:
                 result = run_zhizao(selected_batch, content_limit, update_progress_z, selected_template, reuse_tpl)
 
             if result["success"]:
-                st.success(f"✅ +{result['articles_generated']} {'articles' if is_en else '篇'}")
+                if result['articles_generated'] > 0:
+                    st.success(f"✅ +{result['articles_generated']} {'articles' if is_en else '篇'}")
+                else:
+                    st.warning("⚠️ API called successfully but generated 0 articles. Possible causes: API returned empty/error response, or all selected queries failed." if is_en else "⚠️ API 调用成功但生成 0 篇。可能原因：API 返回空内容，或所有短语处理失败。")
             else:
                 st.error(f"❌ {'Failed' if is_en else '失败'}: {result['error']}")
         except ImportError:

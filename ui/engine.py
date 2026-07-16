@@ -747,19 +747,24 @@ Stay strictly on topic. Every paragraph must relate directly to the search query
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         futures = {executor.submit(_generate_single_article, item): item[0] for item in items}
         completed = 0
+        errors = []
         for future in as_completed(futures):
             try:
                 result = future.result()
                 results.append(result)
             except Exception as e:
-                # Skip failed articles but continue others
-                pass
+                errors.append(str(e)[:100])
             completed += 1
             if progress_callback:
                 progress_callback(completed / total, f"已完成 {completed}/{total} 篇...")
 
     # Sort results by content_id to maintain order
     results.sort(key=lambda x: x.get("content_id", ""))
+
+    # If no results but had errors, report them
+    if not results and errors:
+        return {"success": True, "output_file": "", "articles_generated": 0,
+                "error_details": "; ".join(errors[:3])}
 
     # Save as CSV
     df_out = pd.DataFrame(results)
