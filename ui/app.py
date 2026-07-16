@@ -889,62 +889,20 @@ elif _page_idx == 1:
                     )
                 if result["success"]:
                     predictions = result.get("predictions", [])
-                    cumulative = result.get("total_cumulative", len(predictions))
-                    st.success(f"✅ +{len(predictions)} this run, {cumulative} total cumulative" if is_en else f"✅ 本次 +{len(predictions)} 条，累计 {cumulative} 条（自动去重叠加）")
 
-                    # Show cumulative distribution from master file
-                    master_file = OUTPUT_PATH / "zhiku_predictions" / "predictions_master.csv"
-                    if master_file.exists():
-                        _df_master = pd.read_csv(master_file, encoding="utf-8-sig")
-                        if "priority_level" in _df_master.columns:
-                            cum_p0 = len(_df_master[_df_master["priority_level"] == "P0"])
-                            cum_p1 = len(_df_master[_df_master["priority_level"] == "P1"])
-                            cum_p2 = len(_df_master[_df_master["priority_level"] == "P2"])
+                    # AUTO-IMPORT to zhiku immediately (no manual export step needed)
+                    if predictions:
+                        export_result = export_to_zhiku(predictions, selected_batch)
+                        added = export_result.get('exported', 0)
+                        total = export_result.get('total_in_zhiku', 0)
+                        if added > 0:
+                            st.success(f"✅ +{added} new queries auto-imported to library (total: {total})" if is_en else f"✅ 新增 {added} 条已自动导入智库（总量: {total}）")
                         else:
-                            cum_p0, cum_p1, cum_p2 = len(_df_master), 0, 0
+                            st.info(f"All queries already in library ({total} total, no new additions)" if is_en else f"全部短语已在智库中（共 {total} 条，无新增。请换不同条件推演）")
                     else:
-                        dist = result.get("priority_distribution", {})
-                        cum_p0, cum_p1, cum_p2 = dist.get("P0", 0), dist.get("P1", 0), dist.get("P2", 0)
+                        st.info("No new predictions (all already in library). Try different sites/topics." if is_en else "无新预测短语（已全部在库）。请换不同站点/话题再试。")
 
-                    dc1, dc2, dc3 = st.columns(3)
-                    dc1.metric("P0 (Core)", cum_p0)
-                    dc2.metric("P1 (Important)", cum_p1)
-                    dc3.metric("P2 (Long-tail)", cum_p2)
-
-                    # Show results table — load from cumulative master file
-                    master_file = OUTPUT_PATH / "zhiku_predictions" / "predictions_master.csv"
-                    if master_file.exists():
-                        df_pred = pd.read_csv(master_file, encoding="utf-8-sig")
-                    elif predictions:
-                        df_pred = pd.DataFrame(predictions)
-                    else:
-                        df_pred = pd.DataFrame()
-
-                    if not df_pred.empty:
-                        st.caption(f"Showing all {len(df_pred)} cumulative predictions" if is_en else f"显示全部 {len(df_pred)} 条累计推演短语")
-                        show_cols = [c for c in ["ai_query", "identity", "site", "topic", "priority_score", "estimated_volume", "priority_level"] if c in df_pred.columns]
-                        st.dataframe(df_pred[show_cols], use_container_width=True, hide_index=True)
-
-                        # Export to zhiku button — exports ALL cumulative predictions
-                        if st.button("📤 Export to Query Library & Send to Verify" if is_en else "📤 导入智库 & 送智测验证", key="btn_p4_export"):
-                            # Load from master file for full cumulative export
-                            _master_f = OUTPUT_PATH / "zhiku_predictions" / "predictions_master.csv"
-                            if _master_f.exists():
-                                _df_m = pd.read_csv(_master_f, encoding="utf-8-sig")
-                                _all_preds = _df_m.to_dict("records")
-                            else:
-                                _all_preds = predictions
-                            export_result = export_to_zhiku(_all_preds, selected_batch)
-                            if export_result["success"]:
-                                added = export_result['exported']
-                                total = export_result.get('total_in_zhiku', added)
-                                if added > 0:
-                                    st.success(f"✅ +{added} new queries added to zhiku (total now: {total})" if is_en else f"✅ 新增 {added} 条到智库（智库总量: {total}）")
-                                else:
-                                    st.info(f"All {total} queries already in zhiku (no duplicates added)" if is_en else f"全部短语已存在智库中（共 {total} 条，无新增）")
-                                st.rerun()
-                            else:
-                                st.error(export_result.get("error", "Export failed"))
+                    st.rerun()
                 else:
                     st.warning(result.get("error", "No results"))
             except Exception as e:
