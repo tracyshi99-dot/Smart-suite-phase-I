@@ -94,60 +94,63 @@ def get_lifecycle_stage(identity: str) -> str:
 def generate_query_from_template(template: str, identity: str, topic: str, site: str,
                                   enterprise: str = "", delivery: str = "",
                                   language: str = "中文") -> str:
-    """Fill in a query template with actual values. Supports Chinese, English, or bilingual."""
-    query = template
-    query = query.replace("{站点}", site.replace("站", ""))
-    query = query.replace("{内容分类}", topic)
-    query = query.replace("{企业类型}", enterprise if enterprise else "中国卖家")
-    query = query.replace("{发货方式}", delivery if delivery else "FBA")
-    query = query.replace("{年销售额}", "")
-    query = query.replace("{竞品}", "Shopee")
-    query = query.replace("{年份}", "2026")
-    query = query.strip()
+    """Fill in a query template. English mode uses native English templates."""
+
+    SITE_EN = {
+        "美国站": "US", "加拿大站": "Canada", "墨西哥站": "Mexico",
+        "英国站": "UK", "德国站": "Germany", "法国站": "France",
+        "意大利站": "Italy", "西班牙站": "Spain", "日本站": "Japan",
+        "阿联酋站": "UAE", "沙特站": "Saudi Arabia", "巴西站": "Brazil",
+        "澳洲站": "Australia", "印度站": "India", "土耳其站": "Turkey",
+        "荷兰站": "Netherlands", "瑞典站": "Sweden", "波兰站": "Poland", "比利时站": "Belgium",
+    }
+    TOPIC_EN = {
+        "新手指南": "getting started", "选品": "product research",
+        "合规": "compliance", "物流仓储": "logistics and FBA",
+        "品牌打造": "brand building", "旺季与流量": "peak season",
+        "企业购": "Amazon Business", "卖家百科": "seller FAQ",
+        "卖家成长服务": "growth services", "工厂专区": "manufacturer program",
+        "跨境收付款": "cross-border payments", "品类洞察": "category trends",
+        "广告推广": "PPC advertising",
+    }
 
     if language == "English":
-        # Translate to English equivalent
-        EN_MAP = {
-            "亚马逊": "Amazon", "跨境电商": "cross-border e-commerce",
-            "怎么做": "how to", "怎么样": "how is it",
-            "需要什么": "what do I need", "多少钱": "how much does it cost",
-            "注册": "register", "开店": "start selling",
-            "选品": "product selection", "物流": "logistics",
-            "仓储": "warehousing", "广告": "advertising",
-            "合规": "compliance", "品牌": "brand",
-            "新手": "beginner", "指南": "guide",
-            "费用": "fees", "成本": "cost",
-            "技巧": "tips", "策略": "strategy",
-            "美国": "US", "英国": "UK", "德国": "Germany",
-            "日本": "Japan", "加拿大": "Canada", "法国": "France",
-            "意大利": "Italy", "西班牙": "Spain", "澳洲": "Australia",
-            "阿联酋": "UAE", "沙特": "Saudi Arabia", "巴西": "Brazil",
-            "墨西哥": "Mexico", "印度": "India", "北美": "North America",
-            "欧洲": "Europe", "全球开店": "Global Selling",
-            "卖家": "seller", "怎么": "how to",
-            "什么": "what", "哪个好": "which is better",
-            "适合": "suitable for", "优势": "advantages",
-            "难不难": "is it difficult", "赚钱吗": "is it profitable",
-            "竞争大吗": "is it competitive",
-        }
-        for zh, en in EN_MAP.items():
-            query = query.replace(zh, en)
-        # Clean up any remaining Chinese punctuation
-        query = query.replace("？", "?").replace("，", ", ").replace("、", ", ")
+        site_en = SITE_EN.get(site, site.replace("站", ""))
+        topic_en = TOPIC_EN.get(topic, topic)
+        # Use hash of Chinese template to pick a stable English variant
+        import hashlib
+        h = int(hashlib.md5(template.encode()).hexdigest(), 16)
 
-    elif language == "中英双语":
-        # Keep Chinese, add English version after
-        EN_MAP = {
-            "亚马逊": "Amazon", "跨境电商": "cross-border ecommerce",
-            "全球开店": "Global Selling", "选品": "product selection",
-            "物流": "logistics", "广告": "advertising", "合规": "compliance",
-        }
-        en_query = query
-        for zh, en in EN_MAP.items():
-            en_query = en_query.replace(zh, en)
-        query = query + " / " + en_query
+        en_patterns = [
+            f"How to sell on Amazon {site_en} as a new seller",
+            f"Amazon {site_en} {topic_en} complete guide 2026",
+            f"What do I need to start selling on Amazon {site_en}",
+            f"Amazon {site_en} seller fees and costs breakdown",
+            f"Is it worth selling on Amazon {site_en} in 2026",
+            f"How to register as Amazon {site_en} seller step by step",
+            f"Amazon {site_en} FBA vs FBM which is better",
+            f"Best {topic_en} strategies for Amazon {site_en}",
+            f"How much does it cost to sell on Amazon {site_en}",
+            f"Amazon {site_en} {topic_en} tips for beginners",
+            f"How to do {topic_en} on Amazon {site_en} marketplace",
+            f"Amazon {site_en} seller registration requirements 2026",
+            f"How to optimize {topic_en} on Amazon {site_en}",
+            f"Amazon Global Selling {site_en} marketplace overview",
+            f"Common mistakes new Amazon {site_en} sellers make",
+        ]
+        return en_patterns[h % len(en_patterns)]
 
-    return query
+    else:
+        # Chinese or bilingual — fill Chinese template
+        query = template
+        query = query.replace("{站点}", site.replace("站", ""))
+        query = query.replace("{内容分类}", topic)
+        query = query.replace("{企业类型}", enterprise if enterprise else "中国卖家")
+        query = query.replace("{发货方式}", delivery if delivery else "FBA")
+        query = query.replace("{年销售额}", "")
+        query = query.replace("{竞品}", "Shopee")
+        query = query.replace("{年份}", "2026")
+        return query.strip()
 
 
 def run_persona_prediction(
