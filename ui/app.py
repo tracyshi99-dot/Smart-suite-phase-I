@@ -1737,7 +1737,8 @@ elif _page_idx == 3:
                 if result['articles_generated'] > 0:
                     st.success(f"✅ +{result['articles_generated']} {'articles' if is_en else '篇'}")
                 else:
-                    st.warning("⚠️ API called successfully but generated 0 articles. Possible causes: API returned empty/error response, or all selected queries failed." if is_en else "⚠️ API 调用成功但生成 0 篇。可能原因：API 返回空内容，或所有短语处理失败。")
+                    err_detail = result.get('error_details', '')
+                    st.warning(f"⚠️ Generated 0 articles. {err_detail}" if err_detail else "⚠️ API called successfully but generated 0 articles. Possible causes: API returned empty/error response, or all selected queries failed.")
             else:
                 st.error(f"❌ {'Failed' if is_en else '失败'}: {result['error']}")
         except ImportError:
