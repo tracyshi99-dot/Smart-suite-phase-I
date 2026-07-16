@@ -196,7 +196,12 @@ def load_csv_safe(path: Path):
     """Load CSV with robust error handling for malformed files."""
     if path.exists():
         try:
-            return pd.read_csv(path, encoding="utf-8-sig", on_bad_lines="skip")
+            df = pd.read_csv(path, encoding="utf-8-sig", on_bad_lines="skip")
+            # Ensure all columns are object type to avoid Arrow serialization issues
+            for col in df.columns:
+                if df[col].dtype == 'object':
+                    df[col] = df[col].astype(str).replace("nan", "")
+            return df
         except Exception:
             # Fallback: read with Python engine which is more forgiving
             try:
@@ -347,11 +352,11 @@ def get_monthly_metrics():
                     "Total GEO", "Total GEO", "Total GEO", "WW Website Direct", "WW Website Direct", "WW Website Direct",
                     "Total (GEO+Direct)", "Total (GEO+Direct)", "Total (GEO+Direct)"],
         "Type": ["Actual", "PY", "YoY"] * 5,
-        "M1 (Jan)": [89, 13, "+585%", 83, 38, "+118%", 172, 51, "+237%", 4965, 1801, "+176%", 5137, 1852, "+177%"],
-        "M2 (Feb)": [65, 13, "+400%", 51, 51, "+0%", 116, 64, "+81%", 2387, 3056, "-22%", 2503, 3120, "-20%"],
-        "M3 (Mar)": [165, 36, "+358%", 91, 45, "+102%", 256, 81, "+216%", 7267, 4274, "+70%", 7523, 4355, "+73%"],
-        "M4 (Apr)": [164, 30, "+447%", 70, 32, "+119%", 234, 62, "+277%", 7205, 4270, "+69%", 7439, 4332, "+72%"],
-        "M5 (May)": [120, 19, "+532%", 74, 33, "+124%", 194, 52, "+273%", 5330, 3247, "+64%", 5524, 3299, "+67%"],
+        "M1 (Jan)": ["89", "13", "+585%", "83", "38", "+118%", "172", "51", "+237%", "4965", "1801", "+176%", "5137", "1852", "+177%"],
+        "M2 (Feb)": ["65", "13", "+400%", "51", "51", "+0%", "116", "64", "+81%", "2387", "3056", "-22%", "2503", "3120", "-20%"],
+        "M3 (Mar)": ["165", "36", "+358%", "91", "45", "+102%", "256", "81", "+216%", "7267", "4274", "+70%", "7523", "4355", "+73%"],
+        "M4 (Apr)": ["164", "30", "+447%", "70", "32", "+119%", "234", "62", "+277%", "7205", "4270", "+69%", "7439", "4332", "+72%"],
+        "M5 (May)": ["120", "19", "+532%", "74", "33", "+124%", "194", "52", "+273%", "5330", "3247", "+64%", "5524", "3299", "+67%"],
     })
 
 
@@ -2910,8 +2915,8 @@ elif _page_idx == 7:
                         yoy_vals.append(f"{(a-p)/p:+.0%}")
                     else:
                         yoy_vals.append("N/A")
-                rows.append({"Channel": ch_name, "Type": "Actual", **dict(zip(weeks, actual_vals))})
-                rows.append({"Channel": ch_name, "Type": "PY", **dict(zip(weeks, py_vals))})
+                rows.append({"Channel": ch_name, "Type": "Actual", **dict(zip(weeks, [str(v) for v in actual_vals]))})
+                rows.append({"Channel": ch_name, "Type": "PY", **dict(zip(weeks, [str(v) for v in py_vals]))})
                 rows.append({"Channel": ch_name, "Type": "YoY", **dict(zip(weeks, yoy_vals))})
             return pd.DataFrame(rows)
 
