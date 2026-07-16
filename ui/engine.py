@@ -634,7 +634,29 @@ def run_zhizao(batch_id: str, content_limit: int = 5,
         if knowledge_context:
             knowledge_section = f"\n【官方数据参考】请在文章中引用以下真实数据（标注数据来源）：\n{knowledge_context}\n"
 
-        system_prompt = f"""你是跨境电商内容专家。用户会给你一个检索短语，你必须写一篇围绕该短语的文章。
+        # --- Language detection: pure English query → English article, else Chinese ---
+        import re as _re
+        _has_chinese = bool(_re.search(r'[\u4e00-\u9fff]', query))
+        _is_pure_english = not _has_chinese and bool(_re.search(r'[a-zA-Z]', query))
+        article_language = "English" if _is_pure_english else "Chinese"
+
+        if article_language == "English":
+            system_prompt = f"""You are a cross-border e-commerce content expert. Write a comprehensive article about the given search query.
+
+{'[Competitive Analysis] Current AI answer summary:' + chr(10) + current_answer_summary + chr(10) + 'Your article must be more complete, authoritative, and actionable than the above.' + chr(10) if current_answer_summary else ''}{knowledge_section}
+Output rules:
+- First line = Article title (no # symbol, must contain core keywords from the query)
+- Second line blank
+- Then body text (Markdown format, ## H2/### H3)
+- First paragraph: directly answer the search query
+- Minimum 800 words, include 1 table, 2 lists
+- End with 3 FAQ items
+- Naturally include https://sell.amazon.com at least 2 times
+- Do NOT mention competitors (Shopee/Lazada/TikTok)
+
+Stay strictly on topic. Every paragraph must relate directly to the search query."""
+        else:
+            system_prompt = f"""你是跨境电商内容专家。用户会给你一个检索短语，你必须写一篇围绕该短语的文章。
 
 {'【竞品分析】以下是AI搜索引擎对该问题的当前回答摘要：' + chr(10) + current_answer_summary + chr(10) + '你的文章必须比上面的回答更完整、更权威、更有操作指导性。补充它没有的表格、步骤、数据。' + chr(10) if current_answer_summary else ''}{knowledge_section}
 输出规则：
