@@ -150,6 +150,25 @@ def generate_query_from_template(template: str, identity: str, topic: str, site:
         query = query.replace("{年销售额}", "")
         query = query.replace("{竞品}", "Shopee")
         query = query.replace("{年份}", "2026")
+
+        # For bilingual mode: replace brand/product terms with English equivalents
+        if language == "中英双语":
+            BRAND_EN = {
+                "亚马逊": "Amazon", "全球开店": "Global Selling",
+                "亚马逊物流": "FBA", "自发货": "FBM",
+            }
+            SITE_MIX = {
+                "美国": "US", "英国": "UK", "德国": "Germany",
+                "日本": "Japan", "加拿大": "Canada", "法国": "France",
+                "意大利": "Italy", "西班牙": "Spain", "澳洲": "Australia",
+                "阿联酋": "UAE", "沙特": "Saudi Arabia", "巴西": "Brazil",
+                "墨西哥": "Mexico", "印度": "India",
+            }
+            for zh, en in BRAND_EN.items():
+                query = query.replace(zh, en)
+            for zh, en in SITE_MIX.items():
+                query = query.replace(zh, en)
+
         return query.strip()
 
 
