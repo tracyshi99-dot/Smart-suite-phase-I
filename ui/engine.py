@@ -728,7 +728,7 @@ Stay strictly on topic. Every paragraph must relate directly to the search query
         faq_section = faq_match.group(1) if faq_match else ""
 
         return {
-            "content_id": f"C_{keyword_id}_{idx+1:03d}",
+            "content_id": f"C_{keyword_id}_{abs(hash(query)) % 100000:05d}",
             "query_id": query_id,
             "keyword_id": keyword_id,
             "ai_query": query,
@@ -790,8 +790,8 @@ Stay strictly on topic. Every paragraph must relate directly to the search query
     if output_file.exists():
         existing = pd.read_csv(output_file, encoding="utf-8-sig", on_bad_lines="skip")
         combined = pd.concat([existing, df_out], ignore_index=True)
-        if "content_id" in combined.columns:
-            combined = combined.drop_duplicates(subset=["content_id"], keep="last")
+        if "ai_query" in combined.columns:
+            combined = combined.drop_duplicates(subset=["ai_query"], keep="last")
         combined.to_csv(output_file, index=False, encoding="utf-8-sig")
     else:
         df_out.to_csv(output_file, index=False, encoding="utf-8-sig")
