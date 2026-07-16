@@ -785,7 +785,16 @@ Stay strictly on topic. Every paragraph must relate directly to the search query
     # Save as CSV
     df_out = pd.DataFrame(results)
     output_file = output_dir / "zhizao_draft_content.csv"
-    df_out.to_csv(output_file, index=False, encoding="utf-8-sig")
+
+    # Append to existing file (don't overwrite previous batches)
+    if output_file.exists():
+        existing = pd.read_csv(output_file, encoding="utf-8-sig", on_bad_lines="skip")
+        combined = pd.concat([existing, df_out], ignore_index=True)
+        if "content_id" in combined.columns:
+            combined = combined.drop_duplicates(subset=["content_id"], keep="last")
+        combined.to_csv(output_file, index=False, encoding="utf-8-sig")
+    else:
+        df_out.to_csv(output_file, index=False, encoding="utf-8-sig")
 
     if progress_callback:
         progress_callback(1.0, "智造完成 ✅")
