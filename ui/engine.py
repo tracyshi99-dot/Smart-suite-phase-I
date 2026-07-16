@@ -116,8 +116,14 @@ def get_client():
 
 
 def _is_cloud_environment() -> bool:
-    """Always use Qianwen as primary LLM (no AWS credential dependency)."""
-    return True
+    """Detect if running on Streamlit Cloud (no local AWS credentials available)."""
+    import os
+    if os.environ.get("STREAMLIT_SHARING_MODE"):
+        return True
+    aws_creds = Path.home() / ".aws" / "credentials"
+    if not aws_creds.exists():
+        return True
+    return False
 
 
 def call_claude(system_prompt: str, user_prompt: str, max_tokens: int = MAX_TOKENS) -> str:
