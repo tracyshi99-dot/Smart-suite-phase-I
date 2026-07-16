@@ -564,10 +564,12 @@ def run_zhizao(batch_id: str, content_limit: int = 5,
     # --- Helper function for single article generation (enables parallelism) ---
     def _generate_single_article(idx_row_tuple):
         idx, row = idx_row_tuple
-        query = row.get("ai_query", "")
-        keyword = row.get("keyword", "")
-        keyword_id = row.get("keyword_id", "")
-        query_id = row.get("query_id", "")
+        query = str(row.get("ai_query", "")).strip()
+        if not query or query == "nan":
+            return None
+        keyword = str(row.get("keyword", ""))
+        keyword_id = str(row.get("keyword_id", ""))
+        query_id = str(row.get("query_id", ""))
 
         # --- Step A: Pre-research — get current AI answer ---
         current_answer_summary = ""
@@ -764,7 +766,8 @@ Stay strictly on topic. Every paragraph must relate directly to the search query
         for future in as_completed(futures):
             try:
                 result = future.result()
-                results.append(result)
+                if result is not None:
+                    results.append(result)
             except Exception as e:
                 errors.append(str(e)[:100])
             completed += 1
