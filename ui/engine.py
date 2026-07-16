@@ -43,24 +43,31 @@ DEEPSEEK_API_URL = "https://api.deepseek.com/chat/completions"
 
 def _get_deepseek_key():
     """Get DashScope (Qianwen) API key from multiple sources. No caching — always reads fresh."""
+    global DEEPSEEK_API_KEY
+    # If already set by main thread (for parallel workers), use it
+    if DEEPSEEK_API_KEY:
+        return DEEPSEEK_API_KEY
     # Try Streamlit secrets first
     try:
         import streamlit as st
         if hasattr(st, "secrets") and "deepseek" in st.secrets:
-            return st.secrets["deepseek"]["api_key"]
+            DEEPSEEK_API_KEY = st.secrets["deepseek"]["api_key"]
+            return DEEPSEEK_API_KEY
     except Exception:
         pass
     # Try environment variable (DASHSCOPE_API_KEY takes priority)
     import os
     key = os.environ.get("DASHSCOPE_API_KEY", "") or os.environ.get("DEEPSEEK_API_KEY", "")
     if key:
+        DEEPSEEK_API_KEY = key
         return key
     # Try .env file
     env_path = Path(__file__).parent.parent / ".env"
     if env_path.exists():
         for line in env_path.read_text(encoding="utf-8").splitlines():
             if line.startswith("DASHSCOPE_API_KEY=") or line.startswith("DEEPSEEK_API_KEY="):
-                return line.split("=", 1)[1].strip()
+                DEEPSEEK_API_KEY = line.split("=", 1)[1].strip()
+                return DEEPSEEK_API_KEY
     return ""
 
 
@@ -740,6 +747,12 @@ Stay strictly on topic. Every paragraph must relate directly to the search query
 
     MAX_WORKERS = 3  # 3 parallel API calls
     items = list(df_q.iterrows())
+
+    # Pre-fetch API key in main thread (st.secrets not accessible from worker threads)
+    _prefetched_key = _get_deepseek_key()
+    if _prefetched_key:
+        global DEEPSEEK_API_KEY
+        DEEPSEEK_API_KEY = _prefetched_key
 
     if progress_callback:
         progress_callback(0.05, f"正在并行生成 {total} 篇内容（{MAX_WORKERS} 并发）...")
