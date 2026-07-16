@@ -42,31 +42,25 @@ DEEPSEEK_API_URL = "https://api.deepseek.com/chat/completions"
 
 
 def _get_deepseek_key():
-    """Get DashScope (Qianwen) API key from multiple sources."""
-    global DEEPSEEK_API_KEY
-    if DEEPSEEK_API_KEY:
-        return DEEPSEEK_API_KEY
+    """Get DashScope (Qianwen) API key from multiple sources. No caching — always reads fresh."""
     # Try Streamlit secrets first
     try:
         import streamlit as st
         if hasattr(st, "secrets") and "deepseek" in st.secrets:
-            DEEPSEEK_API_KEY = st.secrets["deepseek"]["api_key"]
-            return DEEPSEEK_API_KEY
+            return st.secrets["deepseek"]["api_key"]
     except Exception:
         pass
     # Try environment variable (DASHSCOPE_API_KEY takes priority)
     import os
     key = os.environ.get("DASHSCOPE_API_KEY", "") or os.environ.get("DEEPSEEK_API_KEY", "")
     if key:
-        DEEPSEEK_API_KEY = key
-        return DEEPSEEK_API_KEY
+        return key
     # Try .env file
     env_path = Path(__file__).parent.parent / ".env"
     if env_path.exists():
         for line in env_path.read_text(encoding="utf-8").splitlines():
             if line.startswith("DASHSCOPE_API_KEY=") or line.startswith("DEEPSEEK_API_KEY="):
-                DEEPSEEK_API_KEY = line.split("=", 1)[1].strip()
-                return DEEPSEEK_API_KEY
+                return line.split("=", 1)[1].strip()
     return ""
 
 
