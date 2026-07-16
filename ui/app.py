@@ -876,6 +876,9 @@ elif _page_idx == 1:
         with col_p4_topics:
             p4_topics = st.multiselect("Target Topics" if is_en else "目标话题", _all_topics, default=_all_topics[:5], key="p4_topics")
 
+        # Language selector
+        p4_language = st.radio("Output Language" if is_en else "输出语言", ["中文", "English", "中英双语"], horizontal=True, key="p4_language")
+
         # Run prediction
         if st.button("🧠 Run Persona Prediction" if is_en else "🧠 执行画像推演", type="primary", key="btn_p4_predict"):
             try:
@@ -886,6 +889,7 @@ elif _page_idx == 1:
                         max_queries=p4_max,
                         target_sites=p4_sites if p4_sites else None,
                         target_topics=p4_topics if p4_topics else None,
+                        language=p4_language,
                     )
                 if result["success"]:
                     predictions = result.get("predictions", [])

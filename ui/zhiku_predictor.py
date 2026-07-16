@@ -92,8 +92,9 @@ def get_lifecycle_stage(identity: str) -> str:
 
 
 def generate_query_from_template(template: str, identity: str, topic: str, site: str,
-                                  enterprise: str = "", delivery: str = "") -> str:
-    """Fill in a query template with actual values."""
+                                  enterprise: str = "", delivery: str = "",
+                                  language: str = "中文") -> str:
+    """Fill in a query template with actual values. Supports Chinese, English, or bilingual."""
     query = template
     query = query.replace("{站点}", site.replace("站", ""))
     query = query.replace("{内容分类}", topic)
@@ -102,7 +103,51 @@ def generate_query_from_template(template: str, identity: str, topic: str, site:
     query = query.replace("{年销售额}", "")
     query = query.replace("{竞品}", "Shopee")
     query = query.replace("{年份}", "2026")
-    return query.strip()
+    query = query.strip()
+
+    if language == "English":
+        # Translate to English equivalent
+        EN_MAP = {
+            "亚马逊": "Amazon", "跨境电商": "cross-border e-commerce",
+            "怎么做": "how to", "怎么样": "how is it",
+            "需要什么": "what do I need", "多少钱": "how much does it cost",
+            "注册": "register", "开店": "start selling",
+            "选品": "product selection", "物流": "logistics",
+            "仓储": "warehousing", "广告": "advertising",
+            "合规": "compliance", "品牌": "brand",
+            "新手": "beginner", "指南": "guide",
+            "费用": "fees", "成本": "cost",
+            "技巧": "tips", "策略": "strategy",
+            "美国": "US", "英国": "UK", "德国": "Germany",
+            "日本": "Japan", "加拿大": "Canada", "法国": "France",
+            "意大利": "Italy", "西班牙": "Spain", "澳洲": "Australia",
+            "阿联酋": "UAE", "沙特": "Saudi Arabia", "巴西": "Brazil",
+            "墨西哥": "Mexico", "印度": "India", "北美": "North America",
+            "欧洲": "Europe", "全球开店": "Global Selling",
+            "卖家": "seller", "怎么": "how to",
+            "什么": "what", "哪个好": "which is better",
+            "适合": "suitable for", "优势": "advantages",
+            "难不难": "is it difficult", "赚钱吗": "is it profitable",
+            "竞争大吗": "is it competitive",
+        }
+        for zh, en in EN_MAP.items():
+            query = query.replace(zh, en)
+        # Clean up any remaining Chinese punctuation
+        query = query.replace("？", "?").replace("，", ", ").replace("、", ", ")
+
+    elif language == "中英双语":
+        # Keep Chinese, add English version after
+        EN_MAP = {
+            "亚马逊": "Amazon", "跨境电商": "cross-border ecommerce",
+            "全球开店": "Global Selling", "选品": "product selection",
+            "物流": "logistics", "广告": "advertising", "合规": "compliance",
+        }
+        en_query = query
+        for zh, en in EN_MAP.items():
+            en_query = en_query.replace(zh, en)
+        query = query + " / " + en_query
+
+    return query
 
 
 def run_persona_prediction(
@@ -110,6 +155,7 @@ def run_persona_prediction(
     max_queries: int = 50,
     target_sites: list = None,
     target_topics: list = None,
+    language: str = "中文",
     progress_callback: Optional[Callable] = None,
 ) -> dict:
     """
@@ -118,6 +164,7 @@ def run_persona_prediction(
     Args:
         priority_level: "P0" (top), "P1", "P2", or "ALL"
         max_queries: Maximum number of queries to generate
+        language: "中文", "English", or "中英双语"
         target_sites: Filter to specific sites (None = all)
         target_topics: Filter to specific topics (None = all)
         progress_callback: Optional progress callback
@@ -201,7 +248,7 @@ def run_persona_prediction(
                     for delivery in dlv_list:
                         for template in stage_templates:
                             query = generate_query_from_template(
-                                template, identity, topic, site, enterprise, delivery
+                                template, identity, topic, site, enterprise, delivery, language
                             )
                             if len(query) > 5:
                                 all_predictions.append({
