@@ -99,20 +99,33 @@ USER_ACTIONS_FILE = USER_DIR / "actions.json"
 st.caption(f"👤 当前用户: **{user_login}** | 数据目录: `output/requests/{user_login}/`")
 st.divider()
 
-# --- Tabs (flow order) ---
-tab_test, tab_opps, tab_execute, tab_status, tab_dashboard = st.tabs([
-    "🔬 ① 执行测试",
-    "💡 ② 机会点分析",
-    "🚀 ③ 执行机会点",
-    "📋 ④ 执行状态",
-    "🔄 ⑤ 闭环看板",
-])
+# --- Step navigation (supports auto-jump) ---
+STEPS = ["🔬 ① 执行测试", "💡 ② 机会点分析", "🚀 ③ 执行机会点", "📋 ④ 执行状态", "🔄 ⑤ 闭环看板"]
+
+# Check if we need to auto-jump
+if "current_step" not in st.session_state:
+    st.session_state["current_step"] = 0
+
+# Step selector (horizontal buttons)
+step_cols = st.columns(5)
+for i, step_name in enumerate(STEPS):
+    with step_cols[i]:
+        is_active = (st.session_state["current_step"] == i)
+        btn_type = "primary" if is_active else "secondary"
+        if st.button(step_name.split(" ")[1], key=f"step_nav_{i}", type=btn_type, use_container_width=True):
+            st.session_state["current_step"] = i
+            st.rerun()
+
+st.markdown(f"**{STEPS[st.session_state['current_step']]}**")
+st.divider()
+
+current_step = st.session_state["current_step"]
 
 
 # ============================================================
-# TAB 1: 执行测试
+# STEP 1: 执行测试
 # ============================================================
-with tab_test:
+if current_step == 0:
     st.markdown("### 🔬 执行测试")
     st.caption("AI 测试 / 手动上传话题 / 手动上传内容")
 
@@ -275,17 +288,15 @@ with tab_test:
             shared_file.write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
             log_action(user_login, "test_executed", f"topic={topic}, queries={len(queries)}")
 
-            st.success(f"✅ 测试完成！{len(results)} 条结果已保存。请前往「② 机会点分析」查看。")
+            st.success(f"✅ 测试完成！{len(results)} 条结果已保存。")
             for r in results:
                 icon = "✅" if r.get("has_official_link") else "❌"
                 st.markdown(f"{icon} **{r['query']}** ({PLATFORMS.get(r.get('platform',''), r.get('platform',''))}) — {r.get('answer_length',0)} chars")
 
-            # CTA to next step
+            # Auto-jump CTA
             st.divider()
             if st.button("➡️ 下一步：查看机会点分析", type="primary", key="cta_to_step2"):
-                st.session_state["active_tab"] = 1
-                # Switch to tab 2 by using query params
-                st.query_params["step"] = "2"
+                st.session_state["current_step"] = 1
                 st.rerun()
 
     # --- Sub-tab: 上传话题 ---
@@ -430,9 +441,9 @@ with tab_test:
 
 
 # ============================================================
-# TAB 2: 机会点分析
+# STEP 2: 机会点分析
 # ============================================================
-with tab_opps:
+if current_step == 1:
     st.markdown("### 💡 机会点分析")
     st.caption("基于测试结果，分析缺口和改善机会，确认哪些需要行动")
 
@@ -490,20 +501,23 @@ with tab_opps:
             if st.button("✅ 确认机会点，进入执行", type="primary", key="confirm_opps"):
                 USER_OPPS_FILE.write_text(json.dumps(opp_list, ensure_ascii=False, indent=2), encoding="utf-8")
                 log_action(user_login, "opps_confirmed", f"count={len(opp_list)}")
-                st.success(f"✅ 已确认 {len(opp_list)} 个机会点！请点击上方「③ 执行机会点」标签。")
+                st.session_state["current_step"] = 2
+                st.rerun()
 
             # CTA
             if USER_OPPS_FILE.exists():
                 st.divider()
-                st.info("💡 已有确认的机会点？点击上方「③ 执行机会点」标签开始产出内容。")
+                if st.button("➡️ 下一步：执行机会点", type="primary", key="cta_to_step3"):
+                    st.session_state["current_step"] = 2
+                    st.rerun()
         else:
             st.success("🎉 全部覆盖，无缺口！无需额外行动。")
 
 
 # ============================================================
-# TAB 3: 执行机会点
+# STEP 3: 执行机会点
 # ============================================================
-with tab_execute:
+if current_step == 2:
     st.markdown("### 🚀 执行机会点")
     st.caption("针对确认的缺口，产出内容 → 优化 → 准备发布")
 
@@ -595,8 +609,9 @@ with tab_execute:
                         log_action(user_login, "opps_executed", f"batch={batch}, count={articles}")
                         st.success(f"✅ 完成！生成 {articles} 篇，已优化。")
                         st.divider()
-                        st.info("💡 查看执行状态和闭环效果？点击上方「④ 执行状态」或「⑤ 闭环看板」标签。")
-                        st.rerun()
+                        if st.button("➡️ 下一步：查看执行状态", type="primary", key="cta_to_step4"):
+                            st.session_state["current_step"] = 3
+                            st.rerun()
                     else:
                         st.error(f"❌ 失败: {r1.get('error', '')}")
                 except Exception as e:
@@ -606,9 +621,9 @@ with tab_execute:
 
 
 # ============================================================
-# TAB 4: 执行状态
+# STEP 4: 执行状态
 # ============================================================
-with tab_status:
+if current_step == 3:
     st.markdown("### 📋 执行状态")
     st.caption("查看机会点执行进展和内容产出状态")
 
@@ -655,9 +670,9 @@ with tab_status:
 
 
 # ============================================================
-# TAB 5: 闭环看板（放最后）
+# STEP 5: 闭环看板（放最后）
 # ============================================================
-with tab_dashboard:
+if current_step == 4:
     st.markdown("### 🔄 闭环看板")
     st.caption("整体效果：测试 → 缺口 → 行动 → 结果")
 
