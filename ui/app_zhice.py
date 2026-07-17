@@ -101,18 +101,19 @@ st.divider()
 
 # --- Step navigation (supports auto-jump) ---
 STEPS = ["🔬 ① 执行测试", "💡 ② 机会点分析", "🚀 ③ 执行机会点", "📋 ④ 执行状态", "🔄 ⑤ 闭环看板"]
+STEP_SHORT = ["① 执行测试", "② 机会点", "③ 执行", "④ 状态", "⑤ 看板"]
 
 # Check if we need to auto-jump
 if "current_step" not in st.session_state:
     st.session_state["current_step"] = 0
 
-# Step selector (horizontal buttons)
+# Step selector (horizontal buttons with full names)
 step_cols = st.columns(5)
 for i, step_name in enumerate(STEPS):
     with step_cols[i]:
         is_active = (st.session_state["current_step"] == i)
         btn_type = "primary" if is_active else "secondary"
-        if st.button(step_name.split(" ")[1], key=f"step_nav_{i}", type=btn_type, use_container_width=True):
+        if st.button(STEP_SHORT[i], key=f"step_nav_{i}", type=btn_type, use_container_width=True):
             st.session_state["current_step"] = i
             st.rerun()
 
@@ -129,8 +130,8 @@ if current_step == 0:
     st.markdown("### 🔬 执行测试")
     st.caption("AI 测试 / 手动上传话题 / 手动上传内容")
 
-    sub_tab_ai, sub_tab_topic, sub_tab_content = st.tabs([
-        "🤖 AI 测试", "📋 上传话题", "📄 上传内容"
+    sub_tab_ai, sub_tab_topic = st.tabs([
+        "🤖 AI 测试", "📋 上传话题"
     ])
 
     # --- Sub-tab: AI 测试 ---
@@ -353,91 +354,6 @@ if current_step == 0:
                 log_action(user_login, "topics_manual", f"count={len(lines)}")
                 st.success(f"✅ 已提交 {len(lines)} 个话题！")
 
-    # --- Sub-tab: 上传内容 ---
-    with sub_tab_content:
-        st.caption("上传已有的内容文章，直接跳过生产步骤进入优化/发布")
-
-        st.markdown("**上传 CSV 格式内容**")
-        st.caption("CSV 建议包含列：`ai_query`, `title`, `content_draft`（至少有 content 或 title）")
-        uploaded_content = st.file_uploader("上传内容 CSV", type=["csv"], key="upload_content")
-        if uploaded_content:
-            try:
-                df_content_up = pd.read_csv(uploaded_content, encoding="utf-8-sig", on_bad_lines="skip")
-                st.dataframe(df_content_up.head(5), use_container_width=True, hide_index=True)
-                st.caption(f"预览前 5 行（共 {len(df_content_up)} 行）")
-
-                if st.button("✅ 确认上传到产出库", key="confirm_content_upload"):
-                    batch = get_batches()[0]
-                    zhizao_file = OUTPUT_PATH / batch / "02_zhizao" / "zhizao_draft_content.csv"
-                    zhizao_file.parent.mkdir(parents=True, exist_ok=True)
-
-                    # Normalize columns
-                    col_map = {"content": "content_draft", "article": "content_draft",
-                               "body": "content_draft", "query": "ai_query"}
-                    for old, new in col_map.items():
-                        if old in df_content_up.columns and new not in df_content_up.columns:
-                            df_content_up = df_content_up.rename(columns={old: new})
-
-                    # Add metadata
-                    if "content_id" not in df_content_up.columns:
-                        df_content_up["content_id"] = [f"UPLOAD_{user_login}_{i:03d}" for i in range(len(df_content_up))]
-                    if "version" not in df_content_up.columns:
-                        df_content_up["version"] = "uploaded"
-                    if "word_count" not in df_content_up.columns and "content_draft" in df_content_up.columns:
-                        df_content_up["word_count"] = df_content_up["content_draft"].astype(str).str.len()
-
-                    # Append to existing
-                    if zhizao_file.exists() and zhizao_file.stat().st_size > 0:
-                        try:
-                            existing = pd.read_csv(zhizao_file, encoding="utf-8-sig", on_bad_lines="skip")
-                            combined = pd.concat([existing, df_content_up], ignore_index=True)
-                            combined.to_csv(zhizao_file, index=False, encoding="utf-8-sig")
-                        except Exception:
-                            df_content_up.to_csv(zhizao_file, index=False, encoding="utf-8-sig")
-                    else:
-                        df_content_up.to_csv(zhizao_file, index=False, encoding="utf-8-sig")
-
-                    log_action(user_login, "content_uploaded", f"batch={batch}, count={len(df_content_up)}")
-                    st.success(f"✅ 已上传 {len(df_content_up)} 篇内容到 {batch}！可直接在「③ 执行机会点」中进行优化。")
-            except Exception as e:
-                st.error(f"上传失败: {str(e)}")
-
-        st.divider()
-        st.markdown("**手动粘贴单篇内容**")
-        paste_title = st.text_input("文章标题", key="paste_title", placeholder="e.g. 亚马逊FBA完全指南")
-        paste_query = st.text_input("对应问句", key="paste_query", placeholder="e.g. 亚马逊FBA是什么？")
-        paste_content = st.text_area("文章内容", height=200, key="paste_content", placeholder="粘贴完整文章...")
-
-        if st.button("✅ 提交单篇内容", key="submit_paste"):
-            if paste_content.strip():
-                batch = get_batches()[0]
-                zhizao_file = OUTPUT_PATH / batch / "02_zhizao" / "zhizao_draft_content.csv"
-                zhizao_file.parent.mkdir(parents=True, exist_ok=True)
-
-                ts = datetime.now().strftime('%Y%m%d_%H%M%S')
-                new_row = pd.DataFrame([{
-                    "content_id": f"PASTE_{user_login}_{ts}",
-                    "ai_query": paste_query or paste_title,
-                    "title": paste_title or "Untitled",
-                    "content_draft": paste_content,
-                    "word_count": len(paste_content),
-                    "version": "uploaded",
-                }])
-
-                if zhizao_file.exists() and zhizao_file.stat().st_size > 0:
-                    try:
-                        existing = pd.read_csv(zhizao_file, encoding="utf-8-sig", on_bad_lines="skip")
-                        combined = pd.concat([existing, new_row], ignore_index=True)
-                        combined.to_csv(zhizao_file, index=False, encoding="utf-8-sig")
-                    except Exception:
-                        new_row.to_csv(zhizao_file, index=False, encoding="utf-8-sig")
-                else:
-                    new_row.to_csv(zhizao_file, index=False, encoding="utf-8-sig")
-
-                log_action(user_login, "content_pasted", f"title={paste_title}")
-                st.success("✅ 单篇内容已提交！")
-            else:
-                st.warning("请输入内容。")
 
 
 # ============================================================
@@ -519,11 +435,137 @@ if current_step == 1:
 # ============================================================
 if current_step == 2:
     st.markdown("### 🚀 执行机会点")
-    st.caption("针对确认的缺口，产出内容 → 优化 → 准备发布")
+    st.caption("产出内容 / 上传已有文章（自动匹配机会点）→ 优化 → 发布")
 
     # Load opportunities
     opps = json.loads(USER_OPPS_FILE.read_text(encoding="utf-8")) if USER_OPPS_FILE.exists() else []
 
+    # --- Upload section: upload existing articles to match opportunities ---
+    with st.expander("📄 上传已有文章（自动匹配机会点）", expanded=False):
+        st.caption("上传已有内容 → 系统自动匹配对应的检索短语 → 匹配成功的直接进入优化流程")
+
+        upload_mode = st.radio("上传方式", ["CSV 批量上传", "手动粘贴"], horizontal=True, key="upload_mode_s3")
+
+        if upload_mode == "CSV 批量上传":
+            uploaded_content = st.file_uploader("上传内容 CSV", type=["csv"], key="upload_content_s3",
+                                               help="建议包含列：title, content_draft (或 content/article/body)")
+            if uploaded_content:
+                try:
+                    df_up = pd.read_csv(uploaded_content, encoding="utf-8-sig", on_bad_lines="skip")
+                    # Normalize columns
+                    col_map = {"content": "content_draft", "article": "content_draft",
+                               "body": "content_draft", "query": "ai_query", "text": "content_draft"}
+                    for old, new in col_map.items():
+                        if old in df_up.columns and new not in df_up.columns:
+                            df_up = df_up.rename(columns={old: new})
+
+                    st.dataframe(df_up.head(3), use_container_width=True, hide_index=True)
+
+                    # Smart matching: match uploaded content to opportunity queries
+                    if opps and "content_draft" in df_up.columns:
+                        st.markdown("**🔍 自动匹配结果：**")
+                        pending_queries = [o["query"] for o in opps if o.get("status") == "待执行"]
+                        matched = []
+                        unmatched = []
+
+                        for _, row in df_up.iterrows():
+                            content = str(row.get("content_draft", ""))
+                            title = str(row.get("title", row.get("ai_query", "")))
+                            # Try to match against pending opportunity queries
+                            best_match = None
+                            for pq in pending_queries:
+                                # Simple keyword matching
+                                keywords = [w for w in pq.replace("？", "").replace("?", "").split() if len(w) > 1]
+                                if not keywords:
+                                    keywords = [pq[:8]]
+                                match_score = sum(1 for kw in keywords if kw in content or kw in title)
+                                if match_score >= max(1, len(keywords) // 2):
+                                    best_match = pq
+                                    break
+                            if best_match:
+                                matched.append({"title": title[:50], "matched_query": best_match, "status": "✅ 匹配"})
+                            else:
+                                unmatched.append({"title": title[:50], "status": "⚠️ 未匹配"})
+
+                        if matched:
+                            st.success(f"✅ 匹配成功 {len(matched)} 篇 — 可直接进入优化")
+                            st.dataframe(pd.DataFrame(matched), use_container_width=True, hide_index=True)
+                        if unmatched:
+                            st.warning(f"⚠️ 未匹配 {len(unmatched)} 篇 — 将作为额外内容上传")
+
+                    if st.button("✅ 确认上传并标记完成", type="primary", key="confirm_upload_s3"):
+                        batch = get_batches()[0]
+                        zhizao_file = OUTPUT_PATH / batch / "02_zhizao" / "zhizao_draft_content.csv"
+                        zhizao_file.parent.mkdir(parents=True, exist_ok=True)
+
+                        if "content_id" not in df_up.columns:
+                            df_up["content_id"] = [f"UPLOAD_{user_login}_{i:03d}" for i in range(len(df_up))]
+                        if "version" not in df_up.columns:
+                            df_up["version"] = "uploaded"
+                        if "word_count" not in df_up.columns and "content_draft" in df_up.columns:
+                            df_up["word_count"] = df_up["content_draft"].astype(str).str.len()
+
+                        if zhizao_file.exists() and zhizao_file.stat().st_size > 0:
+                            try:
+                                existing = pd.read_csv(zhizao_file, encoding="utf-8-sig", on_bad_lines="skip")
+                                combined = pd.concat([existing, df_up], ignore_index=True)
+                                combined.to_csv(zhizao_file, index=False, encoding="utf-8-sig")
+                            except Exception:
+                                df_up.to_csv(zhizao_file, index=False, encoding="utf-8-sig")
+                        else:
+                            df_up.to_csv(zhizao_file, index=False, encoding="utf-8-sig")
+
+                        # Mark matched opportunities as done
+                        if opps and matched:
+                            matched_queries = {m["matched_query"] for m in matched}
+                            for o in opps:
+                                if o["query"] in matched_queries and o.get("status") == "待执行":
+                                    o["status"] = "已完成(上传)"
+                                    o["completed_at"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+                            USER_OPPS_FILE.write_text(json.dumps(opps, ensure_ascii=False, indent=2), encoding="utf-8")
+
+                        log_action(user_login, "content_uploaded_s3", f"count={len(df_up)}, matched={len(matched) if 'matched' in dir() else 0}")
+                        st.success(f"✅ 上传 {len(df_up)} 篇！匹配的机会点已标记完成，可直接走优化流程。")
+                        st.rerun()
+                except Exception as e:
+                    st.error(f"上传失败: {str(e)}")
+
+        else:  # 手动粘贴
+            paste_title = st.text_input("文章标题", key="paste_title_s3")
+            paste_content = st.text_area("文章内容", height=150, key="paste_content_s3")
+            if st.button("✅ 提交", key="submit_paste_s3"):
+                if paste_content.strip():
+                    batch = get_batches()[0]
+                    zhizao_file = OUTPUT_PATH / batch / "02_zhizao" / "zhizao_draft_content.csv"
+                    zhizao_file.parent.mkdir(parents=True, exist_ok=True)
+                    ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    new_row = pd.DataFrame([{"content_id": f"PASTE_{user_login}_{ts}",
+                                             "ai_query": paste_title, "title": paste_title or "Untitled",
+                                             "content_draft": paste_content, "word_count": len(paste_content), "version": "uploaded"}])
+                    if zhizao_file.exists() and zhizao_file.stat().st_size > 0:
+                        try:
+                            existing = pd.read_csv(zhizao_file, encoding="utf-8-sig", on_bad_lines="skip")
+                            pd.concat([existing, new_row], ignore_index=True).to_csv(zhizao_file, index=False, encoding="utf-8-sig")
+                        except Exception:
+                            new_row.to_csv(zhizao_file, index=False, encoding="utf-8-sig")
+                    else:
+                        new_row.to_csv(zhizao_file, index=False, encoding="utf-8-sig")
+
+                    # Try to match and mark opportunity
+                    for o in opps:
+                        if o.get("status") == "待执行":
+                            if any(kw in paste_content or kw in paste_title for kw in o["query"].replace("？","").split() if len(kw) > 1):
+                                o["status"] = "已完成(上传)"
+                                o["completed_at"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+                                break
+                    USER_OPPS_FILE.write_text(json.dumps(opps, ensure_ascii=False, indent=2), encoding="utf-8")
+                    log_action(user_login, "content_pasted_s3", f"title={paste_title}")
+                    st.success("✅ 已提交！匹配的机会点已标记完成。")
+                    st.rerun()
+
+    st.divider()
+
+    # --- Original execution logic ---
     if not opps:
         st.info("暂无机会点。请先在「② 机会点分析」中确认机会点。")
     else:
