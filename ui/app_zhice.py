@@ -275,6 +275,7 @@ if current_step == 0:
 
             prog.progress(1.0)
             st.session_state["test_running"] = False
+            st.session_state["test_just_completed"] = True
 
             # Save to user directory
             ts = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -294,11 +295,13 @@ if current_step == 0:
                 icon = "✅" if r.get("has_official_link") else "❌"
                 st.markdown(f"{icon} **{r['query']}** ({PLATFORMS.get(r.get('platform',''), r.get('platform',''))}) — {r.get('answer_length',0)} chars")
 
-            # Auto-jump CTA
-            st.divider()
-            if st.button("➡️ 下一步：查看机会点分析", type="primary", key="cta_to_step2"):
-                st.session_state["current_step"] = 1
-                st.rerun()
+    # Persistent CTA: show when user has test results
+    _user_has_tests = USER_TESTS_FILE.exists() and USER_TESTS_FILE.stat().st_size > 2
+    if _user_has_tests:
+        st.divider()
+        if st.button("➡️ 下一步：查看机会点分析", type="primary", key="cta_to_step2"):
+            st.session_state["current_step"] = 1
+            st.rerun()
 
     # --- Sub-tab: 上传话题 ---
     with sub_tab_topic:
