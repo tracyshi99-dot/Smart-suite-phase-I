@@ -247,8 +247,8 @@ with tab_test:
                         try:
                             r = api_func(query)
                             answer = r.get("full_answer", "")
-                            has_gs = "gs.amazon" in answer.lower() or "globalselling" in answer.lower() or "amazon.cn" in answer.lower() or "sell.amazon" in answer.lower() or "sellercentral" in answer.lower()
-                            has_brand = any(kw in answer for kw in ["全球开店", "Global Selling", "亚马逊全球开店", "Amazon Global Selling", "gs.amazon.cn", "卖家平台", "Seller Central", "亚马逊官方", "Amazon官方"])
+                            has_gs = ".amazon" in answer.lower()
+                            has_brand = "亚马逊" in answer or "amazon" in answer.lower()
                             results.append({"query": query, "platform": plat, "answer": answer,
                                             "answer_length": len(answer), "has_official_link": has_gs,
                                             "has_brand_mention": has_brand,

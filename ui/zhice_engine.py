@@ -831,8 +831,8 @@ def run_zhice_journey(persona_name: str, persona_goal: str, platforms: list, rou
                 try:
                     r = api_func(query)
                     answer = r.get("full_answer", "")
-                    has_gs = "gs.amazon" in answer.lower() or "globalselling" in answer.lower() or "amazon.cn" in answer.lower() or "sell.amazon" in answer.lower() or "sellercentral" in answer.lower()
-                    has_brand = any(kw in answer for kw in ["全球开店", "Global Selling", "亚马逊全球开店", "Amazon Global Selling", "gs.amazon.cn", "卖家平台", "Seller Central", "亚马逊官方", "Amazon官方"])
+                    has_gs = ".amazon" in answer.lower()
+                    has_brand = "亚马逊" in answer or "amazon" in answer.lower()
                     
                     round_results["results"][platform] = {
                         "query": query,
