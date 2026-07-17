@@ -122,7 +122,7 @@ with tab_test:
 
     # --- Sub-tab: AI 测试 ---
     with sub_tab_ai:
-        st.caption("输入产品/话题 → AI 裂变短语（或引用智库） → 测试 → 查看覆盖结果")
+        st.caption("输入产品/话题 → 自动引用智库 + AI 裂变补充 → 测试 → 查看覆盖结果")
         col_cfg, col_q = st.columns([1, 1.5])
 
         with col_cfg:
@@ -130,72 +130,104 @@ with tab_test:
             sim_platforms = st.multiselect("测试平台", list(PLATFORMS.keys()),
                                            default=["qianwen"],
                                            format_func=lambda x: PLATFORMS[x], key="sim_plat")
-            num_q = st.slider("裂变短语数量", 3, 30, 10, key="sim_num")
+            num_q = st.slider("总短语数量", 3, 30, 10, key="sim_num")
 
-            # Check if zhiku has relevant phrases
-            zhiku_matches = []
-            if topic:
-                for batch_dir in sorted(OUTPUT_PATH.iterdir(), reverse=True):
-                    if batch_dir.is_dir() and batch_dir.name.startswith("batch_"):
-                        zhiku_file = batch_dir / "01_zhiku" / "zhiku_ai_queries.csv"
-                        if zhiku_file.exists():
-                            df_zk = load_csv_safe(zhiku_file)
-                            if not df_zk.empty and "ai_query" in df_zk.columns:
-                                matches = df_zk[df_zk["ai_query"].astype(str).str.contains(topic, case=False, na=False)]
-                                if not matches.empty:
-                                    zhiku_matches = matches["ai_query"].tolist()[:30]
-                            break  # Only check latest batch
-
-            gen_mode = st.radio("生成方式", ["🤖 AI 裂变", "📚 引用智库"] if zhiku_matches else ["🤖 AI 裂变"],
-                                key="gen_mode", horizontal=True)
-
-            if zhiku_matches and gen_mode == "📚 引用智库":
-                st.success(f"✅ 智库中找到 {len(zhiku_matches)} 条相关短语")
-
-            if st.button("🎯 生成短语", key="gen_q"):
+            if st.button("🎯 生成短语（智库优先 + AI 裂变补充）", key="gen_q"):
                 if topic:
-                    if gen_mode == "📚 引用智库" and zhiku_matches:
-                        st.session_state["sim_queries"] = zhiku_matches[:num_q]
-                    else:
-                        # AI裂变：用 LLM 生成更多变体
+                    final_queries = []
+
+                    # Step 1: 从智库引用已有短语
+                    zhiku_matches = []
+                    for batch_dir in sorted(OUTPUT_PATH.iterdir(), reverse=True):
+                        if batch_dir.is_dir() and batch_dir.name.startswith("batch_"):
+                            zhiku_file = batch_dir / "01_zhiku" / "zhiku_ai_queries.csv"
+                            if zhiku_file.exists():
+                                df_zk = load_csv_safe(zhiku_file)
+                                if not df_zk.empty and "ai_query" in df_zk.columns:
+                                    matches = df_zk[df_zk["ai_query"].astype(str).str.contains(topic, case=False, na=False)]
+                                    if not matches.empty:
+                                        zhiku_matches = matches["ai_query"].tolist()
+                                break
+
+                    if zhiku_matches:
+                        final_queries.extend(zhiku_matches[:num_q])
+                        st.success(f"📚 智库引用 {len(final_queries)} 条已有短语")
+
+                    # Step 2: AI 裂变补充到目标数量
+                    remaining = num_q - len(final_queries)
+                    if remaining > 0:
                         try:
                             from engine import call_bedrock_claude
-                            prompt = f"""请为话题「{topic}」生成 {num_q} 个中国卖家可能在 AI 搜索引擎中输入的口语化检索短语。
+                            existing_str = "\n".join(final_queries) if final_queries else "无"
+                            prompt = f"""请为话题「{topic}」生成 {remaining} 个中国卖家可能在 AI 搜索引擎中输入的口语化检索短语。
+
+已有短语（不要重复）：
+{existing_str}
 
 要求：
-1. 覆盖不同角度：是什么、怎么做、费用、优势、对比、问题、流程、最新变化等
-2. 语言自然口语化，像真人提问
-3. 包含长尾变体（如"新手""2026""中国卖家"等修饰词）
-4. 每行一条，不要编号
+1. 不要重复已有短语的意思
+2. 覆盖不同角度：是什么、怎么做、费用、优势、对比、问题、流程、最新变化等
+3. 语言自然口语化，像真人提问
+4. 包含长尾变体（如"新手""2026""中国卖家"等修饰词）
+5. 每行一条，不要编号
 
 直接输出短语，不要其他解释。"""
-                            with st.spinner("AI 裂变中..."):
+                            with st.spinner(f"AI 裂变补充 {remaining} 条..."):
                                 response = call_bedrock_claude(prompt)
-                            queries = [q.strip().lstrip("0123456789.-、）) ") for q in response.strip().split("\n")
-                                       if q.strip() and len(q.strip()) > 4]
-                            st.session_state["sim_queries"] = queries[:num_q]
+                            new_queries = [q.strip().lstrip("0123456789.-、）) ") for q in response.strip().split("\n")
+                                           if q.strip() and len(q.strip()) > 4]
+                            final_queries.extend(new_queries[:remaining])
+                            st.info(f"🤖 AI 裂变补充 {min(len(new_queries), remaining)} 条")
                         except Exception as e:
                             # Fallback to template
-                            st.warning(f"AI 裂变失败({str(e)[:50]}), 使用模板生成")
-                            base = [f"{topic}是什么？", f"{topic}怎么使用？", f"{topic}费用多少？",
-                                    f"{topic}有什么优势？", f"{topic}和竞品有什么区别？",
-                                    f"{topic}常见问题有哪些？", f"中国卖家如何使用{topic}？",
-                                    f"{topic}新手入门指南", f"{topic}最新政策", f"{topic}操作流程",
-                                    f"{topic}注意事项", f"{topic}成功案例",
-                                    f"2026年{topic}有什么变化？", f"{topic}适合新手吗？",
-                                    f"{topic}和自发货哪个好？"]
-                            st.session_state["sim_queries"] = base[:num_q]
+                            fallback = [f"{topic}是什么？", f"{topic}怎么使用？", f"{topic}费用多少？",
+                                        f"{topic}有什么优势？", f"{topic}和竞品有什么区别？",
+                                        f"{topic}常见问题有哪些？", f"中国卖家如何使用{topic}？",
+                                        f"{topic}新手入门指南", f"{topic}最新政策", f"{topic}操作流程",
+                                        f"{topic}注意事项", f"{topic}成功案例",
+                                        f"2026年{topic}有什么变化？", f"{topic}适合新手吗？"]
+                            # Remove duplicates with existing
+                            fallback = [q for q in fallback if q not in final_queries]
+                            final_queries.extend(fallback[:remaining])
+                            st.warning(f"AI 不可用，模板补充 {min(len(fallback), remaining)} 条")
+
+                    st.session_state["sim_queries"] = final_queries[:num_q]
 
         with col_q:
             if "sim_queries" in st.session_state and st.session_state["sim_queries"]:
-                st.markdown("**问题列表（可编辑）：**")
+                st.markdown(f"**短语列表（{len(st.session_state['sim_queries'])} 条，可编辑）：**")
                 edited = []
                 for i, q in enumerate(st.session_state["sim_queries"]):
                     edited.append(st.text_input(f"Q{i+1}", value=q, key=f"sq_{i}"))
                 st.session_state["sim_queries_final"] = edited
 
-                if st.button("✅ 确认并执行测试", type="primary", key="run_test"):
-                    st.session_state["test_running"] = True
+                # Continue expansion button
+                col_more, col_run = st.columns(2)
+                with col_more:
+                    more_count = st.number_input("追加裂变数量", 3, 20, 5, key="more_count")
+                    if st.button("➕ 继续裂变", key="more_expand"):
+                        try:
+                            from engine import call_bedrock_claude
+                            existing_str = "\n".join(edited)
+                            topic_val = st.session_state.get("sim_topic", "")
+                            prompt = f"""请为话题「{topic_val}」再生成 {more_count} 个检索短语。
+
+已有短语（不要重复）：
+{existing_str}
+
+要求：与已有短语不重复，覆盖新角度，口语化，每行一条，不要编号。"""
+                            with st.spinner(f"继续裂变 {more_count} 条..."):
+                                response = call_bedrock_claude(prompt)
+                            new_qs = [q.strip().lstrip("0123456789.-、）) ") for q in response.strip().split("\n")
+                                      if q.strip() and len(q.strip()) > 4 and q.strip() not in edited]
+                            st.session_state["sim_queries"] = edited + new_qs[:more_count]
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"裂变失败: {str(e)[:80]}")
+                with col_run:
+                    st.write("")
+                    if st.button("✅ 确认并执行测试", type="primary", key="run_test"):
+                        st.session_state["test_running"] = True
 
         # Execute test
         if st.session_state.get("test_running") and st.session_state.get("sim_queries_final"):
