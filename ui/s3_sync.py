@@ -22,7 +22,22 @@ def _get_s3():
     if _s3_client is None:
         try:
             import boto3
-            _s3_client = boto3.client("s3", region_name=AWS_REGION)
+
+            # Try Streamlit secrets first (for Cloud deployment)
+            try:
+                import streamlit as st
+                if hasattr(st, "secrets") and "aws" in st.secrets:
+                    aws_secrets = st.secrets["aws"]
+                    os.environ.setdefault("AWS_ACCESS_KEY_ID", aws_secrets.get("AWS_ACCESS_KEY_ID", ""))
+                    os.environ.setdefault("AWS_SECRET_ACCESS_KEY", aws_secrets.get("AWS_SECRET_ACCESS_KEY", ""))
+                    os.environ.setdefault("AWS_DEFAULT_REGION", aws_secrets.get("AWS_DEFAULT_REGION", AWS_REGION))
+                    if "SMARTSUITE_S3_BUCKET" in aws_secrets:
+                        global S3_BUCKET
+                        S3_BUCKET = aws_secrets["SMARTSUITE_S3_BUCKET"]
+            except Exception:
+                pass
+
+            _s3_client = boto3.client("s3", region_name=os.environ.get("AWS_DEFAULT_REGION", AWS_REGION))
             # Quick check: list bucket (will fail if no access)
             _s3_client.head_bucket(Bucket=S3_BUCKET)
         except Exception:
