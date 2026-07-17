@@ -108,13 +108,11 @@ def get_batches():
 
 
 def recompute_detection(r):
-    """Re-compute official link and brand mention from answer + query text."""
+    """Re-compute official link and brand mention from actual AI answer only."""
     answer = r.get("answer", r.get("answer_preview", r.get("full_answer", "")))
-    query = r.get("query", "")
-    # Combine answer + query for detection
-    text = (answer + " " + query).strip()
-    r["has_official_link"] = ".amazon" in text.lower()
-    r["has_brand_mention"] = "亚马逊" in text or "amazon" in text.lower()
+    if answer:
+        r["has_official_link"] = ".amazon" in answer.lower()
+        r["has_brand_mention"] = "亚马逊" in answer or "amazon" in answer.lower()
     return r
 
 
@@ -454,9 +452,9 @@ if current_step == 1:
         df_r = pd.DataFrame([{
             "Query": r.get("query", ""),
             "Platform": PLATFORMS.get(r.get("platform", ""), r.get("platform", "")),
-            "Official Link": "✅" if recompute_detection(r).get("has_official_link") else "❌",
-            "Brand": "✅" if r.get("has_brand_mention") else "❌",
-            "Gap": "⚠️" if not r.get("has_official_link") else "✅",
+            "Official Link": "✅" if recompute_detection(r).get("has_official_link") else ("—" if not r.get("answer") else "❌"),
+            "Brand": "✅" if r.get("has_brand_mention") else ("—" if not r.get("answer") else "❌"),
+            "Gap": "⚠️" if (r.get("answer") and not r.get("has_official_link")) else ("🔬 待测试" if not r.get("answer") else "✅"),
         } for r in results if "error" not in r])
         st.dataframe(df_r, use_container_width=True, hide_index=True)
 
