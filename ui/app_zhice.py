@@ -449,12 +449,18 @@ if current_step == 1:
 
         # Show results table
         st.markdown("**测试结果：**")
+
+        # Debug: show if answers are populated
+        has_answers = sum(1 for r in results if r.get("answer") and len(r.get("answer", "")) > 10)
+        st.caption(f"📊 {has_answers}/{len(results)} 条有真实 AI 回答 | 无回答的显示 '—'")
+
         df_r = pd.DataFrame([{
             "Query": r.get("query", ""),
             "Platform": PLATFORMS.get(r.get("platform", ""), r.get("platform", "")),
             "Official Link": "✅" if recompute_detection(r).get("has_official_link") else ("—" if not r.get("answer") else "❌"),
             "Brand": "✅" if r.get("has_brand_mention") else ("—" if not r.get("answer") else "❌"),
             "Gap": "⚠️" if (r.get("answer") and not r.get("has_official_link")) else ("🔬 待测试" if not r.get("answer") else "✅"),
+            "Answer": (r.get("answer", "")[:30] + "...") if r.get("answer") else "⚠️ 无回答",
         } for r in results if "error" not in r])
         st.dataframe(df_r, use_container_width=True, hide_index=True)
 
