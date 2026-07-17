@@ -114,90 +114,233 @@ tab_test, tab_opps, tab_execute, tab_status, tab_dashboard = st.tabs([
 # ============================================================
 with tab_test:
     st.markdown("### 🔬 执行测试")
-    st.caption("输入产品/话题 → 生成问题 → 在 AI 平台测试 → 查看覆盖结果")
+    st.caption("AI 测试 / 手动上传话题 / 手动上传内容")
 
-    col_cfg, col_q = st.columns([1, 1.5])
+    sub_tab_ai, sub_tab_topic, sub_tab_content = st.tabs([
+        "🤖 AI 测试", "📋 上传话题", "📄 上传内容"
+    ])
 
-    with col_cfg:
-        topic = st.text_input("产品/话题", placeholder="e.g. 亚马逊FBA, 跨境选品", key="sim_topic")
-        sim_platforms = st.multiselect("测试平台", list(PLATFORMS.keys()),
-                                       default=["qianwen"],
-                                       format_func=lambda x: PLATFORMS[x], key="sim_plat")
-        num_q = st.slider("问题数量", 1, 10, 5, key="sim_num")
+    # --- Sub-tab: AI 测试 ---
+    with sub_tab_ai:
+        st.caption("输入产品/话题 → 生成问题 → 在 AI 平台测试 → 查看覆盖结果")
+        col_cfg, col_q = st.columns([1, 1.5])
 
-        if st.button("🎯 生成问题", key="gen_q"):
-            if topic:
-                base = [f"{topic}是什么？", f"{topic}怎么使用？", f"{topic}费用多少？",
-                        f"{topic}有什么优势？", f"{topic}和竞品有什么区别？",
-                        f"{topic}常见问题有哪些？", f"中国卖家如何使用{topic}？",
-                        f"{topic}新手入门指南", f"{topic}最新政策", f"{topic}操作流程"]
-                st.session_state["sim_queries"] = base[:num_q]
+        with col_cfg:
+            topic = st.text_input("产品/话题", placeholder="e.g. 亚马逊FBA, 跨境选品", key="sim_topic")
+            sim_platforms = st.multiselect("测试平台", list(PLATFORMS.keys()),
+                                           default=["qianwen"],
+                                           format_func=lambda x: PLATFORMS[x], key="sim_plat")
+            num_q = st.slider("问题数量", 1, 10, 5, key="sim_num")
 
-    with col_q:
-        if "sim_queries" in st.session_state and st.session_state["sim_queries"]:
-            st.markdown("**问题列表（可编辑）：**")
-            edited = []
-            for i, q in enumerate(st.session_state["sim_queries"]):
-                edited.append(st.text_input(f"Q{i+1}", value=q, key=f"sq_{i}"))
-            st.session_state["sim_queries_final"] = edited
+            if st.button("🎯 生成问题", key="gen_q"):
+                if topic:
+                    base = [f"{topic}是什么？", f"{topic}怎么使用？", f"{topic}费用多少？",
+                            f"{topic}有什么优势？", f"{topic}和竞品有什么区别？",
+                            f"{topic}常见问题有哪些？", f"中国卖家如何使用{topic}？",
+                            f"{topic}新手入门指南", f"{topic}最新政策", f"{topic}操作流程"]
+                    st.session_state["sim_queries"] = base[:num_q]
 
-            if st.button("✅ 确认并执行测试", type="primary", key="run_test"):
-                st.session_state["test_running"] = True
+        with col_q:
+            if "sim_queries" in st.session_state and st.session_state["sim_queries"]:
+                st.markdown("**问题列表（可编辑）：**")
+                edited = []
+                for i, q in enumerate(st.session_state["sim_queries"]):
+                    edited.append(st.text_input(f"Q{i+1}", value=q, key=f"sq_{i}"))
+                st.session_state["sim_queries_final"] = edited
 
-    # Execute test
-    if st.session_state.get("test_running") and st.session_state.get("sim_queries_final"):
+                if st.button("✅ 确认并执行测试", type="primary", key="run_test"):
+                    st.session_state["test_running"] = True
+
+        # Execute test
+        if st.session_state.get("test_running") and st.session_state.get("sim_queries_final"):
+            st.divider()
+            from zhice_engine import REAL_API_MAP
+            queries = st.session_state["sim_queries_final"]
+            platforms = st.session_state.get("sim_plat", ["qianwen"])
+            results = []
+            prog = st.progress(0)
+            total = len(queries) * len(platforms)
+            done = 0
+
+            for query in queries:
+                for plat in platforms:
+                    api_func = REAL_API_MAP.get(plat)
+                    if api_func:
+                        try:
+                            r = api_func(query)
+                            answer = r.get("full_answer", "")
+                            has_gs = "gs.amazon" in answer.lower() or "globalselling" in answer.lower()
+                            has_brand = "全球开店" in answer or "Global Selling" in answer
+                            results.append({"query": query, "platform": plat, "answer": answer,
+                                            "answer_length": len(answer), "has_official_link": has_gs,
+                                            "has_brand_mention": has_brand,
+                                            "has_negative": any(w in answer for w in ["风险","骗局","亏损"])})
+                        except Exception as e:
+                            results.append({"query": query, "platform": plat, "error": str(e), "answer": ""})
+                    done += 1
+                    prog.progress(done / total)
+                    time.sleep(0.3)
+
+            prog.progress(1.0)
+            st.session_state["test_running"] = False
+
+            # Save to user directory
+            ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+            test_entry = {"id": f"test_{ts}", "topic": topic, "date": ts,
+                          "user": user_login, "results": results}
+
+            existing_tests = json.loads(USER_TESTS_FILE.read_text(encoding="utf-8")) if USER_TESTS_FILE.exists() else []
+            existing_tests.insert(0, test_entry)
+            USER_TESTS_FILE.write_text(json.dumps(existing_tests, ensure_ascii=False, indent=2), encoding="utf-8")
+
+            shared_file = ZHICE_DIR / f"sim_{topic.replace(' ','_')[:20]}_{ts}.json"
+            shared_file.write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
+            log_action(user_login, "test_executed", f"topic={topic}, queries={len(queries)}")
+
+            st.success(f"✅ 测试完成！{len(results)} 条结果已保存。请前往「② 机会点分析」查看。")
+            for r in results:
+                icon = "✅" if r.get("has_official_link") else "❌"
+                st.markdown(f"{icon} **{r['query']}** ({PLATFORMS.get(r.get('platform',''), r.get('platform',''))}) — {r.get('answer_length',0)} chars")
+
+    # --- Sub-tab: 上传话题 ---
+    with sub_tab_topic:
+        st.caption("手动上传需要测试的话题/检索短语（CSV 或手动输入）")
+
+        st.markdown("**方式一：上传 CSV**")
+        st.caption("CSV 需包含 `query` 或 `ai_query` 列")
+        uploaded_topics = st.file_uploader("上传话题 CSV", type=["csv"], key="upload_topics")
+        if uploaded_topics:
+            try:
+                df_up = pd.read_csv(uploaded_topics, encoding="utf-8-sig", on_bad_lines="skip")
+                # Find query column
+                q_col = None
+                for col in ["query", "ai_query", "检索短语", "问题", "topic"]:
+                    if col in df_up.columns:
+                        q_col = col
+                        break
+                if q_col is None and len(df_up.columns) > 0:
+                    q_col = df_up.columns[0]
+
+                if q_col:
+                    queries_list = df_up[q_col].dropna().astype(str).tolist()
+                    ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    test_entry = {"id": f"upload_topic_{ts}", "topic": f"上传话题({len(queries_list)}条)",
+                                  "date": ts, "user": user_login,
+                                  "results": [{"query": q, "platform": "待测试", "answer": "",
+                                               "has_official_link": False, "has_brand_mention": False} for q in queries_list]}
+                    existing_tests = json.loads(USER_TESTS_FILE.read_text(encoding="utf-8")) if USER_TESTS_FILE.exists() else []
+                    existing_tests.insert(0, test_entry)
+                    USER_TESTS_FILE.write_text(json.dumps(existing_tests, ensure_ascii=False, indent=2), encoding="utf-8")
+                    log_action(user_login, "topics_uploaded", f"count={len(queries_list)}")
+                    st.success(f"✅ 上传 {len(queries_list)} 个话题！可在「② 机会点分析」中查看，或回到 AI 测试执行。")
+                    st.dataframe(pd.DataFrame({"话题": queries_list}), use_container_width=True, hide_index=True)
+            except Exception as e:
+                st.error(f"上传失败: {str(e)}")
+
         st.divider()
-        from zhice_engine import REAL_API_MAP
-        queries = st.session_state["sim_queries_final"]
-        platforms = st.session_state.get("sim_plat", ["qianwen"])
-        results = []
-        prog = st.progress(0)
-        total = len(queries) * len(platforms)
-        done = 0
+        st.markdown("**方式二：手动输入**")
+        st.caption("每行一个话题/问句")
+        manual_topics = st.text_area("输入话题（每行一个）", height=150, key="manual_topics",
+                                     placeholder="亚马逊FBA是什么？\n亚马逊开店费用多少？\n如何选择物流方案？")
+        if st.button("✅ 提交话题", key="submit_manual_topics"):
+            lines = [l.strip() for l in manual_topics.strip().split("\n") if l.strip()]
+            if lines:
+                ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+                test_entry = {"id": f"manual_topic_{ts}", "topic": f"手动输入({len(lines)}条)",
+                              "date": ts, "user": user_login,
+                              "results": [{"query": q, "platform": "待测试", "answer": "",
+                                           "has_official_link": False, "has_brand_mention": False} for q in lines]}
+                existing_tests = json.loads(USER_TESTS_FILE.read_text(encoding="utf-8")) if USER_TESTS_FILE.exists() else []
+                existing_tests.insert(0, test_entry)
+                USER_TESTS_FILE.write_text(json.dumps(existing_tests, ensure_ascii=False, indent=2), encoding="utf-8")
+                log_action(user_login, "topics_manual", f"count={len(lines)}")
+                st.success(f"✅ 已提交 {len(lines)} 个话题！")
 
-        for query in queries:
-            for plat in platforms:
-                api_func = REAL_API_MAP.get(plat)
-                if api_func:
+    # --- Sub-tab: 上传内容 ---
+    with sub_tab_content:
+        st.caption("上传已有的内容文章，直接跳过生产步骤进入优化/发布")
+
+        st.markdown("**上传 CSV 格式内容**")
+        st.caption("CSV 建议包含列：`ai_query`, `title`, `content_draft`（至少有 content 或 title）")
+        uploaded_content = st.file_uploader("上传内容 CSV", type=["csv"], key="upload_content")
+        if uploaded_content:
+            try:
+                df_content_up = pd.read_csv(uploaded_content, encoding="utf-8-sig", on_bad_lines="skip")
+                st.dataframe(df_content_up.head(5), use_container_width=True, hide_index=True)
+                st.caption(f"预览前 5 行（共 {len(df_content_up)} 行）")
+
+                if st.button("✅ 确认上传到产出库", key="confirm_content_upload"):
+                    batch = get_batches()[0]
+                    zhizao_file = OUTPUT_PATH / batch / "02_zhizao" / "zhizao_draft_content.csv"
+                    zhizao_file.parent.mkdir(parents=True, exist_ok=True)
+
+                    # Normalize columns
+                    col_map = {"content": "content_draft", "article": "content_draft",
+                               "body": "content_draft", "query": "ai_query"}
+                    for old, new in col_map.items():
+                        if old in df_content_up.columns and new not in df_content_up.columns:
+                            df_content_up = df_content_up.rename(columns={old: new})
+
+                    # Add metadata
+                    if "content_id" not in df_content_up.columns:
+                        df_content_up["content_id"] = [f"UPLOAD_{user_login}_{i:03d}" for i in range(len(df_content_up))]
+                    if "version" not in df_content_up.columns:
+                        df_content_up["version"] = "uploaded"
+                    if "word_count" not in df_content_up.columns and "content_draft" in df_content_up.columns:
+                        df_content_up["word_count"] = df_content_up["content_draft"].astype(str).str.len()
+
+                    # Append to existing
+                    if zhizao_file.exists() and zhizao_file.stat().st_size > 0:
+                        try:
+                            existing = pd.read_csv(zhizao_file, encoding="utf-8-sig", on_bad_lines="skip")
+                            combined = pd.concat([existing, df_content_up], ignore_index=True)
+                            combined.to_csv(zhizao_file, index=False, encoding="utf-8-sig")
+                        except Exception:
+                            df_content_up.to_csv(zhizao_file, index=False, encoding="utf-8-sig")
+                    else:
+                        df_content_up.to_csv(zhizao_file, index=False, encoding="utf-8-sig")
+
+                    log_action(user_login, "content_uploaded", f"batch={batch}, count={len(df_content_up)}")
+                    st.success(f"✅ 已上传 {len(df_content_up)} 篇内容到 {batch}！可直接在「③ 执行机会点」中进行优化。")
+            except Exception as e:
+                st.error(f"上传失败: {str(e)}")
+
+        st.divider()
+        st.markdown("**手动粘贴单篇内容**")
+        paste_title = st.text_input("文章标题", key="paste_title", placeholder="e.g. 亚马逊FBA完全指南")
+        paste_query = st.text_input("对应问句", key="paste_query", placeholder="e.g. 亚马逊FBA是什么？")
+        paste_content = st.text_area("文章内容", height=200, key="paste_content", placeholder="粘贴完整文章...")
+
+        if st.button("✅ 提交单篇内容", key="submit_paste"):
+            if paste_content.strip():
+                batch = get_batches()[0]
+                zhizao_file = OUTPUT_PATH / batch / "02_zhizao" / "zhizao_draft_content.csv"
+                zhizao_file.parent.mkdir(parents=True, exist_ok=True)
+
+                ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+                new_row = pd.DataFrame([{
+                    "content_id": f"PASTE_{user_login}_{ts}",
+                    "ai_query": paste_query or paste_title,
+                    "title": paste_title or "Untitled",
+                    "content_draft": paste_content,
+                    "word_count": len(paste_content),
+                    "version": "uploaded",
+                }])
+
+                if zhizao_file.exists() and zhizao_file.stat().st_size > 0:
                     try:
-                        r = api_func(query)
-                        answer = r.get("full_answer", "")
-                        has_gs = "gs.amazon" in answer.lower() or "globalselling" in answer.lower()
-                        has_brand = "全球开店" in answer or "Global Selling" in answer
-                        results.append({"query": query, "platform": plat, "answer": answer,
-                                        "answer_length": len(answer), "has_official_link": has_gs,
-                                        "has_brand_mention": has_brand,
-                                        "has_negative": any(w in answer for w in ["风险","骗局","亏损"])})
-                    except Exception as e:
-                        results.append({"query": query, "platform": plat, "error": str(e), "answer": ""})
-                done += 1
-                prog.progress(done / total)
-                time.sleep(0.3)
+                        existing = pd.read_csv(zhizao_file, encoding="utf-8-sig", on_bad_lines="skip")
+                        combined = pd.concat([existing, new_row], ignore_index=True)
+                        combined.to_csv(zhizao_file, index=False, encoding="utf-8-sig")
+                    except Exception:
+                        new_row.to_csv(zhizao_file, index=False, encoding="utf-8-sig")
+                else:
+                    new_row.to_csv(zhizao_file, index=False, encoding="utf-8-sig")
 
-        prog.progress(1.0)
-        st.session_state["test_running"] = False
-
-        # Save to user directory
-        ts = datetime.now().strftime('%Y%m%d_%H%M%S')
-        test_entry = {"id": f"test_{ts}", "topic": topic, "date": ts,
-                      "user": user_login, "results": results}
-
-        # Append to user's tests
-        existing_tests = json.loads(USER_TESTS_FILE.read_text(encoding="utf-8")) if USER_TESTS_FILE.exists() else []
-        existing_tests.insert(0, test_entry)
-        USER_TESTS_FILE.write_text(json.dumps(existing_tests, ensure_ascii=False, indent=2), encoding="utf-8")
-
-        # Also save to shared zhice dir
-        shared_file = ZHICE_DIR / f"sim_{topic.replace(' ','_')[:20]}_{ts}.json"
-        shared_file.write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
-        log_action(user_login, "test_executed", f"topic={topic}, queries={len(queries)}")
-
-        st.success(f"✅ 测试完成！{len(results)} 条结果已保存。请前往「② 机会点分析」查看。")
-
-        # Quick preview
-        for r in results:
-            icon = "✅" if r.get("has_official_link") else "❌"
-            st.markdown(f"{icon} **{r['query']}** ({PLATFORMS.get(r.get('platform',''), r.get('platform',''))}) — {r.get('answer_length',0)} chars")
+                log_action(user_login, "content_pasted", f"title={paste_title}")
+                st.success("✅ 单篇内容已提交！")
+            else:
+                st.warning("请输入内容。")
 
 
 # ============================================================
@@ -430,6 +573,10 @@ with tab_dashboard:
     opps = json.loads(USER_OPPS_FILE.read_text(encoding="utf-8")) if USER_OPPS_FILE.exists() else []
     actions = json.loads(USER_ACTIONS_FILE.read_text(encoding="utf-8")) if USER_ACTIONS_FILE.exists() else []
 
+    # Load history (archived records)
+    USER_HISTORY_FILE = USER_DIR / "history.json"
+    history = json.loads(USER_HISTORY_FILE.read_text(encoding="utf-8")) if USER_HISTORY_FILE.exists() else []
+
     # Summary KPIs
     total_tests = len(user_tests)
     total_queries = sum(len(t.get("results", [])) for t in user_tests)
@@ -496,3 +643,89 @@ with tab_dashboard:
                 st.info("前后测试无相同短语可对比。建议发布后用相同短语重新测试。")
     else:
         st.info("需要至少 2 次测试才能展示前后效果对比。")
+
+    # ===== 清除当前记录（归档到历史） =====
+    st.divider()
+    st.markdown("#### 🗑️ 清除当前记录")
+    st.caption("清除后，当前数据将归档到下方历史记录中，可随时查看。")
+
+    col_clear1, col_clear2, col_clear3 = st.columns(3)
+    with col_clear1:
+        if st.button("🗑️ 清除测试记录", key="clear_tests"):
+            if user_tests:
+                archive_entry = {"archived_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                                 "type": "tests", "count": len(user_tests), "data": user_tests}
+                history.insert(0, archive_entry)
+                USER_HISTORY_FILE.write_text(json.dumps(history, ensure_ascii=False, indent=2), encoding="utf-8")
+                USER_TESTS_FILE.write_text("[]", encoding="utf-8")
+                log_action(user_login, "tests_cleared", f"archived {len(user_tests)} tests")
+                st.success(f"✅ 已归档 {len(user_tests)} 条测试记录到历史。")
+                st.rerun()
+    with col_clear2:
+        if st.button("🗑️ 清除机会点", key="clear_opps"):
+            if opps:
+                archive_entry = {"archived_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                                 "type": "opportunities", "count": len(opps), "data": opps}
+                history.insert(0, archive_entry)
+                USER_HISTORY_FILE.write_text(json.dumps(history, ensure_ascii=False, indent=2), encoding="utf-8")
+                USER_OPPS_FILE.write_text("[]", encoding="utf-8")
+                log_action(user_login, "opps_cleared", f"archived {len(opps)} opps")
+                st.success(f"✅ 已归档 {len(opps)} 条机会点到历史。")
+                st.rerun()
+    with col_clear3:
+        if st.button("🗑️ 清除全部记录", key="clear_all"):
+            archived_items = []
+            if user_tests:
+                archived_items.append({"type": "tests", "count": len(user_tests), "data": user_tests})
+            if opps:
+                archived_items.append({"type": "opportunities", "count": len(opps), "data": opps})
+            if actions:
+                archived_items.append({"type": "actions", "count": len(actions), "data": actions})
+            if archived_items:
+                archive_entry = {"archived_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                                 "type": "full_clear", "items": archived_items}
+                history.insert(0, archive_entry)
+                USER_HISTORY_FILE.write_text(json.dumps(history, ensure_ascii=False, indent=2), encoding="utf-8")
+                USER_TESTS_FILE.write_text("[]", encoding="utf-8")
+                USER_OPPS_FILE.write_text("[]", encoding="utf-8")
+                USER_ACTIONS_FILE.write_text("[]", encoding="utf-8")
+                log_action(user_login, "all_cleared", "full reset")
+                st.success("✅ 全部记录已归档到历史！")
+                st.rerun()
+
+    # ===== 历史记录 =====
+    st.divider()
+    st.markdown("#### 📜 历史记录")
+    st.caption("之前清除的数据归档在此")
+
+    if history:
+        for i, h in enumerate(history[:10]):
+            h_type = h.get("type", "unknown")
+            h_time = h.get("archived_at", "")
+
+            if h_type == "full_clear":
+                items = h.get("items", [])
+                summary = ", ".join([f"{it['type']}({it['count']}条)" for it in items])
+                with st.expander(f"🗂️ {h_time} — 全部清除: {summary}"):
+                    for it in items:
+                        st.markdown(f"**{it['type']}** — {it['count']} 条")
+                        if it["type"] == "tests":
+                            for t in it["data"][:5]:
+                                st.markdown(f"  - {t.get('topic', '')} ({t.get('date', '')})")
+                        elif it["type"] == "opportunities":
+                            for o in it["data"][:5]:
+                                st.markdown(f"  - {o.get('query', '')} [{o.get('status', '')}]")
+            else:
+                count = h.get("count", 0)
+                with st.expander(f"🗂️ {h_time} — {h_type} ({count} 条)"):
+                    data = h.get("data", [])
+                    if h_type == "tests":
+                        for t in data[:5]:
+                            st.markdown(f"- {t.get('topic', '')} ({t.get('date', '')}) — {len(t.get('results',[]))} queries")
+                    elif h_type == "opportunities":
+                        for o in data[:10]:
+                            st.markdown(f"- {o.get('query', '')} [{o.get('status', '')}]")
+                    if len(data) > 5:
+                        st.caption(f"...及其他 {len(data)-5} 条")
+    else:
+        st.info("暂无历史记录。清除数据后将在此展示。")
