@@ -357,6 +357,30 @@ if current_step == 0:
                 log_action(user_login, "topics_manual", f"count={len(lines)}")
                 st.success(f"✅ 已提交 {len(lines)} 个话题！")
 
+    # --- Step 1: Clear & History ---
+    USER_HISTORY_FILE = USER_DIR / "history.json"
+    _history = json.loads(USER_HISTORY_FILE.read_text(encoding="utf-8")) if USER_HISTORY_FILE.exists() else []
+
+    with st.expander("🗑️ 清除测试记录 / 📜 历史", expanded=False):
+        user_tests_here = json.loads(USER_TESTS_FILE.read_text(encoding="utf-8")) if USER_TESTS_FILE.exists() else []
+        if user_tests_here:
+            st.caption(f"当前有 {len(user_tests_here)} 条测试记录")
+            if st.button("🗑️ 清除所有测试记录（归档）", key="clear_tests_s1"):
+                archive = {"archived_at": datetime.now().strftime("%Y-%m-%d %H:%M"), "type": "tests", "count": len(user_tests_here), "data": user_tests_here}
+                _history.insert(0, archive)
+                USER_HISTORY_FILE.write_text(json.dumps(_history, ensure_ascii=False, indent=2), encoding="utf-8")
+                USER_TESTS_FILE.write_text("[]", encoding="utf-8")
+                st.success("✅ 已归档")
+                st.rerun()
+        else:
+            st.caption("暂无测试记录")
+
+        # Show history for tests
+        test_history = [h for h in _history if h.get("type") == "tests"]
+        if test_history:
+            st.markdown("**📜 历史记录：**")
+            for h in test_history[:5]:
+                st.caption(f"🗂️ {h.get('archived_at','')} — {h.get('count',0)} 条测试")
 
 
 # ============================================================
@@ -431,6 +455,28 @@ if current_step == 1:
                     st.rerun()
         else:
             st.success("🎉 全部覆盖，无缺口！无需额外行动。")
+
+    # --- Step 2: Clear & History ---
+    USER_HISTORY_FILE = USER_DIR / "history.json"
+    _history = json.loads(USER_HISTORY_FILE.read_text(encoding="utf-8")) if USER_HISTORY_FILE.exists() else []
+    with st.expander("🗑️ 清除机会点 / 📜 历史", expanded=False):
+        opps_here = json.loads(USER_OPPS_FILE.read_text(encoding="utf-8")) if USER_OPPS_FILE.exists() else []
+        if opps_here:
+            st.caption(f"当前有 {len(opps_here)} 条机会点")
+            if st.button("🗑️ 清除所有机会点（归档）", key="clear_opps_s2"):
+                archive = {"archived_at": datetime.now().strftime("%Y-%m-%d %H:%M"), "type": "opportunities", "count": len(opps_here), "data": opps_here}
+                _history.insert(0, archive)
+                USER_HISTORY_FILE.write_text(json.dumps(_history, ensure_ascii=False, indent=2), encoding="utf-8")
+                USER_OPPS_FILE.write_text("[]", encoding="utf-8")
+                st.success("✅ 已归档")
+                st.rerun()
+        else:
+            st.caption("暂无机会点")
+        opp_history = [h for h in _history if h.get("type") == "opportunities"]
+        if opp_history:
+            st.markdown("**📜 历史记录：**")
+            for h in opp_history[:5]:
+                st.caption(f"🗂️ {h.get('archived_at','')} — {h.get('count',0)} 条机会点")
 
 
 # ============================================================
@@ -906,88 +952,3 @@ if current_step == 4:
     else:
         st.info("需要至少 2 次测试才能展示前后效果对比。")
 
-    # ===== 清除当前记录（归档到历史） =====
-    st.divider()
-    st.markdown("#### 🗑️ 清除当前记录")
-    st.caption("清除后，当前数据将归档到下方历史记录中，可随时查看。")
-
-    col_clear1, col_clear2, col_clear3 = st.columns(3)
-    with col_clear1:
-        if st.button("🗑️ 清除测试记录", key="clear_tests"):
-            if user_tests:
-                archive_entry = {"archived_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                                 "type": "tests", "count": len(user_tests), "data": user_tests}
-                history.insert(0, archive_entry)
-                USER_HISTORY_FILE.write_text(json.dumps(history, ensure_ascii=False, indent=2), encoding="utf-8")
-                USER_TESTS_FILE.write_text("[]", encoding="utf-8")
-                log_action(user_login, "tests_cleared", f"archived {len(user_tests)} tests")
-                st.success(f"✅ 已归档 {len(user_tests)} 条测试记录到历史。")
-                st.rerun()
-    with col_clear2:
-        if st.button("🗑️ 清除机会点", key="clear_opps"):
-            if opps:
-                archive_entry = {"archived_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                                 "type": "opportunities", "count": len(opps), "data": opps}
-                history.insert(0, archive_entry)
-                USER_HISTORY_FILE.write_text(json.dumps(history, ensure_ascii=False, indent=2), encoding="utf-8")
-                USER_OPPS_FILE.write_text("[]", encoding="utf-8")
-                log_action(user_login, "opps_cleared", f"archived {len(opps)} opps")
-                st.success(f"✅ 已归档 {len(opps)} 条机会点到历史。")
-                st.rerun()
-    with col_clear3:
-        if st.button("🗑️ 清除全部记录", key="clear_all"):
-            archived_items = []
-            if user_tests:
-                archived_items.append({"type": "tests", "count": len(user_tests), "data": user_tests})
-            if opps:
-                archived_items.append({"type": "opportunities", "count": len(opps), "data": opps})
-            if actions:
-                archived_items.append({"type": "actions", "count": len(actions), "data": actions})
-            if archived_items:
-                archive_entry = {"archived_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                                 "type": "full_clear", "items": archived_items}
-                history.insert(0, archive_entry)
-                USER_HISTORY_FILE.write_text(json.dumps(history, ensure_ascii=False, indent=2), encoding="utf-8")
-                USER_TESTS_FILE.write_text("[]", encoding="utf-8")
-                USER_OPPS_FILE.write_text("[]", encoding="utf-8")
-                USER_ACTIONS_FILE.write_text("[]", encoding="utf-8")
-                log_action(user_login, "all_cleared", "full reset")
-                st.success("✅ 全部记录已归档到历史！")
-                st.rerun()
-
-    # ===== 历史记录 =====
-    st.divider()
-    st.markdown("#### 📜 历史记录")
-    st.caption("之前清除的数据归档在此")
-
-    if history:
-        for i, h in enumerate(history[:10]):
-            h_type = h.get("type", "unknown")
-            h_time = h.get("archived_at", "")
-
-            if h_type == "full_clear":
-                items = h.get("items", [])
-                summary = ", ".join([f"{it['type']}({it['count']}条)" for it in items])
-                with st.expander(f"🗂️ {h_time} — 全部清除: {summary}"):
-                    for it in items:
-                        st.markdown(f"**{it['type']}** — {it['count']} 条")
-                        if it["type"] == "tests":
-                            for t in it["data"][:5]:
-                                st.markdown(f"  - {t.get('topic', '')} ({t.get('date', '')})")
-                        elif it["type"] == "opportunities":
-                            for o in it["data"][:5]:
-                                st.markdown(f"  - {o.get('query', '')} [{o.get('status', '')}]")
-            else:
-                count = h.get("count", 0)
-                with st.expander(f"🗂️ {h_time} — {h_type} ({count} 条)"):
-                    data = h.get("data", [])
-                    if h_type == "tests":
-                        for t in data[:5]:
-                            st.markdown(f"- {t.get('topic', '')} ({t.get('date', '')}) — {len(t.get('results',[]))} queries")
-                    elif h_type == "opportunities":
-                        for o in data[:10]:
-                            st.markdown(f"- {o.get('query', '')} [{o.get('status', '')}]")
-                    if len(data) > 5:
-                        st.caption(f"...及其他 {len(data)-5} 条")
-    else:
-        st.info("暂无历史记录。清除数据后将在此展示。")
