@@ -5125,8 +5125,9 @@ elif _page_idx == 10:
 elif _page_idx == 13:
     st.markdown("""<div style="padding:20px 0 10px;"><h1 style="font-size:28px;font-weight:800;color:#00bcd4;margin:0;">📝 """ + ("Operations Dashboard" if is_en else "运营管理看板") + """</h1><p style="font-size:13px;color:#8892b0;margin-top:6px;">""" + ("Team activity log, pipeline status, who did what" if is_en else "团队操作日志、流水线状态、谁执行了什么") + """</p></div>""", unsafe_allow_html=True)
 
-    tab_activity, tab_pipeline, tab_link = st.tabs([
+    tab_activity, tab_approval, tab_pipeline, tab_link = st.tabs([
         "📋 Activity Log" if is_en else "📋 操作日志",
+        "✅ Approvals" if is_en else "✅ 需求审批",
         "📊 Pipeline Status" if is_en else "📊 流水线状态",
         "🔗 Links" if is_en else "🔗 入口链接",
     ])
@@ -5162,6 +5163,73 @@ elif _page_idx == 13:
                 st.info("No activity logged yet." if is_en else "暂无操作记录。")
         else:
             st.info("No audit log found." if is_en else "未找到审计日志。")
+
+    with tab_approval:
+        st.markdown("### ✅ " + ("Request Approvals" if is_en else "需求审批"))
+        st.caption("Review and approve content requests from team members (8503)" if is_en else "审核并批复团队成员 (8503) 提交的内容发布请求")
+
+        # Load request tracking
+        request_file = OUTPUT_PATH / "request_tracking.json"
+        if request_file.exists():
+            requests_data = json.loads(request_file.read_text(encoding="utf-8"))
+        else:
+            requests_data = []
+
+        if not requests_data:
+            st.info("No pending requests." if is_en else "暂无待审批请求。")
+        else:
+            # Show all requests
+            pending = [r for r in requests_data if r.get("status") == "pending"]
+            approved = [r for r in requests_data if r.get("status") == "approved"]
+            published = [r for r in requests_data if r.get("status") == "published"]
+
+            kc1, kc2, kc3 = st.columns(3)
+            kc1.metric("Pending" if is_en else "待审批", len(pending))
+            kc2.metric("Approved" if is_en else "已批复", len(approved))
+            kc3.metric("Published" if is_en else "已发布", len(published))
+
+            # Pending requests
+            if pending:
+                st.divider()
+                st.markdown("**" + ("Pending Requests:" if is_en else "待审批请求：") + "**")
+                for i, req in enumerate(pending):
+                    with st.expander(f"📤 {req.get('user', 'unknown')} — {req.get('count', 0)} {'articles' if is_en else '篇'} ({req.get('submitted_at', '')})"):
+                        st.markdown(f"**{'User' if is_en else '提交人'}:** {req.get('user', '')}")
+                        st.markdown(f"**{'Articles' if is_en else '文章数'}:** {req.get('count', 0)}")
+                        st.markdown(f"**{'Submitted' if is_en else '提交时间'}:** {req.get('submitted_at', '')}")
+                        st.markdown(f"**{'Batch' if is_en else '批次'}:** {req.get('batch', '')}")
+
+                        if req.get("queries"):
+                            st.markdown("**" + ("Queries:" if is_en else "对应短语：") + "**")
+                            for q in req["queries"][:10]:
+                                st.markdown(f"  - {q}")
+
+                        col_a, col_r = st.columns(2)
+                        with col_a:
+                            if st.button("✅ " + ("Approve & Publish" if is_en else "批复并发布"), key=f"approve_{i}", type="primary"):
+                                req["status"] = "approved"
+                                req["approved_at"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+                                request_file.write_text(json.dumps(requests_data, ensure_ascii=False, indent=2), encoding="utf-8")
+                                st.success("✅ " + ("Approved! Will auto-publish on next 8503 refresh." if is_en else "已批复！8503 刷新后将自动执行发布。"))
+                                st.rerun()
+                        with col_r:
+                            if st.button("❌ " + ("Reject" if is_en else "驳回"), key=f"reject_{i}"):
+                                req["status"] = "rejected"
+                                req["rejected_at"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+                                request_file.write_text(json.dumps(requests_data, ensure_ascii=False, indent=2), encoding="utf-8")
+                                st.warning("❌ " + ("Rejected." if is_en else "已驳回。"))
+                                st.rerun()
+
+            # Published history
+            if published:
+                st.divider()
+                st.markdown("**" + ("Published:" if is_en else "已发布：") + "**")
+                df_pub = pd.DataFrame([{
+                    "User": r.get("user", ""),
+                    "Articles" if is_en else "篇数": r.get("count", 0),
+                    "Published" if is_en else "发布时间": r.get("published_at", ""),
+                } for r in published])
+                st.dataframe(df_pub, use_container_width=True, hide_index=True)
 
     with tab_pipeline:
         st.markdown("### " + ("Pipeline Status per Batch" if is_en else "各批次流水线状态"))

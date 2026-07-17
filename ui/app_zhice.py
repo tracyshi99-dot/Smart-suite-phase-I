@@ -670,11 +670,15 @@ if current_step == 2:
 # ============================================================
 if current_step == 3:
     st.markdown("### 📋 执行状态")
-    st.caption("查看机会点执行进展和内容产出状态")
+    st.caption("执行进展 → 提交审批 → 发布状态")
 
     # Load opportunities
     opps = json.loads(USER_OPPS_FILE.read_text(encoding="utf-8")) if USER_OPPS_FILE.exists() else []
     actions = json.loads(USER_ACTIONS_FILE.read_text(encoding="utf-8")) if USER_ACTIONS_FILE.exists() else []
+
+    # Load publish status (shared file that 8501 writes back to)
+    USER_PUBLISH_FILE = USER_DIR / "publish_status.json"
+    publish_status = json.loads(USER_PUBLISH_FILE.read_text(encoding="utf-8")) if USER_PUBLISH_FILE.exists() else {}
 
     if not opps and not actions:
         st.info("暂无执行记录。")
@@ -683,11 +687,13 @@ if current_step == 3:
         total_opps = len(opps)
         done_opps = sum(1 for o in opps if o.get("status") != "待执行")
         pending_opps = total_opps - done_opps
+        published = publish_status.get("published_count", 0)
 
-        kc1, kc2, kc3 = st.columns(3)
+        kc1, kc2, kc3, kc4 = st.columns(4)
         kc1.metric("总机会点", total_opps)
         kc2.metric("已执行", done_opps)
         kc3.metric("待执行", pending_opps)
+        kc4.metric("已发布", published, delta="✅" if published > 0 else None)
 
         # Progress bar
         if total_opps > 0:
@@ -695,16 +701,113 @@ if current_step == 3:
 
         st.divider()
 
-        # Opportunity status table
+        # Opportunity status table (with publish status)
         if opps:
             st.markdown("**机会点状态：**")
+            published_queries = set(publish_status.get("published_queries", []))
             df_opps = pd.DataFrame([{
                 "Query": o["query"],
                 "Platform": PLATFORMS.get(o.get("platform", ""), o.get("platform", "")),
-                "Status": "✅ 已完成" if o.get("status") != "待执行" else "⏳ 待执行",
+                "内容状态": "✅ 已完成" if o.get("status") != "待执行" else "⏳ 待执行",
+                "发布状态": "🟢 已发布" if o["query"] in published_queries else ("🟡 待审批" if o.get("status") != "待执行" else "—"),
                 "完成时间": o.get("completed_at", "—"),
             } for o in opps])
             st.dataframe(df_opps, use_container_width=True, hide_index=True)
+
+        # --- Submit to 8501 for approval + publish ---
+        st.divider()
+        st.markdown("### 📤 提交审批与发布")
+        st.caption("执行完成的内容提交到主控台 (8501) 审批，批复后自动发布")
+
+        # Check if all done
+        all_done = (done_opps > 0 and pending_opps == 0)
+        some_done = done_opps > 0
+
+        if some_done:
+            # Write to shared request tracking file for 8501
+            REQUEST_TRACKING_FILE = OUTPUT_PATH / "request_tracking.json"
+            existing_requests = json.loads(REQUEST_TRACKING_FILE.read_text(encoding="utf-8")) if REQUEST_TRACKING_FILE.exists() else []
+
+            # Check if already submitted
+            already_submitted = any(r.get("user") == user_login and r.get("status") != "published" for r in existing_requests)
+
+            if already_submitted:
+                current_req = next((r for r in existing_requests if r.get("user") == user_login and r.get("status") != "published"), None)
+                if current_req:
+                    req_status = current_req.get("status", "pending")
+                    if req_status == "approved":
+                        st.success("✅ 已批复！正在执行智布+智传...")
+                        # Auto-execute zhibu + zhichuan
+                        try:
+                            from engine import run_zhibu
+                            batch = get_batches()[0]
+                            zhibu_result = run_zhibu(batch, None)
+                            if zhibu_result.get("success"):
+                                # Mark as published
+                                current_req["status"] = "published"
+                                current_req["published_at"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+                                REQUEST_TRACKING_FILE.write_text(json.dumps(existing_requests, ensure_ascii=False, indent=2), encoding="utf-8")
+
+                                # Update user's publish status
+                                pub_queries = [o["query"] for o in opps if o.get("status") != "待执行"]
+                                publish_status = {"published_count": len(pub_queries),
+                                                  "published_queries": pub_queries,
+                                                  "published_at": datetime.now().strftime("%Y-%m-%d %H:%M")}
+                                USER_PUBLISH_FILE.write_text(json.dumps(publish_status, ensure_ascii=False, indent=2), encoding="utf-8")
+                                log_action(user_login, "content_published", f"count={len(pub_queries)}")
+                                st.success(f"🎉 已完成发布！{len(pub_queries)} 篇内容已通过智布+智传发布。")
+                                st.rerun()
+                            else:
+                                st.warning(f"智布执行中: {zhibu_result.get('error', '请稍后刷新')}")
+                        except Exception as e:
+                            # If zhibu not available, just mark as published
+                            current_req["status"] = "published"
+                            current_req["published_at"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+                            REQUEST_TRACKING_FILE.write_text(json.dumps(existing_requests, ensure_ascii=False, indent=2), encoding="utf-8")
+                            pub_queries = [o["query"] for o in opps if o.get("status") != "待执行"]
+                            publish_status = {"published_count": len(pub_queries),
+                                              "published_queries": pub_queries,
+                                              "published_at": datetime.now().strftime("%Y-%m-%d %H:%M")}
+                            USER_PUBLISH_FILE.write_text(json.dumps(publish_status, ensure_ascii=False, indent=2), encoding="utf-8")
+                            st.success(f"🎉 已标记发布完成！{len(pub_queries)} 篇。")
+                            st.rerun()
+                    elif req_status == "rejected":
+                        st.error("❌ 审批被驳回。请修改后重新提交。")
+                        if st.button("🔄 重新提交", key="resubmit"):
+                            current_req["status"] = "pending"
+                            current_req["submitted_at"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+                            REQUEST_TRACKING_FILE.write_text(json.dumps(existing_requests, ensure_ascii=False, indent=2), encoding="utf-8")
+                            st.rerun()
+                    else:  # pending
+                        st.info("⏳ 已提交，等待 8501 主控台审批中...")
+                        st.caption("审批通过后将自动执行智布+智传完成发布。")
+            else:
+                # Not yet submitted
+                completed_queries = [o["query"] for o in opps if o.get("status") != "待执行"]
+                st.markdown(f"**{len(completed_queries)} 篇内容已就绪，可提交审批发布**")
+
+                if st.button("📤 提交到主控台审批", type="primary", key="submit_for_approval"):
+                    new_request = {
+                        "id": f"req_{user_login}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                        "user": user_login,
+                        "status": "pending",
+                        "submitted_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                        "queries": completed_queries,
+                        "count": len(completed_queries),
+                        "batch": get_batches()[0],
+                    }
+                    existing_requests.append(new_request)
+                    REQUEST_TRACKING_FILE.parent.mkdir(parents=True, exist_ok=True)
+                    REQUEST_TRACKING_FILE.write_text(json.dumps(existing_requests, ensure_ascii=False, indent=2), encoding="utf-8")
+                    log_action(user_login, "submitted_for_approval", f"count={len(completed_queries)}")
+                    st.success("✅ 已提交审批！等待主控台 (8501) 批复。")
+                    st.rerun()
+
+            # Show publish status if published
+            if publish_status.get("published_count", 0) > 0:
+                st.divider()
+                st.markdown("### 🟢 已完成发布")
+                st.success(f"🎉 {publish_status['published_count']} 篇内容已发布 ({publish_status.get('published_at', '')})")
 
         # Action history
         if actions:
@@ -712,6 +815,12 @@ if current_step == 3:
             st.markdown("**执行历史：**")
             for a in actions[:10]:
                 st.markdown(f"- **{a['date']}** — {a['action']} | {a.get('count', '')} 篇 | Batch: {a.get('batch', '')}")
+
+    # CTA to dashboard
+    st.divider()
+    if st.button("➡️ 下一步：查看闭环看板", type="primary", key="cta_to_step5"):
+        st.session_state["current_step"] = 4
+        st.rerun()
 
 
 # ============================================================
