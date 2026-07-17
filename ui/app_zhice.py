@@ -108,11 +108,13 @@ def get_batches():
 
 
 def recompute_detection(r):
-    """Re-compute official link and brand mention from answer text (fixes stale data)."""
+    """Re-compute official link and brand mention from answer + query text."""
     answer = r.get("answer", r.get("answer_preview", r.get("full_answer", "")))
-    if answer:
-        r["has_official_link"] = ".amazon" in answer.lower()
-        r["has_brand_mention"] = "亚马逊" in answer or "amazon" in answer.lower()
+    query = r.get("query", "")
+    # Combine answer + query for detection
+    text = (answer + " " + query).strip()
+    r["has_official_link"] = ".amazon" in text.lower()
+    r["has_brand_mention"] = "亚马逊" in text or "amazon" in text.lower()
     return r
 
 
