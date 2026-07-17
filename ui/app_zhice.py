@@ -74,6 +74,15 @@ def get_batches():
     return batches if batches else ["batch_003"]
 
 
+def recompute_detection(r):
+    """Re-compute official link and brand mention from answer text (fixes stale data)."""
+    answer = r.get("answer", r.get("answer_preview", r.get("full_answer", "")))
+    if answer:
+        r["has_official_link"] = ".amazon" in answer.lower()
+        r["has_brand_mention"] = "亚马逊" in answer or "amazon" in answer.lower()
+    return r
+
+
 # --- Header & Login ---
 st.markdown("""<div style="padding:12px 0 8px;">
 <h1 style="font-size:28px;font-weight:800;color:#00bcd4;margin:0;">🔄 Smart Suite — 需求提交</h1>
@@ -292,6 +301,7 @@ if current_step == 0:
 
             st.success(f"✅ 测试完成！{len(results)} 条结果已保存。")
             for r in results:
+                recompute_detection(r)
                 icon = "✅" if r.get("has_official_link") else "❌"
                 st.markdown(f"{icon} **{r['query']}** ({PLATFORMS.get(r.get('platform',''), r.get('platform',''))}) — {r.get('answer_length',0)} chars")
 
@@ -409,7 +419,7 @@ if current_step == 1:
         df_r = pd.DataFrame([{
             "Query": r.get("query", ""),
             "Platform": PLATFORMS.get(r.get("platform", ""), r.get("platform", "")),
-            "Official Link": "✅" if r.get("has_official_link") else "❌",
+            "Official Link": "✅" if recompute_detection(r).get("has_official_link") else "❌",
             "Brand": "✅" if r.get("has_brand_mention") else "❌",
             "Gap": "⚠️" if not r.get("has_official_link") else "✅",
         } for r in results if "error" not in r])
