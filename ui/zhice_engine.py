@@ -273,20 +273,23 @@ def _call_deepseek(query: str) -> dict:
 def _call_qianwen(query: str) -> dict:
     """Call Alibaba Qianwen (通义千问) via DashScope API."""
     import requests
-    key = os.environ.get("DASHSCOPE_API_KEY", "")
+    key = os.environ.get("DASHSCOPE_API_KEY", "") or os.environ.get("DEEPSEEK_API_KEY", "")
     # Also try Streamlit secrets and .env file
     if not key:
         try:
             import streamlit as st
-            if hasattr(st, "secrets") and "deepseek" in st.secrets:
-                key = st.secrets["deepseek"]["api_key"]
+            if hasattr(st, "secrets"):
+                if "deepseek" in st.secrets:
+                    key = st.secrets["deepseek"].get("api_key", "") or st.secrets["deepseek"].get("DEEPSEEK_API_KEY", "")
+                if not key and "aws" in st.secrets:
+                    key = st.secrets["aws"].get("DEEPSEEK_API_KEY", "")
         except Exception:
             pass
     if not key:
         env_path = Path(__file__).parent.parent / ".env"
         if env_path.exists():
             for line in env_path.read_text(encoding="utf-8").splitlines():
-                if line.startswith("DASHSCOPE_API_KEY="):
+                if line.startswith("DASHSCOPE_API_KEY=") or line.startswith("DEEPSEEK_API_KEY="):
                     key = line.split("=", 1)[1].strip()
                     break
     if not key:
@@ -297,10 +300,10 @@ def _call_qianwen(query: str) -> dict:
         json={
             "model": "qwen-plus",
             "messages": [{"role": "user", "content": query}],
-            "max_tokens": 300,
+            "max_tokens": 800,
             "temperature": 0.7,
         },
-        timeout=30,
+        timeout=60,
     )
     if resp.status_code == 200:
         answer = resp.json()["choices"][0]["message"]["content"]
