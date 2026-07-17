@@ -122,7 +122,7 @@ with tab_test:
 
     # --- Sub-tab: AI 测试 ---
     with sub_tab_ai:
-        st.caption("输入产品/话题 → 生成问题 → 在 AI 平台测试 → 查看覆盖结果")
+        st.caption("输入产品/话题 → AI 裂变短语（或引用智库） → 测试 → 查看覆盖结果")
         col_cfg, col_q = st.columns([1, 1.5])
 
         with col_cfg:
@@ -130,15 +130,61 @@ with tab_test:
             sim_platforms = st.multiselect("测试平台", list(PLATFORMS.keys()),
                                            default=["qianwen"],
                                            format_func=lambda x: PLATFORMS[x], key="sim_plat")
-            num_q = st.slider("问题数量", 1, 10, 5, key="sim_num")
+            num_q = st.slider("裂变短语数量", 3, 30, 10, key="sim_num")
 
-            if st.button("🎯 生成问题", key="gen_q"):
+            # Check if zhiku has relevant phrases
+            zhiku_matches = []
+            if topic:
+                for batch_dir in sorted(OUTPUT_PATH.iterdir(), reverse=True):
+                    if batch_dir.is_dir() and batch_dir.name.startswith("batch_"):
+                        zhiku_file = batch_dir / "01_zhiku" / "zhiku_ai_queries.csv"
+                        if zhiku_file.exists():
+                            df_zk = load_csv_safe(zhiku_file)
+                            if not df_zk.empty and "ai_query" in df_zk.columns:
+                                matches = df_zk[df_zk["ai_query"].astype(str).str.contains(topic, case=False, na=False)]
+                                if not matches.empty:
+                                    zhiku_matches = matches["ai_query"].tolist()[:30]
+                            break  # Only check latest batch
+
+            gen_mode = st.radio("生成方式", ["🤖 AI 裂变", "📚 引用智库"] if zhiku_matches else ["🤖 AI 裂变"],
+                                key="gen_mode", horizontal=True)
+
+            if zhiku_matches and gen_mode == "📚 引用智库":
+                st.success(f"✅ 智库中找到 {len(zhiku_matches)} 条相关短语")
+
+            if st.button("🎯 生成短语", key="gen_q"):
                 if topic:
-                    base = [f"{topic}是什么？", f"{topic}怎么使用？", f"{topic}费用多少？",
-                            f"{topic}有什么优势？", f"{topic}和竞品有什么区别？",
-                            f"{topic}常见问题有哪些？", f"中国卖家如何使用{topic}？",
-                            f"{topic}新手入门指南", f"{topic}最新政策", f"{topic}操作流程"]
-                    st.session_state["sim_queries"] = base[:num_q]
+                    if gen_mode == "📚 引用智库" and zhiku_matches:
+                        st.session_state["sim_queries"] = zhiku_matches[:num_q]
+                    else:
+                        # AI裂变：用 LLM 生成更多变体
+                        try:
+                            from engine import call_bedrock_claude
+                            prompt = f"""请为话题「{topic}」生成 {num_q} 个中国卖家可能在 AI 搜索引擎中输入的口语化检索短语。
+
+要求：
+1. 覆盖不同角度：是什么、怎么做、费用、优势、对比、问题、流程、最新变化等
+2. 语言自然口语化，像真人提问
+3. 包含长尾变体（如"新手""2026""中国卖家"等修饰词）
+4. 每行一条，不要编号
+
+直接输出短语，不要其他解释。"""
+                            with st.spinner("AI 裂变中..."):
+                                response = call_bedrock_claude(prompt)
+                            queries = [q.strip().lstrip("0123456789.-、）) ") for q in response.strip().split("\n")
+                                       if q.strip() and len(q.strip()) > 4]
+                            st.session_state["sim_queries"] = queries[:num_q]
+                        except Exception as e:
+                            # Fallback to template
+                            st.warning(f"AI 裂变失败({str(e)[:50]}), 使用模板生成")
+                            base = [f"{topic}是什么？", f"{topic}怎么使用？", f"{topic}费用多少？",
+                                    f"{topic}有什么优势？", f"{topic}和竞品有什么区别？",
+                                    f"{topic}常见问题有哪些？", f"中国卖家如何使用{topic}？",
+                                    f"{topic}新手入门指南", f"{topic}最新政策", f"{topic}操作流程",
+                                    f"{topic}注意事项", f"{topic}成功案例",
+                                    f"2026年{topic}有什么变化？", f"{topic}适合新手吗？",
+                                    f"{topic}和自发货哪个好？"]
+                            st.session_state["sim_queries"] = base[:num_q]
 
         with col_q:
             if "sim_queries" in st.session_state and st.session_state["sim_queries"]:
