@@ -425,7 +425,7 @@ NAV_PAGES_ZH = [
     "📈 智析",
     "🎯 智中枢",
     "───────────",
-    "🔄 闭环追踪",
+    "🔄 需求提交",
     "📝 运营看板",
     "🔍 引用分析",
     "⚙️ Settings",
@@ -442,7 +442,7 @@ NAV_PAGES_EN = [
     "📈 Analytics",
     "🎯 Hub",
     "───────────",
-    "🔄 Closed-Loop",
+    "🔄 Request",
     "📝 Ops Dashboard",
     "🔍 Citation Analysis",
     "⚙️ Settings",
@@ -4976,10 +4976,10 @@ elif page == "📌 发布追踪" or (is_en and page == "📌 Publish Tracking"):
 
 
 # ============================================================
-# PAGE: 闭环追踪 (Closed-Loop — same as 8503)
+# PAGE: 需求提交 (Request — same as 8503)
 # ============================================================
 elif _page_idx == 10:
-    st.markdown("""<div style="padding:20px 0 10px;"><h1 style="font-size:28px;font-weight:800;color:#00bcd4;margin:0;">🔄 """ + ("Closed-Loop Tracking" if is_en else "闭环追踪") + """</h1><p style="font-size:13px;color:#8892b0;margin-top:6px;">""" + ("Test → Opportunity → Content → Publish → Effect (same as localhost:8503)" if is_en else "智测发现 → 机会点 → 内容产出 → 效果对比 → 总结（与 8503 同步）") + """</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div style="padding:20px 0 10px;"><h1 style="font-size:28px;font-weight:800;color:#00bcd4;margin:0;">🔄 """ + ("Request Submission" if is_en else "需求提交") + """</h1><p style="font-size:13px;color:#8892b0;margin-top:6px;">""" + ("Test → Opportunity → Content → Publish → Effect (same as localhost:8503)" if is_en else "智测发现 → 机会点 → 内容产出 → 效果对比 → 总结（与 8503 同步）") + """</p></div>""", unsafe_allow_html=True)
 
     # Load zhice results
     zhice_dir = OUTPUT_PATH / "zhice"
