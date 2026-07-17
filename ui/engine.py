@@ -482,6 +482,18 @@ def run_zhizao(batch_id: str, content_limit: int = 5,
         df_q["is_selected"] = df_q["is_selected"].astype(str).str.strip().str.upper()
         df_q = df_q[df_q["is_selected"].isin(["TRUE", "1", "YES"])]
 
+    # Skip already-generated queries (so subsequent runs produce NEW articles)
+    output_dir = OUTPUT_PATH / batch_id / "02_zhizao"
+    existing_output_file = output_dir / "zhizao_draft_content.csv"
+    if existing_output_file.exists() and existing_output_file.stat().st_size > 0:
+        try:
+            df_existing = pd.read_csv(existing_output_file, encoding="utf-8-sig", on_bad_lines="skip")
+            if not df_existing.empty and "ai_query" in df_existing.columns and "ai_query" in df_q.columns:
+                already_done = set(df_existing["ai_query"].dropna().astype(str).str.strip())
+                df_q = df_q[~df_q["ai_query"].astype(str).str.strip().isin(already_done)]
+        except Exception:
+            pass
+
     df_q = df_q.head(content_limit)
 
     if df_q.empty:
@@ -787,12 +799,15 @@ Stay strictly on topic. Every paragraph must relate directly to the search query
     output_file = output_dir / "zhizao_draft_content.csv"
 
     # Append to existing file (don't overwrite previous batches)
-    if output_file.exists():
-        existing = pd.read_csv(output_file, encoding="utf-8-sig", on_bad_lines="skip")
-        combined = pd.concat([existing, df_out], ignore_index=True)
-        if "ai_query" in combined.columns:
-            combined = combined.drop_duplicates(subset=["ai_query"], keep="last")
-        combined.to_csv(output_file, index=False, encoding="utf-8-sig")
+    if output_file.exists() and output_file.stat().st_size > 0:
+        try:
+            existing = pd.read_csv(output_file, encoding="utf-8-sig", on_bad_lines="skip")
+            combined = pd.concat([existing, df_out], ignore_index=True)
+            if "ai_query" in combined.columns:
+                combined = combined.drop_duplicates(subset=["ai_query"], keep="last")
+            combined.to_csv(output_file, index=False, encoding="utf-8-sig")
+        except pd.errors.EmptyDataError:
+            df_out.to_csv(output_file, index=False, encoding="utf-8-sig")
     else:
         df_out.to_csv(output_file, index=False, encoding="utf-8-sig")
 

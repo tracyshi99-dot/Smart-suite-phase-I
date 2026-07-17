@@ -425,7 +425,8 @@ NAV_PAGES_ZH = [
     "📈 智析",
     "🎯 智中枢",
     "───────────",
-    "📝 需求中心",
+    "🔄 闭环追踪",
+    "📝 运营看板",
     "🔍 引用分析",
     "⚙️ Settings",
 ]
@@ -441,7 +442,8 @@ NAV_PAGES_EN = [
     "📈 Analytics",
     "🎯 Hub",
     "───────────",
-    "📝 Demand Center",
+    "🔄 Closed-Loop",
+    "📝 Ops Dashboard",
     "🔍 Citation Analysis",
     "⚙️ Settings",
 ]
@@ -486,7 +488,9 @@ with st.sidebar:
             "zhiku": 1, "zhice": 2, "zhizao": 3, "zhiyou": 4,
             "zhibu": 5, "zhichuan": 6, "zhixi": 7,
             "zhishu": 8, "zhongshu": 8,
-            "overview": 0, "settings": 12,
+            "loop": 10, "closed-loop": 10,
+            "ops": 11, "dashboard": 11,
+            "overview": 0, "settings": 13,
         }
         _idx = _tool_map_idx.get(_qp["tool"])
         if _idx is not None and _idx < len(NAV_PAGES):
@@ -1873,6 +1877,9 @@ elif _page_idx == 3:
             df_z["confirmed"] = True
         confirm_cols.append("confirmed") if "confirmed" not in confirm_cols else None
 
+        # Ensure confirmed column is boolean (not float from NaN)
+        df_z["confirmed"] = df_z["confirmed"].fillna(True).astype(bool)
+
         df_confirm = df_z[["title", "confirmed"]].copy() if "title" in df_z.columns else df_z[["confirmed"]].copy()
         if "title" in df_z.columns:
             df_confirm_edit = st.data_editor(
@@ -2231,6 +2238,7 @@ elif _page_idx == 4:
 
         if "confirmed" not in df_opt.columns:
             df_opt["confirmed"] = True
+        df_opt["confirmed"] = df_opt["confirmed"].fillna(True).astype(bool)
 
         if title_col in df_opt.columns:
             df_confirm = st.data_editor(
@@ -4968,76 +4976,220 @@ elif page == "📌 发布追踪" or (is_en and page == "📌 Publish Tracking"):
 
 
 # ============================================================
-# PAGE: 需求中心 (Intake + 智测)
+# PAGE: 闭环追踪 (Closed-Loop — same as 8503)
 # ============================================================
 elif _page_idx == 10:
-    st.markdown("""<div style="padding:20px 0 10px;"><h1 style="font-size:28px;font-weight:800;color:#00bcd4;margin:0;">📝 """ + ("Request Center" if is_en else "需求中心") + """</h1><p style="font-size:13px;color:#8892b0;margin-top:6px;">""" + ("Intake + Journey Research — Product request submission, user journey research, request tracking" if is_en else "Intake + 智测合并 — 产品需求提交、用户旅程调研、需求追踪") + """</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div style="padding:20px 0 10px;"><h1 style="font-size:28px;font-weight:800;color:#00bcd4;margin:0;">🔄 """ + ("Closed-Loop Tracking" if is_en else "闭环追踪") + """</h1><p style="font-size:13px;color:#8892b0;margin-top:6px;">""" + ("Test → Opportunity → Content → Publish → Effect (same as localhost:8503)" if is_en else "智测发现 → 机会点 → 内容产出 → 效果对比 → 总结（与 8503 同步）") + """</p></div>""", unsafe_allow_html=True)
 
-    tab_geo, tab_tracking = st.tabs([
-        "📊 Request Dashboard" if is_en else "📊 需求管理看板",
-        "📋 Request Progress Tracking" if is_en else "📋 需求进展追踪",
+    # Load zhice results
+    zhice_dir = OUTPUT_PATH / "zhice"
+    zhice_results = []
+    if zhice_dir.exists():
+        for f in sorted(zhice_dir.glob("*.json"), key=lambda x: x.stat().st_mtime, reverse=True):
+            try:
+                data = json.loads(f.read_text(encoding="utf-8"))
+                zhice_results.append({"file": f.name, "data": data, "mtime": f.stat().st_mtime})
+            except Exception:
+                pass
+
+    # Load content
+    zhizao_file = OUTPUT_PATH / selected_batch / "02_zhizao" / "zhizao_draft_content.csv"
+    df_content_cl = load_csv_safe(zhizao_file) if zhizao_file.exists() else pd.DataFrame()
+    opt_file = OUTPUT_PATH / selected_batch / "03_zhiyou" / "zhiyou_optimized_content.csv"
+    df_optimized_cl = load_csv_safe(opt_file) if opt_file.exists() else pd.DataFrame()
+
+    # KPIs
+    test_count = len(zhice_results)
+    total_queries_tested = sum(len(r["data"]) for r in zhice_results if isinstance(r["data"], list))
+    gaps_found = sum(
+        sum(1 for item in r["data"] if not item.get("has_official_link", False) and not item.get("has_amazon_cn", False))
+        for r in zhice_results if isinstance(r["data"], list)
+    )
+    content_produced = len(df_content_cl) if not df_content_cl.empty else 0
+    content_optimized = len(df_optimized_cl) if not df_optimized_cl.empty else 0
+
+    kc1, kc2, kc3, kc4, kc5 = st.columns(5)
+    kc1.metric("Tests" if is_en else "智测次数", test_count)
+    kc2.metric("Queries" if is_en else "短语测试", total_queries_tested)
+    kc3.metric("Gaps" if is_en else "发现缺口", gaps_found)
+    kc4.metric("Content" if is_en else "内容产出", content_produced)
+    kc5.metric("Optimized" if is_en else "优化完成", content_optimized)
+
+    st.divider()
+
+    # Step 1: Test Results
+    st.markdown("### 🔍 " + ("Step 1: Test Results" if is_en else "Step 1: 智测发现"))
+    if zhice_results and isinstance(zhice_results[0]["data"], list):
+        latest_data = zhice_results[0]["data"]
+        df_test = pd.DataFrame([{
+            "Query": item.get("query", ""),
+            "Platform": item.get("platform", ""),
+            "Official Link": "✅" if item.get("has_official_link", False) else "❌",
+            "Brand": "✅" if item.get("has_brand_mention", False) else "❌",
+            "Status": "✅" if (item.get("has_official_link") or item.get("has_amazon_cn")) else "⚠️ Gap",
+        } for item in latest_data])
+        st.dataframe(df_test, use_container_width=True, hide_index=True)
+    else:
+        st.info("No test results yet." if is_en else "暂无智测结果。")
+
+    st.divider()
+
+    # Step 2: Opportunities
+    st.markdown("### 💡 " + ("Step 2: Opportunities" if is_en else "Step 2: 机会点"))
+    all_gaps = []
+    for r in zhice_results:
+        if isinstance(r["data"], list):
+            for item in r["data"]:
+                if not item.get("has_official_link") and not item.get("has_amazon_cn"):
+                    all_gaps.append({"Query": item.get("query", ""), "Platform": item.get("platform", "")})
+    if all_gaps:
+        st.dataframe(pd.DataFrame(all_gaps[:20]), use_container_width=True, hide_index=True)
+    else:
+        st.success("No gaps!" if is_en else "无缺口！")
+
+    st.divider()
+
+    # Step 3: Content Production
+    st.markdown("### ✍️ " + ("Step 3: Content & Publishing" if is_en else "Step 3: 内容产出与发布"))
+    if not df_content_cl.empty:
+        show_cols = [c for c in ["ai_query", "title", "word_count", "version"] if c in df_content_cl.columns]
+        if show_cols:
+            df_s = df_content_cl[show_cols].copy()
+            if not df_optimized_cl.empty and "ai_query" in df_optimized_cl.columns:
+                opt_q = set(df_optimized_cl["ai_query"].dropna().astype(str))
+                df_s["Status"] = df_s["ai_query"].apply(lambda q: "✅" if str(q) in opt_q else "⏳")
+            else:
+                df_s["Status"] = "⏳"
+            st.dataframe(df_s, use_container_width=True, hide_index=True)
+    else:
+        st.info("No content yet." if is_en else "暂无内容。")
+
+    # Quick produce button
+    col_qp1, col_qp2 = st.columns([1, 3])
+    with col_qp1:
+        qp_count = st.number_input("Articles" if is_en else "篇数", 1, 10, 3, key="qp_count_cl")
+    with col_qp2:
+        if st.button("🚀 " + ("Quick Produce + Optimize" if is_en else "快速生产+优化"), type="primary", key="qp_btn_cl"):
+            try:
+                from engine import run_zhizao, run_zhiyou_score, run_zhiyou_execute
+                with st.spinner("Producing..." if is_en else "生产中..."):
+                    r1 = run_zhizao(selected_batch, qp_count, None, "auto")
+                    if r1.get("success"):
+                        run_zhiyou_score(selected_batch, None)
+                        run_zhiyou_execute(selected_batch, None)
+                        st.success(f"✅ Done! {r1.get('articles_generated', 0)} articles" if is_en else f"✅ 完成！{r1.get('articles_generated', 0)} 篇")
+                        st.rerun()
+                    else:
+                        st.error(r1.get("error", "Failed"))
+            except Exception as e:
+                st.error(str(e))
+
+    st.divider()
+
+    # Step 4: Before vs After
+    st.markdown("### 📈 " + ("Step 4: Effect Comparison" if is_en else "Step 4: 效果对比"))
+    if len(zhice_results) >= 2:
+        first = zhice_results[-1]["data"]
+        last = zhice_results[0]["data"]
+        if isinstance(first, list) and isinstance(last, list):
+            bq = {item.get("query"): item for item in first}
+            aq = {item.get("query"): item for item in last}
+            common = set(bq.keys()) & set(aq.keys())
+            if common:
+                comp = []
+                for q in common:
+                    b_ok = bq[q].get("has_official_link") or bq[q].get("has_brand_mention")
+                    a_ok = aq[q].get("has_official_link") or aq[q].get("has_brand_mention")
+                    change = "🆕" if (not b_ok and a_ok) else ("⚠️" if (b_ok and not a_ok) else "→")
+                    comp.append({"Query": q, "Before": "✅" if b_ok else "❌", "After": "✅" if a_ok else "❌", "Δ": change})
+                st.dataframe(pd.DataFrame(comp), use_container_width=True, hide_index=True)
+            else:
+                st.info("No common queries to compare." if is_en else "无相同短语可对比。")
+    else:
+        st.info("Need 2+ test runs to compare." if is_en else "需2次以上测试才能对比。")
+
+    st.divider()
+
+    # Step 5: Summary
+    st.markdown("### 📝 " + ("Step 5: Summary" if is_en else "Step 5: 总结"))
+    st.markdown(f"- {'Tests:' if is_en else '测试：'} {test_count} runs, {total_queries_tested} queries")
+    st.markdown(f"- {'Gaps:' if is_en else '缺口：'} {gaps_found}")
+    st.markdown(f"- {'Content:' if is_en else '内容：'} {content_produced} produced, {content_optimized} optimized")
+    if gaps_found > 0 and content_produced > 0:
+        st.markdown(f"- {'Fill rate:' if is_en else '填补率：'} {min(100, content_produced/gaps_found*100):.0f}%")
+
+
+# PAGE: 运营看板 (Operations Dashboard)
+# ============================================================
+elif _page_idx == 11:
+    st.markdown("""<div style="padding:20px 0 10px;"><h1 style="font-size:28px;font-weight:800;color:#00bcd4;margin:0;">📝 """ + ("Operations Dashboard" if is_en else "运营管理看板") + """</h1><p style="font-size:13px;color:#8892b0;margin-top:6px;">""" + ("Team activity log, pipeline status, who did what" if is_en else "团队操作日志、流水线状态、谁执行了什么") + """</p></div>""", unsafe_allow_html=True)
+
+    tab_activity, tab_pipeline, tab_link = st.tabs([
+        "📋 Activity Log" if is_en else "📋 操作日志",
+        "📊 Pipeline Status" if is_en else "📊 流水线状态",
+        "🔗 Links" if is_en else "🔗 入口链接",
     ])
 
-    with tab_geo:
-        st.markdown("""<div style="background:#1a1d2e;border:1px solid #2a2f4a;border-radius:12px;padding:20px;margin:8px 0;">
-            <h3 style="color:#00bcd4;font-size:18px;font-weight:700;margin:0 0 8px;">📊 """ + ("Request Management Dashboard" if is_en else "需求管理看板") + """</h3>
-            <p style="color:#8892b0;font-size:12px;margin:0;">""" + ("View all submitted requests, track status, and manage content pipeline" if is_en else "查看所有提交的需求、追踪状态、管理内容流水线") + """</p>
-        </div>""", unsafe_allow_html=True)
+    with tab_activity:
+        st.markdown("### " + ("Recent Operations" if is_en else "最近操作"))
+        st.caption("Who did what — audit trail from all interfaces" if is_en else "谁执行了什么 — 所有界面的操作记录")
 
-        st.caption("Requests are submitted at: http://localhost:8503 (Submit Request tab)" if is_en else "需求提交入口: http://localhost:8503（Submit Request tab）")
+        # Load audit log
+        audit_file = Path(BASE_PATH) / "logs" / "audit.log"
+        if audit_file.exists():
+            lines = audit_file.read_text(encoding="utf-8", errors="replace").strip().split("\n")
+            # Parse log lines
+            log_entries = []
+            for line in reversed(lines[-100:]):  # Last 100 entries, newest first
+                line = line.strip()
+                if not line or "credentials" in line.lower():
+                    continue
+                # Parse: 2026-06-02 15:19:56 | USER=yujiashi | ACTION=intake_submitted | details
+                parts = [p.strip() for p in line.split("|")]
+                if len(parts) >= 3:
+                    timestamp = parts[0]
+                    user = parts[1].replace("USER=", "") if "USER=" in parts[1] else parts[1]
+                    action = parts[2].replace("ACTION=", "") if "ACTION=" in parts[2] else parts[2]
+                    details = " | ".join(parts[3:]) if len(parts) > 3 else ""
+                    log_entries.append({"Time": timestamp, "User": user, "Action": action, "Details": details})
 
-        # Load intake data
-        intake_file = OUTPUT_PATH / "intake_requests.csv"
-        if intake_file.exists():
-            df_intake = load_csv_safe(intake_file)
-            if not df_intake.empty:
-                # KPIs
-                kc1, kc2, kc3, kc4 = st.columns(4)
-                total_req = len(df_intake)
-                new_req = len(df_intake[df_intake.get("status", pd.Series()) == "New"]) if "status" in df_intake.columns else 0
-                in_progress = len(df_intake[df_intake.get("status", pd.Series()).isin(["In Progress", "Processing"])]) if "status" in df_intake.columns else 0
-                done_req = len(df_intake[df_intake.get("status", pd.Series()).isin(["Done", "Published", "Completed"])]) if "status" in df_intake.columns else 0
-                kc1.metric("Total Requests" if is_en else "总需求", total_req)
-                kc2.metric("New" if is_en else "待处理", new_req)
-                kc3.metric("In Progress" if is_en else "进行中", in_progress)
-                kc4.metric("Completed" if is_en else "已完成", done_req)
-
-                st.divider()
-
-                # Editable status table
-                st.markdown("**All Requests:**" if is_en else "**全部需求：**")
-                status_options = ["New", "In Progress", "Content Created", "Under Review", "Published", "Rejected"]
-                col_config = {}
-                if "status" in df_intake.columns:
-                    col_config["status"] = st.column_config.SelectboxColumn("Status", options=status_options)
-                edited = st.data_editor(df_intake, use_container_width=True, hide_index=True,
-                                       column_config=col_config, key="intake_editor")
-                if st.button("💾 Save Changes" if is_en else "💾 保存修改", key="save_intake_changes"):
-                    edited.to_csv(intake_file, index=False, encoding="utf-8-sig")
-                    st.success("✅ Saved!" if is_en else "✅ 已保存！")
-                    st.rerun()
+            if log_entries:
+                df_log = pd.DataFrame(log_entries[:50])  # Show last 50
+                st.dataframe(df_log, use_container_width=True, hide_index=True)
+                st.caption(f"{'Showing last 50 entries' if is_en else '显示最近 50 条'} ({len(log_entries)} {'total' if is_en else '总计'})")
             else:
-                st.info("No requests yet. Share http://localhost:8503 with your team to submit requests." if is_en else "暂无需求。分享 http://localhost:8503 给团队成员提交需求。")
+                st.info("No activity logged yet." if is_en else "暂无操作记录。")
         else:
-            st.info("No requests yet." if is_en else "暂无需求。")
+            st.info("No audit log found." if is_en else "未找到审计日志。")
 
-    with tab_tracking:
-        st.subheader("📋 Request Progress Tracking" if is_en else "📋 需求进展追踪")
-        intake_file = OUTPUT_PATH / "intake_requests.csv"
-        if intake_file.exists():
-            df_intake = load_csv_safe(intake_file)
-            if not df_intake.empty:
-                st.dataframe(df_intake, use_container_width=True, hide_index=True)
-            else:
-                st.info("No request records" if is_en else "暂无需求记录")
-        else:
-            st.info("No request records yet. Please submit in the Product GEO Request tab." if is_en else "暂无需求记录，请在「产品 GEO 需求」标签页提交。")
+    with tab_pipeline:
+        st.markdown("### " + ("Pipeline Status per Batch" if is_en else "各批次流水线状态"))
+
+        for batch_id in get_batches()[:5]:
+            status = get_batch_status(batch_id)
+            st.markdown(f"**{batch_id}**")
+            cols = st.columns(4)
+            for i, (folder, info) in enumerate(status.items()):
+                with cols[i]:
+                    icon = "✅" if info["done"] else "⬜"
+                    st.markdown(f"{icon} {info['icon']} {info['name']} ({info['files']} files)")
+            st.divider()
+
+    with tab_link:
+        st.markdown("### " + ("Service Links" if is_en else "服务入口"))
+        st.markdown("""
+| Service | URL | Description |
+|---------|-----|-------------|
+| **Main Console** | http://localhost:8501 | """ + ("Management dashboard (this page)" if is_en else "管理看板（当前页面）") + """ |
+| **POC Review** | http://localhost:8502 | """ + ("POC content review & approval" if is_en else "POC 内容审核审批") + """ |
+| **Closed-Loop Console** | http://localhost:8503 | """ + ("Team operations: test→opportunity→content→effect" if is_en else "团队操作台：测试→机会→内容→效果 闭环") + """ |
+""")
 
 
 # ============================================================
 # PAGE: 引用分析
 # ============================================================
-elif _page_idx == 11:
+elif _page_idx == 12:
     st.markdown("""<div style="padding:20px 0 10px;"><h1 style="font-size:28px;font-weight:800;color:#4caf50;margin:0;">🔍 """ + ("Citation Analysis" if is_en else "引用分析") + """</h1><p style="font-size:13px;color:#8892b0;margin-top:6px;">""" + ("Analyze AI search engine citation of our content" if is_en else "分析 AI 搜索引擎对内容的引用情况") + """</p></div>""", unsafe_allow_html=True)
 
     st.subheader("AI Engine Citation Monitoring" if is_en else "AI 引擎引用监控")
@@ -5075,7 +5227,7 @@ elif _page_idx == 11:
 # ============================================================
 # PAGE: Settings
 # ============================================================
-elif _page_idx == 12:
+elif _page_idx == 13:
     st.title("⚙️ Settings")
     st.caption("System Configuration" if is_en else "系统配置")
 
