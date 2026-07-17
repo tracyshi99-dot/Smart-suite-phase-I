@@ -280,6 +280,14 @@ with tab_test:
                 icon = "✅" if r.get("has_official_link") else "❌"
                 st.markdown(f"{icon} **{r['query']}** ({PLATFORMS.get(r.get('platform',''), r.get('platform',''))}) — {r.get('answer_length',0)} chars")
 
+            # CTA to next step
+            st.divider()
+            if st.button("➡️ 下一步：查看机会点分析", type="primary", key="cta_to_step2"):
+                st.session_state["active_tab"] = 1
+                # Switch to tab 2 by using query params
+                st.query_params["step"] = "2"
+                st.rerun()
+
     # --- Sub-tab: 上传话题 ---
     with sub_tab_topic:
         st.caption("手动上传需要测试的话题/检索短语（CSV 或手动输入）")
@@ -482,7 +490,12 @@ with tab_opps:
             if st.button("✅ 确认机会点，进入执行", type="primary", key="confirm_opps"):
                 USER_OPPS_FILE.write_text(json.dumps(opp_list, ensure_ascii=False, indent=2), encoding="utf-8")
                 log_action(user_login, "opps_confirmed", f"count={len(opp_list)}")
-                st.success(f"✅ 已确认 {len(opp_list)} 个机会点！请前往「③ 执行机会点」。")
+                st.success(f"✅ 已确认 {len(opp_list)} 个机会点！请点击上方「③ 执行机会点」标签。")
+
+            # CTA
+            if USER_OPPS_FILE.exists():
+                st.divider()
+                st.info("💡 已有确认的机会点？点击上方「③ 执行机会点」标签开始产出内容。")
         else:
             st.success("🎉 全部覆盖，无缺口！无需额外行动。")
 
@@ -581,6 +594,8 @@ with tab_execute:
 
                         log_action(user_login, "opps_executed", f"batch={batch}, count={articles}")
                         st.success(f"✅ 完成！生成 {articles} 篇，已优化。")
+                        st.divider()
+                        st.info("💡 查看执行状态和闭环效果？点击上方「④ 执行状态」或「⑤ 闭环看板」标签。")
                         st.rerun()
                     else:
                         st.error(f"❌ 失败: {r1.get('error', '')}")
