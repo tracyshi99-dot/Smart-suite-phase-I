@@ -59,6 +59,39 @@ def get_user_dir(user: str) -> Path:
     d.mkdir(parents=True, exist_ok=True)
     return d
 
+
+def load_user_json(filepath: Path, user: str, filename: str):
+    """Load user JSON: try S3 first, fallback to local file."""
+    try:
+        from s3_sync import load_user_data, s3_available
+        if s3_available():
+            data = load_user_data(user, filename)
+            if data:
+                return data
+    except Exception:
+        pass
+    # Fallback to local
+    if filepath.exists():
+        try:
+            return json.loads(filepath.read_text(encoding="utf-8"))
+        except Exception:
+            return []
+    return []
+
+
+def save_user_json(filepath: Path, user: str, filename: str, data):
+    """Save user JSON: write to local + S3."""
+    content = json.dumps(data, ensure_ascii=False, indent=2)
+    # Local
+    filepath.parent.mkdir(parents=True, exist_ok=True)
+    filepath.write_text(content, encoding="utf-8")
+    # S3
+    try:
+        from s3_sync import save_user_data
+        save_user_data(user, filename, data)
+    except Exception:
+        pass
+
 def log_action(user, action, details=""):
     ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_file = LOGS_DIR / "audit.log"
@@ -291,9 +324,9 @@ if current_step == 0:
             test_entry = {"id": f"test_{ts}", "topic": topic, "date": ts,
                           "user": user_login, "results": results}
 
-            existing_tests = json.loads(USER_TESTS_FILE.read_text(encoding="utf-8")) if USER_TESTS_FILE.exists() else []
+            existing_tests = load_user_json(USER_TESTS_FILE, user_login, "tests.json")
             existing_tests.insert(0, test_entry)
-            USER_TESTS_FILE.write_text(json.dumps(existing_tests, ensure_ascii=False, indent=2), encoding="utf-8")
+            save_user_json(USER_TESTS_FILE, user_login, "tests.json", existing_tests)
 
             shared_file = ZHICE_DIR / f"sim_{topic.replace(' ','_')[:20]}_{ts}.json"
             shared_file.write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -339,9 +372,9 @@ if current_step == 0:
                                   "date": ts, "user": user_login,
                                   "results": [{"query": q, "platform": "待测试", "answer": "",
                                                "has_official_link": False, "has_brand_mention": False} for q in queries_list]}
-                    existing_tests = json.loads(USER_TESTS_FILE.read_text(encoding="utf-8")) if USER_TESTS_FILE.exists() else []
+                    existing_tests = load_user_json(USER_TESTS_FILE, user_login, "tests.json")
                     existing_tests.insert(0, test_entry)
-                    USER_TESTS_FILE.write_text(json.dumps(existing_tests, ensure_ascii=False, indent=2), encoding="utf-8")
+                    save_user_json(USER_TESTS_FILE, user_login, "tests.json", existing_tests)
                     log_action(user_login, "topics_uploaded", f"count={len(queries_list)}")
                     st.success(f"✅ 上传 {len(queries_list)} 个话题！可在「② 机会点分析」中查看，或回到 AI 测试执行。")
                     st.dataframe(pd.DataFrame({"话题": queries_list}), use_container_width=True, hide_index=True)
@@ -361,25 +394,25 @@ if current_step == 0:
                               "date": ts, "user": user_login,
                               "results": [{"query": q, "platform": "待测试", "answer": "",
                                            "has_official_link": False, "has_brand_mention": False} for q in lines]}
-                existing_tests = json.loads(USER_TESTS_FILE.read_text(encoding="utf-8")) if USER_TESTS_FILE.exists() else []
+                existing_tests = load_user_json(USER_TESTS_FILE, user_login, "tests.json")
                 existing_tests.insert(0, test_entry)
-                USER_TESTS_FILE.write_text(json.dumps(existing_tests, ensure_ascii=False, indent=2), encoding="utf-8")
+                save_user_json(USER_TESTS_FILE, user_login, "tests.json", existing_tests)
                 log_action(user_login, "topics_manual", f"count={len(lines)}")
                 st.success(f"✅ 已提交 {len(lines)} 个话题！")
 
     # --- Step 1: Clear & History ---
     USER_HISTORY_FILE = USER_DIR / "history.json"
-    _history = json.loads(USER_HISTORY_FILE.read_text(encoding="utf-8")) if USER_HISTORY_FILE.exists() else []
+    _history = load_user_json(USER_HISTORY_FILE, user_login, "history.json")
 
     with st.expander("🗑️ 清除测试记录 / 📜 历史", expanded=False):
-        user_tests_here = json.loads(USER_TESTS_FILE.read_text(encoding="utf-8")) if USER_TESTS_FILE.exists() else []
+        user_tests_here = load_user_json(USER_TESTS_FILE, user_login, "tests.json")
         if user_tests_here:
             st.caption(f"当前有 {len(user_tests_here)} 条测试记录")
             if st.button("🗑️ 清除所有测试记录（归档）", key="clear_tests_s1"):
                 archive = {"archived_at": datetime.now().strftime("%Y-%m-%d %H:%M"), "type": "tests", "count": len(user_tests_here), "data": user_tests_here}
                 _history.insert(0, archive)
-                USER_HISTORY_FILE.write_text(json.dumps(_history, ensure_ascii=False, indent=2), encoding="utf-8")
-                USER_TESTS_FILE.write_text("[]", encoding="utf-8")
+                save_user_json(USER_HISTORY_FILE, user_login, "history.json", _history)
+                save_user_json(USER_TESTS_FILE, user_login, "tests.json", [])
                 st.success("✅ 已归档")
                 st.rerun()
         else:
@@ -401,7 +434,7 @@ if current_step == 1:
     st.caption("基于测试结果，分析缺口和改善机会，确认哪些需要行动")
 
     # Load user's tests
-    user_tests = json.loads(USER_TESTS_FILE.read_text(encoding="utf-8")) if USER_TESTS_FILE.exists() else []
+    user_tests = load_user_json(USER_TESTS_FILE, user_login, "tests.json")
 
     if not user_tests:
         st.info("暂无测试结果。请先在「① 执行测试」中运行测试。")
@@ -452,7 +485,7 @@ if current_step == 1:
             # Save opportunities
             st.divider()
             if st.button("✅ 确认机会点，进入执行", type="primary", key="confirm_opps"):
-                USER_OPPS_FILE.write_text(json.dumps(opp_list, ensure_ascii=False, indent=2), encoding="utf-8")
+                save_user_json(USER_OPPS_FILE, user_login, "opportunities.json", opp_list)
                 log_action(user_login, "opps_confirmed", f"count={len(opp_list)}")
                 st.session_state["current_step"] = 2
                 st.rerun()
@@ -468,16 +501,16 @@ if current_step == 1:
 
     # --- Step 2: Clear & History ---
     USER_HISTORY_FILE = USER_DIR / "history.json"
-    _history = json.loads(USER_HISTORY_FILE.read_text(encoding="utf-8")) if USER_HISTORY_FILE.exists() else []
+    _history = load_user_json(USER_HISTORY_FILE, user_login, "history.json")
     with st.expander("🗑️ 清除机会点 / 📜 历史", expanded=False):
-        opps_here = json.loads(USER_OPPS_FILE.read_text(encoding="utf-8")) if USER_OPPS_FILE.exists() else []
+        opps_here = load_user_json(USER_OPPS_FILE, user_login, "opportunities.json")
         if opps_here:
             st.caption(f"当前有 {len(opps_here)} 条机会点")
             if st.button("🗑️ 清除所有机会点（归档）", key="clear_opps_s2"):
                 archive = {"archived_at": datetime.now().strftime("%Y-%m-%d %H:%M"), "type": "opportunities", "count": len(opps_here), "data": opps_here}
                 _history.insert(0, archive)
-                USER_HISTORY_FILE.write_text(json.dumps(_history, ensure_ascii=False, indent=2), encoding="utf-8")
-                USER_OPPS_FILE.write_text("[]", encoding="utf-8")
+                save_user_json(USER_HISTORY_FILE, user_login, "history.json", _history)
+                save_user_json(USER_OPPS_FILE, user_login, "opportunities.json", [])
                 st.success("✅ 已归档")
                 st.rerun()
         else:
@@ -497,7 +530,7 @@ if current_step == 2:
     st.caption("产出内容 / 上传已有文章（自动匹配机会点）→ 优化 → 发布")
 
     # Load opportunities
-    opps = json.loads(USER_OPPS_FILE.read_text(encoding="utf-8")) if USER_OPPS_FILE.exists() else []
+    opps = load_user_json(USER_OPPS_FILE, user_login, "opportunities.json")
 
     # --- Upload section: upload existing articles to match opportunities ---
     with st.expander("📄 上传已有文章（自动匹配机会点）", expanded=False):
@@ -581,7 +614,7 @@ if current_step == 2:
                                 if o["query"] in matched_queries and o.get("status") == "待执行":
                                     o["status"] = "已完成(上传)"
                                     o["completed_at"] = datetime.now().strftime("%Y-%m-%d %H:%M")
-                            USER_OPPS_FILE.write_text(json.dumps(opps, ensure_ascii=False, indent=2), encoding="utf-8")
+                            save_user_json(USER_OPPS_FILE, user_login, "opportunities.json", opps)
 
                         log_action(user_login, "content_uploaded_s3", f"count={len(df_up)}, matched={len(matched) if 'matched' in dir() else 0}")
                         st.success(f"✅ 上传 {len(df_up)} 篇！匹配的机会点已标记完成，可直接走优化流程。")
@@ -617,7 +650,7 @@ if current_step == 2:
                                 o["status"] = "已完成(上传)"
                                 o["completed_at"] = datetime.now().strftime("%Y-%m-%d %H:%M")
                                 break
-                    USER_OPPS_FILE.write_text(json.dumps(opps, ensure_ascii=False, indent=2), encoding="utf-8")
+                    save_user_json(USER_OPPS_FILE, user_login, "opportunities.json", opps)
                     log_action(user_login, "content_pasted_s3", f"title={paste_title}")
                     st.success("✅ 已提交！匹配的机会点已标记完成。")
                     st.rerun()
@@ -698,14 +731,14 @@ if current_step == 2:
                         for o in pending[:exec_count]:
                             o["status"] = "已完成"
                             o["completed_at"] = datetime.now().strftime("%Y-%m-%d %H:%M")
-                        USER_OPPS_FILE.write_text(json.dumps(opps, ensure_ascii=False, indent=2), encoding="utf-8")
+                        save_user_json(USER_OPPS_FILE, user_login, "opportunities.json", opps)
 
                         # Save action record
-                        actions = json.loads(USER_ACTIONS_FILE.read_text(encoding="utf-8")) if USER_ACTIONS_FILE.exists() else []
+                        actions = load_user_json(USER_ACTIONS_FILE, user_login, "actions.json")
                         actions.insert(0, {"date": datetime.now().strftime("%Y-%m-%d %H:%M"),
                                            "action": "content_produced", "count": articles,
                                            "batch": batch, "queries": [o["query"] for o in pending[:exec_count]]})
-                        USER_ACTIONS_FILE.write_text(json.dumps(actions, ensure_ascii=False, indent=2), encoding="utf-8")
+                        save_user_json(USER_ACTIONS_FILE, user_login, "actions.json", actions)
 
                         log_action(user_login, "opps_executed", f"batch={batch}, count={articles}")
                         st.success(f"✅ 完成！生成 {articles} 篇，已优化。")
@@ -729,12 +762,12 @@ if current_step == 3:
     st.caption("执行进展 → 提交审批 → 发布状态")
 
     # Load opportunities
-    opps = json.loads(USER_OPPS_FILE.read_text(encoding="utf-8")) if USER_OPPS_FILE.exists() else []
-    actions = json.loads(USER_ACTIONS_FILE.read_text(encoding="utf-8")) if USER_ACTIONS_FILE.exists() else []
+    opps = load_user_json(USER_OPPS_FILE, user_login, "opportunities.json")
+    actions = load_user_json(USER_ACTIONS_FILE, user_login, "actions.json")
 
     # Load publish status (shared file that 8501 writes back to)
     USER_PUBLISH_FILE = USER_DIR / "publish_status.json"
-    publish_status = json.loads(USER_PUBLISH_FILE.read_text(encoding="utf-8")) if USER_PUBLISH_FILE.exists() else {}
+    publish_status = load_user_json(USER_PUBLISH_FILE, user_login, "publish_status.json") or {}
 
     if not opps and not actions:
         st.info("暂无执行记录。")
@@ -887,13 +920,13 @@ if current_step == 4:
     st.caption("整体效果：测试 → 缺口 → 行动 → 结果")
 
     # Load all user data
-    user_tests = json.loads(USER_TESTS_FILE.read_text(encoding="utf-8")) if USER_TESTS_FILE.exists() else []
-    opps = json.loads(USER_OPPS_FILE.read_text(encoding="utf-8")) if USER_OPPS_FILE.exists() else []
-    actions = json.loads(USER_ACTIONS_FILE.read_text(encoding="utf-8")) if USER_ACTIONS_FILE.exists() else []
+    user_tests = load_user_json(USER_TESTS_FILE, user_login, "tests.json")
+    opps = load_user_json(USER_OPPS_FILE, user_login, "opportunities.json")
+    actions = load_user_json(USER_ACTIONS_FILE, user_login, "actions.json")
 
     # Load history (archived records)
     USER_HISTORY_FILE = USER_DIR / "history.json"
-    history = json.loads(USER_HISTORY_FILE.read_text(encoding="utf-8")) if USER_HISTORY_FILE.exists() else []
+    history = load_user_json(USER_HISTORY_FILE, user_login, "history.json")
 
     # Summary KPIs
     total_tests = len(user_tests)
