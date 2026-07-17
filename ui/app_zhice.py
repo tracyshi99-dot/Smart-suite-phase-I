@@ -1,7 +1,7 @@
 """
-Smart Suite — Closed-Loop Tracking Console (闭环追踪操作台)
-团队操作界面：智测→机会→内容→发布→效果 完整闭环
-可引用 8501 主控台已有的测试结果和内容产出
+Smart Suite — 需求提交操作台
+流程：执行测试 → 机会点分析 → 执行机会点 → 状态展示 → 闭环看板
+每个用户只能看到自己的数据
 Run: streamlit run app_zhice.py --server.port 8503
 """
 import streamlit as st
@@ -31,41 +31,39 @@ ZHICE_DIR.mkdir(parents=True, exist_ok=True)
 LOGS_DIR = Path(__file__).parent.parent / "logs"
 LOGS_DIR.mkdir(parents=True, exist_ok=True)
 
-st.set_page_config(page_title="Smart Suite — Closed-Loop Console", page_icon="🔄", layout="wide")
+st.set_page_config(page_title="Smart Suite — 需求提交", page_icon="🔄", layout="wide")
 
-st.markdown("""
-<style>
+st.markdown("""<style>
 .main .block-container { padding-top: 1rem; padding-left: 1rem; padding-right: 1rem; max-width: 100%; }
-div[data-testid="stMetric"] {
-    background: linear-gradient(135deg, #1a1d2e 0%, #12131a 100%);
-    border: 1px solid #2a2f4a; border-radius: 10px; padding: 12px 16px;
-}
+div[data-testid="stMetric"] { background: linear-gradient(135deg, #1a1d2e 0%, #12131a 100%); border: 1px solid #2a2f4a; border-radius: 10px; padding: 12px 16px; }
 div[data-testid="stMetric"] label { color: #8892b0 !important; font-size: 12px !important; }
 div[data-testid="stMetric"] [data-testid="stMetricValue"] { color: #00bcd4 !important; font-weight: 700 !important; }
-</style>
-""", unsafe_allow_html=True)
+</style>""", unsafe_allow_html=True)
 
-# --- Platform options ---
 PLATFORMS = {
-    "qianwen": "通义千问 (Qianwen)",
-    "deepseek": "DeepSeek",
-    "kimi": "Kimi (Moonshot)",
-    "doubao": "豆包 (Doubao)",
-    "chatgpt": "ChatGPT (OpenAI)",
-    "gemini": "Gemini (Google)",
+    "qianwen": "通义千问", "deepseek": "DeepSeek", "kimi": "Kimi",
+    "doubao": "豆包", "chatgpt": "ChatGPT", "gemini": "Gemini",
 }
 
-
-# --- Helper functions ---
 def load_csv_safe(path: Path):
     if path.exists():
         try:
-            df = pd.read_csv(path, encoding="utf-8-sig", on_bad_lines="skip")
-            return df
+            return pd.read_csv(path, encoding="utf-8-sig", on_bad_lines="skip")
         except Exception:
             return pd.DataFrame()
     return pd.DataFrame()
 
+def get_user_dir(user: str) -> Path:
+    """Each user has their own directory under output/requests/"""
+    d = OUTPUT_PATH / "requests" / user
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+def log_action(user, action, details=""):
+    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_file = LOGS_DIR / "audit.log"
+    with open(log_file, "a", encoding="utf-8") as f:
+        f.write(f"{ts} | USER={user} | ACTION={action} | {details}\n")
 
 def get_batches():
     batches = []
@@ -76,503 +74,425 @@ def get_batches():
     return batches if batches else ["batch_003"]
 
 
-def load_zhice_results():
-    """Load all zhice test results from output/zhice/"""
-    results = []
-    if ZHICE_DIR.exists():
-        for f in sorted(ZHICE_DIR.glob("*.json"), key=lambda x: x.stat().st_mtime, reverse=True):
-            try:
-                data = json.loads(f.read_text(encoding="utf-8"))
-                results.append({"file": f.name, "data": data, "mtime": f.stat().st_mtime,
-                                "date": datetime.fromtimestamp(f.stat().st_mtime).strftime("%Y-%m-%d %H:%M")})
-            except Exception:
-                pass
-    return results
-
-
-def log_action(user, action, details=""):
-    """Log user action for audit trail"""
-    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    log_file = LOGS_DIR / "audit.log"
-    with open(log_file, "a", encoding="utf-8") as f:
-        f.write(f"{ts} | USER={user} | ACTION={action} | {details}\n")
-
-
-# --- Header ---
-st.markdown("""<div style="padding:16px 0 8px;">
-<h1 style="font-size:28px;font-weight:800;color:#00bcd4;margin:0;">🔄 Smart Suite — 闭环追踪操作台</h1>
-<p style="color:#8892b0;font-size:13px;margin-top:6px;">智测发现 → 机会点 → 内容产出 → 发布情况 → 效果对比 → 总结</p>
+# --- Header & Login ---
+st.markdown("""<div style="padding:12px 0 8px;">
+<h1 style="font-size:28px;font-weight:800;color:#00bcd4;margin:0;">🔄 Smart Suite — 需求提交</h1>
+<p style="color:#8892b0;font-size:13px;margin-top:4px;">执行测试 → 机会点分析 → 执行机会点 → 状态展示 → 闭环看板</p>
 </div>""", unsafe_allow_html=True)
 
-# Login
-col_login, col_batch = st.columns([1, 1])
-with col_login:
-    user_login = st.text_input("👤 Your Name", value=st.session_state.get("user_login", ""),
-                               key="login_input", placeholder="e.g. yujiashi")
-    if user_login:
-        st.session_state["user_login"] = user_login
-with col_batch:
-    batches = get_batches()
-    selected_batch = st.selectbox("📦 Batch", batches, key="batch_select")
+# Login gate
+user_login = st.text_input("👤 请输入您的 Login", value=st.session_state.get("user_login", ""),
+                           placeholder="e.g. yujiashi, joyce, murphy", key="login_input")
+if user_login:
+    st.session_state["user_login"] = user_login
 
+if not user_login:
+    st.warning("⚠️ 请先输入您的 Login 才能继续操作。每个人只能查看自己的数据。")
+    st.stop()
+
+# User-specific data directory
+USER_DIR = get_user_dir(user_login)
+USER_TESTS_FILE = USER_DIR / "tests.json"
+USER_OPPS_FILE = USER_DIR / "opportunities.json"
+USER_ACTIONS_FILE = USER_DIR / "actions.json"
+
+st.caption(f"👤 当前用户: **{user_login}** | 数据目录: `output/requests/{user_login}/`")
 st.divider()
 
-# --- Tabs ---
-tab_loop, tab_test, tab_detail, tab_history = st.tabs([
-    "🔄 闭环看板", "🔬 执行测试", "📋 详情", "📜 历史"
+# --- Tabs (flow order) ---
+tab_test, tab_opps, tab_execute, tab_status, tab_dashboard = st.tabs([
+    "🔬 ① 执行测试",
+    "💡 ② 机会点分析",
+    "🚀 ③ 执行机会点",
+    "📋 ④ 执行状态",
+    "🔄 ⑤ 闭环看板",
 ])
 
 
 # ============================================================
-# TAB: 闭环看板
-# ============================================================
-with tab_loop:
-    # Load all data (shared with 8501)
-    zhice_results = load_zhice_results()
-
-    # Load content from main pipeline (produced via 8501)
-    zhizao_file = OUTPUT_PATH / selected_batch / "02_zhizao" / "zhizao_draft_content.csv"
-    df_content = load_csv_safe(zhizao_file)
-
-    opt_file = OUTPUT_PATH / selected_batch / "03_zhiyou" / "zhiyou_optimized_content.csv"
-    df_optimized = load_csv_safe(opt_file)
-
-    # --- KPI Row ---
-    st.markdown("### 📊 Pipeline Status")
-    kc1, kc2, kc3, kc4, kc5 = st.columns(5)
-
-    test_count = len(zhice_results)
-    total_queries_tested = 0
-    gaps_found = 0
-    for r in zhice_results:
-        data = r["data"]
-        if isinstance(data, list):
-            total_queries_tested += len(data)
-            gaps_found += sum(1 for item in data
-                             if not item.get("has_official_link", False)
-                             and not item.get("has_amazon_cn", False))
-
-    content_produced = len(df_content) if not df_content.empty else 0
-    content_optimized = len(df_optimized) if not df_optimized.empty else 0
-
-    kc1.metric("智测次数", test_count)
-    kc2.metric("短语测试", total_queries_tested)
-    kc3.metric("发现缺口", gaps_found)
-    kc4.metric("内容产出", content_produced)
-    kc5.metric("优化完成", content_optimized)
-
-    st.divider()
-
-    # ===== STEP 1: 智测发现 =====
-    st.markdown("### 🔍 Step 1: 智测发现 — 之前表现")
-    st.caption("AI 平台对目标短语的回答中，我们内容的覆盖情况（引用自 8501 测试结果）")
-
-    if zhice_results:
-        latest = zhice_results[0]
-        latest_data = latest["data"]
-        st.caption(f"📄 Latest: {latest['file']} ({latest['date']})")
-
-        if isinstance(latest_data, list):
-            df_test = pd.DataFrame([{
-                "Query": item.get("query", ""),
-                "Platform": PLATFORMS.get(item.get("platform", ""), item.get("platform", "")),
-                "Official Link": "✅" if item.get("has_official_link", False) else "❌",
-                "Brand Mention": "✅" if item.get("has_brand_mention", False) else "❌",
-                "Status": "✅ Covered" if (item.get("has_official_link", False) or item.get("has_amazon_cn", False)) else "⚠️ Gap",
-            } for item in latest_data])
-            st.dataframe(df_test, use_container_width=True, hide_index=True)
-
-            gap_count = len(df_test[df_test["Status"] == "⚠️ Gap"])
-            covered_count = len(df_test[df_test["Status"] == "✅ Covered"])
-            coverage_rate = covered_count / len(df_test) * 100 if len(df_test) > 0 else 0
-            col_s1, col_s2, col_s3 = st.columns(3)
-            col_s1.metric("覆盖率", f"{coverage_rate:.0f}%")
-            col_s2.metric("缺口数", gap_count)
-            col_s3.metric("已覆盖", covered_count)
-        elif isinstance(latest_data, dict):
-            st.json(latest_data)
-    else:
-        st.info("暂无智测结果。请在「执行测试」标签页运行，或在 8501 主控台执行智测。")
-
-    st.divider()
-
-    # ===== STEP 2: 机会点与建议 =====
-    st.markdown("### 💡 Step 2: 机会点与建议")
-    st.caption("基于智测缺口，发现的改善机会")
-
-    if zhice_results:
-        all_gaps = []
-        for r in zhice_results:
-            data = r["data"]
-            if isinstance(data, list):
-                for item in data:
-                    if not item.get("has_official_link", False) and not item.get("has_amazon_cn", False):
-                        all_gaps.append({
-                            "Query": item.get("query", ""),
-                            "Platform": PLATFORMS.get(item.get("platform", ""), item.get("platform", "")),
-                            "问题": "回答中无官方链接/品牌提及",
-                            "建议动作": "产出针对性 GEO 内容",
-                            "Source": r["file"],
-                        })
-        if all_gaps:
-            df_gaps = pd.DataFrame(all_gaps[:30])
-            st.dataframe(df_gaps, use_container_width=True, hide_index=True)
-            st.caption(f"显示前 30 个缺口（共 {len(all_gaps)} 个）")
-        else:
-            st.success("✅ 未发现缺口 — 覆盖良好！")
-    else:
-        st.info("执行智测以发现机会点。")
-
-    st.divider()
-
-    # ===== STEP 3: 内容产出与发布（引用 8501 产出） =====
-    st.markdown("### ✍️ Step 3: 内容产出与发布")
-    st.caption(f"引用自主控台的产出 + 可直接生产新内容 — Batch: {selected_batch}")
-
-    if not df_content.empty:
-        # Status summary
-        display_cols = [c for c in ["content_id", "ai_query", "title", "word_count", "version"]
-                       if c in df_content.columns]
-        if display_cols:
-            df_show = df_content[display_cols].copy()
-            if not df_optimized.empty and "ai_query" in df_optimized.columns:
-                optimized_queries = set(df_optimized["ai_query"].dropna().astype(str))
-                df_show["Status"] = df_show["ai_query"].apply(
-                    lambda q: "✅ 已优化" if str(q) in optimized_queries else "⏳ 草稿"
-                ) if "ai_query" in df_show.columns else "⏳ 草稿"
-            else:
-                df_show["Status"] = "⏳ 草稿"
-            st.dataframe(df_show, use_container_width=True, hide_index=True)
-
-        col_p1, col_p2, col_p3 = st.columns(3)
-        col_p1.metric("已产出", content_produced)
-        col_p2.metric("已优化", content_optimized)
-        # Check confirmed
-        confirmed_count = 0
-        if not df_optimized.empty and "confirmed" in df_optimized.columns:
-            confirmed_count = len(df_optimized[df_optimized["confirmed"].astype(str).str.upper().isin(["TRUE", "1"])])
-        col_p3.metric("确认发布", confirmed_count)
-    else:
-        st.info("暂无产出内容。")
-
-    # --- Quick Production Panel ---
-    st.divider()
-    st.markdown("**🚀 快速生产（基于智测缺口）**")
-    st.caption("选择数量 → 一键生产 → 自动优化")
-
-    col_prod1, col_prod2, col_prod3 = st.columns(3)
-    with col_prod1:
-        prod_count = st.number_input("生产篇数", 1, 10, 3, key="prod_count_8503")
-    with col_prod2:
-        prod_template = st.selectbox("模板", ["auto", "none", "registration", "fees", "logistics"],
-                                     format_func=lambda x: {"auto": "智能匹配", "none": "无模板",
-                                                            "registration": "注册流程", "fees": "费用成本",
-                                                            "logistics": "物流仓储"}.get(x, x),
-                                     key="prod_tpl_8503")
-    with col_prod3:
-        st.write("")  # spacer
-        st.write("")
-        run_prod = st.button("🚀 开始生产", type="primary", key="run_prod_8503")
-
-    if run_prod:
-        try:
-            from engine import run_zhizao, run_zhiyou_score, run_zhiyou_execute
-            prod_progress = st.progress(0)
-            prod_status = st.empty()
-
-            def prod_cb(pct, msg):
-                prod_progress.progress(min(1.0, max(0.0, pct)))
-                prod_status.text(msg)
-
-            # Step A: Generate content
-            prod_status.text("正在生成内容...")
-            result = run_zhizao(selected_batch, prod_count, prod_cb, prod_template)
-
-            if result.get("success"):
-                articles = result.get("articles_generated", 0)
-                prod_progress.progress(0.5)
-                prod_status.text(f"✅ 生成 {articles} 篇，正在评分优化...")
-
-                # Step B: Score
-                score_result = run_zhiyou_score(selected_batch, prod_cb)
-                prod_progress.progress(0.75)
-
-                # Step C: Optimize
-                if score_result.get("success"):
-                    prod_status.text("正在执行优化...")
-                    opt_result = run_zhiyou_execute(selected_batch, prod_cb)
-                    prod_progress.progress(1.0)
-
-                    if opt_result.get("success"):
-                        prod_status.text("")
-                        st.success(f"✅ 完成！生成 {articles} 篇 → 评分 → 优化")
-                        log_action(st.session_state.get("user_login", "anonymous"),
-                                   "content_produced_8503", f"batch={selected_batch}, count={articles}")
-                        st.rerun()
-                    else:
-                        st.warning(f"生成完成，优化未完成: {opt_result.get('error', '')}")
-                else:
-                    st.warning(f"生成完成，评分未完成: {score_result.get('error', '')}")
-            else:
-                prod_status.text("")
-                st.error(f"❌ 生成失败: {result.get('error', '')}")
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-
-    st.divider()
-
-    # ===== STEP 4: 效果对比 =====
-    st.markdown("### 📈 Step 4: 效果对比 — 前后变化")
-    st.caption("发布后重新测试相同短语，对比改善效果")
-
-    if len(zhice_results) >= 2:
-        first_test = zhice_results[-1]["data"]  # oldest
-        last_test = zhice_results[0]["data"]    # newest
-
-        if isinstance(first_test, list) and isinstance(last_test, list):
-            before_queries = {item.get("query", ""): item for item in first_test}
-            after_queries = {item.get("query", ""): item for item in last_test}
-            common = set(before_queries.keys()) & set(after_queries.keys())
-
-            if common:
-                comparison = []
-                for q in common:
-                    b = before_queries[q]
-                    a = after_queries[q]
-                    b_ok = b.get("has_official_link") or b.get("has_amazon_cn") or b.get("has_brand_mention")
-                    a_ok = a.get("has_official_link") or a.get("has_amazon_cn") or a.get("has_brand_mention")
-                    if not b_ok and a_ok:
-                        change = "🆕 改善"
-                    elif b_ok and not a_ok:
-                        change = "⚠️ 退步"
-                    else:
-                        change = "→ 持平"
-                    comparison.append({"Query": q, "Before": "✅" if b_ok else "❌",
-                                       "After": "✅" if a_ok else "❌", "变化": change})
-
-                df_comp = pd.DataFrame(comparison)
-                st.dataframe(df_comp, use_container_width=True, hide_index=True)
-
-                improved = sum(1 for c in comparison if c["变化"] == "🆕 改善")
-                regressed = sum(1 for c in comparison if c["变化"] == "⚠️ 退步")
-                col_e1, col_e2, col_e3 = st.columns(3)
-                col_e1.metric("改善", improved, delta=f"+{improved}")
-                col_e2.metric("持平", len(comparison) - improved - regressed)
-                col_e3.metric("退步", regressed, delta=f"-{regressed}" if regressed else None, delta_color="inverse")
-            else:
-                st.info("前后测试没有相同短语可对比。请用相同短语测试。")
-        else:
-            st.info("需要结构化测试数据才能对比。")
-    else:
-        st.info("需要至少 2 次测试（发布前/后）才能对比。请发布后重新执行智测。")
-
-    st.divider()
-
-    # ===== STEP 5: 总结 =====
-    st.markdown("### 📝 Step 5: 总结")
-
-    summary_lines = [
-        f"**已执行测试：** {test_count} 次, {total_queries_tested} 个短语",
-        f"**发现缺口：** {gaps_found} 个短语未覆盖",
-        f"**内容产出：** {content_produced} 篇文章",
-        f"**优化完成：** {content_optimized} 篇",
-    ]
-    if gaps_found > 0 and content_produced > 0:
-        fill_rate = min(100, content_produced / gaps_found * 100)
-        summary_lines.append(f"**缺口填补率：** {fill_rate:.0f}%")
-
-    for line in summary_lines:
-        st.markdown(line)
-
-    # Notes
-    st.divider()
-    notes_file = OUTPUT_PATH / "loop_tracking_notes.md"
-    existing_notes = notes_file.read_text(encoding="utf-8") if notes_file.exists() else ""
-    notes = st.text_area("备注 / 观察", value=existing_notes, height=100, key="loop_notes_8503")
-    if st.button("💾 保存备注", key="save_notes_8503"):
-        notes_file.write_text(notes, encoding="utf-8")
-        log_action(st.session_state.get("user_login", "anonymous"), "notes_saved", "loop tracking notes updated")
-        st.success("✅ 已保存")
-
-
-# ============================================================
-# TAB: 执行测试
+# TAB 1: 执行测试
 # ============================================================
 with tab_test:
-    st.markdown("### 🔬 AI Search Simulation")
-    st.caption("配置 → 生成问题 → 确认 → 执行 → 查看结果")
+    st.markdown("### 🔬 执行测试")
+    st.caption("输入产品/话题 → 生成问题 → 在 AI 平台测试 → 查看覆盖结果")
 
-    col_config, col_preview = st.columns([1, 1.5])
+    col_cfg, col_q = st.columns([1, 1.5])
 
-    with col_config:
-        st.markdown("**Configuration**")
-        topic = st.text_input("Topic / Product", placeholder="e.g. Amazon FBA", key="sim_topic")
-        sim_platforms = st.multiselect("AI Platforms", list(PLATFORMS.keys()),
+    with col_cfg:
+        topic = st.text_input("产品/话题", placeholder="e.g. 亚马逊FBA, 跨境选品", key="sim_topic")
+        sim_platforms = st.multiselect("测试平台", list(PLATFORMS.keys()),
                                        default=["qianwen"],
-                                       format_func=lambda x: PLATFORMS[x],
-                                       key="sim_platforms")
-        num_rounds = st.slider("Number of questions", 1, 10, 5, key="sim_rounds")
+                                       format_func=lambda x: PLATFORMS[x], key="sim_plat")
+        num_q = st.slider("问题数量", 1, 10, 5, key="sim_num")
 
-        if st.button("🎯 Generate Questions", key="gen_questions"):
+        if st.button("🎯 生成问题", key="gen_q"):
             if topic:
-                base_queries = [
-                    f"{topic}是什么？",
-                    f"{topic}怎么使用？",
-                    f"{topic}费用多少？",
-                    f"{topic}有什么优势？",
-                    f"{topic}和竞品有什么区别？",
-                    f"{topic}常见问题有哪些？",
-                    f"中国卖家如何使用{topic}？",
-                    f"{topic}新手入门指南",
-                    f"{topic}最新政策变化",
-                    f"{topic}操作流程详解",
-                ]
-                st.session_state["sim_queries"] = base_queries[:num_rounds]
+                base = [f"{topic}是什么？", f"{topic}怎么使用？", f"{topic}费用多少？",
+                        f"{topic}有什么优势？", f"{topic}和竞品有什么区别？",
+                        f"{topic}常见问题有哪些？", f"中国卖家如何使用{topic}？",
+                        f"{topic}新手入门指南", f"{topic}最新政策", f"{topic}操作流程"]
+                st.session_state["sim_queries"] = base[:num_q]
 
-    with col_preview:
+    with col_q:
         if "sim_queries" in st.session_state and st.session_state["sim_queries"]:
-            st.markdown("**Generated Questions (editable):**")
-            edited_queries = []
+            st.markdown("**问题列表（可编辑）：**")
+            edited = []
             for i, q in enumerate(st.session_state["sim_queries"]):
-                edited = st.text_input(f"Q{i+1}", value=q, key=f"sim_q_{i}")
-                edited_queries.append(edited)
-            st.session_state["sim_queries_final"] = edited_queries
+                edited.append(st.text_input(f"Q{i+1}", value=q, key=f"sq_{i}"))
+            st.session_state["sim_queries_final"] = edited
 
-            st.divider()
-            if st.button("✅ Confirm & Execute", type="primary", key="confirm_execute"):
-                st.session_state["sim_running"] = True
+            if st.button("✅ 确认并执行测试", type="primary", key="run_test"):
+                st.session_state["test_running"] = True
 
-    # Execute
-    if st.session_state.get("sim_running") and st.session_state.get("sim_queries_final"):
+    # Execute test
+    if st.session_state.get("test_running") and st.session_state.get("sim_queries_final"):
         st.divider()
-        st.markdown("### 📋 Results")
-
         from zhice_engine import REAL_API_MAP
         queries = st.session_state["sim_queries_final"]
-        platforms = st.session_state.get("sim_platforms", ["qianwen"])
-
-        all_results = []
-        progress = st.progress(0)
+        platforms = st.session_state.get("sim_plat", ["qianwen"])
+        results = []
+        prog = st.progress(0)
         total = len(queries) * len(platforms)
         done = 0
 
         for query in queries:
-            for platform in platforms:
-                api_func = REAL_API_MAP.get(platform)
+            for plat in platforms:
+                api_func = REAL_API_MAP.get(plat)
                 if api_func:
                     try:
                         r = api_func(query)
                         answer = r.get("full_answer", "")
                         has_gs = "gs.amazon" in answer.lower() or "globalselling" in answer.lower()
-                        has_brand = "全球开店" in answer or "Global Selling" in answer or "亚马逊" in answer
-                        negative_words = ["风险", "骗局", "亏损", "不推荐", "不建议"]
-                        has_negative = any(w in answer for w in negative_words)
-                        all_results.append({
-                            "query": query, "platform": platform,
-                            "answer": answer, "answer_length": len(answer),
-                            "has_official_link": has_gs,
-                            "has_brand_mention": has_brand,
-                            "has_negative": has_negative,
-                        })
+                        has_brand = "全球开店" in answer or "Global Selling" in answer
+                        results.append({"query": query, "platform": plat, "answer": answer,
+                                        "answer_length": len(answer), "has_official_link": has_gs,
+                                        "has_brand_mention": has_brand,
+                                        "has_negative": any(w in answer for w in ["风险","骗局","亏损"])})
                     except Exception as e:
-                        all_results.append({"query": query, "platform": platform, "error": str(e), "answer": ""})
+                        results.append({"query": query, "platform": plat, "error": str(e), "answer": ""})
                 done += 1
-                progress.progress(done / total)
-                time.sleep(0.5)
+                prog.progress(done / total)
+                time.sleep(0.3)
 
-        progress.progress(1.0)
-        st.session_state["sim_running"] = False
+        prog.progress(1.0)
+        st.session_state["test_running"] = False
 
-        # Save results
+        # Save to user directory
         ts = datetime.now().strftime('%Y%m%d_%H%M%S')
-        topic_safe = st.session_state.get("sim_topic", "unknown").replace(" ", "_")[:20]
-        out_file = ZHICE_DIR / f"sim_{topic_safe}_{ts}.json"
-        out_file.write_text(json.dumps(all_results, ensure_ascii=False, indent=2), encoding='utf-8')
-        log_action(st.session_state.get("user_login", "anonymous"), "zhice_executed",
-                   f"topic={topic_safe}, queries={len(queries)}, platforms={platforms}")
+        test_entry = {"id": f"test_{ts}", "topic": topic, "date": ts,
+                      "user": user_login, "results": results}
 
-        # Display
-        for r in all_results:
-            if "error" in r:
-                st.error(f"**{r['query']}** ({r['platform']}): {r['error']}")
-            else:
-                icon = "✅" if r["has_official_link"] else "❌"
-                with st.expander(f"{icon} {r['query']} — {PLATFORMS.get(r['platform'], r['platform'])}"):
-                    c1, c2, c3 = st.columns(3)
-                    c1.metric("Official Link", "✅" if r["has_official_link"] else "❌")
-                    c2.metric("Brand Mention", "✅" if r["has_brand_mention"] else "❌")
-                    c3.metric("Negative", "⚠️" if r["has_negative"] else "✅")
-                    st.markdown(r["answer"][:1000])
+        # Append to user's tests
+        existing_tests = json.loads(USER_TESTS_FILE.read_text(encoding="utf-8")) if USER_TESTS_FILE.exists() else []
+        existing_tests.insert(0, test_entry)
+        USER_TESTS_FILE.write_text(json.dumps(existing_tests, ensure_ascii=False, indent=2), encoding="utf-8")
 
-        st.success(f"✅ Saved: {out_file.name}")
+        # Also save to shared zhice dir
+        shared_file = ZHICE_DIR / f"sim_{topic.replace(' ','_')[:20]}_{ts}.json"
+        shared_file.write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
+        log_action(user_login, "test_executed", f"topic={topic}, queries={len(queries)}")
+
+        st.success(f"✅ 测试完成！{len(results)} 条结果已保存。请前往「② 机会点分析」查看。")
+
+        # Quick preview
+        for r in results:
+            icon = "✅" if r.get("has_official_link") else "❌"
+            st.markdown(f"{icon} **{r['query']}** ({PLATFORMS.get(r.get('platform',''), r.get('platform',''))}) — {r.get('answer_length',0)} chars")
 
 
 # ============================================================
-# TAB: 详情
+# TAB 2: 机会点分析
 # ============================================================
-with tab_detail:
-    st.markdown("### 📋 测试详情")
-    st.caption("选择测试文件查看完整详情（包含 8501 执行的测试）")
+with tab_opps:
+    st.markdown("### 💡 机会点分析")
+    st.caption("基于测试结果，分析缺口和改善机会，确认哪些需要行动")
 
-    zhice_results_all = load_zhice_results()
-    if zhice_results_all:
-        file_options = [f"{r['file']} ({r['date']})" for r in zhice_results_all]
-        selected_idx = st.selectbox("选择测试", range(len(file_options)),
-                                    format_func=lambda i: file_options[i], key="detail_select")
+    # Load user's tests
+    user_tests = json.loads(USER_TESTS_FILE.read_text(encoding="utf-8")) if USER_TESTS_FILE.exists() else []
 
-        selected_data = zhice_results_all[selected_idx]["data"]
-        if isinstance(selected_data, list):
-            for i, item in enumerate(selected_data):
-                with st.expander(f"Q{i+1}: {item.get('query', 'N/A')}", expanded=(i == 0)):
-                    col_d1, col_d2, col_d3 = st.columns(3)
-                    col_d1.write(f"**Platform:** {PLATFORMS.get(item.get('platform', ''), item.get('platform', ''))}")
-                    col_d2.write(f"**Official Link:** {'✅' if item.get('has_official_link') else '❌'}")
-                    col_d3.write(f"**Brand:** {'✅' if item.get('has_brand_mention') else '❌'}")
-                    answer = item.get("answer_preview", item.get("answer", ""))
-                    if answer:
-                        st.markdown(answer[:1000])
-        else:
-            st.json(selected_data)
+    if not user_tests:
+        st.info("暂无测试结果。请先在「① 执行测试」中运行测试。")
     else:
-        st.info("暂无测试结果。")
+        # Let user select which test to analyze
+        test_options = [f"{t['topic']} ({t['date']})" for t in user_tests]
+        sel_idx = st.selectbox("选择测试", range(len(test_options)),
+                               format_func=lambda i: test_options[i], key="opp_test_sel")
 
+        selected_test = user_tests[sel_idx]
+        results = selected_test["results"]
 
-# ============================================================
-# TAB: 历史
-# ============================================================
-with tab_history:
-    st.markdown("### 📜 全部测试历史")
-    st.caption("所有测试记录（包含 8501 和 8503 执行的）")
+        # Show results table
+        st.markdown("**测试结果：**")
+        df_r = pd.DataFrame([{
+            "Query": r.get("query", ""),
+            "Platform": PLATFORMS.get(r.get("platform", ""), r.get("platform", "")),
+            "Official Link": "✅" if r.get("has_official_link") else "❌",
+            "Brand": "✅" if r.get("has_brand_mention") else "❌",
+            "Gap": "⚠️" if not r.get("has_official_link") else "✅",
+        } for r in results if "error" not in r])
+        st.dataframe(df_r, use_container_width=True, hide_index=True)
 
-    zhice_results_all = load_zhice_results()
-    if zhice_results_all:
-        history_data = []
-        for r in zhice_results_all:
-            data = r["data"]
-            queries_count = len(data) if isinstance(data, list) else 1
-            # Determine coverage
-            if isinstance(data, list):
-                covered = sum(1 for item in data if item.get("has_official_link") or item.get("has_amazon_cn"))
-                coverage = f"{covered}/{queries_count}"
-            else:
-                coverage = "N/A"
-            history_data.append({
-                "File": r["file"],
-                "Date": r["date"],
-                "Queries": queries_count,
-                "Coverage": coverage,
-            })
-        df_hist = pd.DataFrame(history_data)
-        st.dataframe(df_hist, use_container_width=True, hide_index=True)
+        # Extract gaps
+        gaps = [r for r in results if not r.get("has_official_link") and "error" not in r]
 
-        # Delete option
         st.divider()
-        del_file = st.selectbox("Delete a test file", [r["file"] for r in zhice_results_all], key="del_select")
-        if st.button("🗑️ Delete Selected", key="del_btn"):
-            target = ZHICE_DIR / del_file
-            if target.exists():
-                target.unlink()
-                st.success(f"Deleted: {del_file}")
-                st.rerun()
+        st.markdown(f"### 发现 **{len(gaps)}** 个机会点")
+
+        if gaps:
+            # Show gap details with expandable answers
+            opp_list = []
+            for i, g in enumerate(gaps):
+                with st.expander(f"⚠️ {g['query']} ({PLATFORMS.get(g.get('platform',''), g.get('platform',''))})"):
+                    st.markdown("**当前 AI 回答（无我方内容）：**")
+                    st.markdown(g.get("answer", "")[:800])
+                    st.markdown("---")
+                    st.markdown("**建议：** 产出针对此问题的 GEO 优化内容，确保包含官方链接和品牌信息。")
+
+                opp_list.append({
+                    "id": f"opp_{i}",
+                    "query": g["query"],
+                    "platform": g.get("platform", ""),
+                    "status": "待执行",
+                    "test_id": selected_test["id"],
+                })
+
+            # Save opportunities
+            st.divider()
+            if st.button("✅ 确认机会点，进入执行", type="primary", key="confirm_opps"):
+                USER_OPPS_FILE.write_text(json.dumps(opp_list, ensure_ascii=False, indent=2), encoding="utf-8")
+                log_action(user_login, "opps_confirmed", f"count={len(opp_list)}")
+                st.success(f"✅ 已确认 {len(opp_list)} 个机会点！请前往「③ 执行机会点」。")
+        else:
+            st.success("🎉 全部覆盖，无缺口！无需额外行动。")
+
+
+# ============================================================
+# TAB 3: 执行机会点
+# ============================================================
+with tab_execute:
+    st.markdown("### 🚀 执行机会点")
+    st.caption("针对确认的缺口，产出内容 → 优化 → 准备发布")
+
+    # Load opportunities
+    opps = json.loads(USER_OPPS_FILE.read_text(encoding="utf-8")) if USER_OPPS_FILE.exists() else []
+
+    if not opps:
+        st.info("暂无机会点。请先在「② 机会点分析」中确认机会点。")
     else:
-        st.info("暂无历史记录。")
+        pending = [o for o in opps if o.get("status") == "待执行"]
+        done_opps = [o for o in opps if o.get("status") != "待执行"]
+
+        st.markdown(f"**待执行：** {len(pending)} 个 | **已完成：** {len(done_opps)} 个")
+        st.divider()
+
+        if pending:
+            st.markdown("**待执行的机会点：**")
+            df_pending = pd.DataFrame([{
+                "Query": o["query"],
+                "Platform": PLATFORMS.get(o.get("platform", ""), o.get("platform", "")),
+                "Status": o["status"],
+            } for o in pending])
+            st.dataframe(df_pending, use_container_width=True, hide_index=True)
+
+            # Execution options
+            st.divider()
+            col_ex1, col_ex2 = st.columns(2)
+            with col_ex1:
+                exec_count = st.number_input("执行篇数", 1, len(pending), min(3, len(pending)), key="exec_count")
+            with col_ex2:
+                exec_tpl = st.selectbox("模板", ["auto", "registration", "fees", "logistics", "listing"],
+                                        format_func=lambda x: {"auto":"智能匹配","registration":"注册流程",
+                                                               "fees":"费用成本","logistics":"物流","listing":"Listing"}.get(x,x),
+                                        key="exec_tpl")
+
+            if st.button("🚀 开始执行（生产+优化）", type="primary", key="exec_opps"):
+                try:
+                    from engine import run_zhizao, run_zhiyou_score, run_zhiyou_execute
+                    batch = get_batches()[0]
+                    prog = st.progress(0)
+                    status_text = st.empty()
+
+                    # Ensure queries are in zhiku
+                    zhiku_path = OUTPUT_PATH / batch / "01_zhiku" / "zhiku_ai_queries.csv"
+                    zhiku_path.parent.mkdir(parents=True, exist_ok=True)
+                    existing_zhiku = load_csv_safe(zhiku_path)
+
+                    # Add pending queries to zhiku
+                    new_rows = []
+                    for o in pending[:exec_count]:
+                        new_rows.append({"ai_query": o["query"], "source": f"request_{user_login}",
+                                         "is_selected": "TRUE", "priority_score": 4.8,
+                                         "category": "", "keyword": o["query"][:20]})
+                    df_new = pd.DataFrame(new_rows)
+                    combined = pd.concat([existing_zhiku, df_new], ignore_index=True) if not existing_zhiku.empty else df_new
+                    if "ai_query" in combined.columns:
+                        combined = combined.drop_duplicates(subset=["ai_query"], keep="first")
+                    combined.to_csv(zhiku_path, index=False, encoding="utf-8-sig")
+
+                    # Run production
+                    status_text.text("正在生成内容...")
+                    prog.progress(0.2)
+                    r1 = run_zhizao(batch, exec_count, None, exec_tpl)
+
+                    if r1.get("success"):
+                        articles = r1.get("articles_generated", 0)
+                        status_text.text(f"生成 {articles} 篇，评分中...")
+                        prog.progress(0.5)
+                        run_zhiyou_score(batch, None)
+                        status_text.text("优化中...")
+                        prog.progress(0.75)
+                        run_zhiyou_execute(batch, None)
+                        prog.progress(1.0)
+                        status_text.text("")
+
+                        # Update opportunity status
+                        for o in pending[:exec_count]:
+                            o["status"] = "已完成"
+                            o["completed_at"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+                        USER_OPPS_FILE.write_text(json.dumps(opps, ensure_ascii=False, indent=2), encoding="utf-8")
+
+                        # Save action record
+                        actions = json.loads(USER_ACTIONS_FILE.read_text(encoding="utf-8")) if USER_ACTIONS_FILE.exists() else []
+                        actions.insert(0, {"date": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                                           "action": "content_produced", "count": articles,
+                                           "batch": batch, "queries": [o["query"] for o in pending[:exec_count]]})
+                        USER_ACTIONS_FILE.write_text(json.dumps(actions, ensure_ascii=False, indent=2), encoding="utf-8")
+
+                        log_action(user_login, "opps_executed", f"batch={batch}, count={articles}")
+                        st.success(f"✅ 完成！生成 {articles} 篇，已优化。")
+                        st.rerun()
+                    else:
+                        st.error(f"❌ 失败: {r1.get('error', '')}")
+                except Exception as e:
+                    st.error(f"Error: {str(e)}")
+        else:
+            st.success("✅ 所有机会点已执行完毕！")
+
+
+# ============================================================
+# TAB 4: 执行状态
+# ============================================================
+with tab_status:
+    st.markdown("### 📋 执行状态")
+    st.caption("查看机会点执行进展和内容产出状态")
+
+    # Load opportunities
+    opps = json.loads(USER_OPPS_FILE.read_text(encoding="utf-8")) if USER_OPPS_FILE.exists() else []
+    actions = json.loads(USER_ACTIONS_FILE.read_text(encoding="utf-8")) if USER_ACTIONS_FILE.exists() else []
+
+    if not opps and not actions:
+        st.info("暂无执行记录。")
+    else:
+        # Status KPIs
+        total_opps = len(opps)
+        done_opps = sum(1 for o in opps if o.get("status") != "待执行")
+        pending_opps = total_opps - done_opps
+
+        kc1, kc2, kc3 = st.columns(3)
+        kc1.metric("总机会点", total_opps)
+        kc2.metric("已执行", done_opps)
+        kc3.metric("待执行", pending_opps)
+
+        # Progress bar
+        if total_opps > 0:
+            st.progress(done_opps / total_opps)
+
+        st.divider()
+
+        # Opportunity status table
+        if opps:
+            st.markdown("**机会点状态：**")
+            df_opps = pd.DataFrame([{
+                "Query": o["query"],
+                "Platform": PLATFORMS.get(o.get("platform", ""), o.get("platform", "")),
+                "Status": "✅ 已完成" if o.get("status") != "待执行" else "⏳ 待执行",
+                "完成时间": o.get("completed_at", "—"),
+            } for o in opps])
+            st.dataframe(df_opps, use_container_width=True, hide_index=True)
+
+        # Action history
+        if actions:
+            st.divider()
+            st.markdown("**执行历史：**")
+            for a in actions[:10]:
+                st.markdown(f"- **{a['date']}** — {a['action']} | {a.get('count', '')} 篇 | Batch: {a.get('batch', '')}")
+
+
+# ============================================================
+# TAB 5: 闭环看板（放最后）
+# ============================================================
+with tab_dashboard:
+    st.markdown("### 🔄 闭环看板")
+    st.caption("整体效果：测试 → 缺口 → 行动 → 结果")
+
+    # Load all user data
+    user_tests = json.loads(USER_TESTS_FILE.read_text(encoding="utf-8")) if USER_TESTS_FILE.exists() else []
+    opps = json.loads(USER_OPPS_FILE.read_text(encoding="utf-8")) if USER_OPPS_FILE.exists() else []
+    actions = json.loads(USER_ACTIONS_FILE.read_text(encoding="utf-8")) if USER_ACTIONS_FILE.exists() else []
+
+    # Summary KPIs
+    total_tests = len(user_tests)
+    total_queries = sum(len(t.get("results", [])) for t in user_tests)
+    total_gaps = len(opps)
+    gaps_done = sum(1 for o in opps if o.get("status") != "待执行")
+    total_articles = sum(a.get("count", 0) for a in actions)
+
+    st.markdown("#### 📊 整体数据")
+    kc1, kc2, kc3, kc4, kc5 = st.columns(5)
+    kc1.metric("测试次数", total_tests)
+    kc2.metric("测试短语", total_queries)
+    kc3.metric("发现缺口", total_gaps)
+    kc4.metric("已行动", gaps_done)
+    kc5.metric("产出文章", total_articles)
+
+    # Fill rate
+    if total_gaps > 0:
+        fill_rate = gaps_done / total_gaps
+        st.progress(fill_rate)
+        st.markdown(f"**缺口填补率：{fill_rate*100:.0f}%**")
+
+    st.divider()
+
+    # Timeline view
+    st.markdown("#### 📅 操作时间线")
+    timeline = []
+    for t in user_tests:
+        timeline.append({"date": t.get("date", ""), "type": "🔬 测试",
+                         "detail": f"{t.get('topic', '')} ({len(t.get('results',[]))} queries)"})
+    for a in actions:
+        timeline.append({"date": a.get("date", ""), "type": "🚀 产出",
+                         "detail": f"{a.get('count', 0)} 篇"})
+
+    if timeline:
+        timeline.sort(key=lambda x: x["date"], reverse=True)
+        df_tl = pd.DataFrame(timeline[:20])
+        st.dataframe(df_tl, use_container_width=True, hide_index=True)
+    else:
+        st.info("暂无操作记录。开始执行测试后将在此展示闭环效果。")
+
+    # Before vs After (if multiple tests on same topic)
+    st.divider()
+    st.markdown("#### 📈 前后效果对比")
+    if len(user_tests) >= 2:
+        first = user_tests[-1].get("results", [])
+        last = user_tests[0].get("results", [])
+        if first and last:
+            bq = {r.get("query"): r for r in first if "error" not in r}
+            aq = {r.get("query"): r for r in last if "error" not in r}
+            common = set(bq.keys()) & set(aq.keys())
+            if common:
+                comp = []
+                for q in common:
+                    b_ok = bq[q].get("has_official_link") or bq[q].get("has_brand_mention")
+                    a_ok = aq[q].get("has_official_link") or aq[q].get("has_brand_mention")
+                    change = "🆕 改善" if (not b_ok and a_ok) else ("⚠️ 退步" if (b_ok and not a_ok) else "→ 持平")
+                    comp.append({"Query": q, "Before": "✅" if b_ok else "❌",
+                                 "After": "✅" if a_ok else "❌", "变化": change})
+                df_c = pd.DataFrame(comp)
+                st.dataframe(df_c, use_container_width=True, hide_index=True)
+                improved = sum(1 for c in comp if c["变化"] == "🆕 改善")
+                st.metric("改善数", improved, delta=f"+{improved}")
+            else:
+                st.info("前后测试无相同短语可对比。建议发布后用相同短语重新测试。")
+    else:
+        st.info("需要至少 2 次测试才能展示前后效果对比。")

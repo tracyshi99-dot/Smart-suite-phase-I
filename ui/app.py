@@ -426,9 +426,9 @@ NAV_PAGES_ZH = [
     "🎯 智中枢",
     "───────────",
     "🔄 需求提交",
-    "📝 运营看板",
     "🔍 引用分析",
     "⚙️ Settings",
+    "📝 运营看板",
 ]
 
 NAV_PAGES_EN = [
@@ -443,9 +443,9 @@ NAV_PAGES_EN = [
     "🎯 Hub",
     "───────────",
     "🔄 Request",
-    "📝 Ops Dashboard",
     "🔍 Citation Analysis",
     "⚙️ Settings",
+    "📝 Ops Dashboard",
 ]
 
 
@@ -488,9 +488,10 @@ with st.sidebar:
             "zhiku": 1, "zhice": 2, "zhizao": 3, "zhiyou": 4,
             "zhibu": 5, "zhichuan": 6, "zhixi": 7,
             "zhishu": 8, "zhongshu": 8,
-            "loop": 10, "closed-loop": 10,
-            "ops": 11, "dashboard": 11,
-            "overview": 0, "settings": 13,
+            "request": 10, "loop": 10,
+            "citation": 11,
+            "overview": 0, "settings": 12,
+            "ops": 13, "dashboard": 13,
         }
         _idx = _tool_map_idx.get(_qp["tool"])
         if _idx is not None and _idx < len(NAV_PAGES):
@@ -5121,7 +5122,7 @@ elif _page_idx == 10:
 
 # PAGE: 运营看板 (Operations Dashboard)
 # ============================================================
-elif _page_idx == 11:
+elif _page_idx == 13:
     st.markdown("""<div style="padding:20px 0 10px;"><h1 style="font-size:28px;font-weight:800;color:#00bcd4;margin:0;">📝 """ + ("Operations Dashboard" if is_en else "运营管理看板") + """</h1><p style="font-size:13px;color:#8892b0;margin-top:6px;">""" + ("Team activity log, pipeline status, who did what" if is_en else "团队操作日志、流水线状态、谁执行了什么") + """</p></div>""", unsafe_allow_html=True)
 
     tab_activity, tab_pipeline, tab_link = st.tabs([
@@ -5189,7 +5190,7 @@ elif _page_idx == 11:
 # ============================================================
 # PAGE: 引用分析
 # ============================================================
-elif _page_idx == 12:
+elif _page_idx == 11:
     st.markdown("""<div style="padding:20px 0 10px;"><h1 style="font-size:28px;font-weight:800;color:#4caf50;margin:0;">🔍 """ + ("Citation Analysis" if is_en else "引用分析") + """</h1><p style="font-size:13px;color:#8892b0;margin-top:6px;">""" + ("Analyze AI search engine citation of our content" if is_en else "分析 AI 搜索引擎对内容的引用情况") + """</p></div>""", unsafe_allow_html=True)
 
     st.subheader("AI Engine Citation Monitoring" if is_en else "AI 引擎引用监控")
@@ -5227,7 +5228,7 @@ elif _page_idx == 12:
 # ============================================================
 # PAGE: Settings
 # ============================================================
-elif _page_idx == 13:
+elif _page_idx == 12:
     st.title("⚙️ Settings")
     st.caption("System Configuration" if is_en else "系统配置")
 
