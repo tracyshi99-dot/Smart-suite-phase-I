@@ -717,7 +717,11 @@ if current_step == 2:
                         combined = combined.drop_duplicates(subset=["ai_query"], keep="first")
                     combined.to_csv(zhiku_path, index=False, encoding="utf-8-sig")
 
-                    # Run production
+                    # Run production — clear stale output first to avoid dedup issues
+                    zhizao_out = OUTPUT_PATH / batch / "02_zhizao" / "zhizao_draft_content.csv"
+                    if zhizao_out.exists() and zhizao_out.stat().st_size < 100:
+                        zhizao_out.unlink()  # Remove empty/corrupt file
+
                     status_text.text("正在生成内容...")
                     prog.progress(0.2)
                     r1 = run_zhizao(batch, exec_count, None, exec_tpl)
