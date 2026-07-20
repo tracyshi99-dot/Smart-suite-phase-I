@@ -719,8 +719,9 @@ if current_step == 2:
 
                     # Run production — clear stale output first to avoid dedup issues
                     zhizao_out = OUTPUT_PATH / batch / "02_zhizao" / "zhizao_draft_content.csv"
-                    if zhizao_out.exists() and zhizao_out.stat().st_size < 100:
-                        zhizao_out.unlink()  # Remove empty/corrupt file
+                    # Remove existing file entirely so run_zhizao doesn't skip queries
+                    if zhizao_out.exists():
+                        zhizao_out.unlink()
 
                     status_text.text("正在生成内容...")
                     prog.progress(0.2)
