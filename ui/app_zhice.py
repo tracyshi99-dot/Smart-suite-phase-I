@@ -980,26 +980,8 @@ if current_step == 4:
 
     st.divider()
 
-    # Timeline view
-    st.markdown("#### 📅 操作时间线")
-    timeline = []
-    for t in user_tests:
-        timeline.append({"date": t.get("date", ""), "type": "🔬 测试",
-                         "detail": f"{t.get('topic', '')} ({len(t.get('results',[]))} queries)"})
-    for a in actions:
-        timeline.append({"date": a.get("date", ""), "type": "🚀 产出",
-                         "detail": f"{a.get('count', 0)} 篇"})
-
-    if timeline:
-        timeline.sort(key=lambda x: x["date"], reverse=True)
-        df_tl = pd.DataFrame(timeline[:20])
-        st.dataframe(df_tl, use_container_width=True, hide_index=True)
-    else:
-        st.info("暂无操作记录。开始执行测试后将在此展示闭环效果。")
-
     # Before vs After (if multiple tests on same topic)
-    st.divider()
-    st.markdown("#### 📈 前后效果对比")
+    st.markdown("#### � 前后效果对比")
     if len(user_tests) >= 2:
         first = user_tests[-1].get("results", [])
         last = user_tests[0].get("results", [])
@@ -1023,4 +1005,22 @@ if current_step == 4:
                 st.info("前后测试无相同短语可对比。建议发布后用相同短语重新测试。")
     else:
         st.info("需要至少 2 次测试才能展示前后效果对比。")
+
+    # Timeline view (at bottom)
+    st.divider()
+    st.markdown("#### 📅 操作时间线")
+    timeline = []
+    for t in user_tests:
+        timeline.append({"date": t.get("date", ""), "type": "🔬 测试",
+                         "detail": f"{t.get('topic', '')} ({len(t.get('results',[]))} queries)"})
+    for a in actions:
+        timeline.append({"date": a.get("date", ""), "type": "🚀 产出",
+                         "detail": f"{a.get('count', 0)} 篇"})
+
+    if timeline:
+        timeline.sort(key=lambda x: x["date"], reverse=True)
+        df_tl = pd.DataFrame(timeline[:20])
+        st.dataframe(df_tl, use_container_width=True, hide_index=True)
+    else:
+        st.info("暂无操作记录。")
 
