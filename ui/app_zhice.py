@@ -695,49 +695,67 @@ if current_step == 2:
 
             if st.button("🚀 开始执行（生产+优化）", type="primary", key="exec_opps"):
                 try:
-                    from engine import run_zhizao, run_zhiyou_score, run_zhiyou_execute
+                    from engine import call_claude
                     batch = get_batches()[0]
                     prog = st.progress(0)
                     status_text = st.empty()
 
-                    # Ensure queries are in zhiku
-                    zhiku_path = OUTPUT_PATH / batch / "01_zhiku" / "zhiku_ai_queries.csv"
-                    zhiku_path.parent.mkdir(parents=True, exist_ok=True)
-                    existing_zhiku = load_csv_safe(zhiku_path)
+                    # Direct content generation — bypass run_zhizao to avoid dedup issues
+                    queries_to_produce = [o["query"] for o in pending[:exec_count]]
+                    results = []
+                    total = len(queries_to_produce)
 
-                    # Add pending queries to zhiku
-                    new_rows = []
-                    for o in pending[:exec_count]:
-                        new_rows.append({"ai_query": o["query"], "source": f"request_{user_login}",
-                                         "is_selected": "TRUE", "priority_score": 4.8,
-                                         "category": "", "keyword": o["query"][:20]})
-                    df_new = pd.DataFrame(new_rows)
-                    combined = pd.concat([existing_zhiku, df_new], ignore_index=True) if not existing_zhiku.empty else df_new
-                    if "ai_query" in combined.columns:
-                        combined = combined.drop_duplicates(subset=["ai_query"], keep="first")
-                    combined.to_csv(zhiku_path, index=False, encoding="utf-8-sig")
+                    for idx, query in enumerate(queries_to_produce):
+                        status_text.text(f"正在生成 {idx+1}/{total}: {query[:30]}...")
+                        prog.progress((idx + 0.5) / total)
 
-                    # Run production — clear stale output first to avoid dedup issues
-                    zhizao_out = OUTPUT_PATH / batch / "02_zhizao" / "zhizao_draft_content.csv"
-                    # Remove existing file entirely so run_zhizao doesn't skip queries
-                    if zhizao_out.exists():
-                        zhizao_out.unlink()
+                        system_prompt = "你是跨境电商内容专家。写一篇围绕检索短语的 GEO 优化文章。首段直接回答问题，800字以上，含表格和列表，末尾3个FAQ，植入 https://gs.amazon.cn。第一行是标题（不加#号）。"
+                        user_prompt = f"检索短语：「{query}」\n请写一篇围绕此短语的完整文章。"
 
-                    status_text.text("正在生成内容...")
-                    prog.progress(0.2)
-                    r1 = run_zhizao(batch, exec_count, None, exec_tpl)
+                        try:
+                            response = call_claude(system_prompt, user_prompt)
+                            lines = response.strip().split("\n")
+                            title = lines[0].strip().lstrip("#").strip() if lines else query
+                            content = "\n".join(lines[1:]).strip()
+                            results.append({
+                                "content_id": f"REQ_{user_login}_{idx:03d}",
+                                "ai_query": query,
+                                "title": title,
+                                "content_draft": content,
+                                "word_count": len(content),
+                                "version": "v1",
+                                "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                            })
+                        except Exception as e:
+                            results.append({
+                                "content_id": f"REQ_{user_login}_{idx:03d}",
+                                "ai_query": query,
+                                "title": f"生成失败: {str(e)[:50]}",
+                                "content_draft": "",
+                                "word_count": 0,
+                                "version": "error",
+                            })
+                        prog.progress((idx + 1) / total)
 
-                    if r1.get("success"):
-                        articles = r1.get("articles_generated", 0)
-                        status_text.text(f"生成 {articles} 篇，评分中...")
-                        prog.progress(0.5)
-                        run_zhiyou_score(batch, None)
-                        status_text.text("优化中...")
-                        prog.progress(0.75)
-                        run_zhiyou_execute(batch, None)
-                        prog.progress(1.0)
-                        status_text.text("")
+                    # Save results
+                    if results:
+                        df_out = pd.DataFrame(results)
+                        zhizao_dir = OUTPUT_PATH / batch / "02_zhizao"
+                        zhizao_dir.mkdir(parents=True, exist_ok=True)
+                        out_file = zhizao_dir / "zhizao_draft_content.csv"
+                        if out_file.exists() and out_file.stat().st_size > 0:
+                            try:
+                                existing = pd.read_csv(out_file, encoding="utf-8-sig", on_bad_lines="skip")
+                                df_out = pd.concat([existing, df_out], ignore_index=True)
+                            except Exception:
+                                pass
+                        df_out.to_csv(out_file, index=False, encoding="utf-8-sig")
 
+                    articles = sum(1 for r in results if r.get("word_count", 0) > 0)
+                    prog.progress(1.0)
+                    status_text.text("")
+
+                    if articles > 0:
                         # Update opportunity status
                         for o in pending[:exec_count]:
                             o["status"] = "已完成"
@@ -758,7 +776,7 @@ if current_step == 2:
                             st.session_state["current_step"] = 3
                             st.rerun()
                     else:
-                        st.error(f"❌ 失败: {r1.get('error', '')}")
+                        st.warning("⚠️ 生成 0 篇。可能 API 调用失败，请检查 Secrets 配置。")
                 except Exception as e:
                     st.error(f"Error: {str(e)}")
         else:
