@@ -854,6 +854,21 @@ elif _page_idx == 1:
             # Editable table
             show_cols = [c for c in ["ai_query", "source", "is_selected", "priority_score", "category"] if c in df_display.columns]
             if show_cols:
+                # Bulk select/deselect buttons
+                col_sel1, col_sel2, col_sel3 = st.columns([1, 1, 4])
+                with col_sel1:
+                    if st.button("☑️ " + ("Select All" if is_en else "全选"), key="user_select_all"):
+                        zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
+                        df_zhiku_user["is_selected"] = "TRUE"
+                        df_zhiku_user.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
+                        st.rerun()
+                with col_sel2:
+                    if st.button("☐ " + ("Deselect All" if is_en else "全不选"), key="user_deselect_all"):
+                        zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
+                        df_zhiku_user["is_selected"] = "FALSE"
+                        df_zhiku_user.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
+                        st.rerun()
+
                 col_config = {}
                 if "is_selected" in show_cols:
                     col_config["is_selected"] = st.column_config.CheckboxColumn("Selected" if is_en else "选中")
