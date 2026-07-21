@@ -812,6 +812,106 @@ elif _page_idx == 1:
                     except Exception as e:
                         st.error(f"上传失败: {str(e)}")
 
+        # --- User: Phrase List, Selection, Filtering, CTA ---
+        st.divider()
+        st.markdown("### " + ("Current Phrase Library" if is_en else "当前短语库"))
+
+        df_zhiku_user = load_zhiku_live(selected_batch)
+        total_phrases_u = len(df_zhiku_user) if not df_zhiku_user.empty else 0
+        selected_count_u = 0
+        if not df_zhiku_user.empty and "is_selected" in df_zhiku_user.columns:
+            selected_count_u = df_zhiku_user[df_zhiku_user["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])].shape[0]
+
+        sc1, sc2 = st.columns(2)
+        sc1.metric("Total" if is_en else "总量", total_phrases_u)
+        sc2.metric("Selected" if is_en else "已选中", selected_count_u)
+
+        if not df_zhiku_user.empty:
+            # Filter
+            filter_col = st.columns([2, 2, 1])
+            with filter_col[0]:
+                source_filter = st.selectbox("Source" if is_en else "来源筛选",
+                    ["All"] + (df_zhiku_user["source"].dropna().unique().tolist() if "source" in df_zhiku_user.columns else []),
+                    key="user_source_filter")
+            with filter_col[1]:
+                search_text = st.text_input("Search" if is_en else "搜索", key="user_search_text", placeholder="关键词搜索...")
+
+            df_display = df_zhiku_user.copy()
+            if source_filter != "All" and "source" in df_display.columns:
+                df_display = df_display[df_display["source"] == source_filter]
+            if search_text and "ai_query" in df_display.columns:
+                df_display = df_display[df_display["ai_query"].astype(str).str.contains(search_text, case=False, na=False)]
+
+            # Editable table
+            show_cols = [c for c in ["ai_query", "source", "is_selected", "priority_score", "category"] if c in df_display.columns]
+            if show_cols:
+                col_config = {}
+                if "is_selected" in show_cols:
+                    col_config["is_selected"] = st.column_config.CheckboxColumn("Selected" if is_en else "选中")
+                edited_df = st.data_editor(df_display[show_cols].reset_index(drop=True),
+                                           column_config=col_config,
+                                           use_container_width=True, hide_index=True,
+                                           key="user_zhiku_editor")
+
+                # Save changes
+                if st.button("💾 " + ("Save Changes" if is_en else "保存修改"), key="user_save_zhiku"):
+                    # Apply edits back
+                    for col in show_cols:
+                        if col in edited_df.columns:
+                            df_zhiku_user[col] = edited_df[col].values[:len(df_zhiku_user)]
+                    zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
+                    df_zhiku_user.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
+                    st.success("✅ " + ("Saved!" if is_en else "已保存！"))
+                    st.rerun()
+
+            # CTA to next step
+            st.divider()
+            if selected_count_u > 0:
+                if st.button("➡️ " + ("Next: Run AI Test (智测)" if is_en else "下一步：执行智测"), type="primary", key="user_cta_zhice"):
+                    jump_to("🔍 智测" if not is_en else "🔍 Testing")
+                    st.rerun()
+            else:
+                st.info("Please select phrases first (check '选中' column)" if is_en else "请先选中短语（勾选「选中」列）后进入下一步")
+        else:
+            st.info("No phrases yet. Use the tabs above to generate or upload." if is_en else "暂无短语。请使用上方的标签页生成或上传。")
+
+        # --- Clear & History ---
+        st.divider()
+        with st.expander("🗑️ " + ("Clear & Archive / 📜 History" if is_en else "清除归档 / 📜 历史记录"), expanded=False):
+            if total_phrases_u > 0:
+                if st.button("🗑️ " + ("Clear All & Archive" if is_en else "清空当前短语（归档到历史）"), key="user_clear_zhiku"):
+                    zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
+                    if zhiku_file.exists():
+                        archive_dir = OUTPUT_PATH / selected_batch / "01_zhiku" / "archive"
+                        archive_dir.mkdir(parents=True, exist_ok=True)
+                        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+                        zhiku_file.rename(archive_dir / f"zhiku_ai_queries_{ts}.csv")
+                        st.success("✅ " + ("Archived. Page is now empty." if is_en else "已归档到历史记录，当前页面已清空。"))
+                        st.rerun()
+
+            # Show archived history
+            archive_dir = OUTPUT_PATH / selected_batch / "01_zhiku" / "archive"
+            if archive_dir.exists():
+                archives = sorted(archive_dir.glob("*.csv"), reverse=True)
+                if archives:
+                    st.markdown("**📜 " + ("History" if is_en else "历史记录") + ":**")
+                    for a in archives[:5]:
+                        df_a = load_csv_safe(a)
+                        count = len(df_a) if not df_a.empty else 0
+                        st.caption(f"🗂️ {a.stem.replace('zhiku_ai_queries_', '')} — {count} " + ("phrases" if is_en else "条短语"))
+                    # Restore option
+                    restore_file = st.selectbox("Restore" if is_en else "恢复历史版本",
+                                               [a.name for a in archives], key="user_restore_select")
+                    if st.button("🔄 " + ("Restore" if is_en else "恢复"), key="user_restore_btn"):
+                        src = archive_dir / restore_file
+                        dst = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
+                        import shutil
+                        shutil.copy2(str(src), str(dst))
+                        st.success("✅ " + ("Restored!" if is_en else "已恢复！"))
+                        st.rerun()
+            else:
+                st.caption("No history yet." if is_en else "暂无历史记录。")
+
     # ============================================================
     # ADMIN VIEW: Full interface (original)
     # ============================================================
