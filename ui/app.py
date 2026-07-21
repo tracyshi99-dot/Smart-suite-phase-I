@@ -725,32 +725,92 @@ elif _page_idx == 1:
                     st.error(str(e))
 
         with tab_upload:
-            st.markdown("**直接上传已确定的检索短语**" if not is_en else "**Upload confirmed search phrases**")
-            st.caption("CSV 文件需包含 `ai_query` 或 `query` 列" if not is_en else "CSV must contain `ai_query` or `query` column")
-            uploaded_phrases = st.file_uploader("上传 CSV" if not is_en else "Upload CSV", type=["csv"], key="user_upload_phrases")
-            if uploaded_phrases:
-                try:
-                    df_up = pd.read_csv(uploaded_phrases, encoding="utf-8-sig", on_bad_lines="skip")
-                    q_col = next((c for c in ["ai_query", "query", "检索短语", "问题"] if c in df_up.columns), df_up.columns[0] if len(df_up.columns) > 0 else None)
-                    if q_col:
-                        df_up = df_up.rename(columns={q_col: "ai_query"}) if q_col != "ai_query" else df_up
-                        if "source" not in df_up.columns:
-                            df_up["source"] = "manual_upload"
-                        if "is_selected" not in df_up.columns:
-                            df_up["is_selected"] = "TRUE"
-                        st.dataframe(df_up[["ai_query"]].head(10), use_container_width=True, hide_index=True)
-                        st.caption(f"共 {len(df_up)} 条")
-                        if st.button("✅ 确认上传" if not is_en else "✅ Confirm Upload", type="primary", key="user_confirm_upload"):
-                            zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
-                            zhiku_file.parent.mkdir(parents=True, exist_ok=True)
-                            existing = load_csv_safe(zhiku_file) if zhiku_file.exists() else pd.DataFrame()
-                            merged = pd.concat([existing, df_up], ignore_index=True)
-                            if "ai_query" in merged.columns:
-                                merged = merged.drop_duplicates(subset=["ai_query"], keep="first")
-                            merged.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
-                            st.success(f"✅ 上传 {len(df_up)} 条到智库")
-                except Exception as e:
-                    st.error(str(e))
+            st.markdown("**直接上传已确定的检索短语 或 SEO/SEM 关键词**" if not is_en else "**Upload confirmed search phrases or SEO/SEM keywords**")
+
+            upload_type = st.radio("上传类型" if not is_en else "Upload type",
+                                   ["检索短语 (AI Query)" if not is_en else "Search Phrases",
+                                    "SEO/SEM 关键词" if not is_en else "SEO/SEM Keywords"],
+                                   horizontal=True, key="user_upload_type")
+
+            if upload_type.startswith("检索短语") or upload_type.startswith("Search"):
+                st.caption("CSV 文件需包含 `ai_query` 或 `query` 列" if not is_en else "CSV must contain `ai_query` or `query` column")
+                uploaded_phrases = st.file_uploader("上传 CSV" if not is_en else "Upload CSV", type=["csv"], key="user_upload_phrases")
+                if uploaded_phrases:
+                    try:
+                        df_up = pd.read_csv(uploaded_phrases, encoding="utf-8-sig", on_bad_lines="skip")
+                        q_col = next((c for c in ["ai_query", "query", "检索短语", "问题"] if c in df_up.columns), df_up.columns[0] if len(df_up.columns) > 0 else None)
+                        if q_col:
+                            df_up = df_up.rename(columns={q_col: "ai_query"}) if q_col != "ai_query" else df_up
+                            if "source" not in df_up.columns:
+                                df_up["source"] = "manual_upload"
+                            if "is_selected" not in df_up.columns:
+                                df_up["is_selected"] = "TRUE"
+                            st.dataframe(df_up[["ai_query"]].head(10), use_container_width=True, hide_index=True)
+                            st.caption(f"共 {len(df_up)} 条")
+                            if st.button("✅ 确认上传" if not is_en else "✅ Confirm Upload", type="primary", key="user_confirm_upload"):
+                                zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
+                                zhiku_file.parent.mkdir(parents=True, exist_ok=True)
+                                existing = load_csv_safe(zhiku_file) if zhiku_file.exists() else pd.DataFrame()
+                                merged = pd.concat([existing, df_up], ignore_index=True)
+                                if "ai_query" in merged.columns:
+                                    merged = merged.drop_duplicates(subset=["ai_query"], keep="first")
+                                merged.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
+                                st.success(f"✅ 上传 {len(df_up)} 条到智库")
+                    except Exception as e:
+                        st.error(str(e))
+
+            else:  # SEO/SEM Keywords
+                st.caption("上传 SEO/SEM 关键词 CSV，系统将自动裂变为 AI 检索短语" if not is_en else "Upload SEO/SEM keywords CSV, system will expand into AI search phrases")
+                st.caption("CSV 建议包含 `Keyword` 或 `keyword` 列" if not is_en else "CSV should contain `Keyword` or `keyword` column")
+                uploaded_kw = st.file_uploader("上传关键词 CSV" if not is_en else "Upload Keywords CSV", type=["csv", "xlsx"], key="user_upload_kw")
+                if uploaded_kw:
+                    try:
+                        if uploaded_kw.name.endswith(".csv"):
+                            df_kw = pd.read_csv(uploaded_kw, encoding="utf-8-sig", on_bad_lines="skip")
+                        else:
+                            df_kw = pd.read_excel(uploaded_kw, engine="openpyxl")
+                        kw_col = next((c for c in ["Keyword", "keyword", "关键词", "kw"] if c in df_kw.columns), df_kw.columns[0] if len(df_kw.columns) > 0 else None)
+                        if kw_col:
+                            keywords = df_kw[kw_col].dropna().astype(str).tolist()
+                            st.dataframe(pd.DataFrame({"关键词": keywords[:10]}), use_container_width=True, hide_index=True)
+                            st.caption(f"共 {len(keywords)} 个关键词")
+
+                            kw_expand_count = st.slider("每个关键词裂变短语数" if not is_en else "Phrases per keyword", 3, 10, 5, key="kw_expand_count")
+
+                            if st.button("🚀 裂变为检索短语" if not is_en else "🚀 Expand to Phrases", type="primary", key="user_kw_expand_btn"):
+                                try:
+                                    from engine import call_bedrock_claude
+                                    kw_list = "\n".join(keywords[:20])
+                                    prompt = f"""请将以下 SEO/SEM 关键词裂变为 AI 搜索引擎的口语化检索短语。
+
+关键词列表：
+{kw_list}
+
+要求：
+1. 每个关键词生成 {kw_expand_count} 条口语化问句
+2. 像真实用户在 AI 搜索框里打字提问
+3. 每行一条，不要编号，不要标注来源关键词
+
+直接输出短语列表。"""
+                                    with st.spinner("裂变中..." if not is_en else "Expanding..."):
+                                        response = call_bedrock_claude(prompt)
+                                    queries = [q.strip().lstrip("0123456789.-、）) ") for q in response.strip().split("\n") if q.strip() and len(q.strip()) > 4]
+                                    if queries:
+                                        st.success(f"✅ 生成 {len(queries)} 条检索短语")
+                                        df_result = pd.DataFrame({"ai_query": queries, "source": "seo_sem_expand", "is_selected": "TRUE"})
+                                        st.dataframe(df_result[["ai_query"]].head(15), use_container_width=True, hide_index=True)
+                                        zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
+                                        zhiku_file.parent.mkdir(parents=True, exist_ok=True)
+                                        existing = load_csv_safe(zhiku_file) if zhiku_file.exists() else pd.DataFrame()
+                                        merged = pd.concat([existing, df_result], ignore_index=True)
+                                        if "ai_query" in merged.columns:
+                                            merged = merged.drop_duplicates(subset=["ai_query"], keep="first")
+                                        merged.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
+                                        st.success("✅ 已保存到智库")
+                                except Exception as e:
+                                    st.error(str(e))
+                    except Exception as e:
+                        st.error(f"上传失败: {str(e)}")
 
     # ============================================================
     # ADMIN VIEW: Full interface (original)
