@@ -3231,7 +3231,7 @@ elif _page_idx == 7:
         _custom_metrics = json.loads(_metrics_file.read_text(encoding="utf-8")) if _metrics_file.exists() else []
 
         # Preset metric options
-        preset_metrics = ["Reg Starts", "Page Views", "Click-Through Rate", "Conversion Rate",
+        preset_metrics = ["Reg Starts", "Page Views", "Conversion Rate",
                           "AI Citation Count", "Brand Mention Rate", "Official Link Rate",
                           "Content Published", "GAP Fill Rate"]
 
