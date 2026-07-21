@@ -498,6 +498,9 @@ with st.sidebar:
     if current_user:
         role_label = "🔑 Admin" if is_admin else "👤 User"
         st.caption(f"{role_label}: **{current_user}**")
+        if st.button("🚪", key="logout_btn", help="Logout" if is_en else "退出登录"):
+            st.session_state["app_user"] = ""
+            st.rerun()
 
     if DEMO_MODE:
         st.caption("🎬 Demo" if is_en else "🎬 演示模式")
