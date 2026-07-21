@@ -3133,79 +3133,140 @@ elif _page_idx == 7:
         # Load user's data
         _u_zhiku = load_csv_safe(OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv")
         _u_zhizao = load_csv_safe(OUTPUT_PATH / selected_batch / "02_zhizao" / "zhizao_draft_content.csv")
-        _u_zhice_dir = OUTPUT_PATH / "zhice"
-        _u_test_results = []
-        if _u_zhice_dir.exists():
-            for f in sorted(_u_zhice_dir.glob("*.json"), key=lambda x: x.stat().st_mtime, reverse=True)[:5]:
-                try:
-                    data = json.loads(f.read_text(encoding="utf-8"))
-                    if isinstance(data, list):
-                        _u_test_results.extend(data)
-                except Exception:
-                    pass
 
         # KPIs
         total_phrases = len(_u_zhiku) if not _u_zhiku.empty else 0
         total_articles = len(_u_zhizao) if not _u_zhizao.empty else 0
-        total_tested = len(_u_test_results)
+        selected_phrases = 0
+        if not _u_zhiku.empty and "is_selected" in _u_zhiku.columns:
+            selected_phrases = len(_u_zhiku[_u_zhiku["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])])
 
         kc1, kc2, kc3 = st.columns(3)
-        kc1.metric("Phrases Created" if is_en else "创建短语", total_phrases)
-        kc2.metric("Articles Produced" if is_en else "产出文章", total_articles)
-        kc3.metric("Queries Tested" if is_en else "已测试短语", total_tested)
+        kc1.metric("Total Phrases" if is_en else "创建短语", total_phrases)
+        kc2.metric("Selected" if is_en else "已选中", selected_phrases)
+        kc3.metric("Articles" if is_en else "产出文章", total_articles)
 
         st.divider()
 
-        # Brand & Link mention rates
+        # --- Citation Performance ---
         st.markdown("### " + ("Citation Performance" if is_en else "引用表现"))
+        st.caption("Before/After comparison of brand mention and official link rates across AI platforms" if is_en else "AI 平台中品牌提及率和官方链接率的前后对比")
 
-        if _u_test_results:
-            with_brand = sum(1 for r in _u_test_results if r.get("has_brand_mention") or ("亚马逊" in r.get("answer", "") or "amazon" in r.get("answer", "").lower()))
-            with_link = sum(1 for r in _u_test_results if r.get("has_official_link") or ".amazon" in r.get("answer", "").lower())
+        # Load performance data (from admin-assigned or user-uploaded)
+        _perf_file = OUTPUT_PATH / "requests" / current_user / "performance_data.json"
+        _perf_data = json.loads(_perf_file.read_text(encoding="utf-8")) if _perf_file.exists() else []
 
-            brand_rate = with_brand / total_tested * 100 if total_tested > 0 else 0
-            link_rate = with_link / total_tested * 100 if total_tested > 0 else 0
+        # Show performance table (always show structure, even if empty)
+        perf_columns = {
+            "Query": "检索短语" if not is_en else "Query",
+            "Platform": "平台" if not is_en else "Platform",
+            "Brand Before": "品牌提及(前)" if not is_en else "Brand Before",
+            "Brand After": "品牌提及(后)" if not is_en else "Brand After",
+            "Link Before": "链接(前)" if not is_en else "Link Before",
+            "Link After": "链接(后)" if not is_en else "Link After",
+            "Change": "变化" if not is_en else "Change",
+        }
 
-            col_r1, col_r2 = st.columns(2)
-            col_r1.metric("Brand Mention Rate" if is_en else "品牌提及率", f"{brand_rate:.0f}%")
-            col_r2.metric("Official Link Rate" if is_en else "官方链接率", f"{link_rate:.0f}%")
+        if _perf_data:
+            df_perf = pd.DataFrame(_perf_data)
+            # Ensure all expected columns exist
+            for col in perf_columns.keys():
+                if col not in df_perf.columns:
+                    df_perf[col] = "—"
+            st.dataframe(df_perf[list(perf_columns.keys())], use_container_width=True, hide_index=True)
 
-            # Per-phrase breakdown
-            st.divider()
-            st.markdown("#### " + ("Per-Phrase Performance" if is_en else "逐短语表现"))
-            df_perf = pd.DataFrame([{
-                "Query": r.get("query", ""),
-                "Platform": r.get("platform", ""),
-                "Brand": "✅" if (r.get("has_brand_mention") or "亚马逊" in r.get("answer", "") or "amazon" in r.get("answer", "").lower()) else "❌",
-                "Link": "✅" if (r.get("has_official_link") or ".amazon" in r.get("answer", "").lower()) else "❌",
-            } for r in _u_test_results[:50]])
-            st.dataframe(df_perf, use_container_width=True, hide_index=True)
+            # Summary metrics
+            if len(_perf_data) > 0:
+                brand_before = sum(1 for r in _perf_data if r.get("Brand Before") == "✅")
+                brand_after = sum(1 for r in _perf_data if r.get("Brand After") == "✅")
+                link_before = sum(1 for r in _perf_data if r.get("Link Before") == "✅")
+                link_after = sum(1 for r in _perf_data if r.get("Link After") == "✅")
+                total_p = len(_perf_data)
+                col_m1, col_m2, col_m3, col_m4 = st.columns(4)
+                col_m1.metric("Brand Before" if is_en else "品牌提及(前)", f"{brand_before}/{total_p}")
+                col_m2.metric("Brand After" if is_en else "品牌提及(后)", f"{brand_after}/{total_p}", delta=f"+{brand_after-brand_before}" if brand_after > brand_before else None)
+                col_m3.metric("Link Before" if is_en else "链接(前)", f"{link_before}/{total_p}")
+                col_m4.metric("Link After" if is_en else "链接(后)", f"{link_after}/{total_p}", delta=f"+{link_after-link_before}" if link_after > link_before else None)
         else:
-            st.info("No test data yet. Run tests in 智测 first." if is_en else "暂无测试数据。请先在智测中执行测试。")
+            # Show empty table structure
+            df_empty = pd.DataFrame([{k: "—" for k in perf_columns.keys()}])
+            st.dataframe(df_empty, use_container_width=True, hide_index=True)
+            st.caption("数据为空 — 等待管理员分配数据或自行上传" if not is_en else "No data — waiting for admin to assign data or upload yourself")
 
-        # Custom metrics section
+        # Upload performance data
+        with st.expander("📤 " + ("Upload Performance Data" if is_en else "上传引用表现数据"), expanded=False):
+            st.caption("CSV columns: Query, Platform, Brand Before, Brand After, Link Before, Link After" if is_en else "CSV 列: Query, Platform, Brand Before, Brand After, Link Before, Link After")
+            up_perf = st.file_uploader("Upload CSV" if is_en else "上传 CSV", type=["csv"], key="user_upload_perf")
+            if up_perf:
+                try:
+                    df_up_perf = pd.read_csv(up_perf, encoding="utf-8-sig", on_bad_lines="skip")
+                    st.dataframe(df_up_perf.head(5), use_container_width=True, hide_index=True)
+                    if st.button("✅ " + ("Confirm Upload" if is_en else "确认上传"), key="confirm_perf_upload"):
+                        _perf_file.parent.mkdir(parents=True, exist_ok=True)
+                        _perf_file.write_text(df_up_perf.to_json(orient="records", force_ascii=False), encoding="utf-8")
+                        st.success("✅ Uploaded!")
+                        st.rerun()
+                except Exception as e:
+                    st.error(str(e))
+
         st.divider()
-        st.markdown("### " + ("Add Custom Metrics" if is_en else "添加自定义指标"))
-        st.caption("Track additional metrics for your phrases" if is_en else "为您的短语追踪额外指标")
+
+        # --- Custom Metrics ---
+        st.markdown("### " + ("Metrics Tracking" if is_en else "指标追踪"))
+        st.caption("Select preset metrics or add custom ones" if is_en else "选择预设指标或手动添加")
 
         _metrics_file = OUTPUT_PATH / "requests" / current_user / "custom_metrics.json"
         _custom_metrics = json.loads(_metrics_file.read_text(encoding="utf-8")) if _metrics_file.exists() else []
 
-        with st.expander("➕ " + ("Add Metric" if is_en else "添加指标"), expanded=False):
-            m_name = st.text_input("Metric Name" if is_en else "指标名称", key="custom_metric_name", placeholder="e.g. Reg Starts, Page Views")
-            m_value = st.text_input("Value" if is_en else "数值", key="custom_metric_value", placeholder="e.g. 150")
-            m_date = st.date_input("Date" if is_en else "日期", key="custom_metric_date")
-            if st.button("➕ Add" if is_en else "➕ 添加", key="add_custom_metric"):
-                if m_name and m_value:
-                    _custom_metrics.append({"name": m_name, "value": m_value, "date": str(m_date)})
+        # Preset metric options
+        preset_metrics = ["Reg Starts", "Page Views", "Click-Through Rate", "Conversion Rate",
+                          "AI Citation Count", "Brand Mention Rate", "Official Link Rate",
+                          "Content Published", "GAP Fill Rate"]
+
+        col_add1, col_add2, col_add3, col_add4 = st.columns([2, 1, 1, 1])
+        with col_add1:
+            m_name = st.selectbox("Metric" if is_en else "指标",
+                                  ["— 选择预设 —"] + preset_metrics + ["✏️ 自定义..." if not is_en else "✏️ Custom..."],
+                                  key="metric_select")
+            if m_name in ["✏️ 自定义...", "✏️ Custom..."]:
+                m_name = st.text_input("Custom Name" if is_en else "自定义名称", key="custom_m_name")
+        with col_add2:
+            m_value = st.text_input("Value" if is_en else "数值", key="m_value", placeholder="e.g. 150")
+        with col_add3:
+            m_date = st.date_input("Date" if is_en else "日期", key="m_date")
+        with col_add4:
+            st.write("")
+            if st.button("➕", key="add_metric_btn"):
+                if m_name and m_name != "— 选择预设 —" and m_value:
+                    _custom_metrics.append({"name": m_name, "value": m_value, "date": str(m_date), "user": current_user})
                     _metrics_file.parent.mkdir(parents=True, exist_ok=True)
                     _metrics_file.write_text(json.dumps(_custom_metrics, ensure_ascii=False, indent=2), encoding="utf-8")
-                    st.success("✅ Added!")
                     st.rerun()
 
         if _custom_metrics:
             df_cm = pd.DataFrame(_custom_metrics)
             st.dataframe(df_cm, use_container_width=True, hide_index=True)
+
+        # --- CTA: Submit Request ---
+        st.divider()
+        if st.button("📨 " + ("Submit Request to Admin" if is_en else "提交需求到管理员"), type="primary", key="user_submit_analytics_request"):
+            _req_dir = OUTPUT_PATH / "requests" / current_user
+            _req_dir.mkdir(parents=True, exist_ok=True)
+            _req_file = OUTPUT_PATH / "request_tracking.json"
+            all_reqs = json.loads(_req_file.read_text(encoding="utf-8")) if _req_file.exists() else []
+            all_reqs.append({
+                "id": f"metrics_req_{current_user}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                "user": current_user,
+                "type": "metrics_request",
+                "status": "pending",
+                "submitted_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                "phrases": total_phrases,
+                "articles": total_articles,
+                "message": f"{current_user} 提交了数据需求：{total_phrases} 短语, {total_articles} 文章",
+            })
+            _req_file.parent.mkdir(parents=True, exist_ok=True)
+            _req_file.write_text(json.dumps(all_reqs, ensure_ascii=False, indent=2), encoding="utf-8")
+            st.success("✅ " + ("Request submitted to admin!" if is_en else "需求已提交到管理员！"))
 
     # ============================================================
     # ADMIN VIEW: Full analytics (original)
