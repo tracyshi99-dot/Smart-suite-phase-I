@@ -565,7 +565,7 @@ elif not current_user:
 
     col_login_l, col_login_m, col_login_r = st.columns([1, 2, 1])
     with col_login_m:
-        login_input = st.text_input("Login", placeholder="e.g. yujiashi, joyce, murphy", key="main_login_input", label_visibility="collapsed")
+        login_input = st.text_input("Login", placeholder="请输入您的 Login" if not is_en else "Enter your login", key="main_login_input", label_visibility="collapsed")
         if st.button("🔓 " + ("Login" if is_en else "登录"), type="primary", use_container_width=True, key="main_login_btn"):
             if login_input:
                 if login_input.lower() in ALLOWED_USERS:
