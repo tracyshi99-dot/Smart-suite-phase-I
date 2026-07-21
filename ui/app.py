@@ -463,6 +463,13 @@ with st.sidebar:
     # --- Login ---
     ADMIN_USERS = ["yujiashi", "admin"]  # Admin users see everything
     ALLOWED_USERS = ["yujiashi", "admin", "joyce", "murphy", "eva", "tina", "tianran", "hanhong", "grace", "aki", "jiayu", "shadie"]  # Whitelist
+
+    # Auto-login from URL param ?user=xxx
+    if "user" in _qp and "app_user" not in st.session_state:
+        _url_user = _qp["user"].lower()
+        if _url_user in ALLOWED_USERS:
+            st.session_state["app_user"] = _url_user
+
     user_login = st.text_input("👤 Login", value=st.session_state.get("app_user", ""),
                                placeholder="Your login name", key="sidebar_login", label_visibility="collapsed")
     if user_login:
