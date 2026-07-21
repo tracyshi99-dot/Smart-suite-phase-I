@@ -460,6 +460,18 @@ with st.sidebar:
     st.title("🧠 Smart Suite")
     st.caption("GEO Content Pipeline · Phase I" if is_en else "智系列 · GEO Content Pipeline · Phase I")
 
+    # --- Login ---
+    ADMIN_USERS = ["yujiashi", "admin"]  # Admin users see everything
+    user_login = st.text_input("👤 Login", value=st.session_state.get("app_user", ""),
+                               placeholder="Your login name", key="sidebar_login", label_visibility="collapsed")
+    if user_login:
+        st.session_state["app_user"] = user_login
+    current_user = st.session_state.get("app_user", "")
+    is_admin = current_user.lower() in ADMIN_USERS
+    if current_user:
+        role_label = "🔑 Admin" if is_admin else "👤 User"
+        st.caption(f"{role_label}: **{current_user}**")
+
     if DEMO_MODE:
         st.caption("🎬 Demo" if is_en else "🎬 演示模式")
     st.divider()
@@ -4977,147 +4989,100 @@ elif page == "📌 发布追踪" or (is_en and page == "📌 Publish Tracking"):
 
 
 # ============================================================
-# PAGE: 需求提交 (Request — same as 8503)
+# PAGE: 需求提交 (Request — per-user data)
 # ============================================================
 elif _page_idx == 10:
-    st.markdown("""<div style="padding:20px 0 10px;"><h1 style="font-size:28px;font-weight:800;color:#00bcd4;margin:0;">🔄 """ + ("Request Submission" if is_en else "需求提交") + """</h1><p style="font-size:13px;color:#8892b0;margin-top:6px;">""" + ("Test → Opportunity → Content → Publish → Effect (same as localhost:8503)" if is_en else "智测发现 → 机会点 → 内容产出 → 效果对比 → 总结（与 8503 同步）") + """</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div style="padding:20px 0 10px;"><h1 style="font-size:28px;font-weight:800;color:#00bcd4;margin:0;">🔄 """ + ("Request Submission" if is_en else "需求提交") + """</h1><p style="font-size:13px;color:#8892b0;margin-top:6px;">""" + ("Test → Opportunity → Content → Publish → Effect" if is_en else "智测发现 → 机会点 → 内容产出 → 效果对比 → 总结") + """</p></div>""", unsafe_allow_html=True)
 
-    # Load zhice results
-    zhice_dir = OUTPUT_PATH / "zhice"
-    zhice_results = []
-    if zhice_dir.exists():
-        for f in sorted(zhice_dir.glob("*.json"), key=lambda x: x.stat().st_mtime, reverse=True):
+    # Login gate
+    if not current_user:
+        st.warning("⚠️ " + ("Please enter your login in the sidebar first." if is_en else "请先在左侧栏输入您的 Login。"))
+        st.stop()
+
+    # Per-user data directory
+    _req_user_dir = OUTPUT_PATH / "requests" / current_user
+    _req_user_dir.mkdir(parents=True, exist_ok=True)
+    _req_tests_file = _req_user_dir / "tests.json"
+    _req_opps_file = _req_user_dir / "opportunities.json"
+    _req_actions_file = _req_user_dir / "actions.json"
+
+    def _load_req_json(filepath):
+        if filepath.exists():
             try:
-                data = json.loads(f.read_text(encoding="utf-8"))
-                zhice_results.append({"file": f.name, "data": data, "mtime": f.stat().st_mtime})
+                return json.loads(filepath.read_text(encoding="utf-8"))
             except Exception:
-                pass
+                return []
+        return []
 
-    # Load content
-    zhizao_file = OUTPUT_PATH / selected_batch / "02_zhizao" / "zhizao_draft_content.csv"
-    df_content_cl = load_csv_safe(zhizao_file) if zhizao_file.exists() else pd.DataFrame()
-    opt_file = OUTPUT_PATH / selected_batch / "03_zhiyou" / "zhiyou_optimized_content.csv"
-    df_optimized_cl = load_csv_safe(opt_file) if opt_file.exists() else pd.DataFrame()
+    # Admin sees all users' data, regular user sees only own
+    if is_admin:
+        st.info("🔑 " + ("Admin view: showing all users' requests" if is_en else f"管理员视图：显示所有用户的需求"))
+        # Show request tracking (all users)
+        request_file = OUTPUT_PATH / "request_tracking.json"
+        all_requests = json.loads(request_file.read_text(encoding="utf-8")) if request_file.exists() else []
+
+        # Also show per-user summary
+        requests_dir = OUTPUT_PATH / "requests"
+        if requests_dir.exists():
+            user_dirs = [d.name for d in requests_dir.iterdir() if d.is_dir()]
+            if user_dirs:
+                st.markdown("### " + ("All Users" if is_en else "所有用户"))
+                for ud in sorted(user_dirs):
+                    ud_tests = _req_user_dir.parent / ud / "tests.json"
+                    ud_opps = _req_user_dir.parent / ud / "opportunities.json"
+                    ud_actions = _req_user_dir.parent / ud / "actions.json"
+                    t_count = len(json.loads(ud_tests.read_text(encoding="utf-8"))) if ud_tests.exists() else 0
+                    o_count = len(json.loads(ud_opps.read_text(encoding="utf-8"))) if ud_opps.exists() else 0
+                    a_count = len(json.loads(ud_actions.read_text(encoding="utf-8"))) if ud_actions.exists() else 0
+                    st.markdown(f"- **{ud}**: {t_count} tests, {o_count} opps, {a_count} actions")
+
+    # Show own data (for all users including admin)
+    st.divider()
+    st.markdown(f"### {'My Requests' if is_en else '我的需求'} ({current_user})")
+
+    user_tests = _load_req_json(_req_tests_file)
+    user_opps = _load_req_json(_req_opps_file)
+    user_actions = _load_req_json(_req_actions_file)
 
     # KPIs
-    test_count = len(zhice_results)
-    total_queries_tested = sum(len(r["data"]) for r in zhice_results if isinstance(r["data"], list))
-    gaps_found = sum(
-        sum(1 for item in r["data"] if not item.get("has_official_link", False) and not item.get("has_amazon_cn", False))
-        for r in zhice_results if isinstance(r["data"], list)
-    )
-    content_produced = len(df_content_cl) if not df_content_cl.empty else 0
-    content_optimized = len(df_optimized_cl) if not df_optimized_cl.empty else 0
+    kc1, kc2, kc3, kc4 = st.columns(4)
+    kc1.metric("Tests" if is_en else "测试", len(user_tests))
+    total_queries = sum(len(t.get("results", [])) for t in user_tests)
+    kc2.metric("Queries" if is_en else "短语", total_queries)
+    kc3.metric("Opportunities" if is_en else "机会点", len(user_opps))
+    total_articles = sum(a.get("count", 0) for a in user_actions)
+    kc4.metric("Articles" if is_en else "产出文章", total_articles)
 
-    kc1, kc2, kc3, kc4, kc5 = st.columns(5)
-    kc1.metric("Tests" if is_en else "智测次数", test_count)
-    kc2.metric("Queries" if is_en else "短语测试", total_queries_tested)
-    kc3.metric("Gaps" if is_en else "发现缺口", gaps_found)
-    kc4.metric("Content" if is_en else "内容产出", content_produced)
-    kc5.metric("Optimized" if is_en else "优化完成", content_optimized)
-
+    # Quick actions
     st.divider()
+    st.caption("💡 " + ("For full step-by-step flow (test → analyze → produce → publish), use the dedicated console:" if is_en else "完整的五步操作流程（测试→分析→产出→发布），请使用独立操作台："))
+    st.markdown("**https://smart-suite-phase-i-rexnysnywiqjytrnb4up9a.streamlit.app/**")
 
-    # Step 1: Test Results
-    st.markdown("### 🔍 " + ("Step 1: Test Results" if is_en else "Step 1: 智测发现"))
-    if zhice_results and isinstance(zhice_results[0]["data"], list):
-        latest_data = zhice_results[0]["data"]
-        df_test = pd.DataFrame([{
-            "Query": item.get("query", ""),
-            "Platform": item.get("platform", ""),
-            "Official Link": "✅" if item.get("has_official_link", False) else "❌",
-            "Brand": "✅" if item.get("has_brand_mention", False) else "❌",
-            "Status": "✅" if (item.get("has_official_link") or item.get("has_amazon_cn")) else "⚠️ Gap",
-        } for item in latest_data])
-        st.dataframe(df_test, use_container_width=True, hide_index=True)
-    else:
-        st.info("No test results yet." if is_en else "暂无智测结果。")
+    # Show recent tests
+    if user_tests:
+        st.divider()
+        st.markdown("#### " + ("Recent Tests" if is_en else "最近测试"))
+        for t in user_tests[:5]:
+            results = t.get("results", [])
+            gaps = sum(1 for r in results if not r.get("has_official_link") and r.get("answer"))
+            st.markdown(f"- **{t.get('topic', '')}** ({t.get('date', '')}) — {len(results)} queries, {gaps} gaps")
 
-    st.divider()
+    # Show opportunities status
+    if user_opps:
+        st.divider()
+        st.markdown("#### " + ("Opportunities" if is_en else "机会点状态"))
+        done = sum(1 for o in user_opps if o.get("status") != "待执行")
+        pending = len(user_opps) - done
+        st.markdown(f"✅ {'Done' if is_en else '已完成'}: {done} | ⏳ {'Pending' if is_en else '待执行'}: {pending}")
+        if len(user_opps) > 0:
+            st.progress(done / len(user_opps))
 
-    # Step 2: Opportunities
-    st.markdown("### 💡 " + ("Step 2: Opportunities" if is_en else "Step 2: 机会点"))
-    all_gaps = []
-    for r in zhice_results:
-        if isinstance(r["data"], list):
-            for item in r["data"]:
-                if not item.get("has_official_link") and not item.get("has_amazon_cn"):
-                    all_gaps.append({"Query": item.get("query", ""), "Platform": item.get("platform", "")})
-    if all_gaps:
-        st.dataframe(pd.DataFrame(all_gaps[:20]), use_container_width=True, hide_index=True)
-    else:
-        st.success("No gaps!" if is_en else "无缺口！")
-
-    st.divider()
-
-    # Step 3: Content Production
-    st.markdown("### ✍️ " + ("Step 3: Content & Publishing" if is_en else "Step 3: 内容产出与发布"))
-    if not df_content_cl.empty:
-        show_cols = [c for c in ["ai_query", "title", "word_count", "version"] if c in df_content_cl.columns]
-        if show_cols:
-            df_s = df_content_cl[show_cols].copy()
-            if not df_optimized_cl.empty and "ai_query" in df_optimized_cl.columns:
-                opt_q = set(df_optimized_cl["ai_query"].dropna().astype(str))
-                df_s["Status"] = df_s["ai_query"].apply(lambda q: "✅" if str(q) in opt_q else "⏳")
-            else:
-                df_s["Status"] = "⏳"
-            st.dataframe(df_s, use_container_width=True, hide_index=True)
-    else:
-        st.info("No content yet." if is_en else "暂无内容。")
-
-    # Quick produce button
-    col_qp1, col_qp2 = st.columns([1, 3])
-    with col_qp1:
-        qp_count = st.number_input("Articles" if is_en else "篇数", 1, 10, 3, key="qp_count_cl")
-    with col_qp2:
-        if st.button("🚀 " + ("Quick Produce + Optimize" if is_en else "快速生产+优化"), type="primary", key="qp_btn_cl"):
-            try:
-                from engine import run_zhizao, run_zhiyou_score, run_zhiyou_execute
-                with st.spinner("Producing..." if is_en else "生产中..."):
-                    r1 = run_zhizao(selected_batch, qp_count, None, "auto")
-                    if r1.get("success"):
-                        run_zhiyou_score(selected_batch, None)
-                        run_zhiyou_execute(selected_batch, None)
-                        st.success(f"✅ Done! {r1.get('articles_generated', 0)} articles" if is_en else f"✅ 完成！{r1.get('articles_generated', 0)} 篇")
-                        st.rerun()
-                    else:
-                        st.error(r1.get("error", "Failed"))
-            except Exception as e:
-                st.error(str(e))
-
-    st.divider()
-
-    # Step 4: Before vs After
-    st.markdown("### 📈 " + ("Step 4: Effect Comparison" if is_en else "Step 4: 效果对比"))
-    if len(zhice_results) >= 2:
-        first = zhice_results[-1]["data"]
-        last = zhice_results[0]["data"]
-        if isinstance(first, list) and isinstance(last, list):
-            bq = {item.get("query"): item for item in first}
-            aq = {item.get("query"): item for item in last}
-            common = set(bq.keys()) & set(aq.keys())
-            if common:
-                comp = []
-                for q in common:
-                    b_ok = bq[q].get("has_official_link") or bq[q].get("has_brand_mention")
-                    a_ok = aq[q].get("has_official_link") or aq[q].get("has_brand_mention")
-                    change = "🆕" if (not b_ok and a_ok) else ("⚠️" if (b_ok and not a_ok) else "→")
-                    comp.append({"Query": q, "Before": "✅" if b_ok else "❌", "After": "✅" if a_ok else "❌", "Δ": change})
-                st.dataframe(pd.DataFrame(comp), use_container_width=True, hide_index=True)
-            else:
-                st.info("No common queries to compare." if is_en else "无相同短语可对比。")
-    else:
-        st.info("Need 2+ test runs to compare." if is_en else "需2次以上测试才能对比。")
-
-    st.divider()
-
-    # Step 5: Summary
-    st.markdown("### 📝 " + ("Step 5: Summary" if is_en else "Step 5: 总结"))
-    st.markdown(f"- {'Tests:' if is_en else '测试：'} {test_count} runs, {total_queries_tested} queries")
-    st.markdown(f"- {'Gaps:' if is_en else '缺口：'} {gaps_found}")
-    st.markdown(f"- {'Content:' if is_en else '内容：'} {content_produced} produced, {content_optimized} optimized")
-    if gaps_found > 0 and content_produced > 0:
-        st.markdown(f"- {'Fill rate:' if is_en else '填补率：'} {min(100, content_produced/gaps_found*100):.0f}%")
+    # Show actions
+    if user_actions:
+        st.divider()
+        st.markdown("#### " + ("Action History" if is_en else "执行历史"))
+        for a in user_actions[:10]:
+            st.markdown(f"- **{a.get('date', '')}** — {a.get('count', 0)} {'articles' if is_en else '篇'}")
 
 
 # PAGE: 运营看板 (Operations Dashboard)
