@@ -465,8 +465,9 @@ with st.sidebar:
     ALLOWED_USERS = ["yujiashi", "admin", "joyce", "murphy", "eva", "tina", "tianran", "hanhong", "grace", "aki", "jiayu", "shadie"]  # Whitelist
 
     # Auto-login from URL param ?user=xxx
-    if "user" in _qp and "app_user" not in st.session_state:
-        _url_user = _qp["user"].lower()
+    _qp_login = st.query_params
+    if "user" in _qp_login and "app_user" not in st.session_state:
+        _url_user = _qp_login["user"].lower()
         if _url_user in ALLOWED_USERS:
             st.session_state["app_user"] = _url_user
 
