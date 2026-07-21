@@ -649,7 +649,7 @@ elif _page_idx == 1:
                         queries = [q.strip().lstrip("0123456789.-、）) ") for q in response.strip().split("\n") if q.strip() and len(q.strip()) > 4]
                         if queries:
                             st.success(f"✅ 生成 {len(queries)} 条")
-                            df_result = pd.DataFrame({"ai_query": queries, "source": f"seed_{seed_word}", "is_selected": "TRUE"})
+                            df_result = pd.DataFrame({"ai_query": queries, "source": f"seed_{seed_word}", "is_selected": "FALSE"})
                             st.dataframe(df_result, use_container_width=True, hide_index=True)
                             # Save
                             zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
@@ -711,7 +711,7 @@ elif _page_idx == 1:
                     queries = [q.strip().lstrip("0123456789.-、）) ") for q in response.strip().split("\n") if q.strip() and len(q.strip()) > 4]
                     if queries:
                         st.success(f"✅ 生成 {len(queries)} 条")
-                        df_result = pd.DataFrame({"ai_query": queries, "source": f"persona_{sel_identity}_{sel_site[0] if sel_site else ''}", "is_selected": "TRUE"})
+                        df_result = pd.DataFrame({"ai_query": queries, "source": f"persona_{sel_identity}_{sel_site[0] if sel_site else ''}", "is_selected": "FALSE"})
                         st.dataframe(df_result, use_container_width=True, hide_index=True)
                         zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
                         zhiku_file.parent.mkdir(parents=True, exist_ok=True)
@@ -797,7 +797,7 @@ elif _page_idx == 1:
                                     queries = [q.strip().lstrip("0123456789.-、）) ") for q in response.strip().split("\n") if q.strip() and len(q.strip()) > 4]
                                     if queries:
                                         st.success(f"✅ 生成 {len(queries)} 条检索短语")
-                                        df_result = pd.DataFrame({"ai_query": queries, "source": "seo_sem_expand", "is_selected": "TRUE"})
+                                        df_result = pd.DataFrame({"ai_query": queries, "source": "seo_sem_expand", "is_selected": "FALSE"})
                                         st.dataframe(df_result[["ai_query"]].head(15), use_container_width=True, hide_index=True)
                                         zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
                                         zhiku_file.parent.mkdir(parents=True, exist_ok=True)
@@ -1052,7 +1052,7 @@ elif _page_idx == 1:
                             response = call_bedrock_claude(prompt)
                         queries = [q.strip().lstrip("0123456789.-、）) ") for q in response.strip().split("\n") if q.strip() and len(q.strip()) > 5]
                         if queries:
-                            new_df = pd.DataFrame({"ai_query": queries, "source": "reverse_recall", "priority_score": 4.6, "is_selected": "TRUE"})
+                            new_df = pd.DataFrame({"ai_query": queries, "source": "reverse_recall", "priority_score": 4.6, "is_selected": "FALSE"})
                             zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
                             zhiku_file.parent.mkdir(parents=True, exist_ok=True)
                             existing = load_csv_safe(zhiku_file) if zhiku_file.exists() else pd.DataFrame()
@@ -1084,7 +1084,7 @@ elif _page_idx == 1:
                                 all_queries.extend(qs)
                                 progress.progress((i + 1) / len(df_batch))
                             if all_queries:
-                                new_df = pd.DataFrame({"ai_query": all_queries, "source": "reverse_recall", "priority_score": 4.6, "is_selected": "TRUE"})
+                                new_df = pd.DataFrame({"ai_query": all_queries, "source": "reverse_recall", "priority_score": 4.6, "is_selected": "FALSE"})
                                 zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
                                 zhiku_file.parent.mkdir(parents=True, exist_ok=True)
                                 existing = load_csv_safe(zhiku_file) if zhiku_file.exists() else pd.DataFrame()
@@ -1195,7 +1195,7 @@ elif _page_idx == 1:
                 if st.button("➕ Add" if is_en else "➕ 添加", key="btn_manual_add", disabled=not manual_text):
                     phrases = [p.strip() for p in manual_text.strip().split("\n") if p.strip()]
                     if phrases:
-                        new_df = pd.DataFrame({"ai_query": phrases, "source": "manual", "priority_score": 3.5, "is_selected": "TRUE"})
+                        new_df = pd.DataFrame({"ai_query": phrases, "source": "manual", "priority_score": 3.5, "is_selected": "FALSE"})
                         zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
                         zhiku_file.parent.mkdir(parents=True, exist_ok=True)
                         if zhiku_file.exists():
@@ -1870,12 +1870,12 @@ elif _page_idx == 2:
                                 df_zhiku.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
                             else:
                                 # zhiku file missing expected columns — create fresh with gap phrases
-                                df_new = pd.DataFrame({"ai_query": to_produce_queries, "is_selected": "TRUE"})
+                                df_new = pd.DataFrame({"ai_query": to_produce_queries, "is_selected": "FALSE"})
                                 zhiku_file.parent.mkdir(parents=True, exist_ok=True)
                                 df_new.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
                         else:
                             # No zhiku file exists — create one with the gap phrases
-                            df_new = pd.DataFrame({"ai_query": to_produce_queries, "is_selected": "TRUE"})
+                            df_new = pd.DataFrame({"ai_query": to_produce_queries, "is_selected": "FALSE"})
                             zhiku_file.parent.mkdir(parents=True, exist_ok=True)
                             df_new.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
                         jump_to("✍️ 智造")
@@ -5137,7 +5137,7 @@ Input Activities（自动统计）:
                         "priority_score": 4.5,
                         "target_market": lc_market,
                         "source": "zhiyu_lifecycle",
-                        "is_selected": "TRUE",
+                        "is_selected": "FALSE",
                     } for q in edited_lifecycle if q])
 
                     if zhiku_file.exists():
