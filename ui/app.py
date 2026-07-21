@@ -1585,31 +1585,40 @@ elif _page_idx == 2:
         <h3 style="color:#00bcd4;font-size:18px;font-weight:700;margin:0 0 8px;">① """ + ("Phrases to Verify" if is_en else "待验证短语") + """</h3>
     </div>""", unsafe_allow_html=True)
 
+    # Load selected phrases from zhiku (for both admin and user)
+    df_zhiku_for_zhice = load_zhiku_live(selected_batch)
+    zhiku_selected_phrases = []
+    if not df_zhiku_for_zhice.empty and "ai_query" in df_zhiku_for_zhice.columns:
+        if "is_selected" in df_zhiku_for_zhice.columns:
+            selected_rows = df_zhiku_for_zhice[df_zhiku_for_zhice["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])]
+            zhiku_selected_phrases = selected_rows["ai_query"].dropna().tolist()
+
     # Load from zhiku queue or upload
     zhice_dir = OUTPUT_PATH.parent / "zhice"
-    queue_phrases = []
-    if zhice_dir.exists():
+    queue_phrases = zhiku_selected_phrases if zhiku_selected_phrases else []
+
+    # If no selected phrases from zhiku, try legacy queue files
+    if not queue_phrases and zhice_dir.exists():
         queue_files = sorted(zhice_dir.glob("zhiku_verify_queue_*.json"), key=lambda f: f.stat().st_mtime, reverse=True)
         if queue_files:
             latest_queue = json.loads(queue_files[0].read_text(encoding="utf-8"))
             queue_phrases = latest_queue.get("queries_to_verify", [])
-            st.caption(f"{'From 智库' if is_en else '来自智库'}: {len(queue_phrases)} phrases ({queue_files[0].stem})")
 
-    col_queue, col_upload = st.columns(2)
-    with col_queue:
-        if queue_phrases:
-            st.dataframe(pd.DataFrame({"ai_query": queue_phrases}), use_container_width=True, hide_index=True, height=200)
-        else:
-            st.caption("No pending queue. Upload or go to 智库 to send phrases." if is_en else "暂无待验证队列。请上传或从智库发送短语。")
+    if queue_phrases:
+        st.caption(f"{'From 智库 (selected)' if is_en else '来自智库（已选中）'}: {len(queue_phrases)} phrases")
+        st.dataframe(pd.DataFrame({"ai_query": queue_phrases}), use_container_width=True, hide_index=True, height=200)
+    else:
+        st.info("No selected phrases. Go to 智库 and select phrases first." if is_en else "暂无已选中的短语。请先在智库中选中短语。")
 
-    with col_upload:
-        st.markdown("**" + ("Upload phrases to verify" if is_en else "上传待验证短语") + "**")
-        up_verify = st.file_uploader("CSV with ai_query column" if is_en else "CSV（含 ai_query 列）", type=["csv", "xlsx"], key="zhice_upload_phrases")
-        if up_verify:
-            df_up = pd.read_csv(up_verify, encoding="utf-8-sig", on_bad_lines="skip") if up_verify.name.endswith(".csv") else pd.read_excel(up_verify, engine="openpyxl")
-            if "ai_query" in df_up.columns:
-                queue_phrases = df_up["ai_query"].tolist()
-                st.success(f"✅ {len(queue_phrases)} phrases loaded")
+    # Upload option (admin only)
+    if is_admin:
+        with st.expander("📤 " + ("Upload additional phrases" if is_en else "上传额外待验证短语"), expanded=False):
+            up_verify = st.file_uploader("CSV with ai_query column" if is_en else "CSV（含 ai_query 列）", type=["csv", "xlsx"], key="zhice_upload_phrases")
+            if up_verify:
+                df_up = pd.read_csv(up_verify, encoding="utf-8-sig", on_bad_lines="skip") if up_verify.name.endswith(".csv") else pd.read_excel(up_verify, engine="openpyxl")
+                if "ai_query" in df_up.columns:
+                    queue_phrases = queue_phrases + df_up["ai_query"].tolist()
+                    st.success(f"✅ +{len(df_up)} phrases added")
 
     st.divider()
 
