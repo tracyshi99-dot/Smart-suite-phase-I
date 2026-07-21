@@ -1938,10 +1938,6 @@ elif _page_idx == 2:
                             df_new.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
                         jump_to("✍️ 智造")
                         st.rerun()
-        with col_to_zhiyou:
-            if st.button("🔧 Partial gaps → 智优" if is_en else "🔧 部分Gap → 智优", key="zhice_to_zhiyou"):
-                jump_to("🔧 智优")
-                st.rerun()
     else:
         st.caption("No gap results yet. Execute verification above or upload results." if is_en else "暂无 Gap 结果。请执行验证或上传结果。")
 
