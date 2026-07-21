@@ -507,7 +507,13 @@ with st.sidebar:
     st.divider()
 
     # Select nav pages based on language
-    NAV_PAGES = NAV_PAGES_EN if is_en else NAV_PAGES_ZH
+    _full_nav = NAV_PAGES_EN if is_en else NAV_PAGES_ZH
+    # User: hide admin-only pages (below separator)
+    if current_user and not is_admin:
+        separator_idx = _full_nav.index("───────────") if "───────────" in _full_nav else len(_full_nav)
+        NAV_PAGES = _full_nav[:separator_idx]
+    else:
+        NAV_PAGES = _full_nav
 
     # Handle jump_to_page
     if "jump_to_page" in st.session_state:
