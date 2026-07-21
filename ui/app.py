@@ -497,11 +497,8 @@ with st.sidebar:
     is_admin = current_user.lower() in ADMIN_USERS if current_user else False
     if current_user:
         role_label = "🔑 Admin" if is_admin else "👤 User"
-        col_user_info, col_logout = st.columns([3, 1])
-        with col_user_info:
-            st.caption(f"{role_label}: **{current_user}**")
-        with col_logout:
-            if st.button("Sign out", key="logout_btn", type="secondary"):
+        with st.expander(f"{role_label}: **{current_user}**", expanded=False):
+            if st.button("🚪 Sign out", key="logout_btn", use_container_width=True):
                 st.session_state["app_user"] = ""
                 st.rerun()
 
