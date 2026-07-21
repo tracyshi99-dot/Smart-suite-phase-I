@@ -462,7 +462,21 @@ with st.sidebar:
 
     # --- Login ---
     ADMIN_USERS = ["yujiashi", "admin"]  # Admin users see everything
-    ALLOWED_USERS = ["yujiashi", "admin", "joyce", "murphy", "eva", "tina", "tianran", "hanhong", "grace", "aki", "jiayu", "shadie"]  # Whitelist
+
+    # Load allowed users from file (dynamic whitelist)
+    _users_file = BASE_PATH / "output" / "users.json"
+    if _users_file.exists():
+        try:
+            _users_data = json.loads(_users_file.read_text(encoding="utf-8"))
+            ALLOWED_USERS = _users_data.get("allowed", [])
+            ADMIN_USERS = _users_data.get("admins", ADMIN_USERS)
+        except Exception:
+            ALLOWED_USERS = ["yujiashi", "admin", "joyce", "murphy", "eva", "tina", "tianran", "hanhong", "grace", "aki", "jiayu", "shadie"]
+    else:
+        ALLOWED_USERS = ["yujiashi", "admin", "joyce", "murphy", "eva", "tina", "tianran", "hanhong", "grace", "aki", "jiayu", "shadie"]
+        # Save initial file
+        _users_file.parent.mkdir(parents=True, exist_ok=True)
+        _users_file.write_text(json.dumps({"allowed": ALLOWED_USERS, "admins": ADMIN_USERS, "pending": []}, ensure_ascii=False, indent=2), encoding="utf-8")
 
     # Auto-login from URL param ?user=xxx
     _qp_login = st.query_params
@@ -581,6 +595,27 @@ elif not current_user:
                     st.rerun()
                 else:
                     st.error("⚠️ " + ("Access denied. Contact admin." if is_en else "无权限，请联系管理员。"))
+
+        # Apply for access
+        st.divider()
+        st.caption("没有权限？" if not is_en else "No access?")
+        apply_name = st.text_input("申请 Login" if not is_en else "Apply login name", key="apply_login", placeholder="输入您想申请的登录名")
+        if st.button("📨 " + ("Apply for Access" if is_en else "申请权限"), key="apply_btn", use_container_width=True):
+            if apply_name:
+                _users_file = BASE_PATH / "output" / "users.json"
+                _users_file.parent.mkdir(parents=True, exist_ok=True)
+                if _users_file.exists():
+                    ud = json.loads(_users_file.read_text(encoding="utf-8"))
+                else:
+                    ud = {"allowed": ALLOWED_USERS, "admins": ADMIN_USERS, "pending": []}
+                pending = ud.get("pending", [])
+                if apply_name.lower() not in [p.get("name") for p in pending] and apply_name.lower() not in ud.get("allowed", []):
+                    pending.append({"name": apply_name.lower(), "applied_at": datetime.now().strftime("%Y-%m-%d %H:%M")})
+                    ud["pending"] = pending
+                    _users_file.write_text(json.dumps(ud, ensure_ascii=False, indent=2), encoding="utf-8")
+                    st.success("✅ " + ("Application submitted! Admin will review." if is_en else "申请已提交！等待管理员审批。"))
+                else:
+                    st.info("Already applied or already has access." if is_en else "已申请或已有权限。")
 
 
 elif _page_idx == 1:
@@ -5277,14 +5312,69 @@ elif _page_idx == 13:
         if not is_admin:
             st.warning("Only admin can manage users." if is_en else "仅管理员可管理用户。")
         else:
-            st.caption("Whitelist of allowed login users" if is_en else "允许登录的用户白名单")
-            st.markdown("**" + ("Current allowed users:" if is_en else "当前白名单：") + "**")
-            for u in ALLOWED_USERS:
-                role = "🔑 Admin" if u in ADMIN_USERS else "👤 User"
-                st.markdown(f"- {role} `{u}`")
+            # Load users data
+            _users_file = BASE_PATH / "output" / "users.json"
+            if _users_file.exists():
+                _ud = json.loads(_users_file.read_text(encoding="utf-8"))
+            else:
+                _ud = {"allowed": ALLOWED_USERS, "admins": ADMIN_USERS, "pending": []}
 
+            # Pending approvals
+            _pending = _ud.get("pending", [])
+            if _pending:
+                st.markdown("#### 📨 " + ("Pending Applications" if is_en else "待审批申请"))
+                for i, p in enumerate(_pending):
+                    col_pa, col_pb, col_pc = st.columns([3, 1, 1])
+                    with col_pa:
+                        st.markdown(f"**{p['name']}** ({p.get('applied_at', '')})")
+                    with col_pb:
+                        if st.button("✅ User", key=f"approve_user_{i}"):
+                            _ud["allowed"].append(p["name"])
+                            _ud["pending"] = [x for x in _ud["pending"] if x["name"] != p["name"]]
+                            _users_file.write_text(json.dumps(_ud, ensure_ascii=False, indent=2), encoding="utf-8")
+                            st.rerun()
+                    with col_pc:
+                        if st.button("🔑 Admin", key=f"approve_admin_{i}"):
+                            _ud["allowed"].append(p["name"])
+                            _ud["admins"].append(p["name"])
+                            _ud["pending"] = [x for x in _ud["pending"] if x["name"] != p["name"]]
+                            _users_file.write_text(json.dumps(_ud, ensure_ascii=False, indent=2), encoding="utf-8")
+                            st.rerun()
+                st.divider()
+
+            # Current users
+            st.markdown("#### " + ("Current Users" if is_en else "当前用户"))
+            for u in _ud.get("allowed", []):
+                role = "🔑 Admin" if u in _ud.get("admins", []) else "👤 User"
+                col_u1, col_u2 = st.columns([4, 1])
+                with col_u1:
+                    st.markdown(f"{role} `{u}`")
+                with col_u2:
+                    if u not in ["yujiashi", "admin"]:  # Can't remove base admins
+                        if st.button("🗑️", key=f"del_user_{u}"):
+                            _ud["allowed"] = [x for x in _ud["allowed"] if x != u]
+                            _ud["admins"] = [x for x in _ud.get("admins", []) if x != u]
+                            _users_file.write_text(json.dumps(_ud, ensure_ascii=False, indent=2), encoding="utf-8")
+                            st.rerun()
+
+            # Add user manually
             st.divider()
-            st.caption("To add/remove users, edit `ALLOWED_USERS` in `ui/app.py` and push to GitHub." if is_en else "增删用户请编辑 `ui/app.py` 中的 `ALLOWED_USERS` 列表并推送到 GitHub。")
+            st.markdown("#### ➕ " + ("Add User" if is_en else "手动添加"))
+            col_add1, col_add2, col_add3 = st.columns([2, 1, 1])
+            with col_add1:
+                new_user = st.text_input("Login name", key="add_user_input", placeholder="new_user_login")
+            with col_add2:
+                new_role = st.selectbox("Role", ["User", "Admin"], key="add_user_role")
+            with col_add3:
+                st.write("")
+                if st.button("➕ " + ("Add" if is_en else "添加"), key="add_user_btn"):
+                    if new_user and new_user.lower() not in _ud.get("allowed", []):
+                        _ud["allowed"].append(new_user.lower())
+                        if new_role == "Admin":
+                            _ud["admins"].append(new_user.lower())
+                        _users_file.write_text(json.dumps(_ud, ensure_ascii=False, indent=2), encoding="utf-8")
+                        st.success(f"✅ Added {new_user} as {new_role}")
+                        st.rerun()
 
     with tab_link:
         st.markdown("### " + ("Service Links" if is_en else "服务入口"))
