@@ -115,3 +115,81 @@ def load_shared_data(filename: str, default=None):
         except Exception:
             pass
     return default if default is not None else []
+
+
+def save_batch_file(batch_id: str, sub_path: str, content: str):
+    """Save a batch file to S3. sub_path like '01_zhiku/zhiku_ai_queries.csv'"""
+    s3_key = f"batches/{batch_id}/{sub_path}"
+    s3 = _get_s3()
+    if s3:
+        try:
+            s3.put_object(Bucket=S3_BUCKET, Key=s3_key,
+                          Body=content.encode("utf-8"),
+                          ContentType="text/csv" if sub_path.endswith(".csv") else "application/json")
+            return True
+        except Exception:
+            pass
+    return False
+
+
+def load_batch_file(batch_id: str, sub_path: str) -> str:
+    """Load a batch file from S3. Returns content string or empty string."""
+    s3_key = f"batches/{batch_id}/{sub_path}"
+    s3 = _get_s3()
+    if s3:
+        try:
+            resp = s3.get_object(Bucket=S3_BUCKET, Key=s3_key)
+            return resp["Body"].read().decode("utf-8")
+        except Exception:
+            pass
+    return ""
+
+
+def sync_batch_to_s3(batch_id: str, local_path):
+    """Sync an entire local batch directory to S3."""
+    import os
+    from pathlib import Path
+    local = Path(local_path) if not isinstance(local_path, Path) else local_path
+    batch_dir = local / batch_id
+    if not batch_dir.exists():
+        return False
+    s3 = _get_s3()
+    if not s3:
+        return False
+    try:
+        for root, dirs, files in os.walk(batch_dir):
+            for f in files:
+                fpath = Path(root) / f
+                rel = fpath.relative_to(batch_dir)
+                s3_key = f"batches/{batch_id}/{rel.as_posix()}"
+                s3.put_object(Bucket=S3_BUCKET, Key=s3_key,
+                              Body=fpath.read_bytes(),
+                              ContentType="text/csv" if f.endswith(".csv") else "application/json")
+        return True
+    except Exception:
+        return False
+
+
+def load_batch_from_s3(batch_id: str, local_path):
+    """Load batch files from S3 into local directory (if not already present locally)."""
+    from pathlib import Path
+    local = Path(local_path) if not isinstance(local_path, Path) else local_path
+    batch_dir = local / batch_id
+    s3 = _get_s3()
+    if not s3:
+        return False
+    try:
+        prefix = f"batches/{batch_id}/"
+        resp = s3.list_objects_v2(Bucket=S3_BUCKET, Prefix=prefix)
+        for obj in resp.get("Contents", []):
+            key = obj["Key"]
+            rel_path = key[len(prefix):]
+            local_file = batch_dir / rel_path
+            # Only download if local doesn't exist or is older
+            if not local_file.exists():
+                local_file.parent.mkdir(parents=True, exist_ok=True)
+                data = s3.get_object(Bucket=S3_BUCKET, Key=key)["Body"].read()
+                local_file.write_bytes(data)
+        return True
+    except Exception:
+        return False

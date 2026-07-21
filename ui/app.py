@@ -548,7 +548,28 @@ with st.sidebar:
     st.divider()
 
     batches = get_batches()
-    selected_batch = batches[0] if batches else "batch_003"
+
+    # Per-user batch: regular users get their own batch, admin can choose
+    if current_user and not is_admin:
+        selected_batch = f"batch_{current_user}"
+        # Ensure user batch dir exists
+        _user_batch_dir = OUTPUT_PATH / selected_batch
+        _user_batch_dir.mkdir(parents=True, exist_ok=True)
+        (OUTPUT_PATH / selected_batch / "01_zhiku").mkdir(parents=True, exist_ok=True)
+        # Load from S3 if local is empty (Cloud mode)
+        try:
+            from s3_sync import load_batch_from_s3, s3_available
+            if s3_available():
+                load_batch_from_s3(selected_batch, OUTPUT_PATH)
+        except Exception:
+            pass
+    elif is_admin:
+        # Admin: show all batches including user batches
+        all_batches = batches + [f"batch_{u}" for u in ALLOWED_USERS if f"batch_{u}" not in batches]
+        all_batches = sorted(set(all_batches), reverse=True)
+        selected_batch = st.selectbox("📦 Batch", all_batches, key="admin_batch_select")
+    else:
+        selected_batch = batches[0] if batches else "batch_003"
     market = "ALL"
     kw_limit = 10
     week = "WK21"
@@ -590,14 +611,12 @@ elif not current_user:
 
     col_login_l, col_login_m, col_login_r = st.columns([1, 2, 1])
     with col_login_m:
-        login_input = st.text_input("Login", placeholder="请输入您的 Login" if not is_en else "Enter your login", key="main_login_input", label_visibility="collapsed")
+        login_options = ["— 请选择 —" if not is_en else "— Select —"] + [u for u in ALLOWED_USERS if u != "admin"]
+        login_choice = st.selectbox("Login", login_options, key="main_login_select", label_visibility="collapsed")
         if st.button("🔓 " + ("Login" if is_en else "登录"), type="primary", use_container_width=True, key="main_login_btn"):
-            if login_input:
-                if login_input.lower() in ALLOWED_USERS:
-                    st.session_state["app_user"] = login_input.lower()
-                    st.rerun()
-                else:
-                    st.error("⚠️ " + ("Access denied. Contact admin." if is_en else "无权限，请联系管理员。"))
+            if login_choice and login_choice != "— 请选择 —" and login_choice != "— Select —":
+                st.session_state["app_user"] = login_choice.lower()
+                st.rerun()
 
         # Apply for access
         st.divider()
