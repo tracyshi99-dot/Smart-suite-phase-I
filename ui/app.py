@@ -5505,17 +5505,22 @@ elif _page_idx == 8:
 
         # Add custom rule
         st.divider()
-        with st.expander("➕ " + ("Add Custom Rule" if is_en else "添加自定义规则"), expanded=False):
-            cr_name = st.text_input("Rule Name" if is_en else "规则名称", key="cr_name", placeholder="e.g. 每周一自动裂变")
-            cr_trigger = st.text_input("Trigger Condition" if is_en else "触发条件", key="cr_trigger", placeholder="e.g. 每周一 or 短语数 < 5")
-            cr_action = st.text_input("Action" if is_en else "执行动作", key="cr_action", placeholder="e.g. 自动裂变 10 条新短语")
-            if st.button("➕ " + ("Add Rule" if is_en else "添加规则"), key="add_custom_rule"):
-                if cr_name and cr_trigger and cr_action:
-                    _rules.append({"name": cr_name, "trigger": cr_trigger, "action": cr_action, "enabled": True})
+        st.markdown("**➕ " + ("Add Custom Rule" if is_en else "添加自定义规则") + "**")
+        cr_name = st.text_input("Rule Name" if is_en else "规则名称", key="cr_name", placeholder="e.g. 每周一自动裂变")
+        cr_trigger = st.text_input("Trigger Condition" if is_en else "触发条件", key="cr_trigger", placeholder="e.g. 每周一 or 短语数 < 5")
+        cr_action = st.text_input("Action" if is_en else "执行动作", key="cr_action", placeholder="e.g. 自动裂变 10 条新短语")
+        if st.button("➕ " + ("Add Rule" if is_en else "添加规则"), key="add_custom_rule"):
+            if cr_name and cr_trigger and cr_action:
+                _rules.append({"name": cr_name, "trigger": cr_trigger, "action": cr_action, "enabled": True})
+                try:
                     _rules_file.parent.mkdir(parents=True, exist_ok=True)
                     _rules_file.write_text(json.dumps(_rules, ensure_ascii=False, indent=2), encoding="utf-8")
                     st.success("✅ Added!")
-                    st.rerun()
+                except Exception as e:
+                    st.error(f"Save failed: {e}")
+                st.rerun()
+            else:
+                st.warning("请填写所有字段" if not is_en else "Please fill all fields")
 
     # ============================================================
     # ADMIN VIEW: Original decision engine
