@@ -497,10 +497,13 @@ with st.sidebar:
     is_admin = current_user.lower() in ADMIN_USERS if current_user else False
     if current_user:
         role_label = "🔑 Admin" if is_admin else "👤 User"
-        st.caption(f"{role_label}: **{current_user}**")
-        if st.button("🚪", key="logout_btn", help="Logout" if is_en else "退出登录"):
-            st.session_state["app_user"] = ""
-            st.rerun()
+        col_user_info, col_logout = st.columns([3, 1])
+        with col_user_info:
+            st.caption(f"{role_label}: **{current_user}**")
+        with col_logout:
+            if st.button("Sign out", key="logout_btn", type="secondary"):
+                st.session_state["app_user"] = ""
+                st.rerun()
 
     if DEMO_MODE:
         st.caption("🎬 Demo" if is_en else "🎬 演示模式")
