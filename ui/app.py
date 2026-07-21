@@ -2211,32 +2211,6 @@ elif _page_idx == 3:
         if display_cols:
             st.dataframe(df_z[display_cols], use_container_width=True, hide_index=True)
 
-        # Download / Upload
-        st.divider()
-        col_dl, col_ul, col_cl = st.columns(3)
-        with col_dl:
-            csv_bytes = df_z.to_csv(index=False).encode("utf-8-sig")
-            st.download_button("📥 Download CSV" if is_en else "📥 下载 CSV", csv_bytes,
-                               file_name=f"zhizao_{selected_batch}.csv", mime="text/csv")
-        with col_ul:
-            uploaded_zhizao = st.file_uploader(
-                "📤 Upload Modified File" if is_en else "📤 上传修改后文件", type=["csv"], key="upload_zhizao_edit"
-            )
-            if uploaded_zhizao is not None:
-                df_new = pd.read_csv(uploaded_zhizao, on_bad_lines="skip")
-                out_path = OUTPUT_PATH / selected_batch / "02_zhizao" / "zhizao_draft_content.csv"
-                out_path.parent.mkdir(parents=True, exist_ok=True)
-                df_new.to_csv(out_path, index=False, encoding="utf-8-sig")
-                st.success(f"✅ {'Uploaded and replaced' if is_en else '已上传覆盖'} {len(df_new)} {'records' if is_en else '条记录'}")
-        with col_cl:
-            if st.button("🗑️ Clear History" if is_en else "🗑️ 清空历史", key="clear_zhizao"):
-                zhizao_dir = OUTPUT_PATH / selected_batch / "02_zhizao"
-                if zhizao_dir.exists():
-                    for f in zhizao_dir.glob("zhizao_draft_content*.csv"):
-                        f.unlink()
-                st.success("Cleared" if is_en else "已清空")
-                st.rerun()
-
         # Article preview — all articles (editable)
         st.divider()
         st.subheader(f"📖 {'Article Preview & Edit' if is_en else '文章预览 & 编辑'}（{len(df_z)} {'articles' if is_en else '篇'}）")
@@ -2287,6 +2261,32 @@ elif _page_idx == 3:
             if content_changed:
                 df_z.to_csv(zhizao_file, index=False, encoding="utf-8-sig")
                 st.success("✅ Changes auto-saved" if is_en else "✅ 修改已自动保存")
+
+        # Download / Upload / Clear (after preview)
+        st.divider()
+        col_dl, col_ul, col_cl = st.columns(3)
+        with col_dl:
+            csv_bytes = df_z.to_csv(index=False).encode("utf-8-sig")
+            st.download_button("📥 Download CSV" if is_en else "📥 下载 CSV", csv_bytes,
+                               file_name=f"zhizao_{selected_batch}.csv", mime="text/csv")
+        with col_ul:
+            uploaded_zhizao = st.file_uploader(
+                "📤 Upload Modified File" if is_en else "📤 上传修改后文件", type=["csv"], key="upload_zhizao_edit"
+            )
+            if uploaded_zhizao is not None:
+                df_new = pd.read_csv(uploaded_zhizao, on_bad_lines="skip")
+                out_path = OUTPUT_PATH / selected_batch / "02_zhizao" / "zhizao_draft_content.csv"
+                out_path.parent.mkdir(parents=True, exist_ok=True)
+                df_new.to_csv(out_path, index=False, encoding="utf-8-sig")
+                st.success(f"✅ {'Uploaded and replaced' if is_en else '已上传覆盖'} {len(df_new)} {'records' if is_en else '条记录'}")
+        with col_cl:
+            if st.button("🗑️ Clear History" if is_en else "🗑️ 清空历史", key="clear_zhizao"):
+                zhizao_dir = OUTPUT_PATH / selected_batch / "02_zhizao"
+                if zhizao_dir.exists():
+                    for f in zhizao_dir.glob("zhizao_draft_content*.csv"):
+                        f.unlink()
+                st.success("Cleared" if is_en else "已清空")
+                st.rerun()
 
         # --- 文章确认环节 ---
         st.divider()
