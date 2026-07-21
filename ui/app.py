@@ -625,641 +625,773 @@ elif _page_idx == 1:
     st.markdown("""<div style="padding:20px 0 10px;"><h1 style="font-size:28px;font-weight:800;color:#ffa726;margin:0;">📚 """ + ("Query Library – Phrase Production & Validation" if is_en else "智库 – 检索短语产出与验证") + """</h1><p style="font-size:13px;color:#8892b0;margin-top:6px;">""" + ("Produce → Calibrate → Dedupe → Select → Verify Gap → Confirm to Production" if is_en else "产出 → 校准 → 去重 → 选取 → 验证Gap → 确认进智造") + """</p></div>""", unsafe_allow_html=True)
     render_pipeline_flow("zhiku", selected_batch)
 
-    # --- Status bar ---
-    df_zhiku_all = load_zhiku_live(selected_batch)
-    total_phrases = len(df_zhiku_all) if not df_zhiku_all.empty else 0
-    selected_count = 0
-    if not df_zhiku_all.empty and "is_selected" in df_zhiku_all.columns:
-        selected_count = df_zhiku_all[df_zhiku_all["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])].shape[0]
-
-    sc1, sc2, sc3, sc4 = st.columns(4)
-    sc1.metric("Total Phrases" if is_en else "短语总量", total_phrases)
-    sc2.metric("Selected" if is_en else "已选中", selected_count)
-    sc3.metric("Categories" if is_en else "覆盖类别", df_zhiku_all["category"].dropna().nunique() if not df_zhiku_all.empty and "category" in df_zhiku_all.columns else 0)
-    sc4.metric("Sources" if is_en else "来源数", df_zhiku_all["source"].dropna().nunique() if not df_zhiku_all.empty and "source" in df_zhiku_all.columns else 0)
-
-    # Clear current content (archive to history)
-    if total_phrases > 0:
-        if st.button("🗑️ Clear Current & Archive" if is_en else "🗑️ 清空当前内容（归档到历史）", key="clear_zhiku_current"):
-            zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
-            if zhiku_file.exists():
-                archive_dir = OUTPUT_PATH / selected_batch / "01_zhiku" / "archive"
-                archive_dir.mkdir(parents=True, exist_ok=True)
-                ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-                zhiku_file.rename(archive_dir / f"zhiku_ai_queries_{ts}.csv")
-                st.success("✅ Archived to history. Page is now empty." if is_en else "✅ 已归档到历史记录，当前页面已清空。")
-                st.rerun()
-
     # ============================================================
-    # 🚀 一键全流程 (End-to-End)
+    # USER VIEW: Simplified 3-tab interface
     # ============================================================
-    with st.expander("🚀 One-Click Full Pipeline (Keywords → Word Doc)" if is_en else "🚀 一键全流程（关键词 → Word 文档）", expanded=False):
-        st.caption("Run all steps automatically: 智库 → 智造 → 智优 → 合规 → 智布" if is_en else "自动执行全部步骤：智库裂变 → 智造生成 → 智优评分+重写 → 合规审查 → 智布导出")
+    if not is_admin:
+        tab_seed, tab_persona, tab_upload = st.tabs([
+            "🌱 词根裂变" if not is_en else "🌱 Seed Expansion",
+            "🧠 画像裂变" if not is_en else "🧠 Persona Expansion",
+            "📋 上传检索短语" if not is_en else "📋 Upload Phrases",
+        ])
 
-        col_e2e_1, col_e2e_2, col_e2e_3 = st.columns(3)
-        with col_e2e_1:
-            e2e_kw_limit = st.number_input("Keywords" if is_en else "关键词数", 1, 50, 10, key="e2e_kw_limit")
-        with col_e2e_2:
-            e2e_content_limit = st.number_input("Articles" if is_en else "文章数", 1, 20, 5, key="e2e_content_limit")
-        with col_e2e_3:
-            e2e_template_options = {
-                "auto": "Auto-detect" if is_en else "智能匹配",
-                "none": "No template" if is_en else "无模板",
-                "registration": "Registration" if is_en else "注册流程",
-                "fees": "Fees" if is_en else "费用成本",
-                "logistics": "Logistics" if is_en else "物流仓储",
-                "advertising": "Advertising" if is_en else "广告推广",
-                "listing": "Listing" if is_en else "Listing优化",
-            }
-            e2e_template = st.selectbox("Template" if is_en else "模板", list(e2e_template_options.keys()), format_func=lambda x: e2e_template_options[x], key="e2e_template")
+        with tab_seed:
+            st.markdown("**输入词根，AI 自动裂变出检索短语**" if not is_en else "**Enter seed words, AI expands into search phrases**")
+            seed_word = st.text_input("词根" if not is_en else "Seed word", placeholder="e.g. FBA、选品、注册", key="user_seed_word")
+            seed_count = st.slider("裂变数量" if not is_en else "Count", 5, 30, 15, key="user_seed_count")
+            if st.button("🌱 开始裂变" if not is_en else "🌱 Expand", type="primary", key="user_seed_btn"):
+                if seed_word:
+                    try:
+                        from engine import call_bedrock_claude
+                        prompt = f"请为词根「{seed_word}」生成 {seed_count} 个中国卖家在 AI 搜索引擎中可能输入的口语化检索短语。每行一条，不要编号，不要解释。"
+                        with st.spinner("裂变中..." if not is_en else "Expanding..."):
+                            response = call_bedrock_claude(prompt)
+                        queries = [q.strip().lstrip("0123456789.-、）) ") for q in response.strip().split("\n") if q.strip() and len(q.strip()) > 4]
+                        if queries:
+                            st.success(f"✅ 生成 {len(queries)} 条")
+                            df_result = pd.DataFrame({"ai_query": queries, "source": f"seed_{seed_word}", "is_selected": "TRUE"})
+                            st.dataframe(df_result, use_container_width=True, hide_index=True)
+                            # Save
+                            zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
+                            zhiku_file.parent.mkdir(parents=True, exist_ok=True)
+                            existing = load_csv_safe(zhiku_file) if zhiku_file.exists() else pd.DataFrame()
+                            merged = pd.concat([existing, df_result], ignore_index=True)
+                            if "ai_query" in merged.columns:
+                                merged = merged.drop_duplicates(subset=["ai_query"], keep="first")
+                            merged.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
+                            st.success(f"✅ 已保存到智库")
+                    except Exception as e:
+                        st.error(str(e))
 
-        if st.button("🚀 Execute Full Pipeline" if is_en else "🚀 开始一键全流程", type="primary", key="btn_e2e"):
-            try:
-                from engine import run_full_pipeline
-                e2e_progress = st.progress(0)
-                e2e_status = st.empty()
+        with tab_persona:
+            st.markdown("**根据用户画像维度组合推演检索短语**" if not is_en else "**Generate phrases based on persona dimensions**")
 
-                def e2e_callback(pct, msg):
-                    e2e_progress.progress(min(1.0, max(0.0, pct)))
-                    e2e_status.text(msg)
+            # Load persona matrix
+            _persona_file = INPUT_PATH / "persona_matrix.json"
+            if _persona_file.exists():
+                _pm = json.loads(_persona_file.read_text(encoding="utf-8"))
+            else:
+                _pm = {}
 
-                with st.spinner("Running full pipeline..." if is_en else "正在执行全流程..."):
-                    result = run_full_pipeline(
-                        selected_batch,
-                        market="ALL",
-                        keyword_limit=e2e_kw_limit,
-                        content_limit=e2e_content_limit,
-                        progress_callback=e2e_callback,
-                    )
+            # 基础画像
+            st.markdown("##### 基础画像" if not is_en else "##### Basic Persona")
+            col_p1, col_p2 = st.columns(2)
+            with col_p1:
+                _基础 = _pm.get("基础画像", {})
+                sel_identity = st.selectbox("身份", _基础.get("身份", {}).get("params", []), key="persona_identity")
+                sel_company = st.selectbox("企业类型", _基础.get("企业类型", {}).get("params", []), key="persona_company")
+                sel_role = st.selectbox("职位", _基础.get("职位", {}).get("params", []), key="persona_role")
+            with col_p2:
+                sel_revenue = st.selectbox("年销售额", _基础.get("年销售额", {}).get("params", []), key="persona_revenue")
+                sel_biz_type = st.selectbox("公司类型", _基础.get("公司类型", {}).get("params", []), key="persona_biz")
+                sel_shipping = st.selectbox("计划发货方式", _基础.get("计划发货方式", {}).get("params", []), key="persona_ship")
 
-                if result.get("success"):
-                    st.success("✅ Full pipeline completed! Check each step for results." if is_en else "✅ 全流程执行完毕！请查看各步骤的输出结果。")
-                    st.balloons()
-                else:
-                    stopped = result.get("stopped_at", "Unknown")
-                    error = result.get("error", "")
-                    st.error(f"❌ Stopped at: {stopped} — {error}")
-            except Exception as e:
-                st.error(f"Error: {str(e)}")
+            # 兴趣画像
+            st.markdown("##### 兴趣画像" if not is_en else "##### Interest Persona")
+            _兴趣 = _pm.get("兴趣画像", {})
+            sel_site = st.multiselect("目标站点", _兴趣.get("站点", {}).get("params", []), default=["美国站"], key="persona_site")
+            sel_content = st.multiselect("内容分类", _兴趣.get("内容分类", {}).get("params", []), default=["新手指南"], key="persona_content")
 
-    st.divider()
+            persona_count = st.slider("生成短语数" if not is_en else "Phrases to generate", 5, 30, 10, key="persona_gen_count")
 
-    # ============================================================
-    # ① 短语产出
-    # ============================================================
-    st.markdown("""<div style="background:#1a1d2e;border:1px solid #2a2f4a;border-radius:12px;padding:20px;margin:16px 0;">
-        <h3 style="color:#ffa726;font-size:18px;font-weight:700;margin:0 0 8px;">① """ + ("Phrase Production" if is_en else "短语产出") + """</h3>
-        <p style="color:#8892b0;font-size:12px;margin:0;">""" + ("3 input modes: AI auto / Upload CSV / Manual input" if is_en else "三种输入模式：AI 自动 / 上传 CSV / 手动输入") + """</p>
-    </div>""", unsafe_allow_html=True)
-
-    tab_p1, tab_p2, tab_p3, tab_p4 = st.tabs([
-        "⭐ P1 Core (95-90%)" if is_en else "⭐ P1 核心来源 (95-90%)",
-        "⭐ P2 Secondary (85-75%)" if is_en else "⭐ P2 次核心 (85-75%)",
-        "P3 Expand (60%)" if is_en else "P3 兜底扩写 (60%)",
-        "🧠 P4 Persona Predict" if is_en else "🧠 P4 画像推演",
-    ])
-
-    # --- P1 核心来源 ---
-    with tab_p1:
-        st.caption("AI platform native queries — highest accuracy" if is_en else "AI 平台原生问句 — 准确度最高")
-        col_dropdown, col_reverse, col_community = st.columns(3)
-
-        with col_dropdown:
-            st.markdown("**A1: AI Dropdown**" if is_en else "**A1: AI 下拉联想**")
-            st.caption("95% · Collect from platforms, upload" if is_en else "准确度95% · 从各平台收集后上传")
-            uploaded_dropdown = st.file_uploader("Upload" if is_en else "上传CSV", type=["csv", "xlsx"], key="upload_a1")
-            if uploaded_dropdown:
-                try:
-                    df_imp = pd.read_csv(uploaded_dropdown, encoding="utf-8-sig", on_bad_lines="skip") if uploaded_dropdown.name.endswith(".csv") else pd.read_excel(uploaded_dropdown, engine="openpyxl")
-                    if "source" not in df_imp.columns: df_imp["source"] = "ai_dropdown"
-                    if "is_selected" not in df_imp.columns: df_imp["is_selected"] = "TRUE"
-                    if "priority_score" not in df_imp.columns: df_imp["priority_score"] = 4.8
-                    zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
-                    zhiku_file.parent.mkdir(parents=True, exist_ok=True)
-                    existing = load_csv_safe(zhiku_file) if zhiku_file.exists() else pd.DataFrame()
-                    merged = pd.concat([existing, df_imp], ignore_index=True)
-                    if "ai_query" in merged.columns: merged = merged.drop_duplicates(subset=["ai_query"], keep="first")
-                    merged.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
-                    st.success(f"✅ +{len(df_imp)} (A1)")
-                    st.rerun()
-                except Exception as e:
-                    st.error(str(e))
-
-        with col_reverse:
-            st.markdown("**A2: Reverse Recall**" if is_en else "**A2: 逆向召回**")
-            st.caption("92% · Input content → AI returns queries" if is_en else "准确度92% · 输入内容 → AI返回问句")
-
-            # Single input
-            reverse_content = st.text_area("Single content" if is_en else "单条内容", height=60, key="reverse_input_p1", placeholder="Paste one article text or URL...")
-            num_queries = st.select_slider("Queries per content" if is_en else "每条内容返回问句数", options=[5, 10, 15, 20], value=10, key="reverse_num")
-            if st.button("🔮 Run Single" if is_en else "🔮 单条执行", key="btn_reverse_single", disabled=not reverse_content):
+            if st.button("🧠 画像推演生成" if not is_en else "🧠 Generate", type="primary", key="persona_gen_btn"):
                 try:
                     from engine import call_bedrock_claude
-                    prompt = f"以下是一篇已发布内容：\n{reverse_content[:2000]}\n\n用户在AI搜索引擎中输入什么问句才能看到这篇内容？列出{num_queries}个口语化问句，按命中概率排序，每行一条。"
-                    with st.spinner("..." if is_en else "正在询问AI..."):
+                    persona_desc = f"身份={sel_identity}, 企业类型={sel_company}, 职位={sel_role}, 年销售额={sel_revenue}, 公司类型={sel_biz_type}, 发货方式={sel_shipping}, 目标站点={','.join(sel_site)}, 关注内容={','.join(sel_content)}"
+                    prompt = f"""请为以下画像的卖家推演 {persona_count} 个他们在 AI 搜索引擎中最可能输入的检索短语。
+
+画像：{persona_desc}
+
+要求：
+1. 口语化，像真人提问（10-25字）
+2. 与该画像的身份、站点、关注内容高度相关
+3. 每行一条，不要编号，不要解释"""
+                    with st.spinner("推演中..." if not is_en else "Generating..."):
                         response = call_bedrock_claude(prompt)
-                    queries = [q.strip().lstrip("0123456789.-、）) ") for q in response.strip().split("\n") if q.strip() and len(q.strip()) > 5]
+                    queries = [q.strip().lstrip("0123456789.-、）) ") for q in response.strip().split("\n") if q.strip() and len(q.strip()) > 4]
                     if queries:
-                        new_df = pd.DataFrame({"ai_query": queries, "source": "reverse_recall", "priority_score": 4.6, "is_selected": "TRUE"})
+                        st.success(f"✅ 生成 {len(queries)} 条")
+                        df_result = pd.DataFrame({"ai_query": queries, "source": f"persona_{sel_identity}_{sel_site[0] if sel_site else ''}", "is_selected": "TRUE"})
+                        st.dataframe(df_result, use_container_width=True, hide_index=True)
                         zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
                         zhiku_file.parent.mkdir(parents=True, exist_ok=True)
                         existing = load_csv_safe(zhiku_file) if zhiku_file.exists() else pd.DataFrame()
-                        merged = pd.concat([existing, new_df], ignore_index=True)
-                        if "ai_query" in merged.columns: merged = merged.drop_duplicates(subset=["ai_query"], keep="first")
+                        merged = pd.concat([existing, df_result], ignore_index=True)
+                        if "ai_query" in merged.columns:
+                            merged = merged.drop_duplicates(subset=["ai_query"], keep="first")
                         merged.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
-                        st.success(f"✅ +{len(queries)} (A2)")
-                        st.rerun()
+                        st.success("✅ 已保存到智库")
                 except Exception as e:
                     st.error(str(e))
 
-            # Batch upload
-            st.caption("— or batch —" if is_en else "— 或批量 —")
-            up_reverse = st.file_uploader("Upload content list CSV" if is_en else "上传内容列表CSV（含content列）", type=["csv"], key="upload_a2_batch")
-            if up_reverse:
-                st.caption("CSV should have a 'content' or 'url' column" if is_en else "CSV需含 content 或 url 列")
-                if st.button("🔮 Run Batch" if is_en else "🔮 批量执行逆向召回", key="btn_reverse_batch"):
+        with tab_upload:
+            st.markdown("**直接上传已确定的检索短语**" if not is_en else "**Upload confirmed search phrases**")
+            st.caption("CSV 文件需包含 `ai_query` 或 `query` 列" if not is_en else "CSV must contain `ai_query` or `query` column")
+            uploaded_phrases = st.file_uploader("上传 CSV" if not is_en else "Upload CSV", type=["csv"], key="user_upload_phrases")
+            if uploaded_phrases:
+                try:
+                    df_up = pd.read_csv(uploaded_phrases, encoding="utf-8-sig", on_bad_lines="skip")
+                    q_col = next((c for c in ["ai_query", "query", "检索短语", "问题"] if c in df_up.columns), df_up.columns[0] if len(df_up.columns) > 0 else None)
+                    if q_col:
+                        df_up = df_up.rename(columns={q_col: "ai_query"}) if q_col != "ai_query" else df_up
+                        if "source" not in df_up.columns:
+                            df_up["source"] = "manual_upload"
+                        if "is_selected" not in df_up.columns:
+                            df_up["is_selected"] = "TRUE"
+                        st.dataframe(df_up[["ai_query"]].head(10), use_container_width=True, hide_index=True)
+                        st.caption(f"共 {len(df_up)} 条")
+                        if st.button("✅ 确认上传" if not is_en else "✅ Confirm Upload", type="primary", key="user_confirm_upload"):
+                            zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
+                            zhiku_file.parent.mkdir(parents=True, exist_ok=True)
+                            existing = load_csv_safe(zhiku_file) if zhiku_file.exists() else pd.DataFrame()
+                            merged = pd.concat([existing, df_up], ignore_index=True)
+                            if "ai_query" in merged.columns:
+                                merged = merged.drop_duplicates(subset=["ai_query"], keep="first")
+                            merged.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
+                            st.success(f"✅ 上传 {len(df_up)} 条到智库")
+                except Exception as e:
+                    st.error(str(e))
+
+    # ============================================================
+    # ADMIN VIEW: Full interface (original)
+    # ============================================================
+    else:
+
+    # --- Status bar ---
+        df_zhiku_all = load_zhiku_live(selected_batch)
+        total_phrases = len(df_zhiku_all) if not df_zhiku_all.empty else 0
+        selected_count = 0
+        if not df_zhiku_all.empty and "is_selected" in df_zhiku_all.columns:
+            selected_count = df_zhiku_all[df_zhiku_all["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])].shape[0]
+
+        sc1, sc2, sc3, sc4 = st.columns(4)
+        sc1.metric("Total Phrases" if is_en else "短语总量", total_phrases)
+        sc2.metric("Selected" if is_en else "已选中", selected_count)
+        sc3.metric("Categories" if is_en else "覆盖类别", df_zhiku_all["category"].dropna().nunique() if not df_zhiku_all.empty and "category" in df_zhiku_all.columns else 0)
+        sc4.metric("Sources" if is_en else "来源数", df_zhiku_all["source"].dropna().nunique() if not df_zhiku_all.empty and "source" in df_zhiku_all.columns else 0)
+
+        # Clear current content (archive to history)
+        if total_phrases > 0:
+            if st.button("🗑️ Clear Current & Archive" if is_en else "🗑️ 清空当前内容（归档到历史）", key="clear_zhiku_current"):
+                zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
+                if zhiku_file.exists():
+                    archive_dir = OUTPUT_PATH / selected_batch / "01_zhiku" / "archive"
+                    archive_dir.mkdir(parents=True, exist_ok=True)
+                    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    zhiku_file.rename(archive_dir / f"zhiku_ai_queries_{ts}.csv")
+                    st.success("✅ Archived to history. Page is now empty." if is_en else "✅ 已归档到历史记录，当前页面已清空。")
+                    st.rerun()
+
+        # ============================================================
+        # 🚀 一键全流程 (End-to-End)
+        # ============================================================
+        with st.expander("🚀 One-Click Full Pipeline (Keywords → Word Doc)" if is_en else "🚀 一键全流程（关键词 → Word 文档）", expanded=False):
+            st.caption("Run all steps automatically: 智库 → 智造 → 智优 → 合规 → 智布" if is_en else "自动执行全部步骤：智库裂变 → 智造生成 → 智优评分+重写 → 合规审查 → 智布导出")
+
+            col_e2e_1, col_e2e_2, col_e2e_3 = st.columns(3)
+            with col_e2e_1:
+                e2e_kw_limit = st.number_input("Keywords" if is_en else "关键词数", 1, 50, 10, key="e2e_kw_limit")
+            with col_e2e_2:
+                e2e_content_limit = st.number_input("Articles" if is_en else "文章数", 1, 20, 5, key="e2e_content_limit")
+            with col_e2e_3:
+                e2e_template_options = {
+                    "auto": "Auto-detect" if is_en else "智能匹配",
+                    "none": "No template" if is_en else "无模板",
+                    "registration": "Registration" if is_en else "注册流程",
+                    "fees": "Fees" if is_en else "费用成本",
+                    "logistics": "Logistics" if is_en else "物流仓储",
+                    "advertising": "Advertising" if is_en else "广告推广",
+                    "listing": "Listing" if is_en else "Listing优化",
+                }
+                e2e_template = st.selectbox("Template" if is_en else "模板", list(e2e_template_options.keys()), format_func=lambda x: e2e_template_options[x], key="e2e_template")
+
+            if st.button("🚀 Execute Full Pipeline" if is_en else "🚀 开始一键全流程", type="primary", key="btn_e2e"):
+                try:
+                    from engine import run_full_pipeline
+                    e2e_progress = st.progress(0)
+                    e2e_status = st.empty()
+
+                    def e2e_callback(pct, msg):
+                        e2e_progress.progress(min(1.0, max(0.0, pct)))
+                        e2e_status.text(msg)
+
+                    with st.spinner("Running full pipeline..." if is_en else "正在执行全流程..."):
+                        result = run_full_pipeline(
+                            selected_batch,
+                            market="ALL",
+                            keyword_limit=e2e_kw_limit,
+                            content_limit=e2e_content_limit,
+                            progress_callback=e2e_callback,
+                        )
+
+                    if result.get("success"):
+                        st.success("✅ Full pipeline completed! Check each step for results." if is_en else "✅ 全流程执行完毕！请查看各步骤的输出结果。")
+                        st.balloons()
+                    else:
+                        stopped = result.get("stopped_at", "Unknown")
+                        error = result.get("error", "")
+                        st.error(f"❌ Stopped at: {stopped} — {error}")
+                except Exception as e:
+                    st.error(f"Error: {str(e)}")
+
+        st.divider()
+
+        # ============================================================
+        # ① 短语产出
+        # ============================================================
+        st.markdown("""<div style="background:#1a1d2e;border:1px solid #2a2f4a;border-radius:12px;padding:20px;margin:16px 0;">
+            <h3 style="color:#ffa726;font-size:18px;font-weight:700;margin:0 0 8px;">① """ + ("Phrase Production" if is_en else "短语产出") + """</h3>
+            <p style="color:#8892b0;font-size:12px;margin:0;">""" + ("3 input modes: AI auto / Upload CSV / Manual input" if is_en else "三种输入模式：AI 自动 / 上传 CSV / 手动输入") + """</p>
+        </div>""", unsafe_allow_html=True)
+
+        tab_p1, tab_p2, tab_p3, tab_p4 = st.tabs([
+            "⭐ P1 Core (95-90%)" if is_en else "⭐ P1 核心来源 (95-90%)",
+            "⭐ P2 Secondary (85-75%)" if is_en else "⭐ P2 次核心 (85-75%)",
+            "P3 Expand (60%)" if is_en else "P3 兜底扩写 (60%)",
+            "🧠 P4 Persona Predict" if is_en else "🧠 P4 画像推演",
+        ])
+
+        # --- P1 核心来源 ---
+        with tab_p1:
+            st.caption("AI platform native queries — highest accuracy" if is_en else "AI 平台原生问句 — 准确度最高")
+            col_dropdown, col_reverse, col_community = st.columns(3)
+
+            with col_dropdown:
+                st.markdown("**A1: AI Dropdown**" if is_en else "**A1: AI 下拉联想**")
+                st.caption("95% · Collect from platforms, upload" if is_en else "准确度95% · 从各平台收集后上传")
+                uploaded_dropdown = st.file_uploader("Upload" if is_en else "上传CSV", type=["csv", "xlsx"], key="upload_a1")
+                if uploaded_dropdown:
+                    try:
+                        df_imp = pd.read_csv(uploaded_dropdown, encoding="utf-8-sig", on_bad_lines="skip") if uploaded_dropdown.name.endswith(".csv") else pd.read_excel(uploaded_dropdown, engine="openpyxl")
+                        if "source" not in df_imp.columns: df_imp["source"] = "ai_dropdown"
+                        if "is_selected" not in df_imp.columns: df_imp["is_selected"] = "TRUE"
+                        if "priority_score" not in df_imp.columns: df_imp["priority_score"] = 4.8
+                        zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
+                        zhiku_file.parent.mkdir(parents=True, exist_ok=True)
+                        existing = load_csv_safe(zhiku_file) if zhiku_file.exists() else pd.DataFrame()
+                        merged = pd.concat([existing, df_imp], ignore_index=True)
+                        if "ai_query" in merged.columns: merged = merged.drop_duplicates(subset=["ai_query"], keep="first")
+                        merged.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
+                        st.success(f"✅ +{len(df_imp)} (A1)")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(str(e))
+
+            with col_reverse:
+                st.markdown("**A2: Reverse Recall**" if is_en else "**A2: 逆向召回**")
+                st.caption("92% · Input content → AI returns queries" if is_en else "准确度92% · 输入内容 → AI返回问句")
+
+                # Single input
+                reverse_content = st.text_area("Single content" if is_en else "单条内容", height=60, key="reverse_input_p1", placeholder="Paste one article text or URL...")
+                num_queries = st.select_slider("Queries per content" if is_en else "每条内容返回问句数", options=[5, 10, 15, 20], value=10, key="reverse_num")
+                if st.button("🔮 Run Single" if is_en else "🔮 单条执行", key="btn_reverse_single", disabled=not reverse_content):
                     try:
                         from engine import call_bedrock_claude
-                        df_batch = pd.read_csv(up_reverse, encoding="utf-8-sig", on_bad_lines="skip")
-                        content_col = "content" if "content" in df_batch.columns else ("url" if "url" in df_batch.columns else df_batch.columns[0])
-                        all_queries = []
-                        progress = st.progress(0)
-                        for i, row in df_batch.iterrows():
-                            text = str(row[content_col])[:2000]
-                            prompt = f"以下是一篇内容：\n{text}\n\n用户输入什么问句能找到这篇内容？列出5个口语化问句，每行一条。"
+                        prompt = f"以下是一篇已发布内容：\n{reverse_content[:2000]}\n\n用户在AI搜索引擎中输入什么问句才能看到这篇内容？列出{num_queries}个口语化问句，按命中概率排序，每行一条。"
+                        with st.spinner("..." if is_en else "正在询问AI..."):
                             response = call_bedrock_claude(prompt)
-                            qs = [q.strip().lstrip("0123456789.-、） ") for q in response.strip().split("\n") if q.strip() and len(q.strip()) > 5]
-                            all_queries.extend(qs)
-                            progress.progress((i + 1) / len(df_batch))
-                        if all_queries:
-                            new_df = pd.DataFrame({"ai_query": all_queries, "source": "reverse_recall", "priority_score": 4.6, "is_selected": "TRUE"})
+                        queries = [q.strip().lstrip("0123456789.-、）) ") for q in response.strip().split("\n") if q.strip() and len(q.strip()) > 5]
+                        if queries:
+                            new_df = pd.DataFrame({"ai_query": queries, "source": "reverse_recall", "priority_score": 4.6, "is_selected": "TRUE"})
                             zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
                             zhiku_file.parent.mkdir(parents=True, exist_ok=True)
                             existing = load_csv_safe(zhiku_file) if zhiku_file.exists() else pd.DataFrame()
                             merged = pd.concat([existing, new_df], ignore_index=True)
                             if "ai_query" in merged.columns: merged = merged.drop_duplicates(subset=["ai_query"], keep="first")
                             merged.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
-                            st.success(f"✅ +{len(all_queries)} from {len(df_batch)} contents")
+                            st.success(f"✅ +{len(queries)} (A2)")
                             st.rerun()
                     except Exception as e:
                         st.error(str(e))
 
-        with col_community:
-            st.markdown("**A3: AI Community Q&A**" if is_en else "**A3: AI 社区原生提问**")
-            st.caption("90% · Upload from Zhihu/Perplexity" if is_en else "准确度90% · 从知乎/Perplexity上传")
-            uploaded_a3 = st.file_uploader("Upload" if is_en else "上传CSV", type=["csv", "xlsx"], key="upload_a3")
-            if uploaded_a3:
-                try:
-                    df_imp = pd.read_csv(uploaded_a3, encoding="utf-8-sig", on_bad_lines="skip") if uploaded_a3.name.endswith(".csv") else pd.read_excel(uploaded_a3, engine="openpyxl")
-                    if "source" not in df_imp.columns: df_imp["source"] = "ai_community"
-                    if "is_selected" not in df_imp.columns: df_imp["is_selected"] = "TRUE"
-                    if "priority_score" not in df_imp.columns: df_imp["priority_score"] = 4.5
-                    zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
-                    zhiku_file.parent.mkdir(parents=True, exist_ok=True)
-                    existing = load_csv_safe(zhiku_file) if zhiku_file.exists() else pd.DataFrame()
-                    merged = pd.concat([existing, df_imp], ignore_index=True)
-                    if "ai_query" in merged.columns: merged = merged.drop_duplicates(subset=["ai_query"], keep="first")
-                    merged.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
-                    st.success(f"✅ +{len(df_imp)} (A3)")
-                    st.rerun()
-                except Exception as e:
-                    st.error(str(e))
-
-    # --- P2 次核心（上传为主）---
-    with tab_p2:
-        st.caption("Real user behavior data — upload + AI expand" if is_en else "真实用户行为数据 — 上传 + AI 裂变")
-
-        # Source type selection
-        upload_source = st.selectbox("Source Type" if is_en else "来源类型", [
-            "SEO/SEM 关键词裂变",
-            "官方渠道（站内搜索/客服FAQ/公众号）",
-            "社群/客服/直播问句",
-            "AlsoAsked/AnswerThePublic",
-            "其他"
-        ], key="upload_source_type")
-
-        # Upload
-        uploaded_phrases = st.file_uploader("Upload CSV/Excel" if is_en else "上传 CSV/Excel", type=["csv", "xlsx"], key="upload_phrases_new")
-
-        # SEO/SEM specific: expansion controls
-        if upload_source == "SEO/SEM 关键词裂变":
-            st.caption("Upload keywords → AI expands into query phrases" if is_en else "上传关键词 → AI 裂变为口语问句")
-            col_limit, col_action = st.columns([1, 1])
-            with col_limit:
-                kw_per_batch = st.select_slider("Keywords per batch" if is_en else "每次裂变关键词数", options=[5, 10, 20, 30, 50], value=10, key="kw_per_batch_p2")
-            with col_action:
-                if uploaded_phrases:
-                    df_kw = pd.read_csv(uploaded_phrases, on_bad_lines="skip") if uploaded_phrases.name.endswith(".csv") else pd.read_excel(uploaded_phrases, engine="openpyxl")
-                    st.session_state["uploaded_keywords"] = df_kw
-                    INPUT_PATH.mkdir(parents=True, exist_ok=True)
-                    df_kw.to_csv(INPUT_PATH / "seo_sem_keywords.csv", index=False, encoding="utf-8-sig")
-                    st.caption(f"✅ {len(df_kw)} keywords loaded")
-                    if st.button("🚀 Expand Keywords" if is_en else "🚀 裂变关键词", type="primary", key="btn_seo_p2"):
+                # Batch upload
+                st.caption("— or batch —" if is_en else "— 或批量 —")
+                up_reverse = st.file_uploader("Upload content list CSV" if is_en else "上传内容列表CSV（含content列）", type=["csv"], key="upload_a2_batch")
+                if up_reverse:
+                    st.caption("CSV should have a 'content' or 'url' column" if is_en else "CSV需含 content 或 url 列")
+                    if st.button("🔮 Run Batch" if is_en else "🔮 批量执行逆向召回", key="btn_reverse_batch"):
                         try:
-                            from engine import run_zhiku
-                            with st.spinner("Expanding..." if is_en else "裂变中..."):
-                                result = run_zhiku(selected_batch, market, kw_per_batch)
-                            if result["success"]:
-                                st.success(f"✅ +{result['query_count']} phrases")
+                            from engine import call_bedrock_claude
+                            df_batch = pd.read_csv(up_reverse, encoding="utf-8-sig", on_bad_lines="skip")
+                            content_col = "content" if "content" in df_batch.columns else ("url" if "url" in df_batch.columns else df_batch.columns[0])
+                            all_queries = []
+                            progress = st.progress(0)
+                            for i, row in df_batch.iterrows():
+                                text = str(row[content_col])[:2000]
+                                prompt = f"以下是一篇内容：\n{text}\n\n用户输入什么问句能找到这篇内容？列出5个口语化问句，每行一条。"
+                                response = call_bedrock_claude(prompt)
+                                qs = [q.strip().lstrip("0123456789.-、） ") for q in response.strip().split("\n") if q.strip() and len(q.strip()) > 5]
+                                all_queries.extend(qs)
+                                progress.progress((i + 1) / len(df_batch))
+                            if all_queries:
+                                new_df = pd.DataFrame({"ai_query": all_queries, "source": "reverse_recall", "priority_score": 4.6, "is_selected": "TRUE"})
+                                zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
+                                zhiku_file.parent.mkdir(parents=True, exist_ok=True)
+                                existing = load_csv_safe(zhiku_file) if zhiku_file.exists() else pd.DataFrame()
+                                merged = pd.concat([existing, new_df], ignore_index=True)
+                                if "ai_query" in merged.columns: merged = merged.drop_duplicates(subset=["ai_query"], keep="first")
+                                merged.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
+                                st.success(f"✅ +{len(all_queries)} from {len(df_batch)} contents")
                                 st.rerun()
-                            else:
-                                st.error(result['error'])
                         except Exception as e:
                             st.error(str(e))
-        else:
-            # Non-SEO sources: direct upload to library
-            if uploaded_phrases:
-                try:
-                    if uploaded_phrases.name.endswith(".xlsx"):
-                        df_import = pd.read_excel(uploaded_phrases, engine="openpyxl")
-                    else:
-                        df_import = pd.read_csv(uploaded_phrases, encoding="utf-8-sig", on_bad_lines="skip", engine="python")
-                    if "source" not in df_import.columns:
-                        df_import["source"] = upload_source
-                    if "is_selected" not in df_import.columns:
-                        df_import["is_selected"] = "TRUE"
-                    zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
-                    zhiku_file.parent.mkdir(parents=True, exist_ok=True)
-                    if zhiku_file.exists():
-                        existing = load_csv_safe(zhiku_file)
-                        merged = pd.concat([existing, df_import], ignore_index=True)
-                        if "ai_query" in merged.columns:
-                            merged = merged.drop_duplicates(subset=["ai_query"], keep="first")
-                        merged.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
-                        st.success(f"✅ +{len(df_import)} phrases (source: {upload_source})")
-                    else:
-                        df_import.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
-                        st.success(f"✅ {len(df_import)} phrases imported")
-                    st.rerun()
-                except Exception as e:
-                    st.error(str(e))
 
-    # --- P3 兜底扩写 ---
-    with tab_p3:
-        col_free, col_seed = st.columns(2)
-        with col_free:
-            st.markdown("**" + ("Free input (one per line)" if is_en else "自由输入（每行一条）") + "**")
-            manual_text = st.text_area("Phrases" if is_en else "短语", height=120, key="manual_phrases", placeholder="亚马逊怎么注册\nFBA费用多少\n跨境电商新手入门")
-            if st.button("➕ Add" if is_en else "➕ 添加", key="btn_manual_add", disabled=not manual_text):
-                phrases = [p.strip() for p in manual_text.strip().split("\n") if p.strip()]
-                if phrases:
-                    new_df = pd.DataFrame({"ai_query": phrases, "source": "manual", "priority_score": 3.5, "is_selected": "TRUE"})
-                    zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
-                    zhiku_file.parent.mkdir(parents=True, exist_ok=True)
-                    if zhiku_file.exists():
-                        existing = load_csv_safe(zhiku_file)
-                        merged = pd.concat([existing, new_df], ignore_index=True).drop_duplicates(subset=["ai_query"], keep="first")
-                        merged.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
-                    else:
-                        new_df.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
-                    st.success(f"✅ +{len(phrases)}")
-                    st.rerun()
-
-        with col_seed:
-            st.markdown("**" + ("Seed word expansion" if is_en else "词根扩展") + "**")
-            seed_words = st.text_area("Seeds" if is_en else "词根（每行一个）", height=80, key="seed_input_new", placeholder="跨境电商\n亚马逊开店\n选品")
-            phrases_per_seed = st.select_slider("Phrases per seed" if is_en else "每个词根生成数", options=[5, 10, 15, 20, 30], value=15, key="seed_count_p3")
-            if st.button("🚀 Expand Seeds" if is_en else "🚀 裂变词根", key="btn_seed_expand", disabled=not seed_words):
-                seeds = [s.strip() for s in seed_words.strip().split("\n") if s.strip()]
-                if seeds:
+            with col_community:
+                st.markdown("**A3: AI Community Q&A**" if is_en else "**A3: AI 社区原生提问**")
+                st.caption("90% · Upload from Zhihu/Perplexity" if is_en else "准确度90% · 从知乎/Perplexity上传")
+                uploaded_a3 = st.file_uploader("Upload" if is_en else "上传CSV", type=["csv", "xlsx"], key="upload_a3")
+                if uploaded_a3:
                     try:
-                        from engine import run_semantic_expansion
-                        total_gen = 0
-                        with st.spinner("Expanding..." if is_en else "裂变中..."):
-                            for seed in seeds:
-                                r = run_semantic_expansion(seed, market, phrases_per_seed, "zh", selected_batch)
-                                if r.get("success"):
-                                    total_gen += r.get("query_count", 0)
-                        if total_gen > 0:
-                            st.success(f"✅ +{total_gen}")
-                            st.rerun()
+                        df_imp = pd.read_csv(uploaded_a3, encoding="utf-8-sig", on_bad_lines="skip") if uploaded_a3.name.endswith(".csv") else pd.read_excel(uploaded_a3, engine="openpyxl")
+                        if "source" not in df_imp.columns: df_imp["source"] = "ai_community"
+                        if "is_selected" not in df_imp.columns: df_imp["is_selected"] = "TRUE"
+                        if "priority_score" not in df_imp.columns: df_imp["priority_score"] = 4.5
+                        zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
+                        zhiku_file.parent.mkdir(parents=True, exist_ok=True)
+                        existing = load_csv_safe(zhiku_file) if zhiku_file.exists() else pd.DataFrame()
+                        merged = pd.concat([existing, df_imp], ignore_index=True)
+                        if "ai_query" in merged.columns: merged = merged.drop_duplicates(subset=["ai_query"], keep="first")
+                        merged.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
+                        st.success(f"✅ +{len(df_imp)} (A3)")
+                        st.rerun()
                     except Exception as e:
                         st.error(str(e))
 
-    # --- P4 画像推演 ---
-    with tab_p4:
-        st.caption("Based on persona matrix (identity × site × topic), predict search queries by priority." if is_en else "基于客户画像矩阵（身份 × 站点 × 话题），按优先级推演潜在检索短语。")
+        # --- P2 次核心（上传为主）---
+        with tab_p2:
+            st.caption("Real user behavior data — upload + AI expand" if is_en else "真实用户行为数据 — 上传 + AI 裂变")
 
-        # Controls
-        col_p4_1, col_p4_2, col_p4_3 = st.columns(3)
-        with col_p4_1:
-            p4_level = st.selectbox(
-                "Priority Level" if is_en else "优先级",
-                ["P0", "P1", "P2", "ALL"],
-                key="p4_priority_level",
-            )
-        with col_p4_2:
-            p4_max = st.number_input("Max Queries" if is_en else "最大生成数", 10, 200, 50, key="p4_max_queries")
-        with col_p4_3:
-            # Load matrix for site options
-            try:
-                from zhiku_predictor import load_persona_matrix
-                _matrix = load_persona_matrix()
-                _all_sites = _matrix.get("兴趣画像", {}).get("站点", {}).get("params", [])
-                _all_topics = _matrix.get("兴趣画像", {}).get("内容分类", {}).get("params", [])
-            except Exception:
-                _all_sites = ["北美站", "欧洲站", "日本站"]
-                _all_topics = ["新手指南", "选品", "物流仓储"]
+            # Source type selection
+            upload_source = st.selectbox("Source Type" if is_en else "来源类型", [
+                "SEO/SEM 关键词裂变",
+                "官方渠道（站内搜索/客服FAQ/公众号）",
+                "社群/客服/直播问句",
+                "AlsoAsked/AnswerThePublic",
+                "其他"
+            ], key="upload_source_type")
 
-        col_p4_sites, col_p4_topics = st.columns(2)
-        with col_p4_sites:
-            p4_sites = st.multiselect("Target Sites" if is_en else "目标站点", _all_sites, default=_all_sites[:3], key="p4_sites")
-        with col_p4_topics:
-            p4_topics = st.multiselect("Target Topics" if is_en else "目标话题", _all_topics, default=_all_topics[:5], key="p4_topics")
+            # Upload
+            uploaded_phrases = st.file_uploader("Upload CSV/Excel" if is_en else "上传 CSV/Excel", type=["csv", "xlsx"], key="upload_phrases_new")
 
-        # Language selector
-        p4_language = st.radio("Output Language" if is_en else "输出语言", ["中文", "English", "中英双语"], horizontal=True, key="p4_language")
-
-        # Run prediction
-        if st.button("🧠 Run Persona Prediction" if is_en else "🧠 执行画像推演", type="primary", key="btn_p4_predict"):
-            try:
-                from zhiku_predictor import run_persona_prediction, export_to_zhiku
-                with st.spinner("Predicting..." if is_en else "推演中..."):
-                    result = run_persona_prediction(
-                        priority_level=p4_level,
-                        max_queries=p4_max,
-                        target_sites=p4_sites if p4_sites else None,
-                        target_topics=p4_topics if p4_topics else None,
-                        language=p4_language,
-                    )
-                if result["success"]:
-                    predictions = result.get("predictions", [])
-
-                    # AUTO-IMPORT to zhiku immediately (no manual export step needed)
-                    if predictions:
-                        export_result = export_to_zhiku(predictions, selected_batch)
-                        added = export_result.get('exported', 0)
-                        total = export_result.get('total_in_zhiku', 0)
-                        if added > 0:
-                            st.success(f"✅ +{added} new queries auto-imported to library (total: {total})" if is_en else f"✅ 新增 {added} 条已自动导入智库（总量: {total}）")
-                        else:
-                            st.info(f"All queries already in library ({total} total, no new additions)" if is_en else f"全部短语已在智库中（共 {total} 条，无新增。请换不同条件推演）")
-                    else:
-                        st.info("No new predictions (all already in library). Try different sites/topics." if is_en else "无新预测短语（已全部在库）。请换不同站点/话题再试。")
-
-                    st.rerun()
-                else:
-                    st.warning(result.get("error", "No results"))
-            except Exception as e:
-                st.error(f"Error: {str(e)}")
-
-    st.divider()
-
-    # ============================================================
-    # ② 校准 + 去重
-    # ============================================================
-    st.markdown("""<div style="background:#1a1d2e;border:1px solid #2a2f4a;border-radius:12px;padding:20px;margin:16px 0;">
-        <h3 style="color:#ffa726;font-size:18px;font-weight:700;margin:0 0 8px;">② """ + ("Calibrate & Dedupe" if is_en else "校准 + 去重") + """</h3>
-    </div>""", unsafe_allow_html=True)
-
-    if total_phrases > 0:
-        col_b1, col_b2, col_b3, col_dedup = st.columns(4)
-        with col_b1:
-            st.metric("B1 Platform Consensus" if is_en else "B1 跨平台共识", "—", help="Optional: requires API calls")
-        with col_b2:
-            cat_matched = df_zhiku_all["category"].notna().sum() if not df_zhiku_all.empty and "category" in df_zhiku_all.columns else 0
-            st.metric("B2 Category Match" if is_en else "B2 类别匹配", f"{cat_matched}/{total_phrases}")
-        with col_b3:
-            st.metric("B3 Timeliness" if is_en else "B3 时效性", f"{total_phrases}/{total_phrases}", help="Auto-check for expired terms")
-        with col_dedup:
-            st.metric("Dedupe" if is_en else "去重", f"{total_phrases} → ?")
-
-        if st.button("🔄 Run Calibrate & Dedupe" if is_en else "🔄 执行校准去重", key="btn_calibrate"):
-            # Simple dedup on ai_query
-            zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
-            if zhiku_file.exists():
-                df = load_csv_safe(zhiku_file)
-                before = len(df)
-                if "ai_query" in df.columns:
-                    df = df.drop_duplicates(subset=["ai_query"], keep="first")
-                after = len(df)
-                df.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
-                st.success(f"✅ Deduped: {before} → {after} (removed {before - after})" if is_en else f"✅ 去重完成：{before} → {after}（删除 {before - after} 条）")
-                st.rerun()
-    else:
-        st.caption("No phrases yet. Use Step ① to produce phrases first." if is_en else "暂无短语，请先执行第①步产出短语。")
-
-    st.divider()
-
-    # ============================================================
-    # ③ 人工选取/修改
-    # ============================================================
-    st.markdown("""<div style="background:#1a1d2e;border:1px solid #2a2f4a;border-radius:12px;padding:20px;margin:16px 0;">
-        <h3 style="color:#ffa726;font-size:18px;font-weight:700;margin:0 0 8px;">③ """ + ("Review & Select" if is_en else "审核 & 选取") + """</h3>
-    </div>""", unsafe_allow_html=True)
-
-    df_q = load_zhiku_live(selected_batch)
-    if not df_q.empty:
-        # Split by source type
-        if "source" in df_q.columns:
-            predicted_mask = df_q["source"].astype(str).str.contains("predicted|zhiyu", case=False, na=False)
-            df_collected = df_q[~predicted_mask].copy()
-            df_predicted = df_q[predicted_mask].copy()
-        else:
-            df_collected = df_q.copy()
-            df_predicted = pd.DataFrame()
-
-        # Show counts
-        col_src1, col_src2 = st.columns(2)
-        col_src1.metric("🎯 Tracked (已追踪到)" if is_en else "🎯 已追踪到", len(df_collected))
-        col_src2.metric("🔮 Predicted (预估推演)" if is_en else "🔮 预估推演", len(df_predicted))
-
-        # Tabbed view
-        tab_collected, tab_predicted, tab_all = st.tabs([
-            f"🎯 Tracked ({len(df_collected)})" if is_en else f"🎯 已追踪到 ({len(df_collected)})",
-            f"🔮 Predicted ({len(df_predicted)})" if is_en else f"🔮 预估推演 ({len(df_predicted)})",
-            f"📋 All ({len(df_q)})" if is_en else f"📋 全部 ({len(df_q)})",
-        ])
-
-        with tab_collected:
-            st.caption("From real channels: SEO/SEM keywords, AI dropdown suggestions, reverse recall, community Q&A, manual input." if is_en else "来自真实渠道：SEO/SEM 关键词裂变、AI 平台下拉联想、逆向召回、社区原生提问、手动录入。")
-            if not df_collected.empty:
-                edit_cols_c = [c for c in ["ai_query", "category", "source", "priority_score", "is_selected"] if c in df_collected.columns]
-                if edit_cols_c:
-                    if "is_selected" in df_collected.columns:
-                        df_collected["is_selected"] = df_collected["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])
-                    st.dataframe(df_collected[edit_cols_c], use_container_width=True, hide_index=True)
-            else:
-                st.caption("No tracked phrases yet. Use P1/P2/P3 tabs above to add from real channels." if is_en else "暂无已追踪短语。请通过上方 P1/P2/P3 来源添加。")
-
-        with tab_predicted:
-            st.caption("AI-predicted based on persona matrix × lifecycle × site × topic. Need verification before production." if is_en else "基于画像矩阵 × 生命周期 × 站点 × 话题推演预估。进入生产前需通过智测验证。")
-            if not df_predicted.empty:
-                edit_cols_p = [c for c in ["ai_query", "category", "source", "priority_score", "estimated_volume", "is_selected"] if c in df_predicted.columns]
-                if edit_cols_p:
-                    if "is_selected" in df_predicted.columns:
-                        df_predicted["is_selected"] = df_predicted["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])
-                    st.dataframe(df_predicted[edit_cols_p], use_container_width=True, hide_index=True)
-            else:
-                st.caption("No predicted phrases yet. Use P4 Persona Prediction tab to generate." if is_en else "暂无预估短语。请通过 P4 画像推演生成。")
-
-        with tab_all:
-            # Filters
-            col_f1, col_f2 = st.columns(2)
-            with col_f1:
-                filter_options = ["All" if is_en else "全部", "✅ Selected" if is_en else "✅ 已选中", "⬜ Not selected" if is_en else "⬜ 未选中"]
-                if "source" in df_q.columns:
-                    filter_options += sorted(df_q["source"].dropna().unique().tolist())
-                sel_filter = st.selectbox("Filter" if is_en else "筛选", filter_options, key="zhiku_filter")
-            with col_f2:
-                if "category" in df_q.columns:
-                    cat_options = ["All" if is_en else "全部"] + sorted(df_q["category"].dropna().unique().tolist())
-                    cat_filter = st.selectbox("Category" if is_en else "类别", cat_options, key="zhiku_cat_filter")
-                else:
-                    cat_filter = "全部"
-
-            # Apply filters
-            df_display = df_q.copy()
-            if sel_filter in ["✅ Selected", "✅ 已选中"] and "is_selected" in df_display.columns:
-                df_display = df_display[df_display["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])]
-            elif sel_filter in ["⬜ Not selected", "⬜ 未选中"] and "is_selected" in df_display.columns:
-                df_display = df_display[~df_display["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])]
-            elif sel_filter not in ["All", "全部", "✅ Selected", "✅ 已选中", "⬜ Not selected", "⬜ 未选中"] and "source" in df_display.columns:
-                df_display = df_display[df_display["source"] == sel_filter]
-            if cat_filter not in ["All", "全部"] and "category" in df_display.columns:
-                df_display = df_display[df_display["category"] == cat_filter]
-
-            # Bulk actions
-            col_sa, col_sn, col_count = st.columns([1, 1, 4])
-            with col_sa:
-                if st.button("✅ Select All" if is_en else "✅ 全选", key="btn_sel_all"):
-                    zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
-                    df_q["is_selected"] = df_q["is_selected"].astype(str)
-                    df_q.loc[df_display.index, "is_selected"] = "TRUE"
-                    df_q.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
-                    st.rerun()
-            with col_sn:
-                if st.button("⬜ Deselect All" if is_en else "⬜ 全不选", key="btn_desel_all"):
-                    zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
-                    df_q["is_selected"] = df_q["is_selected"].astype(str)
-                    df_q.loc[df_display.index, "is_selected"] = "FALSE"
-                    df_q.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
-                    st.rerun()
-            with col_count:
-                sel_now = df_display[df_display["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])].shape[0] if "is_selected" in df_display.columns else 0
-                st.caption(f"{'Showing' if is_en else '显示'} {len(df_display)} | {'Selected' if is_en else '选中'} {sel_now}")
-
-            # Editable table
-            edit_cols = [c for c in ["ai_query", "category", "source", "priority_score", "is_selected"] if c in df_display.columns]
-            if edit_cols:
-                column_config = {}
-                if "category" in df_display.columns:
-                    column_config["category"] = st.column_config.SelectboxColumn("Category" if is_en else "类别", options=CATEGORIES_35)
-                if "is_selected" in df_display.columns:
-                    df_display["is_selected"] = df_display["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])
-                    column_config["is_selected"] = st.column_config.CheckboxColumn("Sel" if is_en else "选")
-                if "source" in df_display.columns:
-                    column_config["source"] = st.column_config.TextColumn("Source" if is_en else "来源", disabled=True)
-
-                edited_df = st.data_editor(df_display[edit_cols], column_config=column_config, use_container_width=True, hide_index=True, num_rows="dynamic", key="zhiku_editor_new")
-
-                # Save button — saves checkbox edits to file
-                if st.button("💾 Save Edits" if is_en else "💾 保存编辑", key="btn_save_edits"):
-                    zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
-                    try:
-                        # Ensure is_selected is string type in df_q before assignment
-                        if "is_selected" in df_q.columns:
-                            df_q["is_selected"] = df_q["is_selected"].astype(str)
-                        for col in edit_cols:
-                            if col in edited_df.columns and col in df_q.columns:
-                                if col == "is_selected":
-                                    vals = edited_df[col].apply(lambda x: "TRUE" if x else "FALSE").values
-                                    df_q.loc[df_display.index[:len(vals)], col] = vals
+            # SEO/SEM specific: expansion controls
+            if upload_source == "SEO/SEM 关键词裂变":
+                st.caption("Upload keywords → AI expands into query phrases" if is_en else "上传关键词 → AI 裂变为口语问句")
+                col_limit, col_action = st.columns([1, 1])
+                with col_limit:
+                    kw_per_batch = st.select_slider("Keywords per batch" if is_en else "每次裂变关键词数", options=[5, 10, 20, 30, 50], value=10, key="kw_per_batch_p2")
+                with col_action:
+                    if uploaded_phrases:
+                        df_kw = pd.read_csv(uploaded_phrases, on_bad_lines="skip") if uploaded_phrases.name.endswith(".csv") else pd.read_excel(uploaded_phrases, engine="openpyxl")
+                        st.session_state["uploaded_keywords"] = df_kw
+                        INPUT_PATH.mkdir(parents=True, exist_ok=True)
+                        df_kw.to_csv(INPUT_PATH / "seo_sem_keywords.csv", index=False, encoding="utf-8-sig")
+                        st.caption(f"✅ {len(df_kw)} keywords loaded")
+                        if st.button("🚀 Expand Keywords" if is_en else "🚀 裂变关键词", type="primary", key="btn_seo_p2"):
+                            try:
+                                from engine import run_zhiku
+                                with st.spinner("Expanding..." if is_en else "裂变中..."):
+                                    result = run_zhiku(selected_batch, market, kw_per_batch)
+                                if result["success"]:
+                                    st.success(f"✅ +{result['query_count']} phrases")
+                                    st.rerun()
                                 else:
-                                    vals = edited_df[col].values
-                                    df_q.loc[df_display.index[:len(vals)], col] = vals
-                        df_q.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
-                        st.success("✅ Saved" if is_en else "✅ 已保存")
+                                    st.error(result['error'])
+                            except Exception as e:
+                                st.error(str(e))
+            else:
+                # Non-SEO sources: direct upload to library
+                if uploaded_phrases:
+                    try:
+                        if uploaded_phrases.name.endswith(".xlsx"):
+                            df_import = pd.read_excel(uploaded_phrases, engine="openpyxl")
+                        else:
+                            df_import = pd.read_csv(uploaded_phrases, encoding="utf-8-sig", on_bad_lines="skip", engine="python")
+                        if "source" not in df_import.columns:
+                            df_import["source"] = upload_source
+                        if "is_selected" not in df_import.columns:
+                            df_import["is_selected"] = "TRUE"
+                        zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
+                        zhiku_file.parent.mkdir(parents=True, exist_ok=True)
+                        if zhiku_file.exists():
+                            existing = load_csv_safe(zhiku_file)
+                            merged = pd.concat([existing, df_import], ignore_index=True)
+                            if "ai_query" in merged.columns:
+                                merged = merged.drop_duplicates(subset=["ai_query"], keep="first")
+                            merged.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
+                            st.success(f"✅ +{len(df_import)} phrases (source: {upload_source})")
+                        else:
+                            df_import.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
+                            st.success(f"✅ {len(df_import)} phrases imported")
                         st.rerun()
                     except Exception as e:
                         st.error(str(e))
 
-            # Export
-            csv_export = df_display.to_csv(index=False).encode("utf-8-sig")
-            st.download_button("📥 Export CSV" if is_en else "📥 导出 CSV", csv_export, file_name=f"zhiku_{selected_batch}.csv", mime="text/csv")
-    else:
-        st.caption("No phrases yet." if is_en else "暂无短语。")
-
-    st.divider()
-
-    # ============================================================
-    # ④ CTA → 智测验证 / 直接智造
-    # ============================================================
-    st.markdown("""<div style="background:#1a1d2e;border:1px solid #2a2f4a;border-radius:12px;padding:20px;margin:16px 0;">
-        <h3 style="color:#4caf50;font-size:18px;font-weight:700;margin:0;">④ """ + ("Next Step" if is_en else "下一步") + """</h3>
-    </div>""", unsafe_allow_html=True)
-
-    col_verify, col_skip = st.columns([2, 1])
-    with col_verify:
-        if st.button("🔍 Send to 智测 Verify Gap" if is_en else "🔍 发送到智测验证 Gap", type="primary", key="cta_to_zhice"):
-            # Use in-memory df_q which has auto-saved edits
-            if not df_q.empty and "ai_query" in df_q.columns:
-                df_sel = df_q.copy()
-                if "is_selected" in df_sel.columns:
-                    df_sel = df_sel[df_sel["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])]
-                if not df_sel.empty:
-                    zhice_dir = OUTPUT_PATH.parent / "zhice"
-                    zhice_dir.mkdir(parents=True, exist_ok=True)
-                    ts = datetime.now().strftime('%Y%m%d_%H%M%S')
-                    queue_file = zhice_dir / f"zhiku_verify_queue_{ts}.json"
-                    queue_data = {"source": "zhiku", "batch_id": selected_batch, "queries_to_verify": df_sel["ai_query"].tolist(), "total_count": len(df_sel), "created_at": ts}
-                    queue_file.write_text(json.dumps(queue_data, ensure_ascii=False, indent=2), encoding='utf-8')
-                    st.success(f"✅ {len(df_sel)} phrases sent" if is_en else f"✅ {len(df_sel)} 条已发送到智测")
-                    jump_to("🔍 智测")
-                    st.rerun()
-                else:
-                    st.warning("No selected phrases. Use ✅ Select All or check boxes above." if is_en else "没有选中的短语。请先用 ✅全选 或在上方表格勾选。")
-            else:
-                st.warning("No phrases in library" if is_en else "短语库为空")
-    with col_skip:
-        if st.button("⏭️ Skip to 智造" if is_en else "⏭️ 跳过直接智造", key="cta_skip_zhizao"):
-            jump_to("✍️ 智造")
-            st.rerun()
-
-    # History
-    with st.expander("📜 History" if is_en else "📜 历史记录"):
-        batch_path = OUTPUT_PATH / selected_batch / "01_zhiku"
-        all_files = []
-        if batch_path.exists():
-            all_files.extend([f for f in batch_path.glob("*.csv")])
-            archive_path = batch_path / "archive"
-            if archive_path.exists():
-                all_files.extend([f for f in archive_path.glob("*.csv")])
-        if all_files:
-            col_hist_title, col_hist_clear = st.columns([4, 1])
-            with col_hist_title:
-                st.caption(f"{len(all_files)} files")
-            with col_hist_clear:
-                if st.button("🗑️ Clear All" if is_en else "🗑️ 清空全部", key="clear_zhiku_hist"):
-                    if batch_path.exists():
-                        for f in batch_path.glob("*.csv"):
-                            f.unlink()
-                        archive_path = batch_path / "archive"
-                        if archive_path.exists():
-                            for f in archive_path.glob("*.csv"):
-                                f.unlink()
-                    st.success("Cleared" if is_en else "已清空")
-                    st.rerun()
-            all_files.sort(key=lambda f: f.stat().st_mtime, reverse=True)
-            for f in all_files[:10]:
-                mtime = datetime.fromtimestamp(f.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S")
-                col_i, col_r, col_d = st.columns([3, 1, 1])
-                with col_i:
-                    st.caption(f"📄 {f.name} · {f.stat().st_size/1024:.1f}KB · 🕐 {mtime}")
-                with col_r:
-                    if st.button("♻️ Reuse" if is_en else "♻️ 复用", key=f"reuse_zhiku_{f.name}"):
-                        live_path = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
-                        safe_copy(f, live_path)
+        # --- P3 兜底扩写 ---
+        with tab_p3:
+            col_free, col_seed = st.columns(2)
+            with col_free:
+                st.markdown("**" + ("Free input (one per line)" if is_en else "自由输入（每行一条）") + "**")
+                manual_text = st.text_area("Phrases" if is_en else "短语", height=120, key="manual_phrases", placeholder="亚马逊怎么注册\nFBA费用多少\n跨境电商新手入门")
+                if st.button("➕ Add" if is_en else "➕ 添加", key="btn_manual_add", disabled=not manual_text):
+                    phrases = [p.strip() for p in manual_text.strip().split("\n") if p.strip()]
+                    if phrases:
+                        new_df = pd.DataFrame({"ai_query": phrases, "source": "manual", "priority_score": 3.5, "is_selected": "TRUE"})
+                        zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
+                        zhiku_file.parent.mkdir(parents=True, exist_ok=True)
+                        if zhiku_file.exists():
+                            existing = load_csv_safe(zhiku_file)
+                            merged = pd.concat([existing, new_df], ignore_index=True).drop_duplicates(subset=["ai_query"], keep="first")
+                            merged.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
+                        else:
+                            new_df.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
+                        st.success(f"✅ +{len(phrases)}")
                         st.rerun()
-                with col_d:
-                    st.download_button("⬇️", f.read_bytes(), file_name=f.name, mime="text/csv", key=f"dl_zhiku_{f.name}")
+
+            with col_seed:
+                st.markdown("**" + ("Seed word expansion" if is_en else "词根扩展") + "**")
+                seed_words = st.text_area("Seeds" if is_en else "词根（每行一个）", height=80, key="seed_input_new", placeholder="跨境电商\n亚马逊开店\n选品")
+                phrases_per_seed = st.select_slider("Phrases per seed" if is_en else "每个词根生成数", options=[5, 10, 15, 20, 30], value=15, key="seed_count_p3")
+                if st.button("🚀 Expand Seeds" if is_en else "🚀 裂变词根", key="btn_seed_expand", disabled=not seed_words):
+                    seeds = [s.strip() for s in seed_words.strip().split("\n") if s.strip()]
+                    if seeds:
+                        try:
+                            from engine import run_semantic_expansion
+                            total_gen = 0
+                            with st.spinner("Expanding..." if is_en else "裂变中..."):
+                                for seed in seeds:
+                                    r = run_semantic_expansion(seed, market, phrases_per_seed, "zh", selected_batch)
+                                    if r.get("success"):
+                                        total_gen += r.get("query_count", 0)
+                            if total_gen > 0:
+                                st.success(f"✅ +{total_gen}")
+                                st.rerun()
+                        except Exception as e:
+                            st.error(str(e))
+
+        # --- P4 画像推演 ---
+        with tab_p4:
+            st.caption("Based on persona matrix (identity × site × topic), predict search queries by priority." if is_en else "基于客户画像矩阵（身份 × 站点 × 话题），按优先级推演潜在检索短语。")
+
+            # Controls
+            col_p4_1, col_p4_2, col_p4_3 = st.columns(3)
+            with col_p4_1:
+                p4_level = st.selectbox(
+                    "Priority Level" if is_en else "优先级",
+                    ["P0", "P1", "P2", "ALL"],
+                    key="p4_priority_level",
+                )
+            with col_p4_2:
+                p4_max = st.number_input("Max Queries" if is_en else "最大生成数", 10, 200, 50, key="p4_max_queries")
+            with col_p4_3:
+                # Load matrix for site options
+                try:
+                    from zhiku_predictor import load_persona_matrix
+                    _matrix = load_persona_matrix()
+                    _all_sites = _matrix.get("兴趣画像", {}).get("站点", {}).get("params", [])
+                    _all_topics = _matrix.get("兴趣画像", {}).get("内容分类", {}).get("params", [])
+                except Exception:
+                    _all_sites = ["北美站", "欧洲站", "日本站"]
+                    _all_topics = ["新手指南", "选品", "物流仓储"]
+
+            col_p4_sites, col_p4_topics = st.columns(2)
+            with col_p4_sites:
+                p4_sites = st.multiselect("Target Sites" if is_en else "目标站点", _all_sites, default=_all_sites[:3], key="p4_sites")
+            with col_p4_topics:
+                p4_topics = st.multiselect("Target Topics" if is_en else "目标话题", _all_topics, default=_all_topics[:5], key="p4_topics")
+
+            # Language selector
+            p4_language = st.radio("Output Language" if is_en else "输出语言", ["中文", "English", "中英双语"], horizontal=True, key="p4_language")
+
+            # Run prediction
+            if st.button("🧠 Run Persona Prediction" if is_en else "🧠 执行画像推演", type="primary", key="btn_p4_predict"):
+                try:
+                    from zhiku_predictor import run_persona_prediction, export_to_zhiku
+                    with st.spinner("Predicting..." if is_en else "推演中..."):
+                        result = run_persona_prediction(
+                            priority_level=p4_level,
+                            max_queries=p4_max,
+                            target_sites=p4_sites if p4_sites else None,
+                            target_topics=p4_topics if p4_topics else None,
+                            language=p4_language,
+                        )
+                    if result["success"]:
+                        predictions = result.get("predictions", [])
+
+                        # AUTO-IMPORT to zhiku immediately (no manual export step needed)
+                        if predictions:
+                            export_result = export_to_zhiku(predictions, selected_batch)
+                            added = export_result.get('exported', 0)
+                            total = export_result.get('total_in_zhiku', 0)
+                            if added > 0:
+                                st.success(f"✅ +{added} new queries auto-imported to library (total: {total})" if is_en else f"✅ 新增 {added} 条已自动导入智库（总量: {total}）")
+                            else:
+                                st.info(f"All queries already in library ({total} total, no new additions)" if is_en else f"全部短语已在智库中（共 {total} 条，无新增。请换不同条件推演）")
+                        else:
+                            st.info("No new predictions (all already in library). Try different sites/topics." if is_en else "无新预测短语（已全部在库）。请换不同站点/话题再试。")
+
+                        st.rerun()
+                    else:
+                        st.warning(result.get("error", "No results"))
+                except Exception as e:
+                    st.error(f"Error: {str(e)}")
+
+        st.divider()
+
+        # ============================================================
+        # ② 校准 + 去重
+        # ============================================================
+        st.markdown("""<div style="background:#1a1d2e;border:1px solid #2a2f4a;border-radius:12px;padding:20px;margin:16px 0;">
+            <h3 style="color:#ffa726;font-size:18px;font-weight:700;margin:0 0 8px;">② """ + ("Calibrate & Dedupe" if is_en else "校准 + 去重") + """</h3>
+        </div>""", unsafe_allow_html=True)
+
+        if total_phrases > 0:
+            col_b1, col_b2, col_b3, col_dedup = st.columns(4)
+            with col_b1:
+                st.metric("B1 Platform Consensus" if is_en else "B1 跨平台共识", "—", help="Optional: requires API calls")
+            with col_b2:
+                cat_matched = df_zhiku_all["category"].notna().sum() if not df_zhiku_all.empty and "category" in df_zhiku_all.columns else 0
+                st.metric("B2 Category Match" if is_en else "B2 类别匹配", f"{cat_matched}/{total_phrases}")
+            with col_b3:
+                st.metric("B3 Timeliness" if is_en else "B3 时效性", f"{total_phrases}/{total_phrases}", help="Auto-check for expired terms")
+            with col_dedup:
+                st.metric("Dedupe" if is_en else "去重", f"{total_phrases} → ?")
+
+            if st.button("🔄 Run Calibrate & Dedupe" if is_en else "🔄 执行校准去重", key="btn_calibrate"):
+                # Simple dedup on ai_query
+                zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
+                if zhiku_file.exists():
+                    df = load_csv_safe(zhiku_file)
+                    before = len(df)
+                    if "ai_query" in df.columns:
+                        df = df.drop_duplicates(subset=["ai_query"], keep="first")
+                    after = len(df)
+                    df.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
+                    st.success(f"✅ Deduped: {before} → {after} (removed {before - after})" if is_en else f"✅ 去重完成：{before} → {after}（删除 {before - after} 条）")
+                    st.rerun()
         else:
-            st.caption("No history" if is_en else "暂无历史")
+            st.caption("No phrases yet. Use Step ① to produce phrases first." if is_en else "暂无短语，请先执行第①步产出短语。")
+
+        st.divider()
+
+        # ============================================================
+        # ③ 人工选取/修改
+        # ============================================================
+        st.markdown("""<div style="background:#1a1d2e;border:1px solid #2a2f4a;border-radius:12px;padding:20px;margin:16px 0;">
+            <h3 style="color:#ffa726;font-size:18px;font-weight:700;margin:0 0 8px;">③ """ + ("Review & Select" if is_en else "审核 & 选取") + """</h3>
+        </div>""", unsafe_allow_html=True)
+
+        df_q = load_zhiku_live(selected_batch)
+        if not df_q.empty:
+            # Split by source type
+            if "source" in df_q.columns:
+                predicted_mask = df_q["source"].astype(str).str.contains("predicted|zhiyu", case=False, na=False)
+                df_collected = df_q[~predicted_mask].copy()
+                df_predicted = df_q[predicted_mask].copy()
+            else:
+                df_collected = df_q.copy()
+                df_predicted = pd.DataFrame()
+
+            # Show counts
+            col_src1, col_src2 = st.columns(2)
+            col_src1.metric("🎯 Tracked (已追踪到)" if is_en else "🎯 已追踪到", len(df_collected))
+            col_src2.metric("🔮 Predicted (预估推演)" if is_en else "🔮 预估推演", len(df_predicted))
+
+            # Tabbed view
+            tab_collected, tab_predicted, tab_all = st.tabs([
+                f"🎯 Tracked ({len(df_collected)})" if is_en else f"🎯 已追踪到 ({len(df_collected)})",
+                f"🔮 Predicted ({len(df_predicted)})" if is_en else f"🔮 预估推演 ({len(df_predicted)})",
+                f"📋 All ({len(df_q)})" if is_en else f"📋 全部 ({len(df_q)})",
+            ])
+
+            with tab_collected:
+                st.caption("From real channels: SEO/SEM keywords, AI dropdown suggestions, reverse recall, community Q&A, manual input." if is_en else "来自真实渠道：SEO/SEM 关键词裂变、AI 平台下拉联想、逆向召回、社区原生提问、手动录入。")
+                if not df_collected.empty:
+                    edit_cols_c = [c for c in ["ai_query", "category", "source", "priority_score", "is_selected"] if c in df_collected.columns]
+                    if edit_cols_c:
+                        if "is_selected" in df_collected.columns:
+                            df_collected["is_selected"] = df_collected["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])
+                        st.dataframe(df_collected[edit_cols_c], use_container_width=True, hide_index=True)
+                else:
+                    st.caption("No tracked phrases yet. Use P1/P2/P3 tabs above to add from real channels." if is_en else "暂无已追踪短语。请通过上方 P1/P2/P3 来源添加。")
+
+            with tab_predicted:
+                st.caption("AI-predicted based on persona matrix × lifecycle × site × topic. Need verification before production." if is_en else "基于画像矩阵 × 生命周期 × 站点 × 话题推演预估。进入生产前需通过智测验证。")
+                if not df_predicted.empty:
+                    edit_cols_p = [c for c in ["ai_query", "category", "source", "priority_score", "estimated_volume", "is_selected"] if c in df_predicted.columns]
+                    if edit_cols_p:
+                        if "is_selected" in df_predicted.columns:
+                            df_predicted["is_selected"] = df_predicted["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])
+                        st.dataframe(df_predicted[edit_cols_p], use_container_width=True, hide_index=True)
+                else:
+                    st.caption("No predicted phrases yet. Use P4 Persona Prediction tab to generate." if is_en else "暂无预估短语。请通过 P4 画像推演生成。")
+
+            with tab_all:
+                # Filters
+                col_f1, col_f2 = st.columns(2)
+                with col_f1:
+                    filter_options = ["All" if is_en else "全部", "✅ Selected" if is_en else "✅ 已选中", "⬜ Not selected" if is_en else "⬜ 未选中"]
+                    if "source" in df_q.columns:
+                        filter_options += sorted(df_q["source"].dropna().unique().tolist())
+                    sel_filter = st.selectbox("Filter" if is_en else "筛选", filter_options, key="zhiku_filter")
+                with col_f2:
+                    if "category" in df_q.columns:
+                        cat_options = ["All" if is_en else "全部"] + sorted(df_q["category"].dropna().unique().tolist())
+                        cat_filter = st.selectbox("Category" if is_en else "类别", cat_options, key="zhiku_cat_filter")
+                    else:
+                        cat_filter = "全部"
+
+                # Apply filters
+                df_display = df_q.copy()
+                if sel_filter in ["✅ Selected", "✅ 已选中"] and "is_selected" in df_display.columns:
+                    df_display = df_display[df_display["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])]
+                elif sel_filter in ["⬜ Not selected", "⬜ 未选中"] and "is_selected" in df_display.columns:
+                    df_display = df_display[~df_display["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])]
+                elif sel_filter not in ["All", "全部", "✅ Selected", "✅ 已选中", "⬜ Not selected", "⬜ 未选中"] and "source" in df_display.columns:
+                    df_display = df_display[df_display["source"] == sel_filter]
+                if cat_filter not in ["All", "全部"] and "category" in df_display.columns:
+                    df_display = df_display[df_display["category"] == cat_filter]
+
+                # Bulk actions
+                col_sa, col_sn, col_count = st.columns([1, 1, 4])
+                with col_sa:
+                    if st.button("✅ Select All" if is_en else "✅ 全选", key="btn_sel_all"):
+                        zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
+                        df_q["is_selected"] = df_q["is_selected"].astype(str)
+                        df_q.loc[df_display.index, "is_selected"] = "TRUE"
+                        df_q.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
+                        st.rerun()
+                with col_sn:
+                    if st.button("⬜ Deselect All" if is_en else "⬜ 全不选", key="btn_desel_all"):
+                        zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
+                        df_q["is_selected"] = df_q["is_selected"].astype(str)
+                        df_q.loc[df_display.index, "is_selected"] = "FALSE"
+                        df_q.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
+                        st.rerun()
+                with col_count:
+                    sel_now = df_display[df_display["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])].shape[0] if "is_selected" in df_display.columns else 0
+                    st.caption(f"{'Showing' if is_en else '显示'} {len(df_display)} | {'Selected' if is_en else '选中'} {sel_now}")
+
+                # Editable table
+                edit_cols = [c for c in ["ai_query", "category", "source", "priority_score", "is_selected"] if c in df_display.columns]
+                if edit_cols:
+                    column_config = {}
+                    if "category" in df_display.columns:
+                        column_config["category"] = st.column_config.SelectboxColumn("Category" if is_en else "类别", options=CATEGORIES_35)
+                    if "is_selected" in df_display.columns:
+                        df_display["is_selected"] = df_display["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])
+                        column_config["is_selected"] = st.column_config.CheckboxColumn("Sel" if is_en else "选")
+                    if "source" in df_display.columns:
+                        column_config["source"] = st.column_config.TextColumn("Source" if is_en else "来源", disabled=True)
+
+                    edited_df = st.data_editor(df_display[edit_cols], column_config=column_config, use_container_width=True, hide_index=True, num_rows="dynamic", key="zhiku_editor_new")
+
+                    # Save button — saves checkbox edits to file
+                    if st.button("💾 Save Edits" if is_en else "💾 保存编辑", key="btn_save_edits"):
+                        zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
+                        try:
+                            # Ensure is_selected is string type in df_q before assignment
+                            if "is_selected" in df_q.columns:
+                                df_q["is_selected"] = df_q["is_selected"].astype(str)
+                            for col in edit_cols:
+                                if col in edited_df.columns and col in df_q.columns:
+                                    if col == "is_selected":
+                                        vals = edited_df[col].apply(lambda x: "TRUE" if x else "FALSE").values
+                                        df_q.loc[df_display.index[:len(vals)], col] = vals
+                                    else:
+                                        vals = edited_df[col].values
+                                        df_q.loc[df_display.index[:len(vals)], col] = vals
+                            df_q.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
+                            st.success("✅ Saved" if is_en else "✅ 已保存")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(str(e))
+
+                # Export
+                csv_export = df_display.to_csv(index=False).encode("utf-8-sig")
+                st.download_button("📥 Export CSV" if is_en else "📥 导出 CSV", csv_export, file_name=f"zhiku_{selected_batch}.csv", mime="text/csv")
+        else:
+            st.caption("No phrases yet." if is_en else "暂无短语。")
+
+        st.divider()
+
+        # ============================================================
+        # ④ CTA → 智测验证 / 直接智造
+        # ============================================================
+        st.markdown("""<div style="background:#1a1d2e;border:1px solid #2a2f4a;border-radius:12px;padding:20px;margin:16px 0;">
+            <h3 style="color:#4caf50;font-size:18px;font-weight:700;margin:0;">④ """ + ("Next Step" if is_en else "下一步") + """</h3>
+        </div>""", unsafe_allow_html=True)
+
+        col_verify, col_skip = st.columns([2, 1])
+        with col_verify:
+            if st.button("🔍 Send to 智测 Verify Gap" if is_en else "🔍 发送到智测验证 Gap", type="primary", key="cta_to_zhice"):
+                # Use in-memory df_q which has auto-saved edits
+                if not df_q.empty and "ai_query" in df_q.columns:
+                    df_sel = df_q.copy()
+                    if "is_selected" in df_sel.columns:
+                        df_sel = df_sel[df_sel["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])]
+                    if not df_sel.empty:
+                        zhice_dir = OUTPUT_PATH.parent / "zhice"
+                        zhice_dir.mkdir(parents=True, exist_ok=True)
+                        ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+                        queue_file = zhice_dir / f"zhiku_verify_queue_{ts}.json"
+                        queue_data = {"source": "zhiku", "batch_id": selected_batch, "queries_to_verify": df_sel["ai_query"].tolist(), "total_count": len(df_sel), "created_at": ts}
+                        queue_file.write_text(json.dumps(queue_data, ensure_ascii=False, indent=2), encoding='utf-8')
+                        st.success(f"✅ {len(df_sel)} phrases sent" if is_en else f"✅ {len(df_sel)} 条已发送到智测")
+                        jump_to("🔍 智测")
+                        st.rerun()
+                    else:
+                        st.warning("No selected phrases. Use ✅ Select All or check boxes above." if is_en else "没有选中的短语。请先用 ✅全选 或在上方表格勾选。")
+                else:
+                    st.warning("No phrases in library" if is_en else "短语库为空")
+        with col_skip:
+            if st.button("⏭️ Skip to 智造" if is_en else "⏭️ 跳过直接智造", key="cta_skip_zhizao"):
+                jump_to("✍️ 智造")
+                st.rerun()
+
+        # History
+        with st.expander("📜 History" if is_en else "📜 历史记录"):
+            batch_path = OUTPUT_PATH / selected_batch / "01_zhiku"
+            all_files = []
+            if batch_path.exists():
+                all_files.extend([f for f in batch_path.glob("*.csv")])
+                archive_path = batch_path / "archive"
+                if archive_path.exists():
+                    all_files.extend([f for f in archive_path.glob("*.csv")])
+            if all_files:
+                col_hist_title, col_hist_clear = st.columns([4, 1])
+                with col_hist_title:
+                    st.caption(f"{len(all_files)} files")
+                with col_hist_clear:
+                    if st.button("🗑️ Clear All" if is_en else "🗑️ 清空全部", key="clear_zhiku_hist"):
+                        if batch_path.exists():
+                            for f in batch_path.glob("*.csv"):
+                                f.unlink()
+                            archive_path = batch_path / "archive"
+                            if archive_path.exists():
+                                for f in archive_path.glob("*.csv"):
+                                    f.unlink()
+                        st.success("Cleared" if is_en else "已清空")
+                        st.rerun()
+                all_files.sort(key=lambda f: f.stat().st_mtime, reverse=True)
+                for f in all_files[:10]:
+                    mtime = datetime.fromtimestamp(f.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S")
+                    col_i, col_r, col_d = st.columns([3, 1, 1])
+                    with col_i:
+                        st.caption(f"📄 {f.name} · {f.stat().st_size/1024:.1f}KB · 🕐 {mtime}")
+                    with col_r:
+                        if st.button("♻️ Reuse" if is_en else "♻️ 复用", key=f"reuse_zhiku_{f.name}"):
+                            live_path = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
+                            safe_copy(f, live_path)
+                            st.rerun()
+                    with col_d:
+                        st.download_button("⬇️", f.read_bytes(), file_name=f.name, mime="text/csv", key=f"dl_zhiku_{f.name}")
+            else:
+                st.caption("No history" if is_en else "暂无历史")
 
 
-# ============================================================
-# PAGE: 智测 (Gap Verification)
-# ============================================================
+    # ============================================================
+    # PAGE: 智测 (Gap Verification)
+    # ============================================================
 elif _page_idx == 2:
     st.markdown("""<div style="padding:20px 0 10px;"><h1 style="font-size:28px;font-weight:800;color:#00bcd4;margin:0;">🔍 """ + ("Gap Verification – AI Search Coverage Test" if is_en else "智测 – AI 检索覆盖验证") + """</h1><p style="font-size:13px;color:#8892b0;margin-top:6px;">""" + ("Verify search phrases against 7 AI platforms to discover content gaps" if is_en else "在 7 个 AI 平台验证检索短语的覆盖状态，发现内容 Gap") + """</p></div>""", unsafe_allow_html=True)
     render_pipeline_flow("zhice", selected_batch)
