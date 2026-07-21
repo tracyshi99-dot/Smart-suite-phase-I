@@ -5113,10 +5113,11 @@ elif _page_idx == 10:
 elif _page_idx == 13:
     st.markdown("""<div style="padding:20px 0 10px;"><h1 style="font-size:28px;font-weight:800;color:#00bcd4;margin:0;">📝 """ + ("Operations Dashboard" if is_en else "运营管理看板") + """</h1><p style="font-size:13px;color:#8892b0;margin-top:6px;">""" + ("Team activity log, pipeline status, who did what" if is_en else "团队操作日志、流水线状态、谁执行了什么") + """</p></div>""", unsafe_allow_html=True)
 
-    tab_activity, tab_approval, tab_pipeline, tab_link = st.tabs([
+    tab_activity, tab_approval, tab_pipeline, tab_users, tab_link = st.tabs([
         "📋 Activity Log" if is_en else "📋 操作日志",
         "✅ Approvals" if is_en else "✅ 需求审批",
         "📊 Pipeline Status" if is_en else "📊 流水线状态",
+        "👥 Users" if is_en else "👥 用户管理",
         "🔗 Links" if is_en else "🔗 入口链接",
     ])
 
@@ -5262,6 +5263,20 @@ elif _page_idx == 13:
                     icon = "✅" if info["done"] else "⬜"
                     st.markdown(f"{icon} {info['icon']} {info['name']} ({info['files']} files)")
             st.divider()
+
+    with tab_users:
+        st.markdown("### 👥 " + ("User Management" if is_en else "用户管理"))
+        if not is_admin:
+            st.warning("Only admin can manage users." if is_en else "仅管理员可管理用户。")
+        else:
+            st.caption("Whitelist of allowed login users" if is_en else "允许登录的用户白名单")
+            st.markdown("**" + ("Current allowed users:" if is_en else "当前白名单：") + "**")
+            for u in ALLOWED_USERS:
+                role = "🔑 Admin" if u in ADMIN_USERS else "👤 User"
+                st.markdown(f"- {role} `{u}`")
+
+            st.divider()
+            st.caption("To add/remove users, edit `ALLOWED_USERS` in `ui/app.py` and push to GitHub." if is_en else "增删用户请编辑 `ui/app.py` 中的 `ALLOWED_USERS` 列表并推送到 GitHub。")
 
     with tab_link:
         st.markdown("### " + ("Service Links" if is_en else "服务入口"))
