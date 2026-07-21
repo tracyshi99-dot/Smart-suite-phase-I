@@ -5420,75 +5420,177 @@ elif _page_idx == 8:
     st.markdown("""<div style="padding:20px 0 10px;"><h1 style="font-size:28px;font-weight:800;color:#ff6b35;margin:0;">🎯 """ + ("Decision Engine" if is_en else "智中枢 – Decision Engine") + """</h1><p style="font-size:13px;color:#8892b0;margin-top:6px;">""" + ("Based on analytics data + 7 decision rules, generate weekly action plan" if is_en else "基于智析数据 + 7 条决策规则，生成周度行动计划") + """</p></div>""", unsafe_allow_html=True)
     render_pipeline_flow("zhongshu", selected_batch)
 
-    # Decision Rules
-    st.subheader("📜 7 Decision Rules" if is_en else "📜 7 条决策规则")
-    rules = [
-        ("Rule 1: Growth Acceleration", "Channel WoW > +30% for 2 consecutive weeks" if is_en else "渠道 WoW > +30% 连续2周", "Increase content output for that channel" if is_en else "增加该渠道内容产出", "🟢"),
-        ("Rule 2: Decline Alert", "Channel WoW < -20%" if is_en else "渠道 WoW < -20%", "Pause new content, investigate cause" if is_en else "暂停新内容，排查原因", "🔴"),
-        ("Rule 3: Low Absolute Volume", "GEO weekly < 50 and YoY > +50%" if is_en else "GEO 周 < 50 且 YoY > +50%", "Expand keyword coverage" if is_en else "扩大关键词覆盖", "🟡"),
-        ("Rule 4: High-Performing Site", "Site YoY > +100%" if is_en else "站点 YoY > +100%", "Prioritize content expansion for that site" if is_en else "优先扩展该站点内容", "🟢"),
-        ("Rule 5: Content Gap", "Market has traffic but no new content for 2 weeks" if is_en else "市场有流量但2周无新内容", "Restart full pipeline" if is_en else "重启全流程", "🟡"),
-        ("Rule 6: Benchmark Comparison", "Our YoY < benchmark YoY" if is_en else "我方 YoY < 大盘 YoY", "Strategy review" if is_en else "策略复盘", "🔴"),
-        ("Rule 7: Input-Output Lag", "Content published 2-3 weeks with no improvement" if is_en else "内容发布2-3周无提升", "Check content quality/rewrite" if is_en else "检查内容质量/重写", "🟡"),
-    ]
-    for name, condition, action, emoji in rules:
-        with st.expander(f"{emoji} {name}"):
-            st.markdown(f"**{'Trigger Condition' if is_en else '触发条件'}:** {condition}")
-            st.markdown(f"**{'Action' if is_en else '执行动作'}:** {action}")
+    # ============================================================
+    # USER VIEW: Personal pipeline progress + automation rules
+    # ============================================================
+    if not is_admin:
+        # --- Pipeline Progress ---
+        st.markdown("### " + ("My Pipeline Progress" if is_en else "我的流水线进度"))
 
-    st.divider()
+        _u_zhiku = load_csv_safe(OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv")
+        _u_zhizao = load_csv_safe(OUTPUT_PATH / selected_batch / "02_zhizao" / "zhizao_draft_content.csv")
+        _u_zhiyou = load_csv_safe(OUTPUT_PATH / selected_batch / "03_zhiyou" / "zhiyou_optimized_content.csv")
+        _u_zhibu_dir = OUTPUT_PATH / selected_batch / "04_zhibu"
+        _u_zhibu_done = _u_zhibu_dir.exists() and any(_u_zhibu_dir.glob("*.json"))
 
-    # Weekly Plan
-    st.subheader(f"📋 Smart Suite Weekly Plan - {week}")
-    st.markdown("""
-**🟢 ACCELERATE:**
-- CN GEO: 4 consecutive weeks of growth → Expand CN keyword coverage
-- JP Direct: +67% WoW, +103% YoY → Prioritize JP content expansion
-- WW Direct EST: +32% WoW → Maintain current pace
+        # Zhice: check if any test results exist for this batch
+        _u_zhice_done = False
+        _zhice_dir = OUTPUT_PATH / "zhice"
+        if _zhice_dir.exists():
+            _u_zhice_done = any(_zhice_dir.glob("*.json"))
 
-**🟡 MONITOR:**
-- WW Direct EM: Flat → Watch next week's trend
-- EU GEO: Low absolute value (5/month) → Expand EU search phrases
+        steps_status = [
+            ("📚 智库", len(_u_zhiku) > 0 if not _u_zhiku.empty else False, f"{len(_u_zhiku)} phrases" if not _u_zhiku.empty else "—"),
+            ("🔍 智测", _u_zhice_done, "Done" if _u_zhice_done else "—"),
+            ("✍️ 智造", len(_u_zhizao) > 0 if not _u_zhizao.empty else False, f"{len(_u_zhizao)} articles" if not _u_zhizao.empty else "—"),
+            ("🔧 智优", len(_u_zhiyou) > 0 if not _u_zhiyou.empty else False, f"{len(_u_zhiyou)} optimized" if not _u_zhiyou.empty else "—"),
+            ("📦 智布", _u_zhibu_done, "Published" if _u_zhibu_done else "—"),
+        ]
 
-**🔴 INVESTIGATE:**
-- AE Direct: YoY -61% → Investigate decline cause
-    """ if is_en else """
-**🟢 ACCELERATE:**
-- CN GEO: 连续4周增长 → 增加 CN 关键词覆盖
-- JP Direct: +67% WoW, +103% YoY → 优先扩展 JP 内容
-- WW Direct EST: +32% WoW → 保持当前节奏
+        # Visual progress
+        completed_steps = sum(1 for _, done, _ in steps_status if done)
+        st.progress(completed_steps / len(steps_status))
+        st.caption(f"{completed_steps}/{len(steps_status)} " + ("steps completed" if is_en else "步已完成"))
 
-**🟡 MONITOR:**
-- WW Direct EM: 基本持平 → 观察下周趋势
-- EU GEO: 绝对值低(5/月) → 扩大 EU 检索短语
+        # Step cards
+        cols = st.columns(5)
+        for i, (name, done, detail) in enumerate(steps_status):
+            with cols[i]:
+                icon = "✅" if done else "⬜"
+                st.markdown(f"**{icon} {name}**")
+                st.caption(detail)
 
-**🔴 INVESTIGATE:**
-- AE Direct: YoY -61% → 排查下降原因
-    """)
+        st.divider()
 
-    st.divider()
-    st.markdown(f"""
-**📝 THIS WEEK'S EXECUTION PLAN:**
-- 智库: 15 new keywords (JP×5, CN×5, EU×5)
-- 智造: 6 articles (JP×2, CN×2, EU×2)
-- 智优: Review all 6 articles
-- 智布: Publish 6 articles
+        # --- Automation Rules ---
+        st.markdown("### " + ("Automation Rules" if is_en else "自动化规则"))
+        st.caption("Set rules to trigger next steps automatically" if is_en else "设置规则，满足条件时自动触发下一步")
 
-**⏰ ESTIMATED TIME:** 4-6 hours
-    """)
+        _rules_file = OUTPUT_PATH / "requests" / current_user / "automation_rules.json"
+        _rules = json.loads(_rules_file.read_text(encoding="utf-8")) if _rules_file.exists() else []
 
-    st.divider()
-    st.subheader("🚀 Full Pipeline Quick Commands" if is_en else "🚀 全流程快捷指令")
-    pipeline_cmds = [
-        ("1. 智库", f"执行智库 {selected_batch}，market={market}，keyword_limit={kw_limit}"),
-        ("2. 智造", f"执行智造 {selected_batch}，生成内容"),
-        ("3. 智优", f"一键智优 {selected_batch}"),
-        ("4. 智布", f"执行智布 {selected_batch}，生成JSON"),
-        ("6. 智析", f"生成智析报告 {week}"),
-    ]
-    for label, cmd in pipeline_cmds:
-        st.text(f"📌 {label}")
-        st.code(cmd, language=None)
+        # Preset rules
+        preset_rules = [
+            {"name": "智库 → 智测", "trigger": "短语数 ≥ 10 且全部已选中" if not is_en else "Phrases ≥ 10 and all selected", "action": "自动执行智测" if not is_en else "Auto-run 智测", "enabled": False},
+            {"name": "智测 → 智造", "trigger": "Gap 率 > 50%" if not is_en else "Gap rate > 50%", "action": "自动生产内容" if not is_en else "Auto-produce content", "enabled": False},
+            {"name": "智造 → 智优", "trigger": "文章全部生成完成" if not is_en else "All articles generated", "action": "自动评分优化" if not is_en else "Auto-score & optimize", "enabled": False},
+            {"name": "智优 → 智布", "trigger": "全部评分 ≥ 4.5" if not is_en else "All scores ≥ 4.5", "action": "自动格式化导出" if not is_en else "Auto-format & export", "enabled": False},
+            {"name": "智布 → 发布", "trigger": "导出完成" if not is_en else "Export done", "action": "自动提交发布申请" if not is_en else "Auto-submit publish request", "enabled": False},
+        ]
+
+        # Merge with saved state
+        if not _rules:
+            _rules = preset_rules
+
+        # Display rules with toggles
+        rules_changed = False
+        for i, rule in enumerate(_rules):
+            col_r1, col_r2, col_r3, col_r4 = st.columns([2, 3, 3, 1])
+            with col_r1:
+                st.markdown(f"**{rule['name']}**")
+            with col_r2:
+                st.caption(f"触发: {rule['trigger']}")
+            with col_r3:
+                st.caption(f"动作: {rule['action']}")
+            with col_r4:
+                new_state = st.checkbox("On", value=rule.get("enabled", False), key=f"rule_toggle_{i}", label_visibility="collapsed")
+                if new_state != rule.get("enabled", False):
+                    _rules[i]["enabled"] = new_state
+                    rules_changed = True
+
+        if rules_changed:
+            _rules_file.parent.mkdir(parents=True, exist_ok=True)
+            _rules_file.write_text(json.dumps(_rules, ensure_ascii=False, indent=2), encoding="utf-8")
+            st.success("✅ Rules saved!" if is_en else "✅ 规则已保存！")
+
+        # Add custom rule
+        st.divider()
+        with st.expander("➕ " + ("Add Custom Rule" if is_en else "添加自定义规则"), expanded=False):
+            cr_name = st.text_input("Rule Name" if is_en else "规则名称", key="cr_name", placeholder="e.g. 每周一自动裂变")
+            cr_trigger = st.text_input("Trigger Condition" if is_en else "触发条件", key="cr_trigger", placeholder="e.g. 每周一 or 短语数 < 5")
+            cr_action = st.text_input("Action" if is_en else "执行动作", key="cr_action", placeholder="e.g. 自动裂变 10 条新短语")
+            if st.button("➕ " + ("Add Rule" if is_en else "添加规则"), key="add_custom_rule"):
+                if cr_name and cr_trigger and cr_action:
+                    _rules.append({"name": cr_name, "trigger": cr_trigger, "action": cr_action, "enabled": True})
+                    _rules_file.parent.mkdir(parents=True, exist_ok=True)
+                    _rules_file.write_text(json.dumps(_rules, ensure_ascii=False, indent=2), encoding="utf-8")
+                    st.success("✅ Added!")
+                    st.rerun()
+
+    # ============================================================
+    # ADMIN VIEW: Original decision engine
+    # ============================================================
+    else:
+
+        # Decision Rules
+        st.subheader("📜 7 Decision Rules" if is_en else "📜 7 条决策规则")
+        rules = [
+            ("Rule 1: Growth Acceleration", "Channel WoW > +30% for 2 consecutive weeks" if is_en else "渠道 WoW > +30% 连续2周", "Increase content output for that channel" if is_en else "增加该渠道内容产出", "🟢"),
+            ("Rule 2: Decline Alert", "Channel WoW < -20%" if is_en else "渠道 WoW < -20%", "Pause new content, investigate cause" if is_en else "暂停新内容，排查原因", "🔴"),
+            ("Rule 3: Low Absolute Volume", "GEO weekly < 50 and YoY > +50%" if is_en else "GEO 周 < 50 且 YoY > +50%", "Expand keyword coverage" if is_en else "扩大关键词覆盖", "🟡"),
+            ("Rule 4: High-Performing Site", "Site YoY > +100%" if is_en else "站点 YoY > +100%", "Prioritize content expansion for that site" if is_en else "优先扩展该站点内容", "🟢"),
+            ("Rule 5: Content Gap", "Market has traffic but no new content for 2 weeks" if is_en else "市场有流量但2周无新内容", "Restart full pipeline" if is_en else "重启全流程", "🟡"),
+            ("Rule 6: Benchmark Comparison", "Our YoY < benchmark YoY" if is_en else "我方 YoY < 大盘 YoY", "Strategy review" if is_en else "策略复盘", "🔴"),
+            ("Rule 7: Input-Output Lag", "Content published 2-3 weeks with no improvement" if is_en else "内容发布2-3周无提升", "Check content quality/rewrite" if is_en else "检查内容质量/重写", "🟡"),
+        ]
+        for name, condition, action, emoji in rules:
+            with st.expander(f"{emoji} {name}"):
+                st.markdown(f"**{'Trigger Condition' if is_en else '触发条件'}:** {condition}")
+                st.markdown(f"**{'Action' if is_en else '执行动作'}:** {action}")
+
+        st.divider()
+
+        # Weekly Plan
+        st.subheader(f"📋 Smart Suite Weekly Plan - {week}")
+        st.markdown("""
+    **🟢 ACCELERATE:**
+    - CN GEO: 4 consecutive weeks of growth → Expand CN keyword coverage
+    - JP Direct: +67% WoW, +103% YoY → Prioritize JP content expansion
+    - WW Direct EST: +32% WoW → Maintain current pace
+
+    **🟡 MONITOR:**
+    - WW Direct EM: Flat → Watch next week's trend
+    - EU GEO: Low absolute value (5/month) → Expand EU search phrases
+
+    **🔴 INVESTIGATE:**
+    - AE Direct: YoY -61% → Investigate decline cause
+        """ if is_en else """
+    **🟢 ACCELERATE:**
+    - CN GEO: 连续4周增长 → 增加 CN 关键词覆盖
+    - JP Direct: +67% WoW, +103% YoY → 优先扩展 JP 内容
+    - WW Direct EST: +32% WoW → 保持当前节奏
+
+    **🟡 MONITOR:**
+    - WW Direct EM: 基本持平 → 观察下周趋势
+    - EU GEO: 绝对值低(5/月) → 扩大 EU 检索短语
+
+    **🔴 INVESTIGATE:**
+    - AE Direct: YoY -61% → 排查下降原因
+        """)
+
+        st.divider()
+        st.markdown(f"""
+    **📝 THIS WEEK'S EXECUTION PLAN:**
+    - 智库: 15 new keywords (JP×5, CN×5, EU×5)
+    - 智造: 6 articles (JP×2, CN×2, EU×2)
+    - 智优: Review all 6 articles
+    - 智布: Publish 6 articles
+
+    **⏰ ESTIMATED TIME:** 4-6 hours
+        """)
+
+        st.divider()
+        st.subheader("🚀 Full Pipeline Quick Commands" if is_en else "🚀 全流程快捷指令")
+        pipeline_cmds = [
+            ("1. 智库", f"执行智库 {selected_batch}，market={market}，keyword_limit={kw_limit}"),
+            ("2. 智造", f"执行智造 {selected_batch}，生成内容"),
+            ("3. 智优", f"一键智优 {selected_batch}"),
+            ("4. 智布", f"执行智布 {selected_batch}，生成JSON"),
+            ("6. 智析", f"生成智析报告 {week}"),
+        ]
+        for label, cmd in pipeline_cmds:
+            st.text(f"📌 {label}")
+            st.code(cmd, language=None)
 
 
 # ============================================================
