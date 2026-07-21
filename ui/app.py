@@ -551,6 +551,13 @@ if _page_idx == 0:
     # (End of overview page)
 
 
+# --- LOGIN GATE: All pages except overview require login ---
+elif not current_user:
+    st.markdown("""<div style="padding:40px 20px;text-align:center;">
+    <h2 style="color:#8892b0;">🔒 """ + ("Please Login" if is_en else "请先登录") + """</h2>
+    <p style="color:#5a6380;font-size:14px;">""" + ("Enter your login name in the sidebar to access AI tools." if is_en else "请在左侧栏输入您的 Login 名称以访问智系列工具。") + """</p>
+    </div>""", unsafe_allow_html=True)
+
 
 elif _page_idx == 1:
     st.markdown("""<div style="padding:20px 0 10px;"><h1 style="font-size:28px;font-weight:800;color:#ffa726;margin:0;">📚 """ + ("Query Library – Phrase Production & Validation" if is_en else "智库 – 检索短语产出与验证") + """</h1><p style="font-size:13px;color:#8892b0;margin-top:6px;">""" + ("Produce → Calibrate → Dedupe → Select → Verify Gap → Confirm to Production" if is_en else "产出 → 校准 → 去重 → 选取 → 验证Gap → 确认进智造") + """</p></div>""", unsafe_allow_html=True)
