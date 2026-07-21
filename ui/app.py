@@ -3157,41 +3157,53 @@ elif _page_idx == 7:
         _perf_data = json.loads(_perf_file.read_text(encoding="utf-8")) if _perf_file.exists() else []
 
         # Show performance table (always show structure, even if empty)
-        perf_columns = {
-            "Query": "检索短语" if not is_en else "Query",
-            "Platform": "平台" if not is_en else "Platform",
-            "Brand Before": "品牌提及(前)" if not is_en else "Brand Before",
-            "Brand After": "品牌提及(后)" if not is_en else "Brand After",
-            "Link Before": "链接(前)" if not is_en else "Link Before",
-            "Link After": "链接(后)" if not is_en else "Link After",
-            "Change": "变化" if not is_en else "Change",
-        }
-
+        # Brand Mention section
+        st.markdown("#### 🏷️ " + ("Brand Mention" if is_en else "品牌提及"))
+        brand_columns = ["Query", "Platform", "Before", "After", "Change"]
         if _perf_data:
-            df_perf = pd.DataFrame(_perf_data)
-            # Ensure all expected columns exist
-            for col in perf_columns.keys():
-                if col not in df_perf.columns:
-                    df_perf[col] = "—"
-            st.dataframe(df_perf[list(perf_columns.keys())], use_container_width=True, hide_index=True)
-
-            # Summary metrics
-            if len(_perf_data) > 0:
-                brand_before = sum(1 for r in _perf_data if r.get("Brand Before") == "✅")
-                brand_after = sum(1 for r in _perf_data if r.get("Brand After") == "✅")
-                link_before = sum(1 for r in _perf_data if r.get("Link Before") == "✅")
-                link_after = sum(1 for r in _perf_data if r.get("Link After") == "✅")
-                total_p = len(_perf_data)
-                col_m1, col_m2, col_m3, col_m4 = st.columns(4)
-                col_m1.metric("Brand Before" if is_en else "品牌提及(前)", f"{brand_before}/{total_p}")
-                col_m2.metric("Brand After" if is_en else "品牌提及(后)", f"{brand_after}/{total_p}", delta=f"+{brand_after-brand_before}" if brand_after > brand_before else None)
-                col_m3.metric("Link Before" if is_en else "链接(前)", f"{link_before}/{total_p}")
-                col_m4.metric("Link After" if is_en else "链接(后)", f"{link_after}/{total_p}", delta=f"+{link_after-link_before}" if link_after > link_before else None)
+            df_brand = pd.DataFrame([{
+                "Query": r.get("Query", "—"),
+                "Platform": r.get("Platform", "—"),
+                "Before": r.get("Brand Before", "—"),
+                "After": r.get("Brand After", "—"),
+                "Change": "🆕 改善" if r.get("Brand Before") == "❌" and r.get("Brand After") == "✅" else ("⚠️ 退步" if r.get("Brand Before") == "✅" and r.get("Brand After") == "❌" else "→ 持平"),
+            } for r in _perf_data])
+            st.dataframe(df_brand, use_container_width=True, hide_index=True)
         else:
-            # Show empty table structure
-            df_empty = pd.DataFrame([{k: "—" for k in perf_columns.keys()}])
-            st.dataframe(df_empty, use_container_width=True, hide_index=True)
-            st.caption("数据为空 — 等待管理员分配数据或自行上传" if not is_en else "No data — waiting for admin to assign data or upload yourself")
+            st.dataframe(pd.DataFrame([{c: "—" for c in brand_columns}]), use_container_width=True, hide_index=True)
+
+        st.markdown("")
+
+        # Official Link section
+        st.markdown("#### 🔗 " + ("Official Link" if is_en else "官方链接"))
+        link_columns = ["Query", "Platform", "Before", "After", "Change"]
+        if _perf_data:
+            df_link = pd.DataFrame([{
+                "Query": r.get("Query", "—"),
+                "Platform": r.get("Platform", "—"),
+                "Before": r.get("Link Before", "—"),
+                "After": r.get("Link After", "—"),
+                "Change": "🆕 改善" if r.get("Link Before") == "❌" and r.get("Link After") == "✅" else ("⚠️ 退步" if r.get("Link Before") == "✅" and r.get("Link After") == "❌" else "→ 持平"),
+            } for r in _perf_data])
+            st.dataframe(df_link, use_container_width=True, hide_index=True)
+        else:
+            st.dataframe(pd.DataFrame([{c: "—" for c in link_columns}]), use_container_width=True, hide_index=True)
+
+        # Summary metrics (if data exists)
+        if _perf_data:
+            st.markdown("")
+            brand_before = sum(1 for r in _perf_data if r.get("Brand Before") == "✅")
+            brand_after = sum(1 for r in _perf_data if r.get("Brand After") == "✅")
+            link_before = sum(1 for r in _perf_data if r.get("Link Before") == "✅")
+            link_after = sum(1 for r in _perf_data if r.get("Link After") == "✅")
+            total_p = len(_perf_data)
+            col_m1, col_m2, col_m3, col_m4 = st.columns(4)
+            col_m1.metric("Brand Before" if is_en else "品牌(前)", f"{brand_before}/{total_p}")
+            col_m2.metric("Brand After" if is_en else "品牌(后)", f"{brand_after}/{total_p}", delta=f"+{brand_after-brand_before}" if brand_after > brand_before else None)
+            col_m3.metric("Link Before" if is_en else "链接(前)", f"{link_before}/{total_p}")
+            col_m4.metric("Link After" if is_en else "链接(后)", f"{link_after}/{total_p}", delta=f"+{link_after-link_before}" if link_after > link_before else None)
+        else:
+            st.caption("数据为空 — 等待管理员分配数据或自行上传" if not is_en else "No data — waiting for admin to assign or upload yourself")
 
         # Upload performance data
         with st.expander("📤 " + ("Upload Performance Data" if is_en else "上传引用表现数据"), expanded=False):
