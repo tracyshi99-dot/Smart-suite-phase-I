@@ -560,8 +560,19 @@ if _page_idx == 0:
 elif not current_user:
     st.markdown("""<div style="padding:40px 20px;text-align:center;">
     <h2 style="color:#8892b0;">🔒 """ + ("Please Login" if is_en else "请先登录") + """</h2>
-    <p style="color:#5a6380;font-size:14px;">""" + ("Enter your login name in the sidebar to access AI tools." if is_en else "请在左侧栏输入您的 Login 名称以访问智系列工具。") + """</p>
+    <p style="color:#5a6380;font-size:14px;">""" + ("Enter your login name below to access AI tools." if is_en else "请输入您的 Login 名称以访问智系列工具。") + """</p>
     </div>""", unsafe_allow_html=True)
+
+    col_login_l, col_login_m, col_login_r = st.columns([1, 2, 1])
+    with col_login_m:
+        login_input = st.text_input("Login", placeholder="e.g. yujiashi, joyce, murphy", key="main_login_input", label_visibility="collapsed")
+        if st.button("🔓 " + ("Login" if is_en else "登录"), type="primary", use_container_width=True, key="main_login_btn"):
+            if login_input:
+                if login_input.lower() in ALLOWED_USERS:
+                    st.session_state["app_user"] = login_input.lower()
+                    st.rerun()
+                else:
+                    st.error("⚠️ " + ("Access denied. Contact admin." if is_en else "无权限，请联系管理员。"))
 
 
 elif _page_idx == 1:
