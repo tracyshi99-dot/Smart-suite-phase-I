@@ -828,17 +828,26 @@ elif _page_idx == 1:
 
         if not df_zhiku_user.empty:
             # Filter
-            filter_col = st.columns([2, 2, 1])
+            filter_col = st.columns([2, 2, 2])
             with filter_col[0]:
                 source_filter = st.selectbox("Source" if is_en else "来源筛选",
                     ["All"] + (df_zhiku_user["source"].dropna().unique().tolist() if "source" in df_zhiku_user.columns else []),
                     key="user_source_filter")
             with filter_col[1]:
+                select_filter = st.selectbox("Status" if is_en else "选中状态",
+                    ["All" if is_en else "全部", "Selected" if is_en else "已选中", "Unselected" if is_en else "未选中"],
+                    key="user_select_filter")
+            with filter_col[2]:
                 search_text = st.text_input("Search" if is_en else "搜索", key="user_search_text", placeholder="关键词搜索...")
 
             df_display = df_zhiku_user.copy()
             if source_filter != "All" and "source" in df_display.columns:
                 df_display = df_display[df_display["source"] == source_filter]
+            if "is_selected" in df_display.columns:
+                if select_filter in ["Selected", "已选中"]:
+                    df_display = df_display[df_display["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])]
+                elif select_filter in ["Unselected", "未选中"]:
+                    df_display = df_display[~df_display["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])]
             if search_text and "ai_query" in df_display.columns:
                 df_display = df_display[df_display["ai_query"].astype(str).str.contains(search_text, case=False, na=False)]
 
