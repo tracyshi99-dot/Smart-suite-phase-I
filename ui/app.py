@@ -462,12 +462,17 @@ with st.sidebar:
 
     # --- Login ---
     ADMIN_USERS = ["yujiashi", "admin"]  # Admin users see everything
+    ALLOWED_USERS = ["yujiashi", "admin", "joyce", "murphy", "eva", "tina", "tianran", "hanhong", "grace", "aki", "jiayu", "shadie"]  # Whitelist
     user_login = st.text_input("👤 Login", value=st.session_state.get("app_user", ""),
                                placeholder="Your login name", key="sidebar_login", label_visibility="collapsed")
     if user_login:
-        st.session_state["app_user"] = user_login
+        if user_login.lower() in ALLOWED_USERS:
+            st.session_state["app_user"] = user_login.lower()
+        else:
+            st.session_state["app_user"] = ""
+            st.error("⚠️ Access denied" if is_en else "⚠️ 无权限，请联系管理员")
     current_user = st.session_state.get("app_user", "")
-    is_admin = current_user.lower() in ADMIN_USERS
+    is_admin = current_user.lower() in ADMIN_USERS if current_user else False
     if current_user:
         role_label = "🔑 Admin" if is_admin else "👤 User"
         st.caption(f"{role_label}: **{current_user}**")
