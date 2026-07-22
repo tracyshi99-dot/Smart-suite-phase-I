@@ -3375,22 +3375,36 @@ elif _page_idx == 7:
         _before_data = []
         if _gap_files:
             try:
-                df_gap = load_csv_safe(_gap_files[0])
-                if not df_gap.empty and "ai_query" in df_gap.columns:
+                # Load ALL gap result files and merge (deduplicate by query)
+                all_gap_dfs = []
+                for gf in _gap_files:
+                    _df = load_csv_safe(gf)
+                    if not _df.empty and "ai_query" in _df.columns:
+                        all_gap_dfs.append(_df)
+                if all_gap_dfs:
+                    df_gap = pd.concat(all_gap_dfs, ignore_index=True)
+                    # Deduplicate: keep latest (first file is newest due to reverse sort)
+                    df_gap = df_gap.drop_duplicates(subset=["ai_query"], keep="first")
+
                     for _, row in df_gap.iterrows():
                         query = str(row.get("ai_query", ""))
-                        platform = str(row.get("platform", row.get("platforms_tested", "qianwen")))
+                        platform = str(row.get("platform", ""))
+                        platforms_tested = str(row.get("platforms_tested", ""))
+                        # Use platform name if available, otherwise show number of platforms
+                        plat_display = platform if platform not in ["nan", "", "0"] else (f"{platforms_tested} platforms" if platforms_tested not in ["nan", ""] else "qianwen")
                         # Match various column name patterns
                         brand = str(row.get("has_brand_mention", row.get("brand_mention", row.get("has_brand", ""))))
                         link = str(row.get("has_official_link", row.get("official_link", row.get("has_link", ""))))
+                        gap_status = str(row.get("gap_status", ""))
                         # Normalize to ✅/❌
                         brand_val = "✅" if brand.upper() in ["TRUE", "1", "YES", "✅"] else "❌"
                         link_val = "✅" if link.upper() in ["TRUE", "1", "YES", "✅"] else "❌"
                         _before_data.append({
-                            "Query": query[:50],
-                            "Platform": platform if platform not in ["nan", ""] else "qianwen",
+                            "Query": query[:60],
+                            "Platform": plat_display,
                             "Brand Before": brand_val,
                             "Link Before": link_val,
+                            "Gap Status": gap_status,
                         })
             except Exception:
                 pass
@@ -3408,6 +3422,7 @@ elif _page_idx == 7:
                 _perf_merged.append({
                     "Query": bd["Query"],
                     "Platform": bd["Platform"],
+                    "Gap Status": bd.get("Gap Status", "—"),
                     "Brand Before": bd["Brand Before"],
                     "Brand After": after_match.get("Brand After", "—") if after_match else "—",
                     "Link Before": bd["Link Before"],
@@ -3421,7 +3436,7 @@ elif _page_idx == 7:
         if _perf_merged:
             df_brand = pd.DataFrame([{
                 "Query": r["Query"],
-                "Platform": r["Platform"],
+                "Gap": r.get("Gap Status", "—"),
                 "Before": r.get("Brand Before", "—"),
                 "After": r.get("Brand After", "—"),
                 "Change": "🆕 改善" if r.get("Brand Before") == "❌" and r.get("Brand After") == "✅" else ("⚠️ 退步" if r.get("Brand Before") == "✅" and r.get("Brand After") == "❌" else ("→ 持平" if r.get("Brand After") != "—" else "⏳ 待测")),
@@ -3438,7 +3453,7 @@ elif _page_idx == 7:
         if _perf_merged:
             df_link = pd.DataFrame([{
                 "Query": r["Query"],
-                "Platform": r["Platform"],
+                "Gap": r.get("Gap Status", "—"),
                 "Before": r.get("Link Before", "—"),
                 "After": r.get("Link After", "—"),
                 "Change": "🆕 改善" if r.get("Link Before") == "❌" and r.get("Link After") == "✅" else ("⚠️ 退步" if r.get("Link Before") == "✅" and r.get("Link After") == "❌" else ("→ 持平" if r.get("Link After") != "—" else "⏳ 待测")),
