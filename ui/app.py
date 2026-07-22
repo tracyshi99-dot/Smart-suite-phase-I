@@ -686,7 +686,27 @@ elif _page_idx == 1:
                         queries = [q.strip().lstrip("0123456789.-、）) ") for q in response.strip().split("\n") if q.strip() and len(q.strip()) > 4]
                         if queries:
                             st.success(f"✅ 生成 {len(queries)} 条")
-                            df_result = pd.DataFrame({"ai_query": queries, "source": f"seed_{seed_word}", "is_selected": "FALSE"})
+                            # Auto-score each phrase
+                            def _quick_score(q):
+                                score = 60  # base for AI-generated (P3)
+                                # Length bonus (10-25 chars ideal)
+                                if 10 <= len(q) <= 25:
+                                    score += 10
+                                elif len(q) > 25:
+                                    score += 5
+                                # Intent word bonus
+                                if any(w in q for w in ["怎么", "如何", "多少", "哪些", "为什么", "什么", "能不能", "how", "what", "why"]):
+                                    score += 10
+                                # Business relevance
+                                if any(w in q.lower() for w in ["亚马逊", "amazon", "fba", "注册", "开店", "选品", "物流", "广告", "listing"]):
+                                    score += 10
+                                # Oral/natural style bonus
+                                if any(w in q for w in ["吗", "呢", "啊", "吧", "?"]):
+                                    score += 5
+                                return min(100, score)
+
+                            scores = [_quick_score(q) for q in queries]
+                            df_result = pd.DataFrame({"ai_query": queries, "source": f"seed_{seed_word}", "is_selected": "FALSE", "accuracy_score": scores})
                             st.dataframe(df_result, use_container_width=True, hide_index=True)
                             # Save
                             zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
@@ -748,7 +768,17 @@ elif _page_idx == 1:
                     queries = [q.strip().lstrip("0123456789.-、）) ") for q in response.strip().split("\n") if q.strip() and len(q.strip()) > 4]
                     if queries:
                         st.success(f"✅ 生成 {len(queries)} 条")
-                        df_result = pd.DataFrame({"ai_query": queries, "source": f"persona_{sel_identity}_{sel_site[0] if sel_site else ''}", "is_selected": "FALSE"})
+                        # Auto-score
+                        def _quick_score_p(q):
+                            score = 70  # persona-based = higher base (P2 level)
+                            if 10 <= len(q) <= 25: score += 10
+                            elif len(q) > 25: score += 5
+                            if any(w in q for w in ["怎么", "如何", "多少", "哪些", "为什么", "什么", "能不能"]): score += 10
+                            if any(w in q.lower() for w in ["亚马逊", "amazon", "fba", "注册", "开店", "选品", "物流", "广告"]): score += 5
+                            if any(w in q for w in ["吗", "呢", "啊", "吧", "?"]): score += 5
+                            return min(100, score)
+                        scores = [_quick_score_p(q) for q in queries]
+                        df_result = pd.DataFrame({"ai_query": queries, "source": f"persona_{sel_identity}_{sel_site[0] if sel_site else ''}", "is_selected": "FALSE", "accuracy_score": scores})
                         st.dataframe(df_result, use_container_width=True, hide_index=True)
                         zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
                         zhiku_file.parent.mkdir(parents=True, exist_ok=True)
