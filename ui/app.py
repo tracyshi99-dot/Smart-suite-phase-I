@@ -1733,7 +1733,10 @@ elif _page_idx == 1:
                     if "is_selected" in df_sel.columns:
                         df_sel = df_sel[df_sel["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])]
                     if not df_sel.empty:
-                        zhice_dir = OUTPUT_PATH.parent / "zhice"
+                        if current_user and not is_admin:
+                            zhice_dir = OUTPUT_PATH / selected_batch / "zhice"
+                        else:
+                            zhice_dir = OUTPUT_PATH.parent / "zhice"
                         zhice_dir.mkdir(parents=True, exist_ok=True)
                         ts = datetime.now().strftime('%Y%m%d_%H%M%S')
                         queue_file = zhice_dir / f"zhiku_verify_queue_{ts}.json"
@@ -1813,7 +1816,12 @@ elif _page_idx == 2:
             zhiku_selected_phrases = selected_rows["ai_query"].dropna().tolist()
 
     # Load from zhiku queue or upload
-    zhice_dir = OUTPUT_PATH.parent / "zhice"
+    # Per-user isolation: save zhice results into user's batch directory
+    if current_user and not is_admin:
+        zhice_dir = OUTPUT_PATH / selected_batch / "zhice"
+    else:
+        zhice_dir = OUTPUT_PATH.parent / "zhice"
+    zhice_dir.mkdir(parents=True, exist_ok=True)
     queue_phrases = zhiku_selected_phrases if zhiku_selected_phrases else []
 
     # If no selected phrases from zhiku, try legacy queue files
@@ -3351,25 +3359,17 @@ elif _page_idx == 7:
         st.markdown("### " + ("Citation Performance" if is_en else "引用表现"))
         st.caption("Before = from 智测 verification (baseline) · After = post-content launch (upload when available)" if is_en else "Before = 智测验证结果（基线）· After = 新内容上线后（有数据时上传）")
 
-        # Auto-load Before data from zhice gap results
-        # Search multiple possible locations for gap results
+        # Auto-load Before data from THIS USER's zhice gap results only
+        # Only search in user's own batch directory (per-user isolation)
         _gap_files = []
-        _search_dirs = [
-            OUTPUT_PATH / selected_batch / "zhice",     # user batch level
-            OUTPUT_PATH / "zhice",                      # output/zhice level
-            BASE_PATH / "zhice",                        # project root level
-        ]
-        for _sd in _search_dirs:
-            if _sd.exists():
-                _found = sorted(_sd.glob("gap_result_*.csv"), key=lambda f: f.stat().st_mtime, reverse=True)
-                if _found:
-                    _gap_files = _found
-                    break
+        _user_zhice_dir = OUTPUT_PATH / selected_batch / "zhice"
+        if _user_zhice_dir.exists():
+            _gap_files = sorted(_user_zhice_dir.glob("gap_result_*.csv"), key=lambda f: f.stat().st_mtime, reverse=True)
 
-        # If no local gap files, try loading tracking history (cumulative)
+        # Also check for tracking history in user's batch
         if not _gap_files:
-            _tracking_file = BASE_PATH / "zhice" / "prompt_tracking_history.csv"
-            if _tracking_file.exists() and _tracking_file.stat().st_size > 10:
+            _tracking_file = _user_zhice_dir / "prompt_tracking_history.csv"
+            if _user_zhice_dir.exists() and _tracking_file.exists() and _tracking_file.stat().st_size > 10:
                 _gap_files = [_tracking_file]
 
         _before_data = []
