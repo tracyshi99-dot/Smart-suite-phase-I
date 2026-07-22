@@ -663,12 +663,24 @@ elif _page_idx == 1:
         with tab_seed:
             st.markdown("**输入词根，AI 自动裂变出检索短语**" if not is_en else "**Enter seed words, AI expands into search phrases**")
             seed_word = st.text_input("词根" if not is_en else "Seed word", placeholder="e.g. FBA、选品、注册", key="user_seed_word")
+            seed_lang = st.multiselect("语言" if not is_en else "Language", ["中文", "English", "中英混合"],
+                                       default=["中文"], key="user_seed_lang")
             seed_count = st.slider("裂变数量" if not is_en else "Count", 5, 30, 15, key="user_seed_count")
             if st.button("🌱 开始裂变" if not is_en else "🌱 Expand", type="primary", key="user_seed_btn"):
                 if seed_word:
                     try:
                         from engine import call_bedrock_claude
-                        prompt = f"请为词根「{seed_word}」生成 {seed_count} 个中国卖家在 AI 搜索引擎中可能输入的口语化检索短语。每行一条，不要编号，不要解释。"
+                        lang_instruction = ""
+                        if "中文" in seed_lang and "English" in seed_lang:
+                            lang_instruction = "生成中文和英文两种语言的短语，各占一半。"
+                        elif "中英混合" in seed_lang:
+                            lang_instruction = "生成中英文混合短语（如'亚马逊FBA怎么做'、'Amazon FBA费用'）。"
+                        elif "English" in seed_lang:
+                            lang_instruction = "All phrases must be in English."
+                        else:
+                            lang_instruction = "所有短语使用中文。"
+
+                        prompt = f"请为词根「{seed_word}」生成 {seed_count} 个卖家在 AI 搜索引擎中可能输入的口语化检索短语。{lang_instruction}每行一条，不要编号，不要解释。"
                         with st.spinner("裂变中..." if not is_en else "Expanding..."):
                             response = call_bedrock_claude(prompt)
                         queries = [q.strip().lstrip("0123456789.-、）) ") for q in response.strip().split("\n") if q.strip() and len(q.strip()) > 4]
