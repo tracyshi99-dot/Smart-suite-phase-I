@@ -570,9 +570,9 @@ with st.sidebar:
             ALLOWED_USERS = _users_data.get("allowed", [])
             ADMIN_USERS = _users_data.get("admins", ADMIN_USERS)
         except Exception:
-            ALLOWED_USERS = ["yujiashi", "admin", "joyce", "murphy", "eva", "tina", "tianran", "hanhong", "grace", "aki", "jiayu", "shadie"]
+            ALLOWED_USERS = ["yujiashi", "admin", "fanting", "czhaamzn", "yuchy", "porzh", "linzhshi", "fenixau", "tianranh", "qiudanie", "quadaisy", "budhiraja", "mbudhira", "xinyill", "xdhuang", "gracezjy", "htp", "jinghuaf", "mxyzhang", "emilwliu", "qdhwzj", "panjf", "rickylan", "yountlim", "phunghd", "oanhhtk"]
     else:
-        ALLOWED_USERS = ["yujiashi", "admin", "joyce", "murphy", "eva", "tina", "tianran", "hanhong", "grace", "aki", "jiayu", "shadie"]
+        ALLOWED_USERS = ["yujiashi", "admin", "fanting", "czhaamzn", "yuchy", "porzh", "linzhshi", "fenixau", "tianranh", "qiudanie", "quadaisy", "budhiraja", "mbudhira", "xinyill", "xdhuang", "gracezjy", "htp", "jinghuaf", "mxyzhang", "emilwliu", "qdhwzj", "panjf", "rickylan", "yountlim", "phunghd", "oanhhtk"]
         # Save initial file
         _users_file.parent.mkdir(parents=True, exist_ok=True)
         _users_file.write_text(json.dumps({"allowed": ALLOWED_USERS, "admins": ADMIN_USERS, "pending": []}, ensure_ascii=False, indent=2), encoding="utf-8")
