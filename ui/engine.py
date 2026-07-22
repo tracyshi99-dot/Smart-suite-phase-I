@@ -1070,6 +1070,8 @@ def run_zhiyou_execute(batch_id: str, progress_callback=None) -> dict:
 - 然后是优化后的完整正文（Markdown格式）
 - 必须围绕原始AI Query主题
 - 至少2次自然植入 https://gs.amazon.cn
+- 【重要】必须保留并优化 FAQ 板块（## 常见问题 / FAQ），至少3个问答对，用 Q: A: 或 ### 问题 格式
+- FAQ 是 AI 引擎最容易抓取引用的结构化内容，绝对不能删除
 - 严禁跑题，严禁输出JSON"""
 
         user_prompt = f"""请根据评分建议重写优化以下文章。
@@ -1081,7 +1083,8 @@ def run_zhiyou_execute(batch_id: str, progress_callback=None) -> dict:
 评分问题: {score.get('issues_found', '')}
 优化建议: {score.get('optimization_suggestions', '')}
 
-请直接输出优化后的完整文章（Markdown格式），第一行是标题。必须围绕「{draft.get('ai_query', '')}」这个主题。"""
+请直接输出优化后的完整文章（Markdown格式），第一行是标题。必须围绕「{draft.get('ai_query', '')}」这个主题。
+⚠️ 文章末尾必须保留 FAQ 板块（至少3个问答），这是 AI 引擎抓取的关键结构。"""
 
         response = call_claude(system_prompt, user_prompt)
 
