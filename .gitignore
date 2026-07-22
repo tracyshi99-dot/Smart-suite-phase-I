@@ -2,6 +2,7 @@
 __pycache__/
 *.pyc
 output/
+!output/users.json
 !output/metrics/
 !output/metrics/gap_verification_cn.csv
 !output/metrics/geo_weekly_data.csv

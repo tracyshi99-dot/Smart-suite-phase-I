@@ -756,10 +756,10 @@ Stay strictly on topic. Every paragraph must relate directly to the search query
             "created_at": timestamp(),
         }
 
-    # --- Execute in parallel (3 concurrent workers) ---
+    # --- Execute in parallel (5 concurrent workers) ---
     from concurrent.futures import ThreadPoolExecutor, as_completed
 
-    MAX_WORKERS = 3  # 3 parallel API calls
+    MAX_WORKERS = 5  # 5 parallel API calls for faster generation
     items = list(df_q.iterrows())
 
     # Pre-fetch API key in main thread (st.secrets not accessible from worker threads)
@@ -1045,10 +1045,8 @@ def run_zhiyou_execute(batch_id: str, progress_callback=None) -> dict:
     results = []
     total = len(approved_ids)
 
-    for i, cid in enumerate(approved_ids):
-        if progress_callback:
-            progress_callback((i + 1) / (total + 1), f"正在重写第 {i+1}/{total} 篇...")
-
+    def _rewrite_single(i_cid_tuple):
+        i, cid = i_cid_tuple
         draft_row = df_draft[df_draft["content_id"] == cid]
         score_row = df_score[df_score["content_id"] == cid] if "content_id" in df_score.columns else pd.DataFrame()
 
@@ -1059,7 +1057,7 @@ def run_zhiyou_execute(batch_id: str, progress_callback=None) -> dict:
             score_row = df_score.iloc[[i]]
 
         if draft_row.empty:
-            continue
+            return None
 
         draft = draft_row.iloc[0]
         score = score_row.iloc[0] if not score_row.empty else pd.Series({"issues_found": "", "optimization_suggestions": "请优化内容结构、增加权威性和可操作性"})
@@ -1100,7 +1098,7 @@ def run_zhiyou_execute(batch_id: str, progress_callback=None) -> dict:
                 break
         opt_content = "\n".join(lines[content_start:]).strip()
 
-        results.append({
+        return {
             "content_id": cid,
             "query_id": draft.get("query_id", ""),
             "keyword_id": draft.get("keyword_id", ""),
@@ -1114,7 +1112,30 @@ def run_zhiyou_execute(batch_id: str, progress_callback=None) -> dict:
             "confirmed": "True",
             "needs_poc_review": "False",
             "poc_approved": "True",
-        })
+        }
+
+    # --- Execute in parallel (3 concurrent workers) ---
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    MAX_WORKERS = 3
+    items = list(enumerate(approved_ids))
+
+    if progress_callback:
+        progress_callback(0.05, f"正在并行重写 {total} 篇内容（{MAX_WORKERS} 并发）...")
+
+    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        futures = {executor.submit(_rewrite_single, item): item for item in items}
+        completed = 0
+        for future in as_completed(futures):
+            try:
+                result = future.result()
+                if result is not None:
+                    results.append(result)
+            except Exception:
+                pass
+            completed += 1
+            if progress_callback:
+                progress_callback(completed / total, f"已完成 {completed}/{total} 篇重写...")
 
     output_dir = OUTPUT_PATH / batch_id / "03_zhiyou"
     ensure_dir(output_dir)
