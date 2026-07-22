@@ -3249,7 +3249,7 @@ elif _page_idx == 7:
                           "AI Citation Count", "Brand Mention Rate", "Official Link Rate",
                           "Content Published", "GAP Fill Rate"]
 
-        col_add1, col_add2, col_add3, col_add4 = st.columns([2, 1, 1, 1])
+        col_add1, col_add2, col_add3 = st.columns([3, 1, 1])
         with col_add1:
             m_name = st.selectbox("Metric" if is_en else "指标",
                                   ["— 选择预设 —"] + preset_metrics + ["✏️ 自定义..." if not is_en else "✏️ Custom..."],
@@ -3257,14 +3257,12 @@ elif _page_idx == 7:
             if m_name in ["✏️ 自定义...", "✏️ Custom..."]:
                 m_name = st.text_input("Custom Name" if is_en else "自定义名称", key="custom_m_name")
         with col_add2:
-            m_value = st.text_input("Value" if is_en else "数值", key="m_value", placeholder="e.g. 150")
-        with col_add3:
             m_date = st.date_input("Date" if is_en else "日期", key="m_date")
-        with col_add4:
+        with col_add3:
             st.write("")
             if st.button("➕", key="add_metric_btn"):
-                if m_name and m_name != "— 选择预设 —" and m_value:
-                    _custom_metrics.append({"name": m_name, "value": m_value, "date": str(m_date), "user": current_user})
+                if m_name and m_name != "— 选择预设 —":
+                    _custom_metrics.append({"name": m_name, "date": str(m_date), "user": current_user})
                     _metrics_file.parent.mkdir(parents=True, exist_ok=True)
                     _metrics_file.write_text(json.dumps(_custom_metrics, ensure_ascii=False, indent=2), encoding="utf-8")
                     st.rerun()
