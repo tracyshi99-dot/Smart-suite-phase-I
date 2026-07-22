@@ -617,7 +617,7 @@ elif not current_user:
 
     col_login_l, col_login_m, col_login_r = st.columns([1, 2, 1])
     with col_login_m:
-        login_options = ["— 请选择 —" if not is_en else "— Select —"] + [u for u in ALLOWED_USERS if u != "admin"]
+        login_options = ["— 请选择 —" if not is_en else "— Select —"] + [u for u in ALLOWED_USERS if u not in ["admin", "yujiashi"]]
         login_choice = st.selectbox("Login", login_options, key="main_login_select", label_visibility="collapsed")
         if st.button("🔓 " + ("Login" if is_en else "登录"), type="primary", use_container_width=True, key="main_login_btn"):
             if login_choice and login_choice != "— 请选择 —" and login_choice != "— Select —":
