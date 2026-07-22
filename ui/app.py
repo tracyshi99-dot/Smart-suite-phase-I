@@ -3352,13 +3352,25 @@ elif _page_idx == 7:
         st.caption("Before = from 智测 verification (baseline) · After = post-content launch (upload when available)" if is_en else "Before = 智测验证结果（基线）· After = 新内容上线后（有数据时上传）")
 
         # Auto-load Before data from zhice gap results
-        _zhice_dir = OUTPUT_PATH / selected_batch / "zhice"
-        _gap_files = sorted(_zhice_dir.glob("gap_result_*.csv"), key=lambda f: f.stat().st_mtime, reverse=True) if _zhice_dir.exists() else []
-        # Also check batch-level zhice dir
+        # Search multiple possible locations for gap results
+        _gap_files = []
+        _search_dirs = [
+            OUTPUT_PATH / selected_batch / "zhice",     # user batch level
+            OUTPUT_PATH / "zhice",                      # output/zhice level
+            BASE_PATH / "zhice",                        # project root level
+        ]
+        for _sd in _search_dirs:
+            if _sd.exists():
+                _found = sorted(_sd.glob("gap_result_*.csv"), key=lambda f: f.stat().st_mtime, reverse=True)
+                if _found:
+                    _gap_files = _found
+                    break
+
+        # If no local gap files, try loading tracking history (cumulative)
         if not _gap_files:
-            _zhice_dir2 = OUTPUT_PATH / "zhice"
-            if _zhice_dir2.exists():
-                _gap_files = sorted(_zhice_dir2.glob("gap_result_*.csv"), key=lambda f: f.stat().st_mtime, reverse=True)
+            _tracking_file = BASE_PATH / "zhice" / "prompt_tracking_history.csv"
+            if _tracking_file.exists() and _tracking_file.stat().st_size > 10:
+                _gap_files = [_tracking_file]
 
         _before_data = []
         if _gap_files:
@@ -3367,15 +3379,16 @@ elif _page_idx == 7:
                 if not df_gap.empty and "ai_query" in df_gap.columns:
                     for _, row in df_gap.iterrows():
                         query = str(row.get("ai_query", ""))
-                        platform = str(row.get("platform", "qianwen"))
-                        brand = str(row.get("brand_mention", row.get("has_brand", "")))
-                        link = str(row.get("official_link", row.get("has_link", "")))
+                        platform = str(row.get("platform", row.get("platforms_tested", "qianwen")))
+                        # Match various column name patterns
+                        brand = str(row.get("has_brand_mention", row.get("brand_mention", row.get("has_brand", ""))))
+                        link = str(row.get("has_official_link", row.get("official_link", row.get("has_link", ""))))
                         # Normalize to ✅/❌
                         brand_val = "✅" if brand.upper() in ["TRUE", "1", "YES", "✅"] else "❌"
                         link_val = "✅" if link.upper() in ["TRUE", "1", "YES", "✅"] else "❌"
                         _before_data.append({
                             "Query": query[:50],
-                            "Platform": platform,
+                            "Platform": platform if platform not in ["nan", ""] else "qianwen",
                             "Brand Before": brand_val,
                             "Link Before": link_val,
                         })
