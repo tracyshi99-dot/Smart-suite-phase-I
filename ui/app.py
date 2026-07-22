@@ -705,7 +705,7 @@ elif _page_idx == 1:
                             existing = load_csv_safe(zhiku_file) if zhiku_file.exists() else pd.DataFrame()
                             merged = pd.concat([existing, df_result], ignore_index=True)
                             if "ai_query" in merged.columns:
-                                merged = merged.drop_duplicates(subset=["ai_query"], keep="first")
+                                merged = merged.drop_duplicates(subset=["ai_query"], keep="last")
                             merged.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
                             st.success(f"✅ 已保存到智库")
                     except Exception as e:
@@ -776,7 +776,7 @@ elif _page_idx == 1:
                         existing = load_csv_safe(zhiku_file) if zhiku_file.exists() else pd.DataFrame()
                         merged = pd.concat([existing, df_result], ignore_index=True)
                         if "ai_query" in merged.columns:
-                            merged = merged.drop_duplicates(subset=["ai_query"], keep="first")
+                            merged = merged.drop_duplicates(subset=["ai_query"], keep="last")
                         merged.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
                         st.success("✅ 已保存到智库")
                 except Exception as e:
@@ -811,7 +811,7 @@ elif _page_idx == 1:
                                 existing = load_csv_safe(zhiku_file) if zhiku_file.exists() else pd.DataFrame()
                                 merged = pd.concat([existing, df_up], ignore_index=True)
                                 if "ai_query" in merged.columns:
-                                    merged = merged.drop_duplicates(subset=["ai_query"], keep="first")
+                                    merged = merged.drop_duplicates(subset=["ai_query"], keep="last")
                                 merged.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
                                 st.success(f"✅ 上传 {len(df_up)} 条到智库")
                     except Exception as e:
@@ -862,7 +862,7 @@ elif _page_idx == 1:
                                         existing = load_csv_safe(zhiku_file) if zhiku_file.exists() else pd.DataFrame()
                                         merged = pd.concat([existing, df_result], ignore_index=True)
                                         if "ai_query" in merged.columns:
-                                            merged = merged.drop_duplicates(subset=["ai_query"], keep="first")
+                                            merged = merged.drop_duplicates(subset=["ai_query"], keep="last")
                                         merged.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
                                         st.success("✅ 已保存到智库")
                                 except Exception as e:
@@ -1122,7 +1122,7 @@ elif _page_idx == 1:
                         zhiku_file.parent.mkdir(parents=True, exist_ok=True)
                         existing = load_csv_safe(zhiku_file) if zhiku_file.exists() else pd.DataFrame()
                         merged = pd.concat([existing, df_imp], ignore_index=True)
-                        if "ai_query" in merged.columns: merged = merged.drop_duplicates(subset=["ai_query"], keep="first")
+                        if "ai_query" in merged.columns: merged = merged.drop_duplicates(subset=["ai_query"], keep="last")
                         merged.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
                         st.success(f"✅ +{len(df_imp)} (A1)")
                         st.rerun()
@@ -1149,7 +1149,7 @@ elif _page_idx == 1:
                             zhiku_file.parent.mkdir(parents=True, exist_ok=True)
                             existing = load_csv_safe(zhiku_file) if zhiku_file.exists() else pd.DataFrame()
                             merged = pd.concat([existing, new_df], ignore_index=True)
-                            if "ai_query" in merged.columns: merged = merged.drop_duplicates(subset=["ai_query"], keep="first")
+                            if "ai_query" in merged.columns: merged = merged.drop_duplicates(subset=["ai_query"], keep="last")
                             merged.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
                             st.success(f"✅ +{len(queries)} (A2)")
                             st.rerun()
@@ -1181,7 +1181,7 @@ elif _page_idx == 1:
                                 zhiku_file.parent.mkdir(parents=True, exist_ok=True)
                                 existing = load_csv_safe(zhiku_file) if zhiku_file.exists() else pd.DataFrame()
                                 merged = pd.concat([existing, new_df], ignore_index=True)
-                                if "ai_query" in merged.columns: merged = merged.drop_duplicates(subset=["ai_query"], keep="first")
+                                if "ai_query" in merged.columns: merged = merged.drop_duplicates(subset=["ai_query"], keep="last")
                                 merged.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
                                 st.success(f"✅ +{len(all_queries)} from {len(df_batch)} contents")
                                 st.rerun()
@@ -1202,7 +1202,7 @@ elif _page_idx == 1:
                         zhiku_file.parent.mkdir(parents=True, exist_ok=True)
                         existing = load_csv_safe(zhiku_file) if zhiku_file.exists() else pd.DataFrame()
                         merged = pd.concat([existing, df_imp], ignore_index=True)
-                        if "ai_query" in merged.columns: merged = merged.drop_duplicates(subset=["ai_query"], keep="first")
+                        if "ai_query" in merged.columns: merged = merged.drop_duplicates(subset=["ai_query"], keep="last")
                         merged.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
                         st.success(f"✅ +{len(df_imp)} (A3)")
                         st.rerun()
@@ -1268,7 +1268,7 @@ elif _page_idx == 1:
                             existing = load_csv_safe(zhiku_file)
                             merged = pd.concat([existing, df_import], ignore_index=True)
                             if "ai_query" in merged.columns:
-                                merged = merged.drop_duplicates(subset=["ai_query"], keep="first")
+                                merged = merged.drop_duplicates(subset=["ai_query"], keep="last")
                             merged.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
                             st.success(f"✅ +{len(df_import)} phrases (source: {upload_source})")
                         else:
@@ -1292,7 +1292,7 @@ elif _page_idx == 1:
                         zhiku_file.parent.mkdir(parents=True, exist_ok=True)
                         if zhiku_file.exists():
                             existing = load_csv_safe(zhiku_file)
-                            merged = pd.concat([existing, new_df], ignore_index=True).drop_duplicates(subset=["ai_query"], keep="first")
+                            merged = pd.concat([existing, new_df], ignore_index=True).drop_duplicates(subset=["ai_query"], keep="last")
                             merged.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
                         else:
                             new_df.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
@@ -1415,7 +1415,7 @@ elif _page_idx == 1:
                     df = load_csv_safe(zhiku_file)
                     before = len(df)
                     if "ai_query" in df.columns:
-                        df = df.drop_duplicates(subset=["ai_query"], keep="first")
+                        df = df.drop_duplicates(subset=["ai_query"], keep="last")
                     after = len(df)
                     df.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
                     st.success(f"✅ Deduped: {before} → {after} (removed {before - after})" if is_en else f"✅ 去重完成：{before} → {after}（删除 {before - after} 条）")
@@ -5416,7 +5416,7 @@ elif _page_idx == 7:
                             existing = pd.read_csv(zhiku_file, encoding="utf-8-sig")
                             merged = pd.concat([existing, new_rows], ignore_index=True)
                             if "ai_query" in merged.columns:
-                                merged = merged.drop_duplicates(subset=["ai_query"], keep="first")
+                                merged = merged.drop_duplicates(subset=["ai_query"], keep="last")
                             merged.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
                         else:
                             new_rows.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
