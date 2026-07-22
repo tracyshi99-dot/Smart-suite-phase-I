@@ -510,6 +510,22 @@ def safe_copy(src: Path, dst: Path):
         dst.write_bytes(content)
 
 
+def auto_sync_batch(batch_id: str):
+    """Auto-sync the current user's batch to S3 in background (non-blocking).
+    Called via session_state flag to avoid blocking UI."""
+    try:
+        from s3_sync import sync_batch_to_s3, s3_available
+        if s3_available():
+            sync_batch_to_s3(batch_id, OUTPUT_PATH)
+    except Exception:
+        pass
+
+
+def mark_data_changed():
+    """Mark that data was changed this session, triggering S3 sync on next page load."""
+    st.session_state["_data_changed"] = True
+
+
 # ============================================================
 # NAVIGATION PAGES
 # ============================================================
@@ -684,6 +700,11 @@ with st.sidebar:
 
     # Map current page selection to page index for consistent routing
     _page_idx = NAV_PAGES.index(page) if page in NAV_PAGES else 0
+
+# --- Auto-sync to S3: if data changed in previous interaction, sync batch to S3 ---
+if st.session_state.pop("_data_changed", False) and current_user and not DEMO_MODE:
+    import threading
+    threading.Thread(target=auto_sync_batch, args=(selected_batch,), daemon=True).start()
 
 
 # ============================================================
@@ -1064,6 +1085,7 @@ elif _page_idx == 1:
                             df_zhiku_user[col] = edited_df[col].values[:len(df_zhiku_user)]
                     zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
                     df_zhiku_user.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
+                    mark_data_changed()
                     st.success("✅ " + ("Saved!" if is_en else "已保存！"))
                     st.rerun()
 
@@ -1664,6 +1686,7 @@ elif _page_idx == 1:
                                         vals = edited_df[col].values
                                         df_q.loc[df_display.index[:len(vals)], col] = vals
                             df_q.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
+                            mark_data_changed()
                             st.success("✅ Saved" if is_en else "✅ 已保存")
                             st.rerun()
                         except Exception as e:
@@ -1969,6 +1992,7 @@ elif _page_idx == 2:
                 df_tracking_all.to_csv(tracking_file, index=False, encoding="utf-8-sig")
 
                 st.success(f"✅ Verification complete! History tracked." if is_en else f"✅ 验证完成！已记录追踪历史。")
+                mark_data_changed()
                 st.rerun()
             except ImportError:
                 st.error("zhice_engine not available. Use manual upload instead." if is_en else "zhice_engine 不可用，请手动上传结果。")
@@ -2327,6 +2351,7 @@ elif _page_idx == 3:
             if result["success"]:
                 if result['articles_generated'] > 0:
                     st.success(f"✅ +{result['articles_generated']} {'articles' if is_en else '篇'}")
+                    mark_data_changed()
                 else:
                     err_detail = result.get('error_details', '')
                     st.warning(f"⚠️ Generated 0 articles. {err_detail}" if err_detail else "⚠️ API called successfully but generated 0 articles. Possible causes: API returned empty/error response, or all selected queries failed.")
@@ -2690,6 +2715,7 @@ elif _page_idx == 4:
                         progress_bar.progress(1.0)
                         status_text.text("")
                         st.success("✅ Full Optimization complete!" if is_en else "✅ 智优全流程完成！")
+                        mark_data_changed()
         except ImportError:
             st.error("engine module not ready" if is_en else "engine 模块未就绪")
 
