@@ -48,26 +48,120 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# --- Custom CSS ---
+# --- Custom CSS (Premium UI) ---
 st.markdown("""
 <style>
-.main .block-container { padding-top: 1.2rem; padding-left: 0.5rem; padding-right: 0.5rem; max-width: 100%; }
-iframe { width: 100% !important; }
-div[data-testid="stMetric"] {
-    background: linear-gradient(135deg, #1a1d2e 0%, #12131a 100%);
-    border: 1px solid #2a2f4a; border-radius: 10px; padding: 12px 16px;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* === Global === */
+html, body, [class*="css"] {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+    -webkit-font-smoothing: antialiased;
 }
-div[data-testid="stMetric"] label { color: #8892b0 !important; font-size: 12px !important; text-transform: uppercase; letter-spacing: 0.5px; }
-div[data-testid="stMetric"] [data-testid="stMetricValue"] { color: #00bcd4 !important; font-weight: 700 !important; }
-h1, h2, h3 { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; }
-.stTabs [data-baseweb="tab-list"] { gap: 4px; }
-.stTabs [data-baseweb="tab"] { background: #1a1d2e; border-radius: 8px 8px 0 0; border: 1px solid #2a2f4a; padding: 8px 16px; }
-.stTabs [aria-selected="true"] { background: #222540 !important; border-color: #00bcd4 !important; }
-div[data-testid="stExpander"] { background: #1a1d2e; border: 1px solid #2a2f4a; border-radius: 10px; }
-.stButton > button { border-radius: 8px; font-weight: 600; }
-div[data-testid="stDataFrame"] { border-radius: 10px; border: 1px solid #2a2f4a; }
-.stDivider { border-color: #2a2f4a !important; }
-section[data-testid="stSidebar"] { background: #0f1117; border-right: 1px solid #1e2030; }
+.main .block-container {
+    padding-top: 1.5rem; padding-left: 1.5rem; padding-right: 1.5rem; max-width: 100%;
+}
+iframe { width: 100% !important; }
+
+/* === Typography === */
+h1 { font-family: 'Inter', sans-serif !important; font-weight: 800 !important; letter-spacing: -0.02em !important; }
+h2 { font-family: 'Inter', sans-serif !important; font-weight: 700 !important; letter-spacing: -0.01em !important; }
+h3 { font-family: 'Inter', sans-serif !important; font-weight: 600 !important; }
+p, span, label, div { line-height: 1.6; }
+
+/* === Sidebar === */
+section[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #0a0e1a 0%, #0d1220 100%);
+    border-right: 1px solid rgba(255,255,255,0.06);
+}
+section[data-testid="stSidebar"] .stRadio label {
+    font-size: 13.5px !important; font-weight: 500 !important;
+    padding: 6px 8px !important; border-radius: 8px; transition: all 0.2s ease;
+}
+section[data-testid="stSidebar"] .stRadio label:hover { background: rgba(0, 212, 170, 0.06); }
+
+/* === Metric Cards === */
+div[data-testid="stMetric"] {
+    background: linear-gradient(135deg, rgba(19, 24, 39, 0.9) 0%, rgba(10, 14, 26, 0.9) 100%);
+    border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 16px 20px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+div[data-testid="stMetric"]:hover {
+    transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+}
+div[data-testid="stMetric"] label {
+    color: #7b8ab8 !important; font-size: 11px !important;
+    text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600 !important;
+}
+div[data-testid="stMetric"] [data-testid="stMetricValue"] {
+    color: #00d4aa !important; font-weight: 700 !important; font-size: 1.5rem !important;
+}
+
+/* === Tabs === */
+.stTabs [data-baseweb="tab-list"] { gap: 6px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.stTabs [data-baseweb="tab"] {
+    background: transparent; border-radius: 10px 10px 0 0;
+    border: 1px solid transparent; border-bottom: none;
+    padding: 10px 20px; font-size: 13px; font-weight: 500;
+    color: #7b8ab8; transition: all 0.2s ease;
+}
+.stTabs [data-baseweb="tab"]:hover { background: rgba(0, 212, 170, 0.04); color: #a0b0d0; }
+.stTabs [aria-selected="true"] {
+    background: rgba(0, 212, 170, 0.06) !important;
+    border-color: rgba(0, 212, 170, 0.25) !important;
+    color: #00d4aa !important; font-weight: 600 !important;
+}
+
+/* === Expanders === */
+div[data-testid="stExpander"] {
+    background: rgba(19, 24, 39, 0.6); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px; backdrop-filter: blur(8px); transition: border-color 0.2s ease;
+}
+div[data-testid="stExpander"]:hover { border-color: rgba(255,255,255,0.1); }
+
+/* === Buttons === */
+.stButton > button {
+    border-radius: 10px; font-weight: 600; font-size: 13px;
+    padding: 8px 20px; letter-spacing: 0.01em;
+    transition: all 0.2s ease; border: 1px solid rgba(255,255,255,0.1);
+}
+.stButton > button:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0, 212, 170, 0.15); }
+
+/* === DataFrames === */
+div[data-testid="stDataFrame"] {
+    border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+
+/* === Dividers === */
+hr { border-color: rgba(255,255,255,0.06) !important; }
+.stDivider { border-color: rgba(255,255,255,0.06) !important; }
+
+/* === Inputs === */
+.stTextInput > div > div { border-radius: 10px !important; }
+.stTextInput > div > div:focus-within { border-color: #00d4aa !important; box-shadow: 0 0 0 2px rgba(0, 212, 170, 0.12) !important; }
+.stSelectbox > div > div { border-radius: 10px !important; }
+
+/* === Progress === */
+.stProgress > div > div > div { background: linear-gradient(90deg, #00d4aa, #00b4d8) !important; border-radius: 8px; }
+
+/* === Scrollbar === */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+/* === Page Header === */
+.ss-page-header { padding: 24px 0 16px; border-bottom: 1px solid rgba(255,255,255,0.06); margin-bottom: 20px; }
+.ss-page-header h1 { font-size: 1.6rem !important; margin: 0 !important; }
+.ss-page-header p { font-size: 13px !important; color: #7b8ab8 !important; margin-top: 8px !important; font-weight: 400 !important; }
+
+/* === Section Cards === */
+.ss-section { background: rgba(19,24,39,0.6); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 20px 24px; margin: 16px 0; backdrop-filter: blur(8px); }
+.ss-section h3 { font-size: 15px !important; font-weight: 700 !important; margin: 0 0 6px !important; letter-spacing: -0.01em !important; }
+.ss-section p { font-size: 12px !important; color: #7b8ab8 !important; margin: 0 !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -86,9 +180,9 @@ PIPELINE_STEPS = [
 
 
 def render_pipeline_flow(current_step_id: str, batch_id: str = ""):
-    """Render pipeline flow matching showcase design: current step bright with its color, rest dimmed."""
+    """Render premium pipeline flow with glassmorphism and glow effects."""
 
-    colors = {"zhiku": "#ffa726", "zhice": "#00bcd4", "zhizao": "#ffcc02", "zhiyou": "#e91e63",
+    colors = {"zhiku": "#ffa726", "zhice": "#00d4aa", "zhizao": "#ffcc02", "zhiyou": "#e91e63",
               "zhibu": "#29b6f6", "zhichuan": "#26c6da", "zhixi": "#ab47bc", "zhongshu": "#ff6b35"}
 
     cards_html = ""
@@ -99,19 +193,26 @@ def render_pipeline_flow(current_step_id: str, batch_id: str = ""):
 
         if is_current:
             border = color
-            text_color = color
-            bg = "#0f1117"
+            text_color = "#ffffff"
+            r, g, b = int(color[1:3], 16), int(color[3:5], 16), int(color[5:7], 16)
+            bg = f"rgba({r},{g},{b},0.12)"
+            glow = f"0 0 16px rgba({r},{g},{b},0.25)"
+            font_weight = "700"
+            dot = f'<div style="width:5px;height:5px;border-radius:50%;background:{color};margin:0 auto 4px;box-shadow:0 0 6px {color};"></div>'
         else:
-            border = "#2a2f4a"
-            text_color = "#4a5568"
-            bg = "#0f1117"
+            border = "rgba(255,255,255,0.06)"
+            text_color = "#5a6380"
+            bg = "transparent"
+            glow = "none"
+            font_weight = "500"
+            dot = ""
 
-        cards_html += f'<div style="background:{bg};border:1px solid {border};border-radius:8px;padding:6px 12px;text-align:center;min-width:fit-content;"><div style="font-size:12px;color:{text_color};font-weight:600;">{step["name"]}</div></div>'
+        cards_html += f'<div style="background:{bg};border:1px solid {border};border-radius:10px;padding:8px 14px;text-align:center;min-width:56px;box-shadow:{glow};transition:all 0.3s ease;">{dot}<div style="font-size:12px;color:{text_color};font-weight:{font_weight};letter-spacing:0.02em;">{step["name"]}</div></div>'
         if i < len(PIPELINE_STEPS) - 1:
-            arrow_color = "#8892b0" if is_current else "#2a2f4a"
-            cards_html += f'<div style="color:{arrow_color};font-size:16px;font-weight:700;">&#10132;</div>'
+            arrow_c = color if is_current else "rgba(255,255,255,0.12)"
+            cards_html += f'<div style="color:{arrow_c};font-size:13px;opacity:0.7;">\u203a</div>'
 
-    html = f'''<div style="display:flex;align-items:center;justify-content:center;gap:4px;padding:12px;margin:8px 0;background:#1a1d2e;border-radius:10px;border:1px solid #2a2f4a;flex-wrap:nowrap;overflow-x:auto;">{cards_html}</div>'''
+    html = f'''<div style="display:flex;align-items:center;justify-content:center;gap:6px;padding:14px 20px;margin:12px 0 20px;background:rgba(19,24,39,0.5);border-radius:14px;border:1px solid rgba(255,255,255,0.06);backdrop-filter:blur(10px);flex-wrap:nowrap;overflow-x:auto;">{cards_html}</div>'''
     st.html(html)
 
 
@@ -610,9 +711,12 @@ if _page_idx == 0:
 
 # --- LOGIN GATE: All pages except overview require login ---
 elif not current_user:
-    st.markdown("""<div style="padding:40px 20px;text-align:center;">
-    <h2 style="color:#8892b0;">🔒 """ + ("Please Login" if is_en else "请先登录") + """</h2>
-    <p style="color:#5a6380;font-size:14px;">""" + ("Enter your login name below to access AI tools." if is_en else "请输入您的 Login 名称以访问智系列工具。") + """</p>
+    st.markdown("""<div style="padding:60px 20px;text-align:center;">
+    <div style="width:56px;height:56px;margin:0 auto 20px;border-radius:14px;background:linear-gradient(135deg,rgba(0,212,170,0.12),rgba(0,180,216,0.08));display:flex;align-items:center;justify-content:center;border:1px solid rgba(0,212,170,0.2);">
+        <span style="font-size:24px;">🔒</span>
+    </div>
+    <h2 style="color:#e8eaf6;font-weight:700;font-size:1.3rem;margin-bottom:8px;">""" + ("Please Login to Continue" if is_en else "请先登录") + """</h2>
+    <p style="color:#7b8ab8;font-size:13px;max-width:340px;margin:0 auto;">""" + ("Select your name below or enter login in the sidebar." if is_en else "从下方选择您的名称，或在左侧栏输入 Login。") + """</p>
     </div>""", unsafe_allow_html=True)
 
     col_login_l, col_login_m, col_login_r = st.columns([1, 2, 1])
@@ -647,7 +751,7 @@ elif not current_user:
 
 
 elif _page_idx == 1:
-    st.markdown("""<div style="padding:20px 0 10px;"><h1 style="font-size:28px;font-weight:800;color:#ffa726;margin:0;">📚 """ + ("Query Library – Phrase Production & Validation" if is_en else "智库 – 检索短语产出与验证") + """</h1><p style="font-size:13px;color:#8892b0;margin-top:6px;">""" + ("Produce → Calibrate → Dedupe → Select → Verify Gap → Confirm to Production" if is_en else "产出 → 校准 → 去重 → 选取 → 验证Gap → 确认进智造") + """</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="ss-page-header"><h1 style="color:#ffa726;">📚 """ + ("Query Library" if is_en else "智库 – 检索短语产出与验证") + """</h1><p>""" + ("Produce → Calibrate → Dedupe → Select → Verify Gap → Confirm" if is_en else "产出 → 校准 → 去重 → 选取 → 验证Gap → 确认进智造") + """</p></div>""", unsafe_allow_html=True)
     render_pipeline_flow("zhiku", selected_batch)
 
     # ============================================================
@@ -1100,9 +1204,9 @@ elif _page_idx == 1:
         # ============================================================
         # ① 短语产出
         # ============================================================
-        st.markdown("""<div style="background:#1a1d2e;border:1px solid #2a2f4a;border-radius:12px;padding:20px;margin:16px 0;">
-            <h3 style="color:#ffa726;font-size:18px;font-weight:700;margin:0 0 8px;">① """ + ("Phrase Production" if is_en else "短语产出") + """</h3>
-            <p style="color:#8892b0;font-size:12px;margin:0;">""" + ("3 input modes: AI auto / Upload CSV / Manual input" if is_en else "三种输入模式：AI 自动 / 上传 CSV / 手动输入") + """</p>
+        st.markdown("""<div class="ss-section">
+            <h3 style="color:#ffa726;">① """ + ("Phrase Production" if is_en else "短语产出") + """</h3>
+            <p>""" + ("3 input modes: AI auto / Upload CSV / Manual input" if is_en else "三种输入模式：AI 自动 / 上传 CSV / 手动输入") + """</p>
         </div>""", unsafe_allow_html=True)
 
         tab_p1, tab_p2, tab_p3, tab_p4 = st.tabs([
@@ -1401,8 +1505,8 @@ elif _page_idx == 1:
         # ============================================================
         # ② 校准 + 去重
         # ============================================================
-        st.markdown("""<div style="background:#1a1d2e;border:1px solid #2a2f4a;border-radius:12px;padding:20px;margin:16px 0;">
-            <h3 style="color:#ffa726;font-size:18px;font-weight:700;margin:0 0 8px;">② """ + ("Calibrate & Dedupe" if is_en else "校准 + 去重") + """</h3>
+        st.markdown("""<div class="ss-section">
+            <h3 style="color:#ffa726;">② """ + ("Calibrate & Dedupe" if is_en else "校准 + 去重") + """</h3>
         </div>""", unsafe_allow_html=True)
 
         if total_phrases > 0:
@@ -1437,8 +1541,8 @@ elif _page_idx == 1:
         # ============================================================
         # ③ 人工选取/修改
         # ============================================================
-        st.markdown("""<div style="background:#1a1d2e;border:1px solid #2a2f4a;border-radius:12px;padding:20px;margin:16px 0;">
-            <h3 style="color:#ffa726;font-size:18px;font-weight:700;margin:0 0 8px;">③ """ + ("Review & Select" if is_en else "审核 & 选取") + """</h3>
+        st.markdown("""<div class="ss-section">
+            <h3 style="color:#ffa726;">③ """ + ("Review & Select" if is_en else "审核 & 选取") + """</h3>
         </div>""", unsafe_allow_html=True)
 
         df_q = load_zhiku_live(selected_batch)
@@ -1578,8 +1682,8 @@ elif _page_idx == 1:
         # ============================================================
         # ④ CTA → 智测验证 / 直接智造
         # ============================================================
-        st.markdown("""<div style="background:#1a1d2e;border:1px solid #2a2f4a;border-radius:12px;padding:20px;margin:16px 0;">
-            <h3 style="color:#4caf50;font-size:18px;font-weight:700;margin:0;">④ """ + ("Next Step" if is_en else "下一步") + """</h3>
+        st.markdown("""<div class="ss-section">
+            <h3 style="color:#4caf50;">④ """ + ("Next Step" if is_en else "下一步") + """</h3>
         </div>""", unsafe_allow_html=True)
 
         col_verify, col_skip = st.columns([2, 1])
@@ -1654,12 +1758,12 @@ elif _page_idx == 1:
     # PAGE: 智测 (Gap Verification)
     # ============================================================
 elif _page_idx == 2:
-    st.markdown("""<div style="padding:20px 0 10px;"><h1 style="font-size:28px;font-weight:800;color:#00bcd4;margin:0;">🔍 """ + ("Gap Verification – AI Search Coverage Test" if is_en else "智测 – AI 检索覆盖验证") + """</h1><p style="font-size:13px;color:#8892b0;margin-top:6px;">""" + ("Verify search phrases against 7 AI platforms to discover content gaps" if is_en else "在 7 个 AI 平台验证检索短语的覆盖状态，发现内容 Gap") + """</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="ss-page-header"><h1 style="color:#00d4aa;">🔍 """ + ("Gap Verification" if is_en else "智测 – AI 检索覆盖验证") + """</h1><p>""" + ("Verify search phrases against 7 AI platforms to discover content gaps" if is_en else "在 7 个 AI 平台验证检索短语的覆盖状态，发现内容 Gap") + """</p></div>""", unsafe_allow_html=True)
     render_pipeline_flow("zhice", selected_batch)
 
     # --- Input: phrases to verify ---
-    st.markdown("""<div style="background:#1a1d2e;border:1px solid #2a2f4a;border-radius:12px;padding:20px;margin:16px 0;">
-        <h3 style="color:#00bcd4;font-size:18px;font-weight:700;margin:0 0 8px;">① """ + ("Phrases to Verify" if is_en else "待验证短语") + """</h3>
+    st.markdown("""<div class="ss-section">
+        <h3 style="color:#00d4aa;">① """ + ("Phrases to Verify" if is_en else "待验证短语") + """</h3>
     </div>""", unsafe_allow_html=True)
 
     # Load selected phrases from zhiku (for both admin and user)
@@ -1700,8 +1804,8 @@ elif _page_idx == 2:
     st.divider()
 
     # --- Execute verification ---
-    st.markdown("""<div style="background:#1a1d2e;border:1px solid #2a2f4a;border-radius:12px;padding:20px;margin:16px 0;">
-        <h3 style="color:#00bcd4;font-size:18px;font-weight:700;margin:0 0 8px;">② """ + ("Execute Verification" if is_en else "执行验证") + """</h3>
+    st.markdown("""<div class="ss-section">
+        <h3 style="color:#00d4aa;">② """ + ("Execute Verification" if is_en else "执行验证") + """</h3>
     </div>""", unsafe_allow_html=True)
 
     ZHICE_PLATFORMS = {"qianwen": "通义千问", "deepseek": "DeepSeek", "kimi": "Kimi", "doubao": "豆包", "chatgpt": "ChatGPT", "perplexity": "Perplexity", "gemini": "Gemini"}
@@ -1888,8 +1992,8 @@ elif _page_idx == 2:
     st.divider()
 
     # --- Results & Select ---
-    st.markdown("""<div style="background:#1a1d2e;border:1px solid #2a2f4a;border-radius:12px;padding:20px;margin:16px 0;">
-        <h3 style="color:#00bcd4;font-size:18px;font-weight:700;margin:0 0 8px;">③ """ + ("Gap Results & Select" if is_en else "Gap 结果 & 选取") + """</h3>
+    st.markdown("""<div class="ss-section">
+        <h3 style="color:#00d4aa;">③ """ + ("Gap Results & Select" if is_en else "Gap 结果 & 选取") + """</h3>
     </div>""", unsafe_allow_html=True)
 
     df_gap_display = st.session_state.get("zhice_gap_results", pd.DataFrame())
@@ -2106,7 +2210,7 @@ elif _page_idx == 2:
 # PAGE: 智造 (Step 2) — 单页线性流程
 # ============================================================
 elif _page_idx == 3:
-    st.markdown("""<div style="padding:20px 0 10px;"><h1 style="font-size:28px;font-weight:800;color:#ffcc02;margin:0;">✍️ """ + ("Content Creation – Content Generation" if is_en else "智造 – Content Generation") + """</h1><p style="font-size:13px;color:#8892b0;margin-top:6px;">""" + ("Step 2: Generate SEO+GEO dual-optimized content based on AI Queries" if is_en else "Step 2: 基于 AI Queries 生成 SEO+GEO 双优化内容") + """</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="ss-page-header"><h1 style="color:#ffcc02;">✍️ """ + ("Content Creation" if is_en else "智造 – Content Generation") + """</h1><p>""" + ("Generate SEO+GEO dual-optimized content based on AI Queries" if is_en else "基于 AI Queries 生成 SEO+GEO 双优化内容") + """</p></div>""", unsafe_allow_html=True)
     render_pipeline_flow("zhizao", selected_batch)
 
     # --- Upload custom phrases directly ---
@@ -2467,7 +2571,7 @@ elif _page_idx == 3:
 # PAGE: 智优 (Step 3) — 一键自动完成
 # ============================================================
 elif _page_idx == 4:
-    st.markdown("""<div style="padding:20px 0 10px;"><h1 style="font-size:28px;font-weight:800;color:#e91e63;margin:0;">🔧 """ + ("Optimization – Score · Rewrite · Compliance" if is_en else "智优 – Score · Rewrite · Compliance") + """</h1><p style="font-size:13px;color:#8892b0;margin-top:6px;">""" + ("Step 3: One-click auto: Score → Rewrite → Compliance Review" if is_en else "Step 3: 一键自动完成 评分 → 重写优化 → 合规审查") + """</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="ss-page-header"><h1 style="color:#e91e63;">🔧 """ + ("Optimization" if is_en else "智优 – Score · Rewrite · Compliance") + """</h1><p>""" + ("One-click: Score → Rewrite → Compliance Review" if is_en else "一键自动完成 评分 → 重写优化 → 合规审查") + """</p></div>""", unsafe_allow_html=True)
     render_pipeline_flow("zhiyou", selected_batch)
 
     # Clear history button
@@ -2960,7 +3064,7 @@ elif _page_idx == 4:
 # PAGE: 智布 (Step 4)
 # ============================================================
 elif _page_idx == 5:
-    st.markdown("""<div style="padding:20px 0 10px;"><h1 style="font-size:28px;font-weight:800;color:#29b6f6;margin:0;">📦 """ + ("Publishing – JSON / Word Formatting" if is_en else "智布 – JSON / Word Formatting") + """</h1><p style="font-size:13px;color:#8892b0;margin-top:6px;">""" + ("Step 4: Convert optimized content to structured JSON and Word documents" if is_en else "Step 4: 将优化内容转换为结构化 JSON 和 Word 文档") + """</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="ss-page-header"><h1 style="color:#29b6f6;">📦 """ + ("Publishing" if is_en else "智布 – 内容发布") + """</h1><p>""" + ("Convert optimized content to structured JSON and Word documents" if is_en else "将优化内容转换为结构化 JSON 和 Word 文档") + """</p></div>""", unsafe_allow_html=True)
     render_pipeline_flow("zhibu", selected_batch)
 
     # --- Upload content directly (skip 智优) ---
@@ -3175,7 +3279,7 @@ elif _page_idx == 5:
 # PAGE: 智析 (Step 6) — 重构版
 # ============================================================
 elif _page_idx == 7:
-    st.markdown("""<div style="padding:20px 0 10px;"><h1 style="font-size:28px;font-weight:800;color:#ab47bc;margin:0;">📈 """ + ("Analytics – Performance & Gap Analysis" if is_en else "智析 – Performance & Gap Analysis") + """</h1><p style="font-size:13px;color:#8892b0;margin-top:6px;">""" + ("Performance Analysis: Output trends · Input tracking · AI citation monitoring · Gap opportunities" if is_en else "效果分析：Output 趋势 · Input 产出追踪 · AI 引用监控 · Gap 机会点") + """</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="ss-page-header"><h1 style="color:#ab47bc;">📈 """ + ("Analytics" if is_en else "智析 – Performance & Gap Analysis") + """</h1><p>""" + ("Output trends · Input tracking · AI citation monitoring · Gap opportunities" if is_en else "Output 趋势 · Input 追踪 · AI 引用监控 · Gap 机会点") + """</p></div>""", unsafe_allow_html=True)
     render_pipeline_flow("zhixi", selected_batch)
 
     # ============================================================
@@ -4691,9 +4795,9 @@ elif _page_idx == 7:
         # TAB: AI Link Citation (Gap verification)
         # ============================================================
         with tab_zhice_gap:
-            st.markdown("""<div style="background:#1a1d2e;border:1px solid #2a2f4a;border-radius:12px;padding:20px;margin:8px 0;">
-                <h3 style="color:#ab47bc;font-size:18px;font-weight:700;margin:0 0 8px;">🔬 """ + ("Official Link Coverage Rate" if is_en else "官网链接覆盖率") + """</h3>
-                <p style="color:#8892b0;font-size:12px;margin:0;">""" + ("YTD search phrase coverage: how many have official Amazon links cited by AI" if is_en else "YTD 检索短语覆盖情况：有多少被 AI 引用时带有官方链接") + """</p>
+            st.markdown("""<div class="ss-section">
+                <h3 style="color:#ab47bc;">🔬 """ + ("Official Link Coverage Rate" if is_en else "官网链接覆盖率") + """</h3>
+                <p>""" + ("YTD search phrase coverage: how many have official Amazon links cited by AI" if is_en else "YTD 检索短语覆盖情况：有多少被 AI 引用时带有官方链接") + """</p>
             </div>""", unsafe_allow_html=True)
 
             gap_file = METRICS_PATH / "gap_verification_cn.csv"
@@ -4750,9 +4854,9 @@ elif _page_idx == 7:
 
             # --- Category AI Citation Analysis (from gap_verification_cn.csv + zhice data) ---
             st.divider()
-            st.markdown("""<div style="background:#1a1d2e;border:1px solid #2a2f4a;border-radius:12px;padding:20px;margin:8px 0;">
-                <h3 style="color:#ab47bc;font-size:18px;font-weight:700;margin:0 0 8px;">📊 """ + ("Category AI Citation Ranking" if is_en else "35 类别 AI 引用概率排名") + """</h3>
-                <p style="color:#8892b0;font-size:12px;margin:0;">""" + ("Based on gap verification data: which content categories are most likely to be cited by AI (brand vs industry shown separately)" if is_en else "基于 Gap 验证数据：哪些内容类别最容易被 AI 引用（品牌词与行业词分开展示）") + """</p>
+            st.markdown("""<div class="ss-section">
+                <h3 style="color:#ab47bc;">📊 """ + ("Category AI Citation Ranking" if is_en else "35 类别 AI 引用概率排名") + """</h3>
+                <p>""" + ("Based on gap verification data: which categories are most cited by AI" if is_en else "基于 Gap 验证数据：哪些内容类别最容易被 AI 引用") + """</p>
             </div>""", unsafe_allow_html=True)
 
             # --- Mapping: query topic → 35 categories ---
@@ -5469,7 +5573,7 @@ elif _page_idx == 7:
     # PAGE: 智中枢
     # ============================================================
 elif _page_idx == 8:
-    st.markdown("""<div style="padding:20px 0 10px;"><h1 style="font-size:28px;font-weight:800;color:#ff6b35;margin:0;">🎯 """ + ("Decision Engine" if is_en else "智中枢 – Decision Engine") + """</h1><p style="font-size:13px;color:#8892b0;margin-top:6px;">""" + ("Based on analytics data + 7 decision rules, generate weekly action plan" if is_en else "基于智析数据 + 7 条决策规则，生成周度行动计划") + """</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="ss-page-header"><h1 style="color:#ff6b35;">🎯 """ + ("Decision Engine" if is_en else "智中枢 – Decision Engine") + """</h1><p>""" + ("Analytics data + 7 decision rules → weekly action plan" if is_en else "基于智析数据 + 7 条决策规则，生成周度行动计划") + """</p></div>""", unsafe_allow_html=True)
     render_pipeline_flow("zhongshu", selected_batch)
 
     # ============================================================
@@ -5741,7 +5845,7 @@ elif page == "📌 发布追踪" or (is_en and page == "📌 Publish Tracking"):
 # PAGE: 需求提交 (Request — per-user data)
 # ============================================================
 elif _page_idx == 10:
-    st.markdown("""<div style="padding:20px 0 10px;"><h1 style="font-size:28px;font-weight:800;color:#00bcd4;margin:0;">🔄 """ + ("Request Submission" if is_en else "需求提交") + """</h1><p style="font-size:13px;color:#8892b0;margin-top:6px;">""" + ("Test → Opportunity → Content → Publish → Effect" if is_en else "智测发现 → 机会点 → 内容产出 → 效果对比 → 总结") + """</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="ss-page-header"><h1 style="color:#00d4aa;">🔄 """ + ("Request Submission" if is_en else "需求提交") + """</h1><p>""" + ("Test → Opportunity → Content → Publish → Effect" if is_en else "智测发现 → 机会点 → 内容产出 → 效果对比 → 总结") + """</p></div>""", unsafe_allow_html=True)
 
     # Login gate
     if not current_user:
@@ -5837,7 +5941,7 @@ elif _page_idx == 10:
 # PAGE: 运营看板 (Operations Dashboard)
 # ============================================================
 elif _page_idx == 13:
-    st.markdown("""<div style="padding:20px 0 10px;"><h1 style="font-size:28px;font-weight:800;color:#00bcd4;margin:0;">📝 """ + ("Operations Dashboard" if is_en else "运营管理看板") + """</h1><p style="font-size:13px;color:#8892b0;margin-top:6px;">""" + ("Team activity log, pipeline status, who did what" if is_en else "团队操作日志、流水线状态、谁执行了什么") + """</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="ss-page-header"><h1 style="color:#00d4aa;">📝 """ + ("Operations Dashboard" if is_en else "运营管理看板") + """</h1><p>""" + ("Team activity log, pipeline status, who did what" if is_en else "团队操作日志、流水线状态、谁执行了什么") + """</p></div>""", unsafe_allow_html=True)
 
     tab_activity, tab_approval, tab_pipeline, tab_users, tab_link = st.tabs([
         "📋 Activity Log" if is_en else "📋 操作日志",
@@ -6074,7 +6178,7 @@ elif _page_idx == 13:
 # PAGE: 引用分析
 # ============================================================
 elif _page_idx == 11:
-    st.markdown("""<div style="padding:20px 0 10px;"><h1 style="font-size:28px;font-weight:800;color:#4caf50;margin:0;">🔍 """ + ("Citation Analysis" if is_en else "引用分析") + """</h1><p style="font-size:13px;color:#8892b0;margin-top:6px;">""" + ("Analyze AI search engine citation of our content" if is_en else "分析 AI 搜索引擎对内容的引用情况") + """</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="ss-page-header"><h1 style="color:#4caf50;">🔍 """ + ("Citation Analysis" if is_en else "引用分析") + """</h1><p>""" + ("Analyze AI search engine citation of our content" if is_en else "分析 AI 搜索引擎对内容的引用情况") + """</p></div>""", unsafe_allow_html=True)
 
     st.subheader("AI Engine Citation Monitoring" if is_en else "AI 引擎引用监控")
     st.markdown("""
