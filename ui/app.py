@@ -686,24 +686,15 @@ elif _page_idx == 1:
                         queries = [q.strip().lstrip("0123456789.-、）) ") for q in response.strip().split("\n") if q.strip() and len(q.strip()) > 4]
                         if queries:
                             st.success(f"✅ 生成 {len(queries)} 条")
-                            # Auto-score each phrase
+                            # Auto-score each phrase (1-5 scale)
                             def _quick_score(q):
-                                score = 60  # base for AI-generated (P3)
-                                # Length bonus (10-25 chars ideal)
-                                if 10 <= len(q) <= 25:
-                                    score += 10
-                                elif len(q) > 25:
-                                    score += 5
-                                # Intent word bonus
-                                if any(w in q for w in ["怎么", "如何", "多少", "哪些", "为什么", "什么", "能不能", "how", "what", "why"]):
-                                    score += 10
-                                # Business relevance
-                                if any(w in q.lower() for w in ["亚马逊", "amazon", "fba", "注册", "开店", "选品", "物流", "广告", "listing"]):
-                                    score += 10
-                                # Oral/natural style bonus
-                                if any(w in q for w in ["吗", "呢", "啊", "吧", "?"]):
-                                    score += 5
-                                return min(100, score)
+                                score = 3.0  # base for AI-generated
+                                if 10 <= len(q) <= 25: score += 0.5
+                                elif len(q) > 25: score += 0.3
+                                if any(w in q for w in ["怎么", "如何", "多少", "哪些", "为什么", "什么", "能不能", "how", "what", "why"]): score += 0.5
+                                if any(w in q.lower() for w in ["亚马逊", "amazon", "fba", "注册", "开店", "选品", "物流", "广告", "listing"]): score += 0.5
+                                if any(w in q for w in ["吗", "呢", "啊", "吧", "?"]): score += 0.3
+                                return min(5.0, round(score, 1))
 
                             scores = [_quick_score(q) for q in queries]
                             df_result = pd.DataFrame({"ai_query": queries, "source": f"seed_{seed_word}", "is_selected": "FALSE", "accuracy_score": scores})
@@ -768,15 +759,15 @@ elif _page_idx == 1:
                     queries = [q.strip().lstrip("0123456789.-、）) ") for q in response.strip().split("\n") if q.strip() and len(q.strip()) > 4]
                     if queries:
                         st.success(f"✅ 生成 {len(queries)} 条")
-                        # Auto-score
+                        # Auto-score (1-5 scale)
                         def _quick_score_p(q):
-                            score = 70  # persona-based = higher base (P2 level)
-                            if 10 <= len(q) <= 25: score += 10
-                            elif len(q) > 25: score += 5
-                            if any(w in q for w in ["怎么", "如何", "多少", "哪些", "为什么", "什么", "能不能"]): score += 10
-                            if any(w in q.lower() for w in ["亚马逊", "amazon", "fba", "注册", "开店", "选品", "物流", "广告"]): score += 5
-                            if any(w in q for w in ["吗", "呢", "啊", "吧", "?"]): score += 5
-                            return min(100, score)
+                            score = 3.5  # persona-based = higher base
+                            if 10 <= len(q) <= 25: score += 0.5
+                            elif len(q) > 25: score += 0.3
+                            if any(w in q for w in ["怎么", "如何", "多少", "哪些", "为什么", "什么", "能不能"]): score += 0.5
+                            if any(w in q.lower() for w in ["亚马逊", "amazon", "fba", "注册", "开店", "选品", "物流", "广告"]): score += 0.3
+                            if any(w in q for w in ["吗", "呢", "啊", "吧", "?"]): score += 0.2
+                            return min(5.0, round(score, 1))
                         scores = [_quick_score_p(q) for q in queries]
                         df_result = pd.DataFrame({"ai_query": queries, "source": f"persona_{sel_identity}_{sel_site[0] if sel_site else ''}", "is_selected": "FALSE", "accuracy_score": scores})
                         st.dataframe(df_result, use_container_width=True, hide_index=True)
@@ -919,12 +910,17 @@ elif _page_idx == 1:
                 df_display = df_display[df_display["ai_query"].astype(str).str.contains(search_text, case=False, na=False)]
 
             # Editable table
-            show_cols = [c for c in ["ai_query", "source", "is_selected", "priority_score", "accuracy_score", "category"] if c in df_display.columns]
+            show_cols = [c for c in ["ai_query", "source", "accuracy_score", "category", "is_selected"] if c in df_display.columns]
             # Add accuracy_score column if not present
             if "accuracy_score" not in df_display.columns:
                 df_display["accuracy_score"] = "—"
-                if "accuracy_score" not in show_cols:
-                    show_cols.insert(-1, "accuracy_score") if "category" in show_cols else show_cols.append("accuracy_score")
+                show_cols = [c for c in ["ai_query", "source", "accuracy_score", "category", "is_selected"] if c in df_display.columns]
+            else:
+                # Convert 0-100 score to 1-5 scale
+                df_display["accuracy_score"] = pd.to_numeric(df_display["accuracy_score"], errors="coerce").fillna(0)
+                df_display["accuracy_score"] = df_display["accuracy_score"].apply(
+                    lambda x: round(x / 20, 1) if x > 0 else "—"
+                )
             if show_cols:
                 # Bulk select/deselect buttons
                 col_sel1, col_sel2, col_sel3 = st.columns([1, 1, 4])
