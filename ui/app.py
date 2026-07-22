@@ -889,7 +889,12 @@ elif _page_idx == 1:
                 df_display = df_display[df_display["ai_query"].astype(str).str.contains(search_text, case=False, na=False)]
 
             # Editable table
-            show_cols = [c for c in ["ai_query", "source", "is_selected", "priority_score", "category"] if c in df_display.columns]
+            show_cols = [c for c in ["ai_query", "source", "is_selected", "priority_score", "accuracy_score", "category"] if c in df_display.columns]
+            # Add accuracy_score column if not present
+            if "accuracy_score" not in df_display.columns:
+                df_display["accuracy_score"] = "—"
+                if "accuracy_score" not in show_cols:
+                    show_cols.insert(-1, "accuracy_score") if "category" in show_cols else show_cols.append("accuracy_score")
             if show_cols:
                 # Bulk select/deselect buttons
                 col_sel1, col_sel2, col_sel3 = st.columns([1, 1, 4])
