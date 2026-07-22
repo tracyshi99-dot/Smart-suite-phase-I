@@ -3349,64 +3349,116 @@ elif _page_idx == 7:
 
         # --- Citation Performance ---
         st.markdown("### " + ("Citation Performance" if is_en else "引用表现"))
-        st.caption("Before/After comparison of brand mention and official link rates across AI platforms" if is_en else "AI 平台中品牌提及率和官方链接率的前后对比")
+        st.caption("Before = from 智测 verification (baseline) · After = post-content launch (upload when available)" if is_en else "Before = 智测验证结果（基线）· After = 新内容上线后（有数据时上传）")
 
-        # Load performance data (from admin-assigned or user-uploaded)
+        # Auto-load Before data from zhice gap results
+        _zhice_dir = OUTPUT_PATH / selected_batch / "zhice"
+        _gap_files = sorted(_zhice_dir.glob("gap_result_*.csv"), key=lambda f: f.stat().st_mtime, reverse=True) if _zhice_dir.exists() else []
+        # Also check batch-level zhice dir
+        if not _gap_files:
+            _zhice_dir2 = OUTPUT_PATH / "zhice"
+            if _zhice_dir2.exists():
+                _gap_files = sorted(_zhice_dir2.glob("gap_result_*.csv"), key=lambda f: f.stat().st_mtime, reverse=True)
+
+        _before_data = []
+        if _gap_files:
+            try:
+                df_gap = load_csv_safe(_gap_files[0])
+                if not df_gap.empty and "ai_query" in df_gap.columns:
+                    for _, row in df_gap.iterrows():
+                        query = str(row.get("ai_query", ""))
+                        platform = str(row.get("platform", "qianwen"))
+                        brand = str(row.get("brand_mention", row.get("has_brand", "")))
+                        link = str(row.get("official_link", row.get("has_link", "")))
+                        # Normalize to ✅/❌
+                        brand_val = "✅" if brand.upper() in ["TRUE", "1", "YES", "✅"] else "❌"
+                        link_val = "✅" if link.upper() in ["TRUE", "1", "YES", "✅"] else "❌"
+                        _before_data.append({
+                            "Query": query[:50],
+                            "Platform": platform,
+                            "Brand Before": brand_val,
+                            "Link Before": link_val,
+                        })
+            except Exception:
+                pass
+
+        # Load After data (from admin-assigned or user-uploaded)
         _perf_file = OUTPUT_PATH / "requests" / current_user / "performance_data.json"
-        _perf_data = json.loads(_perf_file.read_text(encoding="utf-8")) if _perf_file.exists() else []
+        _after_data = json.loads(_perf_file.read_text(encoding="utf-8")) if _perf_file.exists() else []
 
-        # Show performance table (always show structure, even if empty)
+        # Merge Before + After
+        _perf_merged = []
+        if _before_data:
+            for bd in _before_data:
+                # Find matching After record
+                after_match = next((a for a in _after_data if a.get("Query", "")[:30] == bd["Query"][:30] and a.get("Platform", "") == bd["Platform"]), None)
+                _perf_merged.append({
+                    "Query": bd["Query"],
+                    "Platform": bd["Platform"],
+                    "Brand Before": bd["Brand Before"],
+                    "Brand After": after_match.get("Brand After", "—") if after_match else "—",
+                    "Link Before": bd["Link Before"],
+                    "Link After": after_match.get("Link After", "—") if after_match else "—",
+                })
+        elif _after_data:
+            _perf_merged = _after_data
+
         # Brand Mention section
         st.markdown("#### 🏷️ " + ("Brand Mention" if is_en else "品牌提及"))
-        brand_columns = ["Query", "Platform", "Before", "After", "Change"]
-        if _perf_data:
+        if _perf_merged:
             df_brand = pd.DataFrame([{
-                "Query": r.get("Query", "—"),
-                "Platform": r.get("Platform", "—"),
+                "Query": r["Query"],
+                "Platform": r["Platform"],
                 "Before": r.get("Brand Before", "—"),
                 "After": r.get("Brand After", "—"),
-                "Change": "🆕 改善" if r.get("Brand Before") == "❌" and r.get("Brand After") == "✅" else ("⚠️ 退步" if r.get("Brand Before") == "✅" and r.get("Brand After") == "❌" else "→ 持平"),
-            } for r in _perf_data])
+                "Change": "🆕 改善" if r.get("Brand Before") == "❌" and r.get("Brand After") == "✅" else ("⚠️ 退步" if r.get("Brand Before") == "✅" and r.get("Brand After") == "❌" else ("→ 持平" if r.get("Brand After") != "—" else "⏳ 待测")),
+            } for r in _perf_merged])
             st.dataframe(df_brand, use_container_width=True, hide_index=True)
         else:
-            st.dataframe(pd.DataFrame([{c: "—" for c in brand_columns}]), use_container_width=True, hide_index=True)
+            st.dataframe(pd.DataFrame([{"Query": "—", "Platform": "—", "Before": "—", "After": "—", "Change": "—"}]), use_container_width=True, hide_index=True)
+            st.caption("请先在智测中验证短语，Before 数据将自动填入" if not is_en else "Run verification in 智测 first — Before data will auto-populate")
 
         st.markdown("")
 
         # Official Link section
         st.markdown("#### 🔗 " + ("Official Link" if is_en else "官方链接"))
-        link_columns = ["Query", "Platform", "Before", "After", "Change"]
-        if _perf_data:
+        if _perf_merged:
             df_link = pd.DataFrame([{
-                "Query": r.get("Query", "—"),
-                "Platform": r.get("Platform", "—"),
+                "Query": r["Query"],
+                "Platform": r["Platform"],
                 "Before": r.get("Link Before", "—"),
                 "After": r.get("Link After", "—"),
-                "Change": "🆕 改善" if r.get("Link Before") == "❌" and r.get("Link After") == "✅" else ("⚠️ 退步" if r.get("Link Before") == "✅" and r.get("Link After") == "❌" else "→ 持平"),
-            } for r in _perf_data])
+                "Change": "🆕 改善" if r.get("Link Before") == "❌" and r.get("Link After") == "✅" else ("⚠️ 退步" if r.get("Link Before") == "✅" and r.get("Link After") == "❌" else ("→ 持平" if r.get("Link After") != "—" else "⏳ 待测")),
+            } for r in _perf_merged])
             st.dataframe(df_link, use_container_width=True, hide_index=True)
         else:
-            st.dataframe(pd.DataFrame([{c: "—" for c in link_columns}]), use_container_width=True, hide_index=True)
+            st.dataframe(pd.DataFrame([{"Query": "—", "Platform": "—", "Before": "—", "After": "—", "Change": "—"}]), use_container_width=True, hide_index=True)
 
-        # Summary metrics (if data exists)
-        if _perf_data:
+        # Summary metrics
+        if _perf_merged:
             st.markdown("")
-            brand_before = sum(1 for r in _perf_data if r.get("Brand Before") == "✅")
-            brand_after = sum(1 for r in _perf_data if r.get("Brand After") == "✅")
-            link_before = sum(1 for r in _perf_data if r.get("Link Before") == "✅")
-            link_after = sum(1 for r in _perf_data if r.get("Link After") == "✅")
-            total_p = len(_perf_data)
+            brand_before = sum(1 for r in _perf_merged if r.get("Brand Before") == "✅")
+            brand_after = sum(1 for r in _perf_merged if r.get("Brand After") == "✅")
+            link_before = sum(1 for r in _perf_merged if r.get("Link Before") == "✅")
+            link_after = sum(1 for r in _perf_merged if r.get("Link After") == "✅")
+            has_after = sum(1 for r in _perf_merged if r.get("Brand After") != "—")
+            total_p = len(_perf_merged)
             col_m1, col_m2, col_m3, col_m4 = st.columns(4)
             col_m1.metric("Brand Before" if is_en else "品牌(前)", f"{brand_before}/{total_p}")
-            col_m2.metric("Brand After" if is_en else "品牌(后)", f"{brand_after}/{total_p}", delta=f"+{brand_after-brand_before}" if brand_after > brand_before else None)
+            if has_after > 0:
+                col_m2.metric("Brand After" if is_en else "品牌(后)", f"{brand_after}/{has_after}", delta=f"+{brand_after-brand_before}" if brand_after > brand_before else None)
+            else:
+                col_m2.metric("Brand After" if is_en else "品牌(后)", "⏳ 待测")
             col_m3.metric("Link Before" if is_en else "链接(前)", f"{link_before}/{total_p}")
-            col_m4.metric("Link After" if is_en else "链接(后)", f"{link_after}/{total_p}", delta=f"+{link_after-link_before}" if link_after > link_before else None)
-        else:
-            st.caption("数据为空 — 等待管理员分配数据或自行上传" if not is_en else "No data — waiting for admin to assign or upload yourself")
+            if has_after > 0:
+                col_m4.metric("Link After" if is_en else "链接(后)", f"{link_after}/{has_after}", delta=f"+{link_after-link_before}" if link_after > link_before else None)
+            else:
+                col_m4.metric("Link After" if is_en else "链接(后)", "⏳ 待测")
 
-        # Upload performance data
-        with st.expander("📤 " + ("Upload Performance Data" if is_en else "上传引用表现数据"), expanded=False):
-            st.caption("CSV columns: Query, Platform, Brand Before, Brand After, Link Before, Link After" if is_en else "CSV 列: Query, Platform, Brand Before, Brand After, Link Before, Link After")
+        # Upload After data (post-content launch)
+        with st.expander("📤 " + ("Upload After Data (post-launch)" if is_en else "上传 After 数据（内容上线后）"), expanded=False):
+            st.caption("Upload verification results AFTER content is published to compare with Before baseline" if is_en else "内容发布上线后，上传新的验证结果来对比 Before 基线")
+            st.caption("CSV columns: Query, Platform, Brand After, Link After" if is_en else "CSV 列: Query, Platform, Brand After, Link After")
             up_perf = st.file_uploader("Upload CSV" if is_en else "上传 CSV", type=["csv"], key="user_upload_perf")
             if up_perf:
                 try:
