@@ -1309,7 +1309,7 @@ def run_zhiyou_compliance(batch_id: str, progress_callback=None) -> dict:
 # STEP 4: 智布
 # ============================================================
 def run_zhibu(batch_id: str, progress_callback=None) -> dict:
-    """Execute Step 4: Convert to structured JSON."""
+    """Execute Step 4: Convert to structured JSON (Lego-compatible format)."""
     steering = load_steering()
 
     opt_path = OUTPUT_PATH / batch_id / "03_zhiyou" / "zhiyou_optimized_content.csv"
@@ -1336,42 +1336,98 @@ def run_zhibu(batch_id: str, progress_callback=None) -> dict:
     if progress_callback:
         progress_callback(0.2, "正在生成 JSON...")
 
+    import re
+
+    def _extract_structure(content: str, title: str) -> dict:
+        """Extract h1 and h2 headers from markdown content."""
+        h2s = re.findall(r'^##\s+(.+)$', content, re.MULTILINE)
+        if not h2s:
+            # Try numbered sections as h2
+            h2s = re.findall(r'^\*\*(\d+[\.\、].+?)\*\*', content, re.MULTILINE)
+        return {"h1": title, "h2": h2s[:8]}  # max 8 h2s
+
+    def _extract_faq(content: str) -> list:
+        """Extract FAQ from markdown content into structured [{question, answer}] format."""
+        faqs = []
+        # Pattern 1: ### question / answer
+        faq_section = re.search(r'(?:##\s*(?:常见问题|FAQ|Frequently Asked Questions).+?)(?=\n##\s|\Z)', content, re.DOTALL | re.IGNORECASE)
+        if faq_section:
+            faq_text = faq_section.group(0)
+            # Find Q&A pairs
+            qa_pairs = re.findall(r'(?:###|\*\*Q[:\d]*[.、]?\*\*|Q[:：]\s*)\s*(.+?)\n+(?:\*\*A[:\d]*[.、]?\*\*|A[:：]\s*)?(.+?)(?=\n(?:###|\*\*Q|Q[:：]|\Z))', faq_text, re.DOTALL)
+            for q, a in qa_pairs:
+                q = q.strip().rstrip('?？').strip() + '?'
+                a = a.strip()
+                if q and a and len(a) > 5:
+                    faqs.append({"question": q, "answer": a[:300]})
+        # Pattern 2: numbered questions
+        if not faqs:
+            qa_pairs = re.findall(r'\d+[.、]\s*\*{0,2}(.+?)\*{0,2}\s*[\n:：]+\s*(.+?)(?=\n\d+[.、]|\Z)', content, re.DOTALL)
+            for q, a in qa_pairs[-5:]:  # Take last 5 (likely FAQ section at end)
+                q = q.strip()
+                a = a.strip()
+                if '?' in q or '？' in q or '吗' in q or '什么' in q:
+                    faqs.append({"question": q, "answer": a[:300]})
+        return faqs[:5]  # max 5 FAQs
+
+    def _extract_keywords(ai_query: str, content: str) -> list:
+        """Extract SEO keywords from query and content."""
+        keywords = [ai_query]
+        # Add query variations
+        words = ai_query.replace('？', '').replace('?', '').split()
+        if len(words) > 3:
+            keywords.append(' '.join(words[:4]))
+        return keywords[:5]
+
     items = []
     for _, row in df_opt.iterrows():
         cid = row.get("content_id", "")
         score_row = df_score[df_score["content_id"] == cid].iloc[0] if not df_score.empty and cid in df_score.get("content_id", pd.Series()).values else {}
 
+        title = str(row.get("optimized_title", row.get("title", "")))
+        content = str(row.get("optimized_content", row.get("content_draft", "")))
+        ai_query = str(row.get("ai_query", ""))
+
+        # Build Lego-compatible item structure (matches batch_001 format)
         item = {
             "content_id": cid,
             "query_id": row.get("query_id", ""),
             "keyword_id": row.get("keyword_id", ""),
-            "keyword": row.get("ai_query", ""),
-            "ai_query": row.get("ai_query", ""),
+            "keyword": ai_query,
+            "ai_query": ai_query,
             "meta": {
-                "title": row.get("optimized_meta_title", row.get("optimized_title", "")),
-                "description": row.get("optimized_meta_description", ""),
+                "title": title[:70],
+                "description": content[:160].replace("\n", " ").strip(),
             },
-            "body": row.get("optimized_content", ""),
-            "faq": row.get("optimized_faq", ""),
-            "cta": row.get("optimized_cta", ""),
-            "geo_summary": row.get("optimized_geo_summary", ""),
+            "structure": _extract_structure(content, title),
+            "body": content,
+            "faq": _extract_faq(content),
+            "cta": row.get("optimized_cta", f"立即前往亚马逊卖家平台了解更多：https://gs.amazon.cn"),
+            "seo": {
+                "keywords": _extract_keywords(ai_query, content),
+                "intent_type": "informational",
+                "query_type": "branded",
+                "internal_links": ["https://gs.amazon.cn"],
+            },
             "ai_friendly": {
-                "intent_match_score": score_row.get("intent_match_score", 0) if isinstance(score_row, dict) or hasattr(score_row, 'get') else 0,
-                "ai_readability_score": score_row.get("ai_readability_score", 0) if isinstance(score_row, dict) or hasattr(score_row, 'get') else 0,
-                "authority_score": score_row.get("authority_score", 0) if isinstance(score_row, dict) or hasattr(score_row, 'get') else 0,
-                "actionability_score": score_row.get("actionability_score", 0) if isinstance(score_row, dict) or hasattr(score_row, 'get') else 0,
-                "differentiation_score": score_row.get("differentiation_score", 0) if isinstance(score_row, dict) or hasattr(score_row, 'get') else 0,
-                "overall_score": score_row.get("overall_score", 0) if isinstance(score_row, dict) or hasattr(score_row, 'get') else 0,
+                "intent_match_score": int(score_row.get("intent_match_score", 0)) if isinstance(score_row, dict) or hasattr(score_row, 'get') else 0,
+                "ai_readability_score": int(score_row.get("ai_readability_score", 0)) if isinstance(score_row, dict) or hasattr(score_row, 'get') else 0,
+                "authority_score": int(score_row.get("authority_score", 0)) if isinstance(score_row, dict) or hasattr(score_row, 'get') else 0,
+                "actionability_score": int(score_row.get("actionability_score", 0)) if isinstance(score_row, dict) or hasattr(score_row, 'get') else 0,
+                "differentiation_score": int(score_row.get("differentiation_score", 0)) if isinstance(score_row, dict) or hasattr(score_row, 'get') else 0,
+                "overall_score": float(score_row.get("overall_score", 0)) if isinstance(score_row, dict) or hasattr(score_row, 'get') else 0,
             },
+            "geo_summary": content[:150].replace("\n", " ").strip(),
             "compliance": {
                 "status": "PASS",
-                "copyright": "Copyright © 2026 Amazon. All rights Reserved.",
+                "disclaimer": "The above content is for reference only and does not represent Amazon's advice.",
+                "copyright": "Copyright (c) 2026 Amazon. All rights Reserved.",
             },
             "quality_metrics": {
-                "word_count": row.get("word_count", 0),
-                "table_count": row.get("table_count", 0),
-                "list_count": row.get("list_count", 0),
-                "link_count": row.get("link_count", 0),
+                "word_count": len(content),
+                "table_count": content.count('|---'),
+                "list_count": len(re.findall(r'^\s*[-•\d]+[.、)]', content, re.MULTILINE)),
+                "link_count": len(re.findall(r'https?://', content)),
             },
         }
         items.append(item)
@@ -1386,7 +1442,7 @@ def run_zhibu(batch_id: str, progress_callback=None) -> dict:
     output_dir = OUTPUT_PATH / batch_id / "04_zhibu"
     ensure_dir(output_dir)
     output_file = output_dir / "zhibu_output.json"
-    output_file.write_text(json.dumps(output_json, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
+    output_file.write_text(json.dumps(output_json, ensure_ascii=False, indent=4, default=str), encoding="utf-8")
 
     if progress_callback:
         progress_callback(1.0, "智布完成 ✅")
