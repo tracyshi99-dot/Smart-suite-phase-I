@@ -911,15 +911,24 @@ elif _page_idx == 1:
 
             # Editable table
             show_cols = [c for c in ["ai_query", "source", "accuracy_score", "category", "is_selected"] if c in df_display.columns]
-            # Add accuracy_score column if not present
+            # Add accuracy_score column if not present, auto-compute
             if "accuracy_score" not in df_display.columns:
-                df_display["accuracy_score"] = "—"
+                def _auto_score(q):
+                    q = str(q)
+                    score = 3.0
+                    if 10 <= len(q) <= 25: score += 0.5
+                    elif len(q) > 25: score += 0.3
+                    if any(w in q for w in ["怎么", "如何", "多少", "哪些", "为什么", "什么", "能不能", "how", "what", "why"]): score += 0.5
+                    if any(w in q.lower() for w in ["亚马逊", "amazon", "fba", "注册", "开店", "选品", "物流", "广告", "listing"]): score += 0.5
+                    if any(w in q for w in ["吗", "呢", "啊", "吧", "?"]): score += 0.3
+                    return min(5.0, round(score, 1))
+                df_display["accuracy_score"] = df_display["ai_query"].apply(_auto_score) if "ai_query" in df_display.columns else "—"
                 show_cols = [c for c in ["ai_query", "source", "accuracy_score", "category", "is_selected"] if c in df_display.columns]
             else:
-                # Convert 0-100 score to 1-5 scale
+                # Convert 0-100 score to 1-5 scale if needed
                 df_display["accuracy_score"] = pd.to_numeric(df_display["accuracy_score"], errors="coerce").fillna(0)
                 df_display["accuracy_score"] = df_display["accuracy_score"].apply(
-                    lambda x: round(x / 20, 1) if x > 0 else "—"
+                    lambda x: round(x / 20, 1) if x > 5 else (round(x, 1) if x > 0 else "—")
                 )
             if show_cols:
                 # Bulk select/deselect buttons
