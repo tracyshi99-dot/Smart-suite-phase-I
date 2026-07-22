@@ -146,7 +146,7 @@ def load_batch_file(batch_id: str, sub_path: str) -> str:
 
 
 def sync_batch_to_s3(batch_id: str, local_path):
-    """Sync an entire local batch directory to S3."""
+    """Sync an entire local batch directory to S3 (organized by user login)."""
     import os
     from pathlib import Path
     local = Path(local_path) if not isinstance(local_path, Path) else local_path
@@ -165,13 +165,42 @@ def sync_batch_to_s3(batch_id: str, local_path):
                 s3.put_object(Bucket=S3_BUCKET, Key=s3_key,
                               Body=fpath.read_bytes(),
                               ContentType="text/csv" if f.endswith(".csv") else "application/json")
+
+        # Also save a copy under user_data/{username}/ for easy per-user access
+        # batch_id format is "batch_{username}"
+        if batch_id.startswith("batch_"):
+            username = batch_id[6:]  # strip "batch_"
+            for root, dirs, files in os.walk(batch_dir):
+                for f in files:
+                    fpath = Path(root) / f
+                    rel = fpath.relative_to(batch_dir)
+                    s3_key = f"user_data/{username}/{rel.as_posix()}"
+                    s3.put_object(Bucket=S3_BUCKET, Key=s3_key,
+                                  Body=fpath.read_bytes(),
+                                  ContentType="text/csv" if f.endswith(".csv") else "application/json")
+
+            # Also sync to local user_data folder for git backup
+            user_data_dir = local / "user_data" / username
+            user_data_dir.mkdir(parents=True, exist_ok=True)
+            for root, dirs, files in os.walk(batch_dir):
+                for f in files:
+                    fpath = Path(root) / f
+                    rel = fpath.relative_to(batch_dir)
+                    dst = user_data_dir / rel
+                    dst.parent.mkdir(parents=True, exist_ok=True)
+                    try:
+                        import shutil
+                        shutil.copy2(str(fpath), str(dst))
+                    except Exception:
+                        pass
         return True
     except Exception:
         return False
 
 
 def load_batch_from_s3(batch_id: str, local_path):
-    """Load batch files from S3 into local directory (if not already present locally)."""
+    """Load batch files from S3 into local directory (if not already present locally).
+    Tries both batches/{batch_id}/ and user_data/{username}/ paths."""
     from pathlib import Path
     local = Path(local_path) if not isinstance(local_path, Path) else local_path
     batch_dir = local / batch_id
@@ -179,17 +208,38 @@ def load_batch_from_s3(batch_id: str, local_path):
     if not s3:
         return False
     try:
+        # Try primary path: batches/{batch_id}/
         prefix = f"batches/{batch_id}/"
         resp = s3.list_objects_v2(Bucket=S3_BUCKET, Prefix=prefix)
+        found = False
         for obj in resp.get("Contents", []):
             key = obj["Key"]
             rel_path = key[len(prefix):]
+            if not rel_path:
+                continue
             local_file = batch_dir / rel_path
-            # Only download if local doesn't exist or is older
             if not local_file.exists():
                 local_file.parent.mkdir(parents=True, exist_ok=True)
                 data = s3.get_object(Bucket=S3_BUCKET, Key=key)["Body"].read()
                 local_file.write_bytes(data)
+                found = True
+
+        # Also try user_data/{username}/ path
+        if batch_id.startswith("batch_"):
+            username = batch_id[6:]
+            prefix2 = f"user_data/{username}/"
+            resp2 = s3.list_objects_v2(Bucket=S3_BUCKET, Prefix=prefix2)
+            for obj in resp2.get("Contents", []):
+                key = obj["Key"]
+                rel_path = key[len(prefix2):]
+                if not rel_path:
+                    continue
+                local_file = batch_dir / rel_path
+                if not local_file.exists():
+                    local_file.parent.mkdir(parents=True, exist_ok=True)
+                    data = s3.get_object(Bucket=S3_BUCKET, Key=key)["Body"].read()
+                    local_file.write_bytes(data)
+                    found = True
         return True
     except Exception:
         return False

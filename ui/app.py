@@ -511,12 +511,29 @@ def safe_copy(src: Path, dst: Path):
 
 
 def auto_sync_batch(batch_id: str):
-    """Auto-sync the current user's batch to S3 in background (non-blocking).
+    """Auto-sync the current user's batch AND requests data to S3.
     Called via session_state flag to avoid blocking UI."""
     try:
-        from s3_sync import sync_batch_to_s3, s3_available
+        from s3_sync import sync_batch_to_s3, s3_available, save_batch_file
         if s3_available():
+            # Sync batch data (zhiku, zhice, zhizao, zhiyou, zhibu)
             sync_batch_to_s3(batch_id, OUTPUT_PATH)
+
+            # Also sync requests/{username}/ data (performance, metrics, etc.)
+            if batch_id.startswith("batch_"):
+                username = batch_id[6:]
+                req_dir = OUTPUT_PATH / "requests" / username
+                if req_dir.exists():
+                    import os
+                    from s3_sync import _get_s3, S3_BUCKET
+                    s3 = _get_s3()
+                    if s3:
+                        for f in req_dir.iterdir():
+                            if f.is_file():
+                                s3_key = f"user_data/{username}/requests/{f.name}"
+                                s3.put_object(Bucket=S3_BUCKET, Key=s3_key,
+                                              Body=f.read_bytes(),
+                                              ContentType="application/json")
     except Exception:
         pass
 
@@ -3398,6 +3415,7 @@ elif _page_idx == 7:
                     if st.button("✅ " + ("Confirm Upload" if is_en else "确认上传"), key="confirm_perf_upload"):
                         _perf_file.parent.mkdir(parents=True, exist_ok=True)
                         _perf_file.write_text(df_up_perf.to_json(orient="records", force_ascii=False), encoding="utf-8")
+                        mark_data_changed()
                         st.success("✅ Uploaded!")
                         st.rerun()
                 except Exception as e:
@@ -3433,6 +3451,7 @@ elif _page_idx == 7:
                     _custom_metrics.append({"name": m_name, "date": str(m_date), "user": current_user})
                     _metrics_file.parent.mkdir(parents=True, exist_ok=True)
                     _metrics_file.write_text(json.dumps(_custom_metrics, ensure_ascii=False, indent=2), encoding="utf-8")
+                    mark_data_changed()
                     st.rerun()
 
         if _custom_metrics:
@@ -3458,6 +3477,7 @@ elif _page_idx == 7:
             })
             _req_file.parent.mkdir(parents=True, exist_ok=True)
             _req_file.write_text(json.dumps(all_reqs, ensure_ascii=False, indent=2), encoding="utf-8")
+            mark_data_changed()
             st.success("✅ " + ("Request submitted to admin!" if is_en else "需求已提交到管理员！"))
 
     # ============================================================
