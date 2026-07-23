@@ -3225,7 +3225,7 @@ elif _page_idx == 5:
     if zhibu_total > 0:
         st.progress(min(1.0, zhibu_done / zhibu_total), text=f"{'Published' if is_en else '已格式化'} {zhibu_done}/{zhibu_total} {'articles' if is_en else '篇'}")
 
-    col_exec1, col_exec2 = st.columns(2)
+    col_exec1 = st.columns(1)[0]
     with col_exec1:
         if zhibu_done > 0 and zhibu_done < zhibu_total:
             btn_zhibu = f"🔄 {'Continue formatting remaining' if is_en else '继续格式化剩余'} {zhibu_total - zhibu_done} {'articles' if is_en else '篇'}"
@@ -3244,18 +3244,6 @@ elif _page_idx == 5:
                     st.error(f"❌ {'Failed' if is_en else '失败'}: {result['error']}")
             except ImportError:
                 st.error("engine module not ready" if is_en else "engine 模块未就绪")
-    with col_exec2:
-        if st.button("📄 Generate Word Docs" if is_en else "📄 生成 Word 文档", key="run_word"):
-            try:
-                from engine import generate_word_docs
-                with st.spinner("Generating Word documents..." if is_en else "正在生成 Word 文档..."):
-                    result = generate_word_docs(selected_batch)
-                if result["success"]:
-                    st.success(f"✅ {'Word generation complete!' if is_en else 'Word 生成完成！'} {result.get('doc_count', 0)} {'articles' if is_en else '篇'}")
-                else:
-                    st.error(f"❌ {'Failed' if is_en else '失败'}: {result['error']}")
-            except ImportError:
-                st.error("engine.generate_word_docs not implemented" if is_en else "engine.generate_word_docs 未实现")
 
     st.divider()
 
@@ -3286,21 +3274,6 @@ elif _page_idx == 5:
             st.metric("Source Keywords" if is_en else "源关键词", len(kws) if isinstance(kws, list) else 0)
 
         # --- Download buttons ---
-        _zhibu_json_file = OUTPUT_PATH / selected_batch / "04_zhibu" / "zhibu_output.json"
-        if _zhibu_json_file.exists():
-            _dl_zb1, _dl_zb2 = st.columns(2)
-            with _dl_zb1:
-                st.download_button("⬇️ " + ("Download Full JSON (for Lego)" if is_en else "下载完整 JSON (用于 Lego 导入)"),
-                                   _zhibu_json_file.read_bytes(), file_name="zhibu_output.json",
-                                   mime="application/json", key="dl_zhibu_full_json", use_container_width=True)
-            with _dl_zb2:
-                # Also offer CSV download of optimized content
-                _opt_csv = OUTPUT_PATH / selected_batch / "03_zhiyou" / "zhiyou_optimized_content.csv"
-                if _opt_csv.exists():
-                    st.download_button("⬇️ " + ("Download Optimized Content (CSV)" if is_en else "下载优化内容 (CSV)"),
-                                       _opt_csv.read_bytes(), file_name="zhiyou_optimized_content.csv",
-                                       mime="text/csv", key="dl_zhibu_opt_csv", use_container_width=True)
-
         items = data.get("items", [])
         if items:
             rows = []
@@ -3338,6 +3311,22 @@ elif _page_idx == 5:
                 title = item.get("meta", {}).get("title", f"Item {i+1}")
                 with st.expander(f"📄 {title}", expanded=(i == 0)):
                     st.json(item)
+
+        # --- Download buttons (after preview) ---
+        st.divider()
+        _zhibu_json_file = OUTPUT_PATH / selected_batch / "04_zhibu" / "zhibu_output.json"
+        if _zhibu_json_file.exists():
+            _dl_zb1, _dl_zb2 = st.columns(2)
+            with _dl_zb1:
+                st.download_button("⬇️ " + ("Download Full JSON (for Lego)" if is_en else "下载完整 JSON (用于 Lego 导入)"),
+                                   _zhibu_json_file.read_bytes(), file_name="zhibu_output.json",
+                                   mime="application/json", key="dl_zhibu_full_json", use_container_width=True)
+            with _dl_zb2:
+                _opt_csv = OUTPUT_PATH / selected_batch / "03_zhiyou" / "zhiyou_optimized_content.csv"
+                if _opt_csv.exists():
+                    st.download_button("⬇️ " + ("Download Optimized Content (CSV)" if is_en else "下载优化内容 (CSV)"),
+                                       _opt_csv.read_bytes(), file_name="zhiyou_optimized_content.csv",
+                                       mime="text/csv", key="dl_zhibu_opt_csv", use_container_width=True)
     else:
         st.info(f"{'Batch' if is_en else '批次'} {selected_batch} {'has no publishing output yet' if is_en else '暂无智布输出'}")
 
