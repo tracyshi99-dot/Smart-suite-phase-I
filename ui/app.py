@@ -2475,23 +2475,41 @@ elif _page_idx == 3:
                 df_z.to_csv(zhizao_file, index=False, encoding="utf-8-sig")
                 st.success("✅ Changes auto-saved" if is_en else "✅ 修改已自动保存")
 
-        # Download / Upload / Clear (after preview)
+        # Upload / Clear (after preview)
         st.divider()
-        col_dl, col_ul, col_cl = st.columns(3)
-        with col_dl:
-            csv_bytes = df_z.to_csv(index=False).encode("utf-8-sig")
-            st.download_button("📥 Download CSV" if is_en else "📥 下载 CSV", csv_bytes,
-                               file_name=f"zhizao_{selected_batch}.csv", mime="text/csv")
+        col_ul, col_cl = st.columns(2)
         with col_ul:
             uploaded_zhizao = st.file_uploader(
-                "📤 Upload Modified File" if is_en else "📤 上传修改后文件", type=["csv"], key="upload_zhizao_edit"
+                "📤 Upload Modified File" if is_en else "📤 上传修改后文件（按标题自动匹配更新）", type=["csv"], key="upload_zhizao_edit"
             )
             if uploaded_zhizao is not None:
-                df_new = pd.read_csv(uploaded_zhizao, on_bad_lines="skip")
+                df_new = pd.read_csv(uploaded_zhizao, on_bad_lines="skip", encoding="utf-8-sig")
                 out_path = OUTPUT_PATH / selected_batch / "02_zhizao" / "zhizao_draft_content.csv"
                 out_path.parent.mkdir(parents=True, exist_ok=True)
-                df_new.to_csv(out_path, index=False, encoding="utf-8-sig")
-                st.success(f"✅ {'Uploaded and replaced' if is_en else '已上传覆盖'} {len(df_new)} {'records' if is_en else '条记录'}")
+                # Smart merge: match by title or ai_query, update content
+                if not df_z.empty and "title" in df_new.columns and "title" in df_z.columns:
+                    updated_count = 0
+                    for _, new_row in df_new.iterrows():
+                        match_col = "title" if "title" in df_z.columns else "ai_query"
+                        match_val = str(new_row.get(match_col, "")).strip()
+                        mask = df_z[match_col].astype(str).str.strip() == match_val
+                        if mask.any():
+                            # Update existing row
+                            for col in df_new.columns:
+                                if col in df_z.columns and col != match_col:
+                                    df_z.loc[mask, col] = new_row[col]
+                            updated_count += 1
+                    if updated_count > 0:
+                        df_z.to_csv(out_path, index=False, encoding="utf-8-sig")
+                        st.success(f"✅ {'Updated' if is_en else '已更新'} {updated_count} {'articles (matched by title)' if is_en else '篇（按标题匹配）'}")
+                    else:
+                        # No match found, full replace
+                        df_new.to_csv(out_path, index=False, encoding="utf-8-sig")
+                        st.success(f"✅ {'No title match, replaced all with' if is_en else '无标题匹配，已全部替换为'} {len(df_new)} {'records' if is_en else '条'}")
+                else:
+                    df_new.to_csv(out_path, index=False, encoding="utf-8-sig")
+                    st.success(f"✅ {'Uploaded' if is_en else '已上传'} {len(df_new)} {'records' if is_en else '条记录'}")
+                st.rerun()
         with col_cl:
             if st.button("🗑️ Clear History" if is_en else "🗑️ 清空历史", key="clear_zhizao"):
                 zhizao_dir = OUTPUT_PATH / selected_batch / "02_zhizao"
