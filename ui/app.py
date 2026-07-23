@@ -2101,11 +2101,22 @@ elif _page_idx == 2:
                     axis=1
                 ) if "gap_status" in df_gap_display.columns else True
 
-        show_cols = [c for c in ["ai_query", "gap_status", "has_brand_mention", "has_official_link", "sentiment", "competitors", "competitor_gap", "to_produce"] if c in df_gap_display.columns]
+        # Add platform column if not present
+        if "platforms_tested" in df_gap_display.columns and "platform" not in df_gap_display.columns:
+            df_gap_display["platform"] = df_gap_display["platforms_tested"].apply(
+                lambda x: f"{x} platforms" if str(x).isdigit() else str(x) if str(x) not in ["nan", ""] else "qianwen"
+            )
+
+        show_cols = [c for c in ["ai_query", "platform", "gap_status", "has_brand_mention", "has_official_link", "sentiment", "competitors", "competitor_gap", "to_produce"] if c in df_gap_display.columns]
         if show_cols:
             col_config = {
+                "ai_query": st.column_config.TextColumn("Search Phrase" if is_en else "检索短语"),
+                "platform": st.column_config.TextColumn("Platform" if is_en else "验证平台"),
+                "gap_status": st.column_config.TextColumn("Gap Status" if is_en else "覆盖状态"),
+                "has_brand_mention": st.column_config.CheckboxColumn("Brand/Product Mention" if is_en else "品牌/产品名称提及", disabled=True),
+                "has_official_link": st.column_config.CheckboxColumn("Official Link" if is_en else "官网链接", disabled=True),
                 "to_produce": st.column_config.CheckboxColumn("→ Produce" if is_en else "→ 生产"),
-                "competitor_gap": st.column_config.CheckboxColumn("🔥 Comp Gap", disabled=True),
+                "competitor_gap": st.column_config.CheckboxColumn("Comp Gap" if is_en else "竞品Gap", disabled=True),
                 "competitors": st.column_config.TextColumn("Competitors" if is_en else "竞品出现"),
                 "sentiment": st.column_config.TextColumn("Tone" if is_en else "内容情感"),
             }
