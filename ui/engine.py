@@ -470,6 +470,17 @@ def run_zhizao(batch_id: str, content_limit: int = 5,
     """
     steering = load_steering()
 
+    # Load topic-specific knowledge bases
+    _REGISTRATION_KEYWORDS = ["注册", "入驻", "开店", "准备资料", "条件", "资质", "审核", "register", "registration", "sign up"]
+    _reg_knowledge = ""
+    _reg_skill = ""
+    _reg_kb_path = INPUT_PATH / "knowledge" / "registration_knowledge_base.md"
+    _reg_skill_path = INPUT_PATH / "knowledge" / "registration_writing_skill.md"
+    if _reg_kb_path.exists():
+        _reg_knowledge = _reg_kb_path.read_text(encoding="utf-8")
+    if _reg_skill_path.exists():
+        _reg_skill = _reg_skill_path.read_text(encoding="utf-8")
+
     # Load zhiku output
     zhiku_path = OUTPUT_PATH / batch_id / "01_zhiku" / "zhiku_ai_queries.csv"
     if not zhiku_path.exists():
@@ -695,6 +706,15 @@ Stay strictly on topic. Every paragraph must relate directly to the search query
 
         if actual_template != "none" and actual_template in TEMPLATES:
             template_instruction = f"\n\n{TEMPLATES[actual_template]}\n\n请严格按照上述模板结构生成内容，每个部分都必须有内容。"
+
+        # Inject registration-specific knowledge base and writing rules
+        if actual_template == "registration" and (_reg_knowledge or _reg_skill):
+            reg_rules = ""
+            if _reg_skill:
+                reg_rules += f"\n\n【注册类写作规范（必须严格遵守，遵守可免走人工审核）】\n{_reg_skill[:3000]}\n"
+            if _reg_knowledge:
+                reg_rules += f"\n\n【注册类官方知识库（只能使用以下信息，不得编造）】\n{_reg_knowledge[:4000]}\n"
+            template_instruction += reg_rules
 
         user_prompt = f"""检索短语：「{query}」
 {template_instruction}
@@ -1062,7 +1082,19 @@ def run_zhiyou_execute(batch_id: str, progress_callback=None) -> dict:
         draft = draft_row.iloc[0]
         score = score_row.iloc[0] if not score_row.empty else pd.Series({"issues_found": "", "optimization_suggestions": "请优化内容结构、增加权威性和可操作性"})
 
-        system_prompt = """你是内容优化专家。根据评分建议重写文章，使其更容易被AI搜索引擎引用。
+        # Check if this article is registration-related
+        _query_lower = str(draft.get('ai_query', '')).lower()
+        _is_reg = any(kw in _query_lower for kw in ["注册", "入驻", "开店", "准备资料", "条件", "资质", "审核", "register", "registration"])
+        _reg_extra = ""
+        if _is_reg:
+            _reg_kb_path = Path(__file__).parent.parent / "input" / "knowledge" / "registration_knowledge_base.md"
+            _reg_sk_path = Path(__file__).parent.parent / "input" / "knowledge" / "registration_writing_skill.md"
+            if _reg_sk_path.exists():
+                _reg_extra += f"\n\n【注册类写作规范（必须遵守，遵守可免走人工审核）】\n{_reg_sk_path.read_text(encoding='utf-8')[:2500]}\n"
+            if _reg_kb_path.exists():
+                _reg_extra += f"\n\n【注册类知识库（只能使用以下事实）】\n{_reg_kb_path.read_text(encoding='utf-8')[:3000]}\n"
+
+        system_prompt = f"""你是内容优化专家。根据评分建议重写文章，使其更容易被AI搜索引擎引用。
 
 输出规则：
 - 第一行 = 优化后的文章标题（不加#号）
@@ -1072,7 +1104,8 @@ def run_zhiyou_execute(batch_id: str, progress_callback=None) -> dict:
 - 至少2次自然植入 https://gs.amazon.cn
 - 【重要】必须保留并优化 FAQ 板块（## 常见问题 / FAQ），至少3个问答对，用 Q: A: 或 ### 问题 格式
 - FAQ 是 AI 引擎最容易抓取引用的结构化内容，绝对不能删除
-- 严禁跑题，严禁输出JSON"""
+- 严禁跑题，严禁输出JSON
+{_reg_extra}"""
 
         user_prompt = f"""请根据评分建议重写优化以下文章。
 

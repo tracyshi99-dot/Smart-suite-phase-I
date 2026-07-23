@@ -3070,6 +3070,53 @@ elif _page_idx == 4:
             if not all_reviewed:
                 st.warning(f"⏳ {int(pending)} articles pending POC approval. Cannot proceed to 智布 until all approved." if is_en else f"⏳ {int(pending)} 篇待 POC 审批。审批完成后才能进入智布。")
 
+        # --- TAX Compliance Audit (QuickSight Integration) ---
+        st.divider()
+        st.subheader("🏛️ TAX Compliance Audit" if is_en else "🏛️ TAX 合规审核")
+        st.caption("For registration/fees/VAT content — linked to QuickSight TAX review workflow" if is_en else "注册/费用/VAT 相关内容 — 关联 QuickSight TAX 审核流程")
+
+        # TAX-related categories
+        TAX_CATEGORIES = ["新手怎么注册亚马逊", "亚马逊开店成本费用详解", "欧洲增值税VAT介绍",
+                          "其他站点税务要求", "合规政策及操作流程"]
+
+        # Identify TAX-related articles in current batch
+        tax_articles = []
+        if not df_opt.empty:
+            for _, row in df_opt.iterrows():
+                content = str(row.get("optimized_content", row.get("content_draft", "")))
+                query = str(row.get("ai_query", ""))
+                cat = str(row.get("category", ""))
+                # Check if article is TAX-related
+                is_tax = (cat in TAX_CATEGORIES or
+                          any(kw in query.lower() for kw in ["注册", "费用", "vat", "税", "开店", "registration", "fee", "tax"]) or
+                          any(kw in content[:500].lower() for kw in ["vat", "税务", "增值税", "注册费", "年费"]))
+                if is_tax:
+                    tax_articles.append({
+                        "content_id": row.get("content_id", ""),
+                        "title": str(row.get("optimized_title", row.get("title", query)))[:60],
+                        "query": query[:50],
+                        "tax_status": "✅ Reviewed" if row.get("poc_approved", False) else "⏳ Pending",
+                    })
+
+        if tax_articles:
+            st.dataframe(pd.DataFrame(tax_articles), use_container_width=True, hide_index=True)
+            st.caption(f"{len(tax_articles)} articles flagged for TAX compliance review" if is_en else f"{len(tax_articles)} 篇文章标记需要 TAX 合规审核")
+        else:
+            st.caption("No TAX-related articles in current batch" if is_en else "当前批次无 TAX 相关文章")
+
+        # QuickSight Dashboard embed link
+        with st.expander("📊 QuickSight TAX Review Dashboard", expanded=False):
+            st.markdown("""
+**TAX 审核流程 Dashboard (QuickSight)**
+
+直接打开 QuickSight 查看审核状态：
+
+🔗 [Open TAX Review Dashboard](https://us-east-1.quicksight.aws.amazon.com/sn/account/amazonbi/start/agents?view=798deaf2-16ca-4da2-a1a0-dd910847051b)
+
+> ⚠️ 需要 Amazon 内网权限访问。QuickSight 为只读参考，实际审核在智优界面完成后同步。
+""")
+            st.caption("Note: QuickSight does not have a write API. Approval status is managed in Smart Suite and synced via batch export." if is_en else "注：QuickSight 无写入 API，审核状态在 Smart Suite 内管理，通过批次导出同步。")
+
     # CTA → 智布 (only enabled when all POC reviews complete)
     st.divider()
     can_proceed = True
