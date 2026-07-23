@@ -2429,7 +2429,8 @@ elif _page_idx == 3:
                 word_count = row.get("word_count", "?")
                 _art_col, _dl_col = st.columns([6, 1])
                 with _art_col:
-                    with st.expander(f"📄 {title} ({word_count} {'words' if is_en else '字'})"):
+                    _ver = str(row.get("version", "v1"))
+                    with st.expander(f"📄 {title} ({word_count} {'words' if is_en else '字'}) [{_ver}]"):
                         if "ai_query" in df_z.columns:
                             st.caption(f"{'Search phrase' if is_en else '检索短语'}: {row.get('ai_query', '')}")
                         if "content_draft" in df_z.columns:
@@ -2444,6 +2445,14 @@ elif _page_idx == 3:
                             if edited_content != original:
                                 df_z.at[idx, "content_draft"] = edited_content
                                 df_z.at[idx, "word_count"] = len(edited_content)
+                                # Auto-increment version
+                                cur_ver = str(row.get("version", "v1"))
+                                try:
+                                    ver_num = int(cur_ver.replace("v", "").replace("V", "")) + 1
+                                except (ValueError, AttributeError):
+                                    ver_num = 2
+                                df_z.at[idx, "version"] = f"v{ver_num}"
+                                df_z.at[idx, "updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                                 content_changed = True
 
                             # Save as template button
@@ -2496,8 +2505,16 @@ elif _page_idx == 3:
                         if mask.any():
                             # Update existing row
                             for col in df_new.columns:
-                                if col in df_z.columns and col != match_col:
+                                if col in df_z.columns and col not in [match_col, "version", "updated_at"]:
                                     df_z.loc[mask, col] = new_row[col]
+                            # Auto-increment version
+                            cur_ver = str(df_z.loc[mask, "version"].iloc[0]) if "version" in df_z.columns else "v1"
+                            try:
+                                ver_num = int(cur_ver.replace("v", "").replace("V", "")) + 1
+                            except (ValueError, AttributeError):
+                                ver_num = 2
+                            df_z.loc[mask, "version"] = f"v{ver_num}"
+                            df_z.loc[mask, "updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                             updated_count += 1
                     if updated_count > 0:
                         df_z.to_csv(out_path, index=False, encoding="utf-8-sig")
