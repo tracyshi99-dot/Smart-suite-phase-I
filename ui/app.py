@@ -2427,42 +2427,49 @@ elif _page_idx == 3:
             for idx, row in df_z.iterrows():
                 title = str(row.get("title", f"{'Article' if is_en else '文章'} {idx+1}"))
                 word_count = row.get("word_count", "?")
-                with st.expander(f"📄 {title} ({word_count} {'words' if is_en else '字'})"):
-                    if "ai_query" in df_z.columns:
-                        st.caption(f"{'Search phrase' if is_en else '检索短语'}: {row.get('ai_query', '')}")
-                    if "content_draft" in df_z.columns:
-                        original = str(row.get("content_draft", ""))
-                        edited_content = st.text_area(
-                            "Body Content" if is_en else "正文内容",
-                            value=original,
-                            height=300,
-                            key=f"edit_article_{idx}",
-                            label_visibility="collapsed",
-                        )
-                        if edited_content != original:
-                            df_z.at[idx, "content_draft"] = edited_content
-                            df_z.at[idx, "word_count"] = len(edited_content)
-                            content_changed = True
+                _art_col, _dl_col = st.columns([6, 1])
+                with _art_col:
+                    with st.expander(f"📄 {title} ({word_count} {'words' if is_en else '字'})"):
+                        if "ai_query" in df_z.columns:
+                            st.caption(f"{'Search phrase' if is_en else '检索短语'}: {row.get('ai_query', '')}")
+                        if "content_draft" in df_z.columns:
+                            original = str(row.get("content_draft", ""))
+                            edited_content = st.text_area(
+                                "Body Content" if is_en else "正文内容",
+                                value=original,
+                                height=300,
+                                key=f"edit_article_{idx}",
+                                label_visibility="collapsed",
+                            )
+                            if edited_content != original:
+                                df_z.at[idx, "content_draft"] = edited_content
+                                df_z.at[idx, "word_count"] = len(edited_content)
+                                content_changed = True
 
-                        # Save as template button
-                        if st.button("💾 Save as Template" if is_en else "💾 保存为模板", key=f"save_tpl_{idx}"):
-                            tpl_dir = BASE_PATH / "templates"
-                            tpl_dir.mkdir(parents=True, exist_ok=True)
-                            tpl_name = str(row.get("ai_query", f"template_{idx}"))[:50].strip()
-                            tpl_file = tpl_dir / f"{tpl_name}.json"
-                            import json as _json
-                            tpl_data = {
-                                "name": tpl_name,
-                                "source_query": str(row.get("ai_query", "")),
-                                "title": str(row.get("title", "")),
-                                "content": edited_content if edited_content != original else original,
-                                "category": str(row.get("category", "")),
-                                "word_count": len(edited_content if edited_content != original else original),
-                                "created_from": f"{selected_batch}/{row.get('content_id', '')}",
-                                "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                            }
-                            tpl_file.write_text(_json.dumps(tpl_data, ensure_ascii=False, indent=2), encoding="utf-8")
-                            st.success(f"✅ {'Saved to template library' if is_en else '已保存到模板库'}: {tpl_name}")
+                            # Save as template button
+                            if st.button("💾 Save as Template" if is_en else "💾 保存为模板", key=f"save_tpl_{idx}"):
+                                tpl_dir = BASE_PATH / "templates"
+                                tpl_dir.mkdir(parents=True, exist_ok=True)
+                                tpl_name = str(row.get("ai_query", f"template_{idx}"))[:50].strip()
+                                tpl_file = tpl_dir / f"{tpl_name}.json"
+                                import json as _json
+                                tpl_data = {
+                                    "name": tpl_name,
+                                    "source_query": str(row.get("ai_query", "")),
+                                    "title": str(row.get("title", "")),
+                                    "content": edited_content if edited_content != original else original,
+                                    "category": str(row.get("category", "")),
+                                    "word_count": len(edited_content if edited_content != original else original),
+                                    "created_from": f"{selected_batch}/{row.get('content_id', '')}",
+                                    "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                                }
+                                tpl_file.write_text(_json.dumps(tpl_data, ensure_ascii=False, indent=2), encoding="utf-8")
+                                st.success(f"✅ {'Saved to template library' if is_en else '已保存到模板库'}: {tpl_name}")
+                with _dl_col:
+                    _article_text = f"# {title}\n\n{str(row.get('content_draft', ''))}"
+                    st.download_button("⬇️", _article_text.encode("utf-8"),
+                                       file_name=f"{str(row.get('ai_query', f'article_{idx}'))[:30]}.md",
+                                       mime="text/markdown", key=f"dl_zhizao_art_{idx}")
             # Auto-save if any content changed
             if content_changed:
                 df_z.to_csv(zhizao_file, index=False, encoding="utf-8-sig")
@@ -2869,17 +2876,24 @@ elif _page_idx == 4:
         for idx, row in df_opt.iterrows():
             title = str(row.get(title_col, f"{'Article' if is_en else '文章'} {idx+1}"))
             word_count = row.get("word_count", "?")
-            with st.expander(f"📄 {title} ({word_count} {'words' if is_en else '字'})"):
-                if "ai_query" in df_opt.columns:
-                    st.caption(f"{'Search phrase' if is_en else '检索短语'}: {row.get('ai_query', '')}")
-                if content_col in df_opt.columns:
-                    original = str(row.get(content_col, ""))
-                    edited = st.text_area("Content" if is_en else "内容", value=original, height=300,
-                                          key=f"zhiyou_edit_{idx}", label_visibility="collapsed")
-                    if edited != original:
-                        df_opt.at[idx, content_col] = edited
-                        df_opt.at[idx, "word_count"] = len(edited)
-                        content_changed = True
+            _opt_col, _opt_dl = st.columns([6, 1])
+            with _opt_col:
+                with st.expander(f"📄 {title} ({word_count} {'words' if is_en else '字'})"):
+                    if "ai_query" in df_opt.columns:
+                        st.caption(f"{'Search phrase' if is_en else '检索短语'}: {row.get('ai_query', '')}")
+                    if content_col in df_opt.columns:
+                        original = str(row.get(content_col, ""))
+                        edited = st.text_area("Content" if is_en else "内容", value=original, height=300,
+                                              key=f"zhiyou_edit_{idx}", label_visibility="collapsed")
+                        if edited != original:
+                            df_opt.at[idx, content_col] = edited
+                            df_opt.at[idx, "word_count"] = len(edited)
+                            content_changed = True
+            with _opt_dl:
+                _opt_text = f"# {title}\n\n{str(row.get(content_col, ''))}"
+                st.download_button("⬇️", _opt_text.encode("utf-8"),
+                                   file_name=f"{str(row.get('ai_query', f'article_{idx}'))[:30]}.md",
+                                   mime="text/markdown", key=f"dl_zhiyou_art_{idx}")
 
         if content_changed:
             df_opt.to_csv(opt_file, index=False, encoding="utf-8-sig")
@@ -3309,8 +3323,15 @@ elif _page_idx == 5:
         if items:
             for i, item in enumerate(items):
                 title = item.get("meta", {}).get("title", f"Item {i+1}")
-                with st.expander(f"📄 {title}", expanded=(i == 0)):
-                    st.json(item)
+                col_prev, col_dl = st.columns([5, 1])
+                with col_prev:
+                    with st.expander(f"📄 {title}", expanded=(i == 0)):
+                        st.json(item)
+                with col_dl:
+                    _single_json = json.dumps(item, ensure_ascii=False, indent=4)
+                    st.download_button("⬇️", _single_json.encode("utf-8"),
+                                       file_name=f"{item.get('content_id', f'item_{i+1}')}.json",
+                                       mime="application/json", key=f"dl_single_{i}")
 
         # --- Download buttons (after preview) ---
         st.divider()
