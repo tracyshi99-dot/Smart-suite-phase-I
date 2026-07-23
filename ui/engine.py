@@ -1422,17 +1422,23 @@ def run_zhibu(batch_id: str, progress_callback=None) -> dict:
     items = []
     for _, row in df_opt.iterrows():
         cid = row.get("content_id", "")
+        # Sanitize pandas NaN values at read time
+        def _safe_str(val, default=""):
+            s = str(val) if val is not None else default
+            return default if s.lower() in ("nan", "none", "null") else s
+
+        cid = _safe_str(row.get("content_id", ""))
         score_row = df_score[df_score["content_id"] == cid].iloc[0] if not df_score.empty and cid in df_score.get("content_id", pd.Series()).values else {}
 
-        title = str(row.get("optimized_title", row.get("title", "")))
-        content = str(row.get("optimized_content", row.get("content_draft", "")))
-        ai_query = str(row.get("ai_query", ""))
+        title = _safe_str(row.get("optimized_title", row.get("title", "")))
+        content = _safe_str(row.get("optimized_content", row.get("content_draft", "")))
+        ai_query = _safe_str(row.get("ai_query", ""))
 
         # Build Lego-compatible item structure (matches batch_001 format)
         item = {
             "content_id": cid,
-            "query_id": row.get("query_id", ""),
-            "keyword_id": row.get("keyword_id", ""),
+            "query_id": _safe_str(row.get("query_id", "")),
+            "keyword_id": _safe_str(row.get("keyword_id", "")),
             "keyword": ai_query,
             "ai_query": ai_query,
             "meta": {
@@ -1442,7 +1448,7 @@ def run_zhibu(batch_id: str, progress_callback=None) -> dict:
             "structure": _extract_structure(content, title),
             "body": content,
             "faq": _extract_faq(content),
-            "cta": row.get("optimized_cta", f"立即前往亚马逊卖家平台了解更多：https://gs.amazon.cn"),
+            "cta": _safe_str(row.get("optimized_cta", ""), "立即前往亚马逊卖家平台了解更多：https://gs.amazon.cn"),
             "seo": {
                 "keywords": _extract_keywords(ai_query, content),
                 "intent_type": "informational",
@@ -1478,6 +1484,21 @@ def run_zhibu(batch_id: str, progress_callback=None) -> dict:
         "total_items": len(items),
         "items": items,
     }
+
+    # Sanitize: replace NaN/nan/None with empty string for Lego compatibility
+    import math
+    def _sanitize(obj):
+        if isinstance(obj, dict):
+            return {k: _sanitize(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [_sanitize(v) for v in obj]
+        elif isinstance(obj, float) and (math.isnan(obj) or math.isinf(obj)):
+            return ""
+        elif isinstance(obj, str) and obj.lower() in ("nan", "none", "null"):
+            return ""
+        return obj
+
+    output_json = _sanitize(output_json)
 
     output_dir = OUTPUT_PATH / batch_id / "04_zhibu"
     ensure_dir(output_dir)
