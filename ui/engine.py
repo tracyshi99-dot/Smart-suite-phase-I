@@ -491,7 +491,11 @@ def run_zhizao(batch_id: str, content_limit: int = 5,
     # Filter selected
     if "is_selected" in df_q.columns:
         df_q["is_selected"] = df_q["is_selected"].astype(str).str.strip().str.upper()
-        df_q = df_q[df_q["is_selected"].isin(["TRUE", "1", "YES"])]
+        df_q_selected = df_q[df_q["is_selected"].isin(["TRUE", "1", "YES"])]
+    else:
+        df_q_selected = df_q
+
+    selected_count = len(df_q_selected)
 
     # Skip already-generated queries (so subsequent runs produce NEW articles)
     output_dir = OUTPUT_PATH / batch_id / "02_zhizao"
@@ -499,16 +503,19 @@ def run_zhizao(batch_id: str, content_limit: int = 5,
     if existing_output_file.exists() and existing_output_file.stat().st_size > 0:
         try:
             df_existing = pd.read_csv(existing_output_file, encoding="utf-8-sig", on_bad_lines="skip")
-            if not df_existing.empty and "ai_query" in df_existing.columns and "ai_query" in df_q.columns:
+            if not df_existing.empty and "ai_query" in df_existing.columns and "ai_query" in df_q_selected.columns:
                 already_done = set(df_existing["ai_query"].dropna().astype(str).str.strip())
-                df_q = df_q[~df_q["ai_query"].astype(str).str.strip().isin(already_done)]
+                df_q_selected = df_q_selected[~df_q_selected["ai_query"].astype(str).str.strip().isin(already_done)]
         except Exception:
             pass
 
-    df_q = df_q.head(content_limit)
+    df_q = df_q_selected.head(content_limit)
 
     if df_q.empty:
-        return {"success": False, "error": "没有已选中的 AI Queries。请先回到【智库】页面，在短语列表中勾选要生成内容的短语（选中列 = ✅），然后再回来执行智造。"}
+        if selected_count == 0:
+            return {"success": False, "error": "没有已选中的 AI Queries。请先回到【智库】页面，在短语列表中勾选要生成内容的短语（选中列 = ✅），然后再回来执行智造。"}
+        else:
+            return {"success": False, "error": f"已选中的 {selected_count} 条短语都已经生成过文章了。如需重新生成，请先在智造页面清空历史记录，或在智库中选中新的短语。"}
 
     output_dir = OUTPUT_PATH / batch_id / "02_zhizao"
     ensure_dir(output_dir)
