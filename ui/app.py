@@ -3335,19 +3335,6 @@ elif _page_idx == 5:
 
         # --- Download buttons (after preview) ---
         st.divider()
-        _zhibu_json_file = OUTPUT_PATH / selected_batch / "04_zhibu" / "zhibu_output.json"
-        if _zhibu_json_file.exists():
-            _dl_zb1, _dl_zb2 = st.columns(2)
-            with _dl_zb1:
-                st.download_button("⬇️ " + ("Download Full JSON (for Lego)" if is_en else "下载完整 JSON (用于 Lego 导入)"),
-                                   _zhibu_json_file.read_bytes(), file_name="zhibu_output.json",
-                                   mime="application/json", key="dl_zhibu_full_json", use_container_width=True)
-            with _dl_zb2:
-                _opt_csv = OUTPUT_PATH / selected_batch / "03_zhiyou" / "zhiyou_optimized_content.csv"
-                if _opt_csv.exists():
-                    st.download_button("⬇️ " + ("Download Optimized Content (CSV)" if is_en else "下载优化内容 (CSV)"),
-                                       _opt_csv.read_bytes(), file_name="zhiyou_optimized_content.csv",
-                                       mime="text/csv", key="dl_zhibu_opt_csv", use_container_width=True)
     else:
         st.info(f"{'Batch' if is_en else '批次'} {selected_batch} {'has no publishing output yet' if is_en else '暂无智布输出'}")
 
