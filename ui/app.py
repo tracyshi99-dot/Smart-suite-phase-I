@@ -1983,7 +1983,7 @@ elif _page_idx == 2:
                         "competitors": ", ".join(unique_competitors) if unique_competitors else "—",
                         "competitor_gap": competitor_gap,
                         "sentiment": overall_sentiment,
-                        "platforms_tested": total_p,
+                        "platforms_tested": ", ".join([ZHICE_PLATFORMS.get(p, p) for p in selected_platforms]),
                     })
                 df_gap = pd.DataFrame(gap_summary)
                 st.session_state["zhice_gap_results"] = df_gap
@@ -2104,7 +2104,7 @@ elif _page_idx == 2:
         # Add platform column if not present
         if "platforms_tested" in df_gap_display.columns and "platform" not in df_gap_display.columns:
             df_gap_display["platform"] = df_gap_display["platforms_tested"].apply(
-                lambda x: f"{x} platforms" if str(x).isdigit() else str(x) if str(x) not in ["nan", ""] else "qianwen"
+                lambda x: str(x) if str(x) not in ["nan", "", "0"] else "通义千问, DeepSeek"
             )
 
         show_cols = [c for c in ["ai_query", "platform", "gap_status", "has_brand_mention", "has_official_link", "sentiment", "competitors", "competitor_gap", "to_produce"] if c in df_gap_display.columns]
