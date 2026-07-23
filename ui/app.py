@@ -2749,6 +2749,27 @@ elif _page_idx == 4:
     # Results display (expanders)
     st.subheader("📊 Results" if is_en else "📊 结果查看")
 
+    # --- Download buttons (visible to all users) ---
+    _dl_col1, _dl_col2, _dl_col3 = st.columns(3)
+    with _dl_col1:
+        _opt_file = OUTPUT_PATH / selected_batch / "03_zhiyou" / "zhiyou_optimized_content.csv"
+        if _opt_file.exists() and _opt_file.stat().st_size > 10:
+            st.download_button("⬇️ " + ("Download Optimized Content (CSV)" if is_en else "下载优化内容 (CSV)"),
+                               _opt_file.read_bytes(), file_name="zhiyou_optimized_content.csv",
+                               mime="text/csv", key="dl_zhiyou_opt", use_container_width=True)
+    with _dl_col2:
+        _sc_file = OUTPUT_PATH / selected_batch / "03_zhiyou" / "zhiyou_scorecard.csv"
+        if _sc_file.exists() and _sc_file.stat().st_size > 10:
+            st.download_button("⬇️ " + ("Download Scorecard (CSV)" if is_en else "下载评分卡 (CSV)"),
+                               _sc_file.read_bytes(), file_name="zhiyou_scorecard.csv",
+                               mime="text/csv", key="dl_zhiyou_sc", use_container_width=True)
+    with _dl_col3:
+        _zhibu_file = OUTPUT_PATH / selected_batch / "04_zhibu" / "zhibu_output.json"
+        if _zhibu_file.exists() and _zhibu_file.stat().st_size > 10:
+            st.download_button("⬇️ " + ("Download JSON for Lego" if is_en else "下载 JSON (Lego 格式)"),
+                               _zhibu_file.read_bytes(), file_name="zhibu_output.json",
+                               mime="application/json", key="dl_zhibu_json", use_container_width=True)
+
     # Scorecard
     with st.expander("📊 Scorecard (Step 3)" if is_en else "📊 评分卡 (Step 3)", expanded=False):
         df_sc = load_scorecard(selected_batch)
@@ -3263,6 +3284,22 @@ elif _page_idx == 5:
         with col3:
             kws = data.get("source_keywords", [])
             st.metric("Source Keywords" if is_en else "源关键词", len(kws) if isinstance(kws, list) else 0)
+
+        # --- Download buttons ---
+        _zhibu_json_file = OUTPUT_PATH / selected_batch / "04_zhibu" / "zhibu_output.json"
+        if _zhibu_json_file.exists():
+            _dl_zb1, _dl_zb2 = st.columns(2)
+            with _dl_zb1:
+                st.download_button("⬇️ " + ("Download Full JSON (for Lego)" if is_en else "下载完整 JSON (用于 Lego 导入)"),
+                                   _zhibu_json_file.read_bytes(), file_name="zhibu_output.json",
+                                   mime="application/json", key="dl_zhibu_full_json", use_container_width=True)
+            with _dl_zb2:
+                # Also offer CSV download of optimized content
+                _opt_csv = OUTPUT_PATH / selected_batch / "03_zhiyou" / "zhiyou_optimized_content.csv"
+                if _opt_csv.exists():
+                    st.download_button("⬇️ " + ("Download Optimized Content (CSV)" if is_en else "下载优化内容 (CSV)"),
+                                       _opt_csv.read_bytes(), file_name="zhiyou_optimized_content.csv",
+                                       mime="text/csv", key="dl_zhibu_opt_csv", use_container_width=True)
 
         items = data.get("items", [])
         if items:
