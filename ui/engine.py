@@ -656,6 +656,42 @@ def run_zhizao(batch_id: str, content_limit: int = 5,
         if knowledge_context:
             knowledge_section = f"\n【官方数据参考】请在文章中引用以下真实数据（标注数据来源）：\n{knowledge_context}\n"
 
+        # --- Load user-uploaded materials (from batch/materials/) ---
+        materials_dir = OUTPUT_PATH / batch_id / "materials"
+        materials_context = ""
+        if materials_dir.exists():
+            query_lower_m = query.lower()
+            for mat_file in materials_dir.iterdir():
+                if not mat_file.is_file():
+                    continue
+                # Check if material filename relates to query keywords
+                fname_lower = mat_file.stem.lower()
+                query_words = [w for w in query_lower_m.replace("？", "").replace("?", "").split() if len(w) > 1]
+                # Match if any query word appears in filename, or just load all materials (< 3 files)
+                match = any(w in fname_lower for w in query_words) or len(list(materials_dir.glob("*"))) <= 3
+                if match:
+                    try:
+                        if mat_file.suffix in [".txt", ".md", ".csv"]:
+                            mat_text = mat_file.read_text(encoding="utf-8")[:2000]
+                        elif mat_file.suffix == ".docx":
+                            try:
+                                from docx import Document as DocxDocument
+                                doc = DocxDocument(str(mat_file))
+                                mat_text = "\n".join([p.text for p in doc.paragraphs[:50]])[:2000]
+                            except ImportError:
+                                mat_text = ""
+                        else:
+                            mat_text = ""
+                        if mat_text:
+                            materials_context += f"\n--- 素材: {mat_file.name} ---\n{mat_text}\n"
+                    except Exception:
+                        pass
+                if len(materials_context) > 4000:
+                    break  # Don't exceed context limit
+
+        if materials_context:
+            knowledge_section += f"\n【用户上传素材（请从中提取相关信息写入文章）】\n{materials_context[:4000]}\n"
+
         # --- Language detection: pure English query → English article, else Chinese ---
         import re as _re
         _has_chinese = bool(_re.search(r'[\u4e00-\u9fff]', query))

@@ -2317,6 +2317,38 @@ elif _page_idx == 3:
 
     st.divider()
 
+    # --- Content Material Upload (reference docs for generation) ---
+    st.subheader("📎 " + ("Reference Materials" if is_en else "内容素材上传"))
+    st.caption("Upload reference documents (Word/PDF/TXT/MD) that the AI can use when generating articles. Materials are matched to phrases by keywords." if is_en else "上传参考素材文档（Word/PDF/TXT/MD），AI 生成文章时会从中抓取相关信息。素材按关键词自动匹配对应短语。")
+
+    _materials_dir = OUTPUT_PATH / selected_batch / "materials"
+    _materials_dir.mkdir(parents=True, exist_ok=True)
+
+    uploaded_materials = st.file_uploader(
+        "Upload materials" if is_en else "上传素材文件",
+        type=["docx", "doc", "pdf", "txt", "md", "csv"],
+        accept_multiple_files=True,
+        key="upload_materials",
+        label_visibility="collapsed",
+    )
+    if uploaded_materials:
+        for uf in uploaded_materials:
+            _save_path = _materials_dir / uf.name
+            _save_path.write_bytes(uf.read())
+        st.success(f"✅ {'Uploaded' if is_en else '已上传'} {len(uploaded_materials)} {'files' if is_en else '个文件'}")
+
+    # Show existing materials
+    _existing_materials = list(_materials_dir.glob("*")) if _materials_dir.exists() else []
+    _existing_materials = [f for f in _existing_materials if f.is_file()]
+    if _existing_materials:
+        st.caption(f"{'Available materials' if is_en else '已有素材'}: {len(_existing_materials)} {'files' if is_en else '个文件'}")
+        for mf in _existing_materials[:10]:
+            st.text(f"  📄 {mf.name} ({mf.stat().st_size // 1024} KB)")
+    else:
+        st.caption("No materials uploaded yet. AI will use built-in knowledge base." if is_en else "暂无上传素材，AI 将使用内置知识库生成。")
+
+    st.divider()
+
     # Execution
     st.subheader("▶️ Generate Content" if is_en else "▶️ 生成内容")
 
