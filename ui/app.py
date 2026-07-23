@@ -2145,7 +2145,7 @@ elif _page_idx == 2:
         st.caption("No gap results yet. Execute verification above or upload results." if is_en else "暂无 Gap 结果。请执行验证或上传结果。")
 
     # --- Prompt Tracking Trends ---
-    with st.expander("📈 Prompt Tracking History" if is_en else "📈 短语追踪历史（品牌提及率变化）", expanded=False):
+    with st.expander("📈 Prompt Tracking History" if is_en else "📈 短语追踪历史（品牌/产品名称提及率变化）", expanded=False):
         tracking_file = zhice_dir / "prompt_tracking_history.csv" if zhice_dir.exists() else None
         if tracking_file and tracking_file.exists():
             df_track = load_csv_safe(tracking_file)
@@ -2166,24 +2166,24 @@ elif _page_idx == 2:
                 tc1.metric("Total Checks" if is_en else "总验证次数", len(df_track))
                 tc2.metric("Unique Queries" if is_en else "不重复短语", df_track["ai_query"].nunique())
                 latest_brand_rate = by_date["brand_rate"].iloc[-1] if len(by_date) > 0 else 0
-                tc3.metric("Brand Mention Rate" if is_en else "品牌提及率", f"{latest_brand_rate}%")
+                tc3.metric("Brand/Product Name Mention Rate" if is_en else "品牌/产品名称提及率", f"{latest_brand_rate}%")
                 latest_link_rate = by_date["link_rate"].iloc[-1] if len(by_date) > 0 else 0
                 tc4.metric("Official Link Rate" if is_en else "官网链接显示率", f"{latest_link_rate}%")
 
                 # Trend chart (both lines)
                 if len(by_date) > 1:
                     fig_track = go.Figure()
-                    fig_track.add_trace(go.Scatter(x=by_date["date"], y=by_date["brand_rate"], name="Brand Rate" if is_en else "品牌提及率", line=dict(color="#00bcd4")))
+                    fig_track.add_trace(go.Scatter(x=by_date["date"], y=by_date["brand_rate"], name="Brand/Product Name Rate" if is_en else "品牌/产品名称提及率", line=dict(color="#00bcd4")))
                     fig_track.add_trace(go.Scatter(x=by_date["date"], y=by_date["link_rate"], name="Link Rate" if is_en else "官网链接率", line=dict(color="#ffa726")))
                     fig_track.update_layout(
-                        title="Brand & Link Rate Over Time" if is_en else "品牌提及率 & 官网链接率变化趋势",
+                        title="Brand & Link Rate Over Time" if is_en else "品牌/产品名称提及率 & 官网链接率变化趋势",
                         height=250, margin=dict(l=0, r=0, t=30, b=0),
                         yaxis_title="%", xaxis_title="Date",
                     )
                     st.plotly_chart(fig_track, use_container_width=True)
 
                 # Per-query tracking (brand + link)
-                st.caption("Per-query history (🟢=Brand ✅, 🔗=Link ✅):" if is_en else "单条短语追踪（🟢=品牌提及, 🔗=官网链接）：")
+                st.caption("Per-query history (🟢=Brand ✅, 🔗=Link ✅):" if is_en else "单条短语追踪（🟢=品牌/产品名称提及, 🔗=官网链接）：")
                 query_history = df_track.groupby(["ai_query", "date"]).agg(
                     brand=("has_brand_mention", "any"),
                     link=("has_official_link", "any"),
@@ -3449,7 +3449,7 @@ elif _page_idx == 7:
                         _before_data.append({
                             "Query": query[:60],
                             "Platform": plat_display,
-                            "Brand Before": brand_val,
+                            "Brand/Product Before": brand_val,
                             "Link Before": link_val,
                             "Gap Status": gap_status,
                         })
@@ -3470,8 +3470,8 @@ elif _page_idx == 7:
                     "Query": bd["Query"],
                     "Platform": bd["Platform"],
                     "Gap Status": bd.get("Gap Status", "—"),
-                    "Brand Before": bd["Brand Before"],
-                    "Brand After": after_match.get("Brand After", "—") if after_match else "—",
+                    "Brand/Product Before": bd["Brand/Product Before"],
+                    "Brand/Product After": after_match.get("Brand/Product After", "—") if after_match else "—",
                     "Link Before": bd["Link Before"],
                     "Link After": after_match.get("Link After", "—") if after_match else "—",
                 })
@@ -3479,14 +3479,14 @@ elif _page_idx == 7:
             _perf_merged = _after_data
 
         # Brand Mention section
-        st.markdown("#### 🏷️ " + ("Brand Mention" if is_en else "品牌提及"))
+        st.markdown("#### 🏷️ " + ("Brand/Product Name Mention" if is_en else "品牌/产品名称提及"))
         if _perf_merged:
             df_brand = pd.DataFrame([{
                 "Query": r["Query"],
                 "Gap": r.get("Gap Status", "—"),
-                "Before": r.get("Brand Before", "—"),
-                "After": r.get("Brand After", "—"),
-                "Change": "🆕 改善" if r.get("Brand Before") == "❌" and r.get("Brand After") == "✅" else ("⚠️ 退步" if r.get("Brand Before") == "✅" and r.get("Brand After") == "❌" else ("→ 持平" if r.get("Brand After") != "—" else "⏳ 待测")),
+                "Before": r.get("Brand/Product Before", "—"),
+                "After": r.get("Brand/Product After", "—"),
+                "Change": "🆕 改善" if r.get("Brand/Product Before") == "❌" and r.get("Brand/Product After") == "✅" else ("⚠️ 退步" if r.get("Brand/Product Before") == "✅" and r.get("Brand/Product After") == "❌" else ("→ 持平" if r.get("Brand/Product After") != "—" else "⏳ 待测")),
             } for r in _perf_merged])
             st.dataframe(df_brand, use_container_width=True, hide_index=True)
         else:
@@ -3512,18 +3512,18 @@ elif _page_idx == 7:
         # Summary metrics
         if _perf_merged:
             st.markdown("")
-            brand_before = sum(1 for r in _perf_merged if r.get("Brand Before") == "✅")
-            brand_after = sum(1 for r in _perf_merged if r.get("Brand After") == "✅")
+            brand_before = sum(1 for r in _perf_merged if r.get("Brand/Product Before") == "✅")
+            brand_after = sum(1 for r in _perf_merged if r.get("Brand/Product After") == "✅")
             link_before = sum(1 for r in _perf_merged if r.get("Link Before") == "✅")
             link_after = sum(1 for r in _perf_merged if r.get("Link After") == "✅")
-            has_after = sum(1 for r in _perf_merged if r.get("Brand After") != "—")
+            has_after = sum(1 for r in _perf_merged if r.get("Brand/Product After") != "—")
             total_p = len(_perf_merged)
             col_m1, col_m2, col_m3, col_m4 = st.columns(4)
-            col_m1.metric("Brand Before" if is_en else "品牌(前)", f"{brand_before}/{total_p}")
+            col_m1.metric("Brand/Product Before" if is_en else "品牌(前)", f"{brand_before}/{total_p}")
             if has_after > 0:
-                col_m2.metric("Brand After" if is_en else "品牌(后)", f"{brand_after}/{has_after}", delta=f"+{brand_after-brand_before}" if brand_after > brand_before else None)
+                col_m2.metric("Brand/Product After" if is_en else "品牌(后)", f"{brand_after}/{has_after}", delta=f"+{brand_after-brand_before}" if brand_after > brand_before else None)
             else:
-                col_m2.metric("Brand After" if is_en else "品牌(后)", "⏳ 待测")
+                col_m2.metric("Brand/Product After" if is_en else "品牌(后)", "⏳ 待测")
             col_m3.metric("Link Before" if is_en else "链接(前)", f"{link_before}/{total_p}")
             if has_after > 0:
                 col_m4.metric("Link After" if is_en else "链接(后)", f"{link_after}/{has_after}", delta=f"+{link_after-link_before}" if link_after > link_before else None)
@@ -3559,7 +3559,7 @@ elif _page_idx == 7:
 
         # Preset metric options
         preset_metrics = ["Reg Starts", "Page Views", "Conversion Rate",
-                          "AI Citation Count", "Brand Mention Rate", "Official Link Rate",
+                          "AI Citation Count", "Brand/Product Name Mention Rate", "Official Link Rate",
                           "Content Published", "GAP Fill Rate"]
 
         col_add1, col_add2, col_add3 = st.columns([3, 1, 1])
@@ -4515,7 +4515,7 @@ elif _page_idx == 7:
             # --- Prompt Re-run Dashboard ---
             st.divider()
             st.markdown("**🔄 Prompt Re-run Dashboard**" if is_en else "**🔄 发布后效果追踪（Pre vs Post）**")
-            st.caption("Compare brand mention before and after content publication." if is_en else "对比内容发布前后的品牌提及率变化，衡量 GEO 效果。")
+            st.caption("Compare brand mention before and after content publication." if is_en else "对比内容发布前后的品牌/产品名称提及率变化，衡量 GEO 效果。")
 
             try:
                 from zhixi_attribution import get_published_queries, compare_pre_post_verification
@@ -4781,7 +4781,7 @@ elif _page_idx == 7:
 
             # --- Section 1: 品牌词 ---
             st.markdown("### 🏷️ 品牌词引用追踪")
-            st.caption("品牌词 = 旧提示词(397) + 新提示词(69品牌) | 包含：品牌提及 + 品牌提及率 + 官网链接提及 + 官网链接提及率")
+            st.caption("品牌词 = 旧提示词(397) + 新提示词(69品牌) | 包含：品牌/产品名称提及 + 品牌/产品名称提及率 + 官网链接提及 + 官网链接提及率")
 
             # 品牌词数量（按月）
             st.markdown("**📊 品牌词数量（按月）**")
@@ -4797,9 +4797,9 @@ elif _page_idx == 7:
 
             st.divider()
 
-            # 品牌提及 + 品牌提及率（按月）
-            st.markdown("**📊 品牌提及 & 品牌提及率（按月）**")
-            st.caption("品牌提及 = 新建内容在AI平台中出现品牌信息并引用发布信源")
+            # 品牌/产品名称提及 + 品牌/产品名称提及率（按月）
+            st.markdown("**📊 品牌/产品名称提及 & 品牌/产品名称提及率（按月）**")
+            st.caption("品牌/产品名称提及 = 新建内容在AI平台中出现品牌信息并引用发布信源")
             df_brand_mention = pd.DataFrame({
                 "指标": ["新建内容#", "品牌内容#", "品牌内容提及", "品牌内容提及率"],
                 "Jan": [98, 98, 98, "100%"],
@@ -4810,7 +4810,7 @@ elif _page_idx == 7:
             })
             st.dataframe(df_brand_mention, use_container_width=True, hide_index=True)
 
-            # 品牌提及趋势图
+            # 品牌/产品名称提及趋势图
             fig_mention = go.Figure()
             fig_mention.add_trace(go.Bar(name="新建内容#", x=_cite_months, y=[98, 43, 118, 123, 135], marker_color="#94a3b8"))
             fig_mention.add_trace(go.Bar(name="品牌内容提及", x=_cite_months, y=[98, 43, 106, 111, 69], marker_color="#4a9eff"))
@@ -4880,31 +4880,31 @@ elif _page_idx == 7:
 
             # --- Section 2: 行业词 ---
             st.markdown("### 🏭 行业词引用追踪")
-            st.caption("行业词(98个) | 仅追踪：品牌提及 + 品牌提及率 | 不涉及官网链接提及（行业词涉及多平台对比，官网链接概率极低）")
+            st.caption("行业词(98个) | 仅追踪：品牌/产品名称提及 + 品牌/产品名称提及率 | 不涉及官网链接提及（行业词涉及多平台对比，官网链接概率极低）")
 
             # 行业词 KPI
             ind_kpi1, ind_kpi2, ind_kpi3 = st.columns(3)
             with ind_kpi1:
                 st.metric("行业词总数", "98")
             with ind_kpi2:
-                st.metric("品牌提及 (7平台合计)", "664")
+                st.metric("品牌/产品名称提及 (7平台合计)", "664")
             with ind_kpi3:
-                st.metric("平均品牌提及率", "91.84%")
+                st.metric("平均品牌/产品名称提及率", "91.84%")
 
-            # 行业词 - 品牌提及 by platform
-            st.markdown("**📊 行业词 - 品牌提及（各平台）**")
+            # 行业词 - 品牌/产品名称提及 by platform
+            st.markdown("**📊 行业词 - 品牌/产品名称提及（各平台）**")
             df_industry = pd.DataFrame({
                 "平台": AI_PLATFORMS,
-                "品牌提及数": [97, 97, 97, 92, 97, 97, 87],
-                "品牌提及率": ["98.98%", "98.98%", "98.98%", "93.88%", "98.98%", "98.98%", "88.78%"],
+                "品牌/产品名称提及数": [97, 97, 97, 92, 97, 97, 87],
+                "品牌/产品名称提及率": ["98.98%", "98.98%", "98.98%", "93.88%", "98.98%", "98.98%", "88.78%"],
                 "备注": ["", "", "", "略低", "", "", "Gemini略低"],
             })
             st.dataframe(df_industry, use_container_width=True, hide_index=True)
 
             fig_ind = go.Figure()
-            fig_ind.add_trace(go.Bar(x=df_industry["平台"], y=df_industry["品牌提及数"], marker_color="#a78bfa"))
+            fig_ind.add_trace(go.Bar(x=df_industry["平台"], y=df_industry["品牌/产品名称提及数"], marker_color="#a78bfa"))
             fig_ind.add_hline(y=98, line_dash="dash", line_color="gray", annotation_text="总行业词=98")
-            fig_ind.update_layout(height=260, margin=dict(l=0, r=0, t=10, b=0), yaxis_title="品牌提及数")
+            fig_ind.update_layout(height=260, margin=dict(l=0, r=0, t=10, b=0), yaxis_title="品牌/产品名称提及数")
             st.plotly_chart(fig_ind, use_container_width=True)
 
             with st.expander("📋 行业词按子类分布", expanded=False):
@@ -4958,7 +4958,7 @@ elif _page_idx == 7:
     - **元宝/千问** 官网链接提及频次最高，适合重点投放
     - **ChatGPT** 直接展示链接概率低(30%)，但角标引用远超其他平台，用户点击率更高
     - **豆包** 1-3月表现优异(80%+)，5月骤降至44.95%，需排查
-    - **行业词** 品牌提及率极高(91.84%)，但官网链接提及几乎为0 → 适合第三方媒体发布
+    - **行业词** 品牌/产品名称提及率极高(91.84%)，但官网链接提及几乎为0 → 适合第三方媒体发布
     - **ChatGPT 新提示词** 官网链接0提及，需针对性优化
     """)
 
@@ -5011,8 +5011,8 @@ elif _page_idx == 7:
                                 "短语数" if not is_en else "Phrases": cat_total,
                                 "有链接" if not is_en else "With Link": cat_with_link,
                                 "链接率" if not is_en else "Link Rate": f"{cat_with_link*100//cat_total if cat_total else 0}%",
-                                "品牌提及" if not is_en else "Brand": brand_count,
-                                "品牌提及率" if not is_en else "Brand Rate": f"{brand_rate}%",
+                                "品牌/产品名称提及" if not is_en else "Brand": brand_count,
+                                "品牌/产品名称提及率" if not is_en else "Brand/Product Name Rate": f"{brand_rate}%",
                                 "占比" if not is_en else "% Total": f"{cat_total*100//total_q if total_q else 0}%",
                             })
                         if summary_rows:
@@ -5179,7 +5179,7 @@ elif _page_idx == 7:
                                 bmr = min(100.0, link_coverage + (100 - link_coverage) * (_overall_brand_rate / 100))
                             else:
                                 bmr = _overall_brand_rate
-                            brand_rows.append({"类别": cat35, "短语数": t, "品牌提及率": f"{bmr:.1f}%", "官方链接覆盖率": f"{link_coverage:.1f}%", "平均链接率(7平台)": f"{alr:.1f}%", "_lk": alr})
+                            brand_rows.append({"类别": cat35, "短语数": t, "品牌/产品名称提及率": f"{bmr:.1f}%", "官方链接覆盖率": f"{link_coverage:.1f}%", "平均链接率(7平台)": f"{alr:.1f}%", "_lk": alr})
                         df_b = pd.DataFrame(brand_rows).sort_values("_lk", ascending=False).reset_index(drop=True)
                         df_b.index = df_b.index + 1
                         st.dataframe(df_b[[c for c in df_b.columns if c != "_lk"]], use_container_width=True)
@@ -5209,7 +5209,7 @@ elif _page_idx == 7:
                                 bmr = min(100.0, link_coverage_i + (100 - link_coverage_i) * (_overall_brand_rate_i / 100))
                             else:
                                 bmr = _overall_brand_rate_i
-                            ind_rows.append({"类别": cat35, "短语数": t, "品牌提及率": f"{bmr:.1f}%", "官方链接覆盖率": f"{link_coverage_i:.1f}%", "平均链接率(7平台)": f"{alr:.1f}%", "_lk": alr})
+                            ind_rows.append({"类别": cat35, "短语数": t, "品牌/产品名称提及率": f"{bmr:.1f}%", "官方链接覆盖率": f"{link_coverage_i:.1f}%", "平均链接率(7平台)": f"{alr:.1f}%", "_lk": alr})
                         df_i = pd.DataFrame(ind_rows).sort_values("_lk", ascending=False).reset_index(drop=True)
                         df_i.index = df_i.index + 1
                         st.dataframe(df_i[[c for c in df_i.columns if c != "_lk"]], use_container_width=True)
@@ -5323,7 +5323,7 @@ elif _page_idx == 7:
                     col_g1.metric("YTD Phrases Tested" if is_en else "YTD 检索短语数", _total)
                     col_g2.metric("Link Coverage" if is_en else "官方链接覆盖率", f"{_link_pct:.1f}%")
                     _brand_pct = _zhice_brand * 100 / _zhice_total if _zhice_total > 0 else 0
-                    col_g3.metric("Brand Mention (智测)" if is_en else "品牌提及率(智测)", f"{_brand_pct:.0f}%" if _zhice_total > 0 else "—")
+                    col_g3.metric("Brand/Product Name Mention (智测)" if is_en else "品牌/产品名称提及率(智测)", f"{_brand_pct:.0f}%" if _zhice_total > 0 else "—")
                     col_g4.metric("No Link (Gap)" if is_en else "无链接 Gap", f"{_no_link} ({100-_link_pct:.0f}%)")
 
                     # Show gap queries from zhice
@@ -5351,7 +5351,7 @@ elif _page_idx == 7:
                     _ct_display = pd.DataFrame({
                         "内容类型" if not is_en else "Content Type": _df_ct["content_type"] if "content_type" in _df_ct.columns else [],
                         "短语数" if not is_en else "Queries": _df_ct["total_queries"] if "total_queries" in _df_ct.columns else [],
-                        "品牌提及率" if not is_en else "Brand Rate": _df_ct.apply(lambda r: f"{float(r.get('brand_rate', 0)):.1f}%" if float(r.get('brand_rate', 0)) > 0 else f"{_BRAND_MENTION_RATE:.1f}%", axis=1),
+                        "品牌/产品名称提及率" if not is_en else "Brand/Product Name Rate": _df_ct.apply(lambda r: f"{float(r.get('brand_rate', 0)):.1f}%" if float(r.get('brand_rate', 0)) > 0 else f"{_BRAND_MENTION_RATE:.1f}%", axis=1),
                         "官方链接率" if not is_en else "Link Rate": _df_ct["link_rate"].apply(lambda x: f"{float(x):.1f}%") if "link_rate" in _df_ct.columns else [],
                         "特征说明" if not is_en else "Characteristics": _df_ct["characteristics"] if "characteristics" in _df_ct.columns else [],
                     })
