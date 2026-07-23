@@ -508,7 +508,7 @@ def run_zhizao(batch_id: str, content_limit: int = 5,
     df_q = df_q.head(content_limit)
 
     if df_q.empty:
-        return {"success": False, "error": "没有已选中的 AI Queries"}
+        return {"success": False, "error": "没有已选中的 AI Queries。请先回到【智库】页面，在短语列表中勾选要生成内容的短语（选中列 = ✅），然后再回来执行智造。"}
 
     output_dir = OUTPUT_PATH / batch_id / "02_zhizao"
     ensure_dir(output_dir)
