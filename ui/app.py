@@ -2115,7 +2115,7 @@ elif _page_idx == 2:
         st.divider()
         col_to_zhizao, col_to_zhiyou = st.columns(2)
         with col_to_zhizao:
-            if st.button(f"✍️ {produce_count} → 智造 (new content)" if is_en else f"✍️ {produce_count} 条 → 智造（生产新内容）", type="primary", key="zhice_to_zhizao"):
+            if st.button(f"✍️ {produce_queries} → 智造 (new content)" if is_en else f"✍️ {produce_queries} 条 → 智造（生产新内容）", type="primary", key="zhice_to_zhizao"):
                 if "to_produce" in edited_gap.columns:
                     to_produce_queries = df_gap_display.loc[edited_gap["to_produce"] == True, "ai_query"].tolist() if "ai_query" in df_gap_display.columns else []
                     if to_produce_queries:
