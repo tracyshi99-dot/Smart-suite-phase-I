@@ -3556,7 +3556,33 @@ elif _page_idx == 7:
         elif _after_data:
             _perf_merged = _after_data
 
-        # --- Summary KPI metrics (Mention #, Rate, Link #, Rate) ---
+        # --- Summary KPI metrics first (top of section) ---
+        if _perf_merged:
+            brand_before = sum(1 for r in _perf_merged if r.get("Brand/Product Before") == "✅")
+            brand_after = sum(1 for r in _perf_merged if r.get("Brand/Product After") == "✅")
+            link_before = sum(1 for r in _perf_merged if r.get("Link Before") == "✅")
+            link_after = sum(1 for r in _perf_merged if r.get("Link After") == "✅")
+            has_after = sum(1 for r in _perf_merged if r.get("Brand/Product After") != "—")
+            total_p = len(_perf_merged)
+            brand_rate_before = f"{brand_before*100//total_p}%" if total_p > 0 else "—"
+            link_rate_before = f"{link_before*100//total_p}%" if total_p > 0 else "—"
+
+            col_m1, col_m2, col_m3, col_m4, col_m5, col_m6 = st.columns(6)
+            col_m1.metric("Mention #" if is_en else "品牌/产品提及#", f"{brand_before}/{total_p}")
+            col_m2.metric("Mention Rate" if is_en else "提及率", brand_rate_before)
+            if has_after > 0:
+                brand_rate_after = f"{brand_after*100//has_after}%" if has_after > 0 else "—"
+                col_m3.metric("After Rate" if is_en else "提及率(后)", brand_rate_after, delta=f"+{brand_after-brand_before}" if brand_after > brand_before else None)
+            else:
+                col_m3.metric("After Rate" if is_en else "提及率(后)", "⏳ 待测")
+            col_m4.metric("Link #" if is_en else "官网链接#", f"{link_before}/{total_p}")
+            col_m5.metric("Link Rate" if is_en else "链接率", link_rate_before)
+            if has_after > 0:
+                link_rate_after = f"{link_after*100//has_after}%" if has_after > 0 else "—"
+                col_m6.metric("After Rate" if is_en else "链接率(后)", link_rate_after, delta=f"+{link_after-link_before}" if link_after > link_before else None)
+            else:
+                col_m6.metric("After Rate" if is_en else "链接率(后)", "⏳ 待测")
+
         # --- Detailed Verification Results (per-platform table) ---
         if _before_data:
             with st.expander("📋 " + ("Detailed Verification by Platform" if is_en else "分平台验证详情"), expanded=False):
@@ -3602,34 +3628,6 @@ elif _page_idx == 7:
             st.dataframe(df_link, use_container_width=True, hide_index=True)
         else:
             st.dataframe(pd.DataFrame([{"Query": "—", "Platform": "—", "Before": "—", "After": "—", "Change": "—"}]), use_container_width=True, hide_index=True)
-
-        # Summary metrics
-        if _perf_merged:
-            st.markdown("")
-            brand_before = sum(1 for r in _perf_merged if r.get("Brand/Product Before") == "✅")
-            brand_after = sum(1 for r in _perf_merged if r.get("Brand/Product After") == "✅")
-            link_before = sum(1 for r in _perf_merged if r.get("Link Before") == "✅")
-            link_after = sum(1 for r in _perf_merged if r.get("Link After") == "✅")
-            has_after = sum(1 for r in _perf_merged if r.get("Brand/Product After") != "—")
-            total_p = len(_perf_merged)
-            brand_rate_before = f"{brand_before*100//total_p}%" if total_p > 0 else "—"
-            link_rate_before = f"{link_before*100//total_p}%" if total_p > 0 else "—"
-
-            col_m1, col_m2, col_m3, col_m4, col_m5, col_m6 = st.columns(6)
-            col_m1.metric("Mention #" if is_en else "品牌/产品提及#", f"{brand_before}/{total_p}")
-            col_m2.metric("Mention Rate" if is_en else "提及率", brand_rate_before)
-            if has_after > 0:
-                brand_rate_after = f"{brand_after*100//has_after}%" if has_after > 0 else "—"
-                col_m3.metric("After Rate" if is_en else "提及率(后)", brand_rate_after, delta=f"+{brand_after-brand_before}" if brand_after > brand_before else None)
-            else:
-                col_m3.metric("After Rate" if is_en else "提及率(后)", "⏳ 待测")
-            col_m4.metric("Link #" if is_en else "官网链接#", f"{link_before}/{total_p}")
-            col_m5.metric("Link Rate" if is_en else "链接率", link_rate_before)
-            if has_after > 0:
-                link_rate_after = f"{link_after*100//has_after}%" if has_after > 0 else "—"
-                col_m6.metric("After Rate" if is_en else "链接率(后)", link_rate_after, delta=f"+{link_after-link_before}" if link_after > link_before else None)
-            else:
-                col_m6.metric("After Rate" if is_en else "链接率(后)", "⏳ 待测")
 
         # Upload After data (post-content launch)
         with st.expander("📤 " + ("Upload After Data (post-launch)" if is_en else "上传 After 数据（内容上线后）"), expanded=False):
