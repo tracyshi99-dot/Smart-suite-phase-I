@@ -128,15 +128,8 @@ def _is_cloud_environment() -> bool:
 
 
 def call_claude(system_prompt: str, user_prompt: str, max_tokens: int = MAX_TOKENS) -> str:
-    """Call Claude via Bedrock (local) or Qianwen (Cloud). Auto-detects environment."""
-    # On Streamlit Cloud: use Qianwen directly (no Bedrock credentials available)
-    if _is_cloud_environment():
-        try:
-            return _call_deepseek_llm(system_prompt, user_prompt, max_tokens)
-        except Exception as e:
-            raise RuntimeError(f"通义千问调用失败（Cloud 模式）: {str(e)[:200]}")
-
-    # Local environment: try Bedrock first, fallback to Qianwen
+    """Call Claude via Bedrock first, fallback to Qianwen. Works on both local and Cloud."""
+    # Always try Bedrock first (Cloud has AWS creds in secrets)
     try:
         client = get_client()
         response = client.converse(
