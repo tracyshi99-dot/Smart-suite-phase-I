@@ -72,7 +72,7 @@ def _get_deepseek_key():
 
 
 def _call_deepseek_llm(system_prompt: str, user_prompt: str, max_tokens: int = MAX_TOKENS) -> str:
-    """Call Qianwen (通义千问) API as fallback LLM."""
+    """Call Qianwen (通义千问) API as fallback LLM. Uses qwen-plus."""
     import requests
     key = _get_deepseek_key()
     if not key:
@@ -94,6 +94,40 @@ def _call_deepseek_llm(system_prompt: str, user_prompt: str, max_tokens: int = M
     if resp.status_code == 200:
         return resp.json()["choices"][0]["message"]["content"]
     raise RuntimeError(f"通义千问 API 错误: {resp.status_code} {resp.text[:300]}")
+
+
+def _call_qianwen_max(system_prompt: str, user_prompt: str, max_tokens: int = MAX_TOKENS) -> str:
+    """Call Qianwen-Max (通义千问旗舰版) for higher quality optimization tasks."""
+    import requests
+    key = _get_deepseek_key()
+    if not key:
+        raise RuntimeError("通义千问 API Key 未配置。")
+    resp = requests.post(
+        "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+        headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+        json={
+            "model": "qwen-max",
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            "max_tokens": max_tokens,
+            "temperature": 0.3,
+        },
+        timeout=180,
+    )
+    if resp.status_code == 200:
+        return resp.json()["choices"][0]["message"]["content"]
+    raise RuntimeError(f"通义千问-Max API 错误: {resp.status_code} {resp.text[:300]}")
+
+
+def call_zhiyou_model(system_prompt: str, user_prompt: str, max_tokens: int = MAX_TOKENS) -> str:
+    """Dedicated model call for 智优 (optimization/rewrite). Uses different model from 智造 for diversity.
+    Priority: Qianwen-Max → Qianwen-Plus (fallback)."""
+    try:
+        return _call_qianwen_max(system_prompt, user_prompt, max_tokens)
+    except Exception:
+        return _call_deepseek_llm(system_prompt, user_prompt, max_tokens)
 
 
 def get_client():
@@ -1015,7 +1049,7 @@ def run_zhiyou_score(batch_id: str, progress_callback=None) -> dict:
 6. updated_at: {timestamp()}
 7. 直接输出 CSV，不要加解释或代码块标记"""
 
-    result = call_claude(system_prompt, user_prompt)
+    result = call_zhiyou_model(system_prompt, user_prompt)
 
     if progress_callback:
         progress_callback(0.8, "正在保存评分卡...")
@@ -1155,7 +1189,7 @@ def run_zhiyou_execute(batch_id: str, progress_callback=None) -> dict:
 请直接输出优化后的完整文章（Markdown格式），第一行是标题。必须围绕「{draft.get('ai_query', '')}」这个主题。
 ⚠️ 文章末尾必须保留 FAQ 板块（至少3个问答），这是 AI 引擎抓取的关键结构。"""
 
-        response = call_claude(system_prompt, user_prompt)
+        response = call_zhiyou_model(system_prompt, user_prompt)
 
         # Parse: first line = title, rest = content
         import re
@@ -1296,7 +1330,7 @@ def run_zhiyou_compliance(batch_id: str, progress_callback=None) -> dict:
 5. updated_at: {timestamp()}
 6. 直接输出 CSV，不要加解释或代码块标记"""
 
-    result = call_claude(system_prompt, user_prompt, max_tokens=MAX_TOKENS)
+    result = call_zhiyou_model(system_prompt, user_prompt, max_tokens=MAX_TOKENS)
 
     if progress_callback:
         progress_callback(0.8, "正在保存合规结果...")
