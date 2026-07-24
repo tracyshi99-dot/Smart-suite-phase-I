@@ -242,27 +242,37 @@ def _call_gemini(query: str) -> dict:
 def _call_deepseek(query: str) -> dict:
     """Call DeepSeek API (OpenAI-compatible)."""
     import requests
-    key = os.environ.get("DEEPSEEK_API_KEY", "")
-    # Also try .env file
+    key = os.environ.get("DEEPSEEK_REAL_API_KEY", "")
+    # Try Streamlit secrets
+    if not key:
+        try:
+            import streamlit as st
+            if hasattr(st, "secrets"):
+                if "deepseek_real" in st.secrets:
+                    key = st.secrets["deepseek_real"].get("api_key", "")
+        except Exception:
+            pass
+    # Try .env file
     if not key:
         env_path = Path(__file__).parent.parent / ".env"
         if env_path.exists():
             for line in env_path.read_text(encoding="utf-8").splitlines():
-                if line.startswith("DEEPSEEK_API_KEY="):
+                if line.startswith("DEEPSEEK_REAL_API_KEY=") or line.startswith("DEEPSEEK_API_KEY="):
                     key = line.split("=", 1)[1].strip()
                     break
+    # Hardcoded fallback (will be overridden by secrets in production)
     if not key:
-        return {"full_answer": "DeepSeek API Key 未配置", "key_points": [], "sources": []}
+        key = "sk-93eaf7e683414f25adfcc67f016f51d4"
     resp = requests.post(
         "https://api.deepseek.com/chat/completions",
         headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
         json={
             "model": "deepseek-chat",
             "messages": [{"role": "user", "content": query}],
-            "max_tokens": 300,
+            "max_tokens": 800,
             "temperature": 0.7,
         },
-        timeout=30,
+        timeout=60,
     )
     if resp.status_code == 200:
         answer = resp.json()["choices"][0]["message"]["content"]
