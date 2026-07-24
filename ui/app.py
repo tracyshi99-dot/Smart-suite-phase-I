@@ -3556,6 +3556,7 @@ elif _page_idx == 7:
         elif _after_data:
             _perf_merged = _after_data
 
+        # --- Summary KPI metrics (Mention #, Rate, Link #, Rate) ---
         # --- Detailed Verification Results (per-platform table) ---
         if _before_data:
             with st.expander("📋 " + ("Detailed Verification by Platform" if is_en else "分平台验证详情"), expanded=False):
