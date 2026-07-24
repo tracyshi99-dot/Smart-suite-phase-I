@@ -1941,50 +1941,47 @@ elif _page_idx == 2:
                         })
                         done += 1
                         progress.progress(done / total)
-                # Aggregate per query
+                # Build per-platform gap results (one row per query × platform)
                 df_results = pd.DataFrame(results)
                 gap_summary = []
                 for q in queue_phrases:
                     q_data = df_results[df_results["ai_query"] == q]
-                    brand_count = q_data["has_brand_mention"].sum()
-                    link_count = q_data["has_official_link"].sum()
-                    total_p = len(q_data)
-                    # Aggregate competitors
-                    all_competitors = []
-                    for c_str in q_data["competitors_mentioned"].dropna():
-                        if c_str:
-                            all_competitors.extend([c.strip() for c in c_str.split(",")])
-                    unique_competitors = list(set(all_competitors))
+                    for _, row in q_data.iterrows():
+                        platform_name = ZHICE_PLATFORMS.get(row.get("platform", ""), row.get("platform", ""))
+                        has_brand = bool(row.get("has_brand_mention", False))
+                        has_link = bool(row.get("has_official_link", False))
+                        competitors_str = str(row.get("competitors_mentioned", ""))
+                        competitors_list = [c.strip() for c in competitors_str.split(",") if c.strip()]
 
-                    if brand_count > 0 and link_count > 0:
-                        gap_status = "covered"
-                    elif brand_count > 0 or link_count > 0:
-                        gap_status = "partial_gap"
-                    else:
-                        gap_status = "full_gap"
+                        if has_brand and has_link:
+                            gap_status = "covered"
+                        elif has_brand or has_link:
+                            gap_status = "partial_gap"
+                        else:
+                            gap_status = "full_gap"
 
-                    # Priority boost: if competitors present but we're not → high priority gap
-                    competitor_gap = len(unique_competitors) > 0 and brand_count == 0
+                        competitor_gap = len(competitors_list) > 0 and not has_brand
 
-                    # Aggregate sentiment
-                    sentiments = q_data["sentiment"].tolist() if "sentiment" in q_data.columns else []
-                    pos = sentiments.count("positive")
-                    neg = sentiments.count("negative")
-                    if pos > neg:
-                        overall_sentiment = "😊 积极"
-                    elif neg > pos:
-                        overall_sentiment = "⚠️ 消极"
-                    else:
-                        overall_sentiment = "😐 中性"
+                        # Sentiment
+                        sent_raw = row.get("sentiment", "neutral")
+                        if sent_raw == "positive":
+                            sentiment_display = "😊 积极"
+                        elif sent_raw == "negative":
+                            sentiment_display = "⚠️ 消极"
+                        else:
+                            sentiment_display = "😐 中性"
 
-                    gap_summary.append({
-                        "ai_query": q, "gap_status": gap_status,
-                        "has_brand_mention": brand_count > 0, "has_official_link": link_count > 0,
-                        "competitors": ", ".join(unique_competitors) if unique_competitors else "—",
-                        "competitor_gap": competitor_gap,
-                        "sentiment": overall_sentiment,
-                        "platforms_tested": ", ".join([ZHICE_PLATFORMS.get(p, p) for p in selected_platforms]),
-                    })
+                        gap_summary.append({
+                            "ai_query": q,
+                            "platform": platform_name,
+                            "gap_status": gap_status,
+                            "has_brand_mention": has_brand,
+                            "has_official_link": has_link,
+                            "competitors": ", ".join(competitors_list) if competitors_list else "—",
+                            "competitor_gap": competitor_gap,
+                            "sentiment": sentiment_display,
+                        })
+
                 df_gap = pd.DataFrame(gap_summary)
                 st.session_state["zhice_gap_results"] = df_gap
                 # Save gap result
@@ -2081,31 +2078,20 @@ elif _page_idx == 2:
             if neg_count > 0:
                 st.warning(f"⚠️ {neg_count} queries with negative AI tone (门槛高/风险大). Need positive content to counter." if is_en else f"⚠️ {neg_count} 条短语的 AI 回答偏消极（强调门槛/风险），需要产出积极正面内容覆盖。")
 
-        # Editable selection
-        if "to_produce" not in df_gap_display.columns:
-            # Auto-select: competitor gaps + full gaps + negative sentiment get priority
-            if "competitor_gap" in df_gap_display.columns:
-                df_gap_display["to_produce"] = df_gap_display.apply(
-                    lambda r: True if r.get("competitor_gap") else (
-                        True if "消极" in str(r.get("sentiment", "")) else (
-                            r.get("gap_status") in ["full_gap", "partial_gap"]
-                        )
-                    ),
-                    axis=1
-                )
-            else:
-                df_gap_display["to_produce"] = df_gap_display.apply(
-                    lambda r: True if "消极" in str(r.get("sentiment", "")) else (
-                        r.get("gap_status") in ["full_gap", "partial_gap"]
-                    ),
-                    axis=1
-                ) if "gap_status" in df_gap_display.columns else True
-
-        # Add platform column if not present
+        # Editable selection — add platform column and to_produce checkbox
+        # Add platform column if not present (for legacy data)
         if "platforms_tested" in df_gap_display.columns and "platform" not in df_gap_display.columns:
             df_gap_display["platform"] = df_gap_display["platforms_tested"].apply(
                 lambda x: str(x) if str(x) not in ["nan", "", "0"] else "通义千问, DeepSeek"
             )
+
+        # Add to_produce checkbox — mark if any gap exists for this query across platforms
+        if "to_produce" not in df_gap_display.columns:
+            if "gap_status" in df_gap_display.columns:
+                gap_queries = set(df_gap_display[df_gap_display["gap_status"].isin(["full_gap", "partial_gap"])]["ai_query"].tolist())
+                df_gap_display["to_produce"] = df_gap_display["ai_query"].isin(gap_queries)
+            else:
+                df_gap_display["to_produce"] = True
 
         show_cols = [c for c in ["ai_query", "platform", "gap_status", "has_brand_mention", "has_official_link", "sentiment", "competitors", "competitor_gap", "to_produce"] if c in df_gap_display.columns]
         if show_cols:
@@ -2121,8 +2107,9 @@ elif _page_idx == 2:
                 "sentiment": st.column_config.TextColumn("Tone" if is_en else "内容情感"),
             }
             edited_gap = st.data_editor(df_gap_display[show_cols], column_config=col_config, use_container_width=True, hide_index=True, key="zhice_gap_editor")
-            produce_count = edited_gap["to_produce"].sum() if "to_produce" in edited_gap.columns else 0
-            st.caption(f"{'Selected for production' if is_en else '选中进入智造'}: {produce_count}")
+            # Count unique queries selected (not individual platform rows)
+            produce_queries = edited_gap[edited_gap["to_produce"] == True]["ai_query"].nunique() if "to_produce" in edited_gap.columns and "ai_query" in edited_gap.columns else 0
+            st.caption(f"{'Selected for production (unique phrases)' if is_en else '选中进入智造（不重复短语数）'}: {produce_queries}")
 
         # CTA
         st.divider()
