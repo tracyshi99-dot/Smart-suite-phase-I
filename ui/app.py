@@ -154,7 +154,7 @@ hr { border-color: rgba(255,255,255,0.06) !important; }
 /* === Page Header === */
 .ss-page-header { padding: 24px 0 16px; border-bottom: 1px solid rgba(255,255,255,0.06); margin-bottom: 20px; }
 .ss-page-header h1 { font-size: 1.6rem !important; margin: 0 !important; }
-.ss-page-header p { font-size: 13px !important; color: #7b8ab8 !important; margin-top: 8px !important; font-weight: 400 !important; }
+.ss-page-header p { font-size: 13px !important; color: inherit !important; opacity: 0.7; margin-top: 8px !important; font-weight: 400 !important; }
 
 /* === Section Cards === */
 .ss-section { background: rgba(19,24,39,0.6); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 20px 24px; margin: 16px 0; backdrop-filter: blur(8px); }
@@ -787,7 +787,7 @@ elif not current_user:
 
 
 elif _page_idx == 1:
-    st.markdown("""<div class="ss-page-header"><h1 style="color:#ffa726;">📚 """ + ("Query Library" if is_en else "智库 – 检索短语产出与验证") + """</h1><p>""" + ("Produce → Calibrate → Dedupe → Select → Verify Gap → Confirm" if is_en else "产出 → 校准 → 去重 → 选取 → 验证Gap → 确认进智造") + """</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="ss-page-header" style="color:#ffa726;"><h1>📚 """ + ("Query Library" if is_en else "智库 – 检索短语产出与验证") + """</h1><p>""" + ("Produce → Calibrate → Dedupe → Select → Verify Gap → Confirm" if is_en else "产出 → 校准 → 去重 → 选取 → 验证Gap → 确认进智造") + """</p></div>""", unsafe_allow_html=True)
     render_pipeline_flow("zhiku", selected_batch)
 
     # ============================================================
@@ -1799,7 +1799,7 @@ elif _page_idx == 1:
     # PAGE: 智测 (Gap Verification)
     # ============================================================
 elif _page_idx == 2:
-    st.markdown("""<div class="ss-page-header"><h1 style="color:#00d4aa;">🔍 """ + ("Gap Verification" if is_en else "智测 – AI 检索覆盖验证") + """</h1><p>""" + ("Verify search phrases against 7 AI platforms to discover content gaps" if is_en else "在 7 个 AI 平台验证检索短语的覆盖状态，发现内容 Gap") + """</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="ss-page-header" style="color:#00d4aa;"><h1>🔍 """ + ("Gap Verification" if is_en else "智测 – AI 检索覆盖验证") + """</h1><p>""" + ("Verify search phrases against 7 AI platforms to discover content gaps" if is_en else "在 7 个 AI 平台验证检索短语的覆盖状态，发现内容 Gap") + """</p></div>""", unsafe_allow_html=True)
     render_pipeline_flow("zhice", selected_batch)
 
     # --- Input: phrases to verify ---
@@ -2255,7 +2255,7 @@ elif _page_idx == 2:
 # PAGE: 智造 (Step 2) — 单页线性流程
 # ============================================================
 elif _page_idx == 3:
-    st.markdown("""<div class="ss-page-header"><h1 style="color:#ffcc02;">✍️ """ + ("Content Creation" if is_en else "智造 – Content Generation") + """</h1><p>""" + ("Generate SEO+GEO dual-optimized content based on AI Queries" if is_en else "基于 AI Queries 生成 SEO+GEO 双优化内容") + """</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="ss-page-header" style="color:#ffcc02;"><h1>✍️ """ + ("Content Creation" if is_en else "智造 – Content Generation") + """</h1><p>""" + ("Generate SEO+GEO dual-optimized content based on AI Queries" if is_en else "基于 AI Queries 生成 SEO+GEO 双优化内容") + """</p></div>""", unsafe_allow_html=True)
     render_pipeline_flow("zhizao", selected_batch)
 
     # --- Upload custom phrases directly ---
@@ -2691,7 +2691,7 @@ elif _page_idx == 3:
 # PAGE: 智优 (Step 3) — 一键自动完成
 # ============================================================
 elif _page_idx == 4:
-    st.markdown("""<div class="ss-page-header"><h1 style="color:#e91e63;">🔧 """ + ("Optimization" if is_en else "智优 – Score · Rewrite · Compliance") + """</h1><p>""" + ("One-click: Score → Rewrite → Compliance Review" if is_en else "一键自动完成 评分 → 重写优化 → 合规审查") + """</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="ss-page-header" style="color:#e91e63;"><h1>🔧 """ + ("Optimization" if is_en else "智优 – Score · Rewrite · Compliance") + """</h1><p>""" + ("One-click: Score → Rewrite → Compliance Review" if is_en else "一键自动完成 评分 → 重写优化 → 合规审查") + """</p></div>""", unsafe_allow_html=True)
     render_pipeline_flow("zhiyou", selected_batch)
 
     # Clear history button
@@ -3239,7 +3239,7 @@ elif _page_idx == 4:
 # PAGE: 智布 (Step 4)
 # ============================================================
 elif _page_idx == 5:
-    st.markdown("""<div class="ss-page-header"><h1 style="color:#29b6f6;">📦 """ + ("Publishing" if is_en else "智布 – 内容发布") + """</h1><p>""" + ("Convert optimized content to structured JSON and Word documents" if is_en else "将优化内容转换为结构化 JSON 和 Word 文档") + """</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="ss-page-header" style="color:#29b6f6;"><h1>📦 """ + ("Publishing" if is_en else "智布 – 内容发布") + """</h1><p>""" + ("Convert optimized content to structured JSON and Word documents" if is_en else "将优化内容转换为结构化 JSON 和 Word 文档") + """</p></div>""", unsafe_allow_html=True)
     render_pipeline_flow("zhibu", selected_batch)
 
     # --- Upload content directly (skip 智优) ---
@@ -3453,7 +3453,7 @@ elif _page_idx == 5:
 # PAGE: 智析 (Step 6) — 重构版
 # ============================================================
 elif _page_idx == 7:
-    st.markdown("""<div class="ss-page-header"><h1 style="color:#ab47bc;">📈 """ + ("Analytics" if is_en else "智析 – Performance & Gap Analysis") + """</h1><p>""" + ("Output trends · Input tracking · AI citation monitoring · Gap opportunities" if is_en else "Output 趋势 · Input 追踪 · AI 引用监控 · Gap 机会点") + """</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="ss-page-header" style="color:#ab47bc;"><h1>📈 """ + ("Analytics" if is_en else "智析 – Performance & Gap Analysis") + """</h1><p>""" + ("Output trends · Input tracking · AI citation monitoring · Gap opportunities" if is_en else "Output 趋势 · Input 追踪 · AI 引用监控 · Gap 机会点") + """</p></div>""", unsafe_allow_html=True)
     render_pipeline_flow("zhixi", selected_batch)
 
     # ============================================================
@@ -5843,7 +5843,7 @@ elif _page_idx == 7:
     # PAGE: 智中枢
     # ============================================================
 elif _page_idx == 8:
-    st.markdown("""<div class="ss-page-header"><h1 style="color:#ff6b35;">🎯 """ + ("Decision Engine" if is_en else "智中枢 – Decision Engine") + """</h1><p>""" + ("Analytics data + 7 decision rules → weekly action plan" if is_en else "基于智析数据 + 7 条决策规则，生成周度行动计划") + """</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="ss-page-header" style="color:#ff6b35;"><h1>🎯 """ + ("Decision Engine" if is_en else "智中枢 – Decision Engine") + """</h1><p>""" + ("Analytics data + 7 decision rules → weekly action plan" if is_en else "基于智析数据 + 7 条决策规则，生成周度行动计划") + """</p></div>""", unsafe_allow_html=True)
     render_pipeline_flow("zhongshu", selected_batch)
 
     # ============================================================
@@ -6115,7 +6115,7 @@ elif page == "📌 发布追踪" or (is_en and page == "📌 Publish Tracking"):
 # PAGE: 需求提交 (Request — per-user data)
 # ============================================================
 elif _page_idx == 10:
-    st.markdown("""<div class="ss-page-header"><h1 style="color:#00d4aa;">🔄 """ + ("Request Submission" if is_en else "需求提交") + """</h1><p>""" + ("Test → Opportunity → Content → Publish → Effect" if is_en else "智测发现 → 机会点 → 内容产出 → 效果对比 → 总结") + """</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="ss-page-header" style="color:#00d4aa;"><h1>🔄 """ + ("Request Submission" if is_en else "需求提交") + """</h1><p>""" + ("Test → Opportunity → Content → Publish → Effect" if is_en else "智测发现 → 机会点 → 内容产出 → 效果对比 → 总结") + """</p></div>""", unsafe_allow_html=True)
 
     # Login gate
     if not current_user:
@@ -6211,7 +6211,7 @@ elif _page_idx == 10:
 # PAGE: 运营看板 (Operations Dashboard)
 # ============================================================
 elif _page_idx == 13:
-    st.markdown("""<div class="ss-page-header"><h1 style="color:#00d4aa;">📝 """ + ("Operations Dashboard" if is_en else "运营管理看板") + """</h1><p>""" + ("Team activity log, pipeline status, who did what" if is_en else "团队操作日志、流水线状态、谁执行了什么") + """</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="ss-page-header" style="color:#00d4aa;"><h1>📝 """ + ("Operations Dashboard" if is_en else "运营管理看板") + """</h1><p>""" + ("Team activity log, pipeline status, who did what" if is_en else "团队操作日志、流水线状态、谁执行了什么") + """</p></div>""", unsafe_allow_html=True)
 
     tab_activity, tab_approval, tab_pipeline, tab_users, tab_link = st.tabs([
         "📋 Activity Log" if is_en else "📋 操作日志",
@@ -6448,7 +6448,7 @@ elif _page_idx == 13:
 # PAGE: 引用分析
 # ============================================================
 elif _page_idx == 11:
-    st.markdown("""<div class="ss-page-header"><h1 style="color:#4caf50;">🔍 """ + ("Citation Analysis" if is_en else "引用分析") + """</h1><p>""" + ("Analyze AI search engine citation of our content" if is_en else "分析 AI 搜索引擎对内容的引用情况") + """</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="ss-page-header" style="color:#4caf50;"><h1>🔍 """ + ("Citation Analysis" if is_en else "引用分析") + """</h1><p>""" + ("Analyze AI search engine citation of our content" if is_en else "分析 AI 搜索引擎对内容的引用情况") + """</p></div>""", unsafe_allow_html=True)
 
     st.subheader("AI Engine Citation Monitoring" if is_en else "AI 引擎引用监控")
     st.markdown("""
