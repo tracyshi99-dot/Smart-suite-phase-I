@@ -3556,6 +3556,21 @@ elif _page_idx == 7:
         elif _after_data:
             _perf_merged = _after_data
 
+        # --- Detailed Verification Results (per-platform table) ---
+        if _before_data:
+            with st.expander("📋 " + ("Detailed Verification by Platform" if is_en else "分平台验证详情"), expanded=False):
+                _detail_rows = []
+                for bd in _before_data:
+                    _detail_rows.append({
+                        ("Search Phrase" if is_en else "检索短语"): bd["Query"],
+                        ("Platform" if is_en else "平台"): bd["Platform"],
+                        ("Brand/Product" if is_en else "品牌/产品"): bd["Brand Before"],
+                        ("Official Link" if is_en else "官网链接"): bd["Link Before"],
+                        ("Gap Status" if is_en else "覆盖状态"): bd.get("Gap Status", "—"),
+                    })
+                st.dataframe(pd.DataFrame(_detail_rows), use_container_width=True, hide_index=True)
+                st.caption(f"{len(_detail_rows)} {'verification records' if is_en else '条验证记录'}")
+
         # Brand Mention section
         st.markdown("#### 🏷️ " + ("Brand/Product Name Mention" if is_en else "品牌/产品名称提及"))
         if _perf_merged:
