@@ -63,8 +63,8 @@ iframe { width: 100% !important; }
 
 /* === Typography === */
 h1 { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; font-weight: 800 !important; letter-spacing: -0.02em !important; }
-h2 { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; font-weight: 700 !important; letter-spacing: -0.01em !important; }
-h3 { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; font-weight: 600 !important; }
+h2 { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; font-weight: 700 !important; font-size: 1.1rem !important; letter-spacing: -0.01em !important; }
+h3 { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; font-weight: 600 !important; font-size: 0.95rem !important; }
 p, span, label, div { line-height: 1.6; }
 
 /* === Sidebar === */
