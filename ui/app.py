@@ -751,7 +751,7 @@ elif not current_user:
     <div style="width:56px;height:56px;margin:0 auto 20px;border-radius:14px;background:linear-gradient(135deg,rgba(0,212,170,0.12),rgba(0,180,216,0.08));display:flex;align-items:center;justify-content:center;border:1px solid rgba(0,212,170,0.2);">
         <span style="font-size:24px;">🔒</span>
     </div>
-    <h2 style="color:#e8eaf6;font-weight:700;font-size:1.3rem;margin-bottom:8px;">""" + ("Please Login to Continue" if is_en else "请先登录") + """</h2>
+    <h2 style="color:#e8eaf6;font-weight:700;font-size:1.3rem;margin-bottom:8px;">""" + ("Please log in to access Smart Suite tools" if is_en else "请先登录") + """</h2>
     <p style="color:#7b8ab8;font-size:13px;max-width:340px;margin:0 auto;">""" + ("Select your name below or enter login in the sidebar." if is_en else "从下方选择您的名称，或在左侧栏输入 Login。") + """</p>
     </div>""", unsafe_allow_html=True)
 
@@ -1022,7 +1022,7 @@ elif _page_idx == 1:
 
         sc1, sc2 = st.columns(2)
         sc1.metric("Total" if is_en else "总量", total_phrases_u)
-        sc2.metric("Selected" if is_en else "已选中", selected_count_u)
+        sc2.metric("Selected Phrases" if is_en else "已选中", selected_count_u)
 
         if not df_zhiku_user.empty:
             # Filter
@@ -1033,7 +1033,7 @@ elif _page_idx == 1:
                     key="user_source_filter")
             with filter_col[1]:
                 select_filter = st.selectbox("Status" if is_en else "选中状态",
-                    ["All" if is_en else "全部", "Selected" if is_en else "已选中", "Unselected" if is_en else "未选中"],
+                    ["All" if is_en else "全部", "Selected Phrases" if is_en else "已选中", "Unselected" if is_en else "未选中"],
                     key="user_select_filter")
             with filter_col[2]:
                 search_text = st.text_input("Search" if is_en else "搜索", key="user_search_text", placeholder="关键词搜索...")
@@ -1103,7 +1103,7 @@ elif _page_idx == 1:
                     zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
                     df_zhiku_user.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
                     mark_data_changed()
-                    st.success("✅ " + ("Saved!" if is_en else "已保存！"))
+                    st.success("✅ " + ("Changes saved successfully!" if is_en else "已保存！"))
                     st.rerun()
 
             # CTA to next step
@@ -1168,7 +1168,7 @@ elif _page_idx == 1:
 
         sc1, sc2, sc3, sc4 = st.columns(4)
         sc1.metric("Total Phrases" if is_en else "短语总量", total_phrases)
-        sc2.metric("Selected" if is_en else "已选中", selected_count)
+        sc2.metric("Selected Phrases" if is_en else "已选中", selected_count)
         sc3.metric("Categories" if is_en else "覆盖类别", df_zhiku_all["category"].dropna().nunique() if not df_zhiku_all.empty and "category" in df_zhiku_all.columns else 0)
         sc4.metric("Sources" if is_en else "来源数", df_zhiku_all["source"].dropna().nunique() if not df_zhiku_all.empty and "source" in df_zhiku_all.columns else 0)
 
@@ -1242,7 +1242,7 @@ elif _page_idx == 1:
         # ① 短语产出
         # ============================================================
         st.markdown("""<div class="ss-section">
-            <h3 style="color:#ffa726;">① """ + ("Phrase Production" if is_en else "短语产出") + """</h3>
+            <h3 style="color:#ffa726;">① """ + ("Search Phrase Generation" if is_en else "短语产出") + """</h3>
             <p>""" + ("3 input modes: AI auto / Upload CSV / Manual input" if is_en else "三种输入模式：AI 自动 / 上传 CSV / 手动输入") + """</p>
         </div>""", unsafe_allow_html=True)
 
@@ -1543,7 +1543,7 @@ elif _page_idx == 1:
         # ② 校准 + 去重
         # ============================================================
         st.markdown("""<div class="ss-section">
-            <h3 style="color:#ffa726;">② """ + ("Calibrate & Dedupe" if is_en else "校准 + 去重") + """</h3>
+            <h3 style="color:#ffa726;">② """ + ("Calibration & Deduplication" if is_en else "校准 + 去重") + """</h3>
         </div>""", unsafe_allow_html=True)
 
         if total_phrases > 0:
@@ -1579,7 +1579,7 @@ elif _page_idx == 1:
         # ③ 人工选取/修改
         # ============================================================
         st.markdown("""<div class="ss-section">
-            <h3 style="color:#ffa726;">③ """ + ("Review & Select" if is_en else "审核 & 选取") + """</h3>
+            <h3 style="color:#ffa726;">③ """ + ("Review & Selection" if is_en else "审核 & 选取") + """</h3>
         </div>""", unsafe_allow_html=True)
 
         df_q = load_zhiku_live(selected_batch)
@@ -1776,7 +1776,7 @@ elif _page_idx == 1:
                             if archive_path.exists():
                                 for f in archive_path.glob("*.csv"):
                                     f.unlink()
-                        st.success("Cleared" if is_en else "已清空")
+                        st.success("History cleared" if is_en else "已清空")
                         st.rerun()
                 all_files.sort(key=lambda f: f.stat().st_mtime, reverse=True)
                 for f in all_files[:10]:
@@ -1792,7 +1792,7 @@ elif _page_idx == 1:
                     with col_d:
                         st.download_button("⬇️", f.read_bytes(), file_name=f.name, mime="text/csv", key=f"dl_zhiku_{f.name}")
             else:
-                st.caption("No history" if is_en else "暂无历史")
+                st.caption("No history records yet" if is_en else "暂无历史")
 
 
     # ============================================================
@@ -1804,7 +1804,7 @@ elif _page_idx == 2:
 
     # --- Input: phrases to verify ---
     st.markdown("""<div class="ss-section">
-        <h3 style="color:#00d4aa;">① """ + ("Phrases to Verify" if is_en else "待验证短语") + """</h3>
+        <h3 style="color:#00d4aa;">① """ + ("Phrases Pending Verification" if is_en else "待验证短语") + """</h3>
     </div>""", unsafe_allow_html=True)
 
     # Load selected phrases from zhiku (for both admin and user)
@@ -1851,11 +1851,11 @@ elif _page_idx == 2:
 
     # --- Execute verification ---
     st.markdown("""<div class="ss-section">
-        <h3 style="color:#00d4aa;">② """ + ("Execute Verification" if is_en else "执行验证") + """</h3>
+        <h3 style="color:#00d4aa;">② """ + ("Run AI Platform Verification" if is_en else "执行验证") + """</h3>
     </div>""", unsafe_allow_html=True)
 
     ZHICE_PLATFORMS = {"qianwen": "通义千问", "deepseek": "DeepSeek", "kimi": "Kimi", "doubao": "豆包", "chatgpt": "ChatGPT", "perplexity": "Perplexity", "gemini": "Gemini"}
-    selected_platforms = st.multiselect("Platforms" if is_en else "验证平台", list(ZHICE_PLATFORMS.keys()), default=["qianwen", "deepseek"], format_func=lambda x: ZHICE_PLATFORMS[x], key="zhice_platforms")
+    selected_platforms = st.multiselect("Verification Platforms" if is_en else "验证平台", list(ZHICE_PLATFORMS.keys()), default=["qianwen", "deepseek"], format_func=lambda x: ZHICE_PLATFORMS[x], key="zhice_platforms")
 
     col_auto, col_manual = st.columns(2)
     with col_auto:
@@ -2040,7 +2040,7 @@ elif _page_idx == 2:
 
     # --- Results & Select ---
     st.markdown("""<div class="ss-section">
-        <h3 style="color:#00d4aa;">③ """ + ("Gap Results & Select" if is_en else "Gap 结果 & 选取") + """</h3>
+        <h3 style="color:#00d4aa;">③ """ + ("Gap Analysis Results & Selection" if is_en else "Gap 结果 & 选取") + """</h3>
     </div>""", unsafe_allow_html=True)
 
     df_gap_display = st.session_state.get("zhice_gap_results", pd.DataFrame())
@@ -2174,12 +2174,12 @@ elif _page_idx == 2:
 
                 # Show metrics
                 tc1, tc2, tc3, tc4 = st.columns(4)
-                tc1.metric("Total Checks" if is_en else "总验证次数", len(df_track))
-                tc2.metric("Unique Queries" if is_en else "不重复短语", df_track["ai_query"].nunique())
+                tc1.metric("Total Verification Runs" if is_en else "总验证次数", len(df_track))
+                tc2.metric("Unique Phrases Tested" if is_en else "不重复短语", df_track["ai_query"].nunique())
                 latest_brand_rate = by_date["brand_rate"].iloc[-1] if len(by_date) > 0 else 0
                 tc3.metric("Brand/Product Name Mention Rate" if is_en else "品牌/产品名称提及率", f"{latest_brand_rate}%")
                 latest_link_rate = by_date["link_rate"].iloc[-1] if len(by_date) > 0 else 0
-                tc4.metric("Official Link Rate" if is_en else "官网链接显示率", f"{latest_link_rate}%")
+                tc4.metric("Official Link Citation Rate" if is_en else "官网链接显示率", f"{latest_link_rate}%")
 
                 # Trend chart (both lines)
                 if len(by_date) > 1:
@@ -2259,9 +2259,9 @@ elif _page_idx == 2:
                             f.unlink()
                             st.rerun()
             else:
-                st.caption("No history" if is_en else "暂无历史")
+                st.caption("No history records yet" if is_en else "暂无历史")
         else:
-            st.caption("No history" if is_en else "暂无历史")
+            st.caption("No history records yet" if is_en else "暂无历史")
 
 
 # ============================================================
@@ -2329,7 +2329,7 @@ elif _page_idx == 3:
     st.divider()
 
     # --- Content Material Upload (reference docs for generation) ---
-    st.subheader("📎 " + ("Reference Materials" if is_en else "内容素材上传"))
+    st.subheader("📎 " + ("Reference Materials Upload" if is_en else "内容素材上传"))
     st.caption("Upload reference documents (Word/PDF/TXT/MD) that the AI can use when generating articles. Materials are matched to phrases by keywords." if is_en else "上传参考素材文档（Word/PDF/TXT/MD），AI 生成文章时会从中抓取相关信息。素材按关键词自动匹配对应短语。")
 
     _materials_dir = OUTPUT_PATH / selected_batch / "materials"
@@ -2576,7 +2576,7 @@ elif _page_idx == 3:
                 if zhizao_dir.exists():
                     for f in zhizao_dir.glob("zhizao_draft_content*.csv"):
                         f.unlink()
-                st.success("Cleared" if is_en else "已清空")
+                st.success("History cleared" if is_en else "已清空")
                 st.rerun()
 
         # --- 文章确认环节 ---
@@ -2636,7 +2636,7 @@ elif _page_idx == 3:
                 if zhizao_dir.exists():
                     for f in zhizao_dir.glob("*.csv"):
                         f.unlink()
-                    st.success("Cleared" if is_en else "已清空")
+                    st.success("History cleared" if is_en else "已清空")
         if zhizao_dir.exists():
             files = sorted(zhizao_dir.glob("*.csv"), key=lambda f: f.stat().st_mtime, reverse=True)
             for f in files:
@@ -2652,7 +2652,7 @@ elif _page_idx == 3:
                 with col_d:
                     st.download_button("⬇️", f.read_bytes(), file_name=f.name, mime="text/csv", key=f"dl_zhizao_{f.name}")
         else:
-            st.caption("No history" if is_en else "暂无历史")
+            st.caption("No history records yet" if is_en else "暂无历史")
 
     # 📚 Template Library
     with st.expander("📚 Template Library" if is_en else "📚 模板库（已保存的文章模板）"):
@@ -2715,7 +2715,7 @@ elif _page_idx == 4:
             if zhiyou_dir.exists():
                 for f in zhiyou_dir.glob("*.csv"):
                     f.unlink()
-            st.success("Cleared" if is_en else "已清空")
+            st.success("History cleared" if is_en else "已清空")
             st.rerun()
 
     # --- Upload content directly (skip 智造) ---
@@ -3229,7 +3229,7 @@ elif _page_idx == 4:
                 if zhiyou_dir.exists():
                     for f in zhiyou_dir.glob("*.csv"):
                         f.unlink()
-                    st.success("Cleared" if is_en else "已清空")
+                    st.success("History cleared" if is_en else "已清空")
         if zhiyou_dir.exists():
             files = sorted(zhiyou_dir.glob("*.csv"), key=lambda f: f.stat().st_mtime, reverse=True)
             for f in files:
@@ -3245,7 +3245,7 @@ elif _page_idx == 4:
                 with col_d:
                     st.download_button("⬇️", f.read_bytes(), file_name=f.name, mime="text/csv", key=f"dl_zhiyou_{f.name}")
         else:
-            st.caption("No history" if is_en else "暂无历史")
+            st.caption("No history records yet" if is_en else "暂无历史")
 
 
 # ============================================================
@@ -3458,7 +3458,7 @@ elif _page_idx == 5:
                     mime = "application/json" if f.suffix == ".json" else "text/csv"
                     st.download_button("⬇️", f.read_bytes(), file_name=f.name, mime=mime, key=f"dl_zhibu_{f.name}")
         else:
-            st.caption("No history" if is_en else "暂无历史")
+            st.caption("No history records yet" if is_en else "暂无历史")
 
 
 # ============================================================
@@ -3473,7 +3473,7 @@ elif _page_idx == 7:
     # USER VIEW: Personal performance dashboard
     # ============================================================
     if not is_admin:
-        st.markdown("### " + ("My Performance" if is_en else "我的 Performance"))
+        st.markdown("### " + ("My Performance Dashboard" if is_en else "我的 Performance"))
 
         # Load user's data
         _u_zhiku = load_csv_safe(OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv")
@@ -3487,14 +3487,14 @@ elif _page_idx == 7:
             selected_phrases = len(_u_zhiku[_u_zhiku["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])])
 
         kc1, kc2, kc3 = st.columns(3)
-        kc1.metric("Total Phrases" if is_en else "创建短语", total_phrases)
-        kc2.metric("Selected" if is_en else "已选中", selected_phrases)
-        kc3.metric("Articles" if is_en else "产出文章", total_articles)
+        kc1.metric("Total Phrases Created" if is_en else "创建短语", total_phrases)
+        kc2.metric("Selected Phrases" if is_en else "已选中", selected_phrases)
+        kc3.metric("Articles Generated" if is_en else "产出文章", total_articles)
 
         st.divider()
 
         # --- Citation Performance ---
-        st.markdown("### " + ("Citation Performance" if is_en else "引用表现"))
+        st.markdown("### " + ("AI Citation Performance (Before vs After)" if is_en else "引用表现"))
         st.caption("Before = from 智测 verification (baseline) · After = post-content launch (upload when available)" if is_en else "Before = 智测验证结果（基线）· After = 新内容上线后（有数据时上传）")
 
         # Auto-load Before data from THIS USER's zhice gap results only
@@ -3630,7 +3630,7 @@ elif _page_idx == 7:
                 try:
                     df_up_perf = pd.read_csv(up_perf, encoding="utf-8-sig", on_bad_lines="skip")
                     st.dataframe(df_up_perf.head(5), use_container_width=True, hide_index=True)
-                    if st.button("✅ " + ("Confirm Upload" if is_en else "确认上传"), key="confirm_perf_upload"):
+                    if st.button("✅ " + ("Confirm & Save Upload" if is_en else "确认上传"), key="confirm_perf_upload"):
                         _perf_file.parent.mkdir(parents=True, exist_ok=True)
                         _perf_file.write_text(df_up_perf.to_json(orient="records", force_ascii=False), encoding="utf-8")
                         mark_data_changed()
@@ -3642,7 +3642,7 @@ elif _page_idx == 7:
         st.divider()
 
         # --- Custom Metrics ---
-        st.markdown("### " + ("Metrics Tracking" if is_en else "指标追踪"))
+        st.markdown("### " + ("Custom Metrics Tracking" if is_en else "指标追踪"))
         st.caption("Select preset metrics or add custom ones" if is_en else "选择预设指标或手动添加")
 
         _metrics_file = OUTPUT_PATH / "requests" / current_user / "custom_metrics.json"
@@ -3678,7 +3678,7 @@ elif _page_idx == 7:
 
         # --- CTA: Submit Request ---
         st.divider()
-        if st.button("📨 " + ("Submit Request to Admin" if is_en else "提交需求到管理员"), type="primary", key="user_submit_analytics_request"):
+        if st.button("📨 " + ("Submit Analytics Request to Admin" if is_en else "提交需求到管理员"), type="primary", key="user_submit_analytics_request"):
             _req_dir = OUTPUT_PATH / "requests" / current_user
             _req_dir.mkdir(parents=True, exist_ok=True)
             _req_file = OUTPUT_PATH / "request_tracking.json"
@@ -5553,7 +5553,7 @@ elif _page_idx == 7:
                     with col_d:
                         st.download_button("⬇️", f.read_bytes(), file_name=f.name, mime="text/csv", key=f"dl_zhixi_{f.name}")
             else:
-                st.caption("No history" if is_en else "暂无历史")
+                st.caption("No history records yet" if is_en else "暂无历史")
 
         # ============================================================
         # TAB 7: 智预 — Query Demand Forecaster
@@ -6166,7 +6166,7 @@ elif _page_idx == 10:
     kc2.metric("Queries" if is_en else "短语", total_queries)
     kc3.metric("Opportunities" if is_en else "机会点", len(user_opps))
     total_articles = sum(a.get("count", 0) for a in user_actions)
-    kc4.metric("Articles" if is_en else "产出文章", total_articles)
+    kc4.metric("Articles Generated" if is_en else "产出文章", total_articles)
 
     # Quick actions
     st.divider()
