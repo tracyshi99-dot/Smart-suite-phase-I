@@ -3980,15 +3980,63 @@ elif _page_idx == 7:
 
         # Brand Mention section
         st.markdown("#### 🏷️ " + ("Brand/Product Name Mention" if is_en else "品牌/产品名称提及"))
+
+        # Clear buttons for performance data
+        _zx_c1, _zx_c2, _zx_c3 = st.columns([1, 1, 4])
+        with _zx_c1:
+            _zhixi_clear_sel = st.button("🗑️ " + ("Clear Selected" if is_en else "选中清空"), key="zhixi_clear_sel")
+        with _zx_c2:
+            if st.button("🗑️ " + ("Clear ALL" if is_en else "全部清空"), key="zhixi_clear_all"):
+                # Archive all gap results to history
+                _user_zhice_dir2 = OUTPUT_PATH / selected_batch / "zhice"
+                if _user_zhice_dir2.exists():
+                    _gap_files2 = sorted(_user_zhice_dir2.glob("gap_result_*.csv"), key=lambda f: f.stat().st_mtime, reverse=True)
+                    if _gap_files2:
+                        archive_dir = _user_zhice_dir2 / "archive"
+                        archive_dir.mkdir(exist_ok=True)
+                        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+                        for gf in _gap_files2:
+                            gf.rename(archive_dir / f"{gf.stem}_{ts}{gf.suffix}")
+                st.success("✅ " + ("All cleared to history" if is_en else "全部已清空到历史"))
+                st.rerun()
+
         if _perf_merged:
+            # Add _select column for selective clearing
             df_brand = pd.DataFrame([{
+                "_select": False,
                 "Query": r["Query"],
                 "Gap": r.get("Gap Status", "—"),
                 "Before": r.get("Brand/Product Before", "—"),
                 "After": r.get("Brand/Product After", "—"),
                 "Change": "🆕 改善" if r.get("Brand/Product Before") == "❌" and r.get("Brand/Product After") == "✅" else ("⚠️ 退步" if r.get("Brand/Product Before") == "✅" and r.get("Brand/Product After") == "❌" else ("→ 持平" if r.get("Brand/Product After") != "—" else "⏳ 待测")),
             } for r in _perf_merged])
-            st.dataframe(df_brand, use_container_width=True, hide_index=True)
+            _zx_col_config = {
+                "_select": st.column_config.CheckboxColumn("☑️", default=False),
+            }
+            edited_zx_brand = st.data_editor(df_brand, column_config=_zx_col_config, use_container_width=True, hide_index=True, key="zhixi_brand_editor")
+
+            # Handle "Clear Selected"
+            if _zhixi_clear_sel:
+                if "_select" in edited_zx_brand.columns and edited_zx_brand["_select"].any():
+                    sel_queries = edited_zx_brand[edited_zx_brand["_select"] == True]["Query"].tolist()
+                    # Remove from gap files
+                    _user_zhice_dir2 = OUTPUT_PATH / selected_batch / "zhice"
+                    if _user_zhice_dir2.exists():
+                        _gap_files2 = sorted(_user_zhice_dir2.glob("gap_result_*.csv"), key=lambda f: f.stat().st_mtime, reverse=True)
+                        for gf in _gap_files2:
+                            df_gf = load_csv_safe(gf)
+                            if not df_gf.empty and "ai_query" in df_gf.columns:
+                                # Archive removed rows
+                                mask = df_gf["ai_query"].str[:60].isin(sel_queries)
+                                if mask.any():
+                                    archive_dir = _user_zhice_dir2 / "archive"
+                                    archive_dir.mkdir(exist_ok=True)
+                                    df_gf[mask].to_csv(archive_dir / f"archived_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv", index=False, encoding="utf-8-sig")
+                                    df_gf[~mask].to_csv(gf, index=False, encoding="utf-8-sig")
+                    st.success(f"✅ {len(sel_queries)} {'cleared' if is_en else '条已清空'}")
+                    st.rerun()
+                else:
+                    st.warning("No items selected. Check ☑️ column first." if is_en else "未勾选任何条目，请先勾选 ☑️ 列")
         else:
             st.dataframe(pd.DataFrame([{"Query": "—", "Platform": "—", "Before": "—", "After": "—", "Change": "—"}]), use_container_width=True, hide_index=True)
             st.caption("请先在智测中验证短语，Before 数据将自动填入" if not is_en else "Run verification in 智测 first — Before data will auto-populate")
