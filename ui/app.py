@@ -30,7 +30,7 @@ if DEMO_MODE:
     import shutil
     _WRITABLE_OUTPUT = Path(tempfile.gettempdir()) / "smartsuite_output"
     _DEMO_SOURCE = Path(__file__).parent / "demo_output"
-    _DATA_VERSION = "v20260728c"
+    _DATA_VERSION = "v20260728d"
     _VERSION_FILE = _WRITABLE_OUTPUT / "_data_version.txt"
     _current_ver = _VERSION_FILE.read_text().strip() if _VERSION_FILE.exists() else ""
     if _current_ver != _DATA_VERSION:
@@ -4683,8 +4683,12 @@ elif _page_idx == 7:
                     else:
                         st.metric("Direct (CN+WW)", "N/A")
                 with col5:
-                    # vs 大盘 (bps): our Total YoY vs SSR YoY
-                    _our_ytd_row = df_ytd[df_ytd["Channel"].isin(["Total (GEO+Direct)", "Total", "Total GEO"])]
+                    # vs 大盘 (bps): our Total (GEO+Direct) YoY vs SSR YoY
+                    _our_ytd_row = df_ytd[df_ytd["Channel"] == "Total (GEO+Direct)"]
+                    if _our_ytd_row.empty:
+                        _our_ytd_row = df_ytd[df_ytd["Channel"] == "Total"]
+                    if _our_ytd_row.empty:
+                        _our_ytd_row = df_ytd[df_ytd["Channel"] == "Total GEO"]
                     _ssr_ytd_row = df_ytd[df_ytd["Channel"].str.contains("SSR", na=False)]
                     if not _our_ytd_row.empty and not _ssr_ytd_row.empty:
                         _our_ytd_yoy = str(_our_ytd_row.iloc[0]["YoY"]).replace("%", "").replace("+", "").strip()
