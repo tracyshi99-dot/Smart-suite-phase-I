@@ -4465,19 +4465,22 @@ elif _page_idx == 7:
                     prev_m = month_cols[-2]
                     monthly_actual = monthly_data[monthly_data["Type"] == "Actual"] if "Type" in monthly_data.columns else monthly_data
                     kpi1, kpi2, kpi3, kpi4 = st.columns(4)
-                    channels_kpi = [
-                        ("Total (GEO+Direct)", "Total", kpi1),
-                        ("CN (GEO)", "CN GEO", kpi2),
-                        ("WW (GEO)", "WW GEO", kpi3),
-                        ("Direct Channel (CN+WW)", "Direct (CN+WW)", kpi4),
+                    # Build lookup: try multiple channel name variants
+                    def _find_monthly_row(channel_names, df):
+                        for name in channel_names:
+                            row = df[df["Channel"] == name]
+                            if not row.empty:
+                                return row
+                        return pd.DataFrame()
+
+                    _kpi_defs = [
+                        (["Total (GEO+Direct)", "Total GEO", "Total"], "Total", kpi1),
+                        (["CN (GEO)", "CN GEO"], "CN GEO", kpi2),
+                        (["WW (GEO)", "WW GEO"], "WW GEO", kpi3),
+                        (["Direct Channel (CN+WW)", "Direct (CN+WW)", "WW Website Direct"], "Direct (CN+WW)", kpi4),
                     ]
-                    for ch_name, display_name, kpi_col in channels_kpi:
-                        row = monthly_actual[monthly_actual["Channel"] == ch_name]
-                        if row.empty:
-                            row = monthly_actual[monthly_actual["Channel"] == display_name]
-                        if row.empty:
-                            # Try partial match
-                            row = monthly_actual[monthly_actual["Channel"].str.contains("Direct", na=False) & monthly_actual["Channel"].str.contains("CN", na=False)] if "Direct" in ch_name else pd.DataFrame()
+                    for ch_names, display_name, kpi_col in _kpi_defs:
+                        row = _find_monthly_row(ch_names, monthly_actual)
                         if not row.empty:
                             cur_val = pd.to_numeric(row.iloc[0][last_m], errors="coerce")
                             prev_val = pd.to_numeric(row.iloc[0][prev_m], errors="coerce")
