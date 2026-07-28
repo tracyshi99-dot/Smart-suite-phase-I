@@ -235,39 +235,64 @@ def restore_from_history(batch_id: str, tool_id: str, snap_name: str):
 
 def render_history_widget(batch_id: str, tool_id: str, is_en: bool = False):
     """Render the save/restore history widget for a tool page."""
-    with st.container():
-        col_h1, col_h2, col_h3 = st.columns([2, 3, 2])
-        with col_h1:
-            save_label = st.text_input(
-                "💾 " + ("Save label" if is_en else "保存标签"),
-                placeholder="e.g. v1 final" if is_en else "如: 第一版",
-                key=f"hist_label_{tool_id}",
-                label_visibility="collapsed",
-            )
-        with col_h2:
-            snapshots = list_history(batch_id, tool_id)
-            snap_options = ["—"] + [f"{s['meta'].get('label') or s['meta'].get('timestamp', '')} ({s['name'][-15:]})" for s in snapshots]
-            selected_snap = st.selectbox(
-                "📂 " + ("History" if is_en else "历史记录"),
-                snap_options,
-                key=f"hist_select_{tool_id}",
-                label_visibility="collapsed",
-            )
-        with col_h3:
-            c_save, c_restore = st.columns(2)
-            with c_save:
-                if st.button("💾 " + ("Save" if is_en else "保存"), key=f"hist_save_{tool_id}", use_container_width=True):
-                    snap = save_to_history(batch_id, tool_id, save_label)
-                    st.success(f"✅ {'Saved' if is_en else '已保存'}: {snap}")
-                    st.rerun()
-            with c_restore:
-                if st.button("🔄 " + ("Restore" if is_en else "恢复"), key=f"hist_restore_{tool_id}", use_container_width=True):
-                    if selected_snap != "—" and snapshots:
-                        idx = snap_options.index(selected_snap) - 1
-                        if 0 <= idx < len(snapshots):
-                            restore_from_history(batch_id, tool_id, snapshots[idx]["name"])
-                            st.success(f"✅ {'Restored' if is_en else '已恢复'}")
-                            st.rerun()
+    tool_folder_map = {
+        "zhiku": "01_zhiku",
+        "zhizao": "02_zhizao",
+        "zhiyou": "03_zhiyou",
+        "zhibu": "04_zhibu",
+    }
+    # Count current items for display
+    src_folder = OUTPUT_PATH / batch_id / tool_folder_map.get(tool_id, tool_id)
+    current_files = [f for f in src_folder.iterdir() if f.is_file() and f.suffix in ('.csv', '.json', '.xlsx')] if src_folder.exists() else []
+    current_count = 0
+    if current_files:
+        for cf in current_files:
+            if cf.suffix == '.csv':
+                try:
+                    current_count += len(pd.read_csv(cf, encoding="utf-8-sig"))
+                except Exception:
+                    pass
+
+    snapshots = list_history(batch_id, tool_id)
+
+    with st.expander(f"💾 {'History' if is_en else '历史记录'} ({len(snapshots)} {'saves' if is_en else '条'})", expanded=False):
+        # Save button row
+        col_s1, col_s2 = st.columns([3, 1])
+        with col_s1:
+            st.caption(f"{'Current state' if is_en else '当前状态'}: {current_count} {'rows' if is_en else '条数据'}, {len(current_files)} {'files' if is_en else '个文件'}" if current_files else ("No data yet" if is_en else "暂无数据"))
+        with col_s2:
+            if st.button("📸 " + ("Save Snapshot" if is_en else "保存快照"), key=f"hist_save_{tool_id}", use_container_width=True, type="primary"):
+                label = f"{current_count} rows" if is_en else f"{current_count}条"
+                snap = save_to_history(batch_id, tool_id, label)
+                st.success(f"✅ {'Saved!' if is_en else '已保存！'}")
+                st.rerun()
+
+        # History list
+        if snapshots:
+            st.markdown("---")
+            for i, snap in enumerate(snapshots):
+                meta = snap["meta"]
+                ts_raw = meta.get("timestamp", "")
+                # Format timestamp nicely
+                try:
+                    ts_dt = datetime.strptime(ts_raw, "%Y%m%d_%H%M%S")
+                    ts_display = ts_dt.strftime("%m/%d %H:%M")
+                except Exception:
+                    ts_display = ts_raw[:10]
+                label = meta.get("label", "")
+                # Count files in snapshot
+                snap_files = [f for f in snap["path"].iterdir() if f.is_file() and f.name != "_meta.json"]
+
+                col_info, col_btn = st.columns([4, 1])
+                with col_info:
+                    st.markdown(f"**#{len(snapshots)-i}** · `{ts_display}` · {label} · {len(snap_files)} files")
+                with col_btn:
+                    if st.button("🔄 " + ("Restore" if is_en else "恢复"), key=f"hist_r_{tool_id}_{i}", use_container_width=True):
+                        restore_from_history(batch_id, tool_id, snap["name"])
+                        st.success(f"✅ {'Restored to' if is_en else '已恢复到'} #{len(snapshots)-i}")
+                        st.rerun()
+        else:
+            st.caption("No history yet. Click 'Save Snapshot' to create one." if is_en else "暂无历史。点击「保存快照」创建第一条。")
 
 
 # --- Pipeline Flow Visual Component ---
