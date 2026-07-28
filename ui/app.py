@@ -3188,22 +3188,49 @@ elif _page_idx == 4:
     if not df_opt.empty:
         st.subheader(f"📖 {'Optimized Article Preview & Edit' if is_en else '优化后文章预览 & 编辑'}（{len(df_opt)} {'articles' if is_en else '篇'}）")
 
-        # Clear current content (archive to history)
-        if st.button("🗑️ Clear Current & Archive" if is_en else "🗑️ 清空当前内容（归档到历史）", key="clear_zhiyou_current"):
-            zhiyou_dir = OUTPUT_PATH / selected_batch / "03_zhiyou"
-            archive_dir = zhiyou_dir / "archive"
-            archive_dir.mkdir(parents=True, exist_ok=True)
-            ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-            for csv_file in zhiyou_dir.glob("*.csv"):
-                csv_file.rename(archive_dir / f"{csv_file.stem}_{ts}{csv_file.suffix}")
-            st.success("✅ Archived" if is_en else "✅ 已归档到历史")
-            st.rerun()
+        # Clear buttons
+        _zy_c1, _zy_c2, _zy_c3 = st.columns([1, 1, 4])
+        with _zy_c1:
+            _zhiyou_clear_sel = st.button("🗑️ " + ("Clear Selected" if is_en else "选中清空"), key="zhiyou_clear_sel")
+        with _zy_c2:
+            if st.button("🗑️ " + ("Clear ALL" if is_en else "全部清空"), key="zhiyou_clear_all_btn"):
+                opt_file = OUTPUT_PATH / selected_batch / "03_zhiyou" / "zhiyou_optimized_content.csv"
+                if opt_file.exists():
+                    all_mask = pd.Series([True] * len(df_opt))
+                    archive_selected_items(selected_batch, "zhiyou", df_opt, all_mask, is_en)
+                    df_opt.head(0).to_csv(opt_file, index=False, encoding="utf-8-sig")
+                    st.success(f"✅ {len(df_opt)} {'cleared' if is_en else '条已清空'}")
+                    st.rerun()
+
+        # Editable list with select column
+        if "_select" not in df_opt.columns:
+            df_opt.insert(0, "_select", False)
+        title_col = "optimized_title" if "optimized_title" in df_opt.columns else "title"
+        _zy_display_cols = ["_select"] + [c for c in ["ai_query", title_col, "overall_score"] if c in df_opt.columns]
+        _zy_col_config = {
+            "_select": st.column_config.CheckboxColumn("☑️", default=False),
+            "ai_query": st.column_config.TextColumn("Search Phrase" if is_en else "检索短语"),
+            title_col: st.column_config.TextColumn("Title" if is_en else "标题"),
+            "overall_score": st.column_config.NumberColumn("Score" if is_en else "评分"),
+        }
+        edited_zy = st.data_editor(df_opt[_zy_display_cols], column_config=_zy_col_config, use_container_width=True, hide_index=True, key="zhiyou_list_editor")
+
+        # Handle "Clear Selected"
+        if _zhiyou_clear_sel:
+            if "_select" in edited_zy.columns and edited_zy["_select"].any():
+                sel_mask = edited_zy["_select"] == True
+                opt_file = OUTPUT_PATH / selected_batch / "03_zhiyou" / "zhiyou_optimized_content.csv"
+                df_remaining = archive_selected_items(selected_batch, "zhiyou", df_opt, sel_mask, is_en)
+                df_remaining.drop(columns=["_select"], errors="ignore").to_csv(opt_file, index=False, encoding="utf-8-sig")
+                st.success(f"✅ {sel_mask.sum()} {'cleared' if is_en else '条已清空'}")
+                st.rerun()
+            else:
+                st.warning("No items selected. Check ☑️ column first." if is_en else "未勾选任何条目，请先在表格中勾选 ☑️ 列")
 
         st.caption("Edit optimized articles below, changes auto-saved" if is_en else "可直接编辑优化后的文章内容，修改自动保存")
 
         opt_file = OUTPUT_PATH / selected_batch / "03_zhiyou" / "zhiyou_optimized_content.csv"
         content_col = "optimized_content" if "optimized_content" in df_opt.columns else "content_draft"
-        title_col = "optimized_title" if "optimized_title" in df_opt.columns else "title"
 
         content_changed = False
         for idx, row in df_opt.iterrows():
