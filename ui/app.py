@@ -164,6 +164,112 @@ hr { border-color: rgba(255,255,255,0.06) !important; }
 """, unsafe_allow_html=True)
 
 
+# --- History Save/Restore Utility ---
+HISTORY_DIR_NAME = "_history"
+
+def get_history_dir(batch_id: str):
+    """Get the history directory for a batch."""
+    hdir = OUTPUT_PATH / batch_id / HISTORY_DIR_NAME
+    hdir.mkdir(parents=True, exist_ok=True)
+    return hdir
+
+def save_to_history(batch_id: str, tool_id: str, label: str = ""):
+    """Save current tool output to a timestamped history snapshot."""
+    import shutil
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    tag = label.replace(" ", "_")[:30] if label else ""
+    snap_name = f"{tool_id}_{ts}" + (f"_{tag}" if tag else "")
+    hdir = get_history_dir(batch_id)
+    snap_path = hdir / snap_name
+    snap_path.mkdir(parents=True, exist_ok=True)
+
+    # Map tool_id to source folder
+    tool_folder_map = {
+        "zhiku": "01_zhiku",
+        "zhizao": "02_zhizao",
+        "zhiyou": "03_zhiyou",
+        "zhibu": "04_zhibu",
+    }
+    src_folder = OUTPUT_PATH / batch_id / tool_folder_map.get(tool_id, tool_id)
+    if src_folder.exists():
+        for f in src_folder.iterdir():
+            if f.is_file():
+                shutil.copy2(f, snap_path / f.name)
+    # Save metadata
+    meta = {"tool": tool_id, "timestamp": ts, "label": label, "batch": batch_id}
+    (snap_path / "_meta.json").write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
+    return snap_name
+
+def list_history(batch_id: str, tool_id: str):
+    """List history snapshots for a tool."""
+    hdir = get_history_dir(batch_id)
+    snapshots = []
+    for d in sorted(hdir.iterdir(), reverse=True):
+        if d.is_dir() and d.name.startswith(tool_id + "_"):
+            meta_file = d / "_meta.json"
+            if meta_file.exists():
+                meta = json.loads(meta_file.read_text(encoding="utf-8"))
+            else:
+                meta = {"tool": tool_id, "timestamp": d.name.split("_", 1)[1][:15], "label": ""}
+            snapshots.append({"path": d, "name": d.name, "meta": meta})
+    return snapshots
+
+def restore_from_history(batch_id: str, tool_id: str, snap_name: str):
+    """Restore a history snapshot back to the tool's working folder."""
+    import shutil
+    tool_folder_map = {
+        "zhiku": "01_zhiku",
+        "zhizao": "02_zhizao",
+        "zhiyou": "03_zhiyou",
+        "zhibu": "04_zhibu",
+    }
+    hdir = get_history_dir(batch_id)
+    snap_path = hdir / snap_name
+    dst_folder = OUTPUT_PATH / batch_id / tool_folder_map.get(tool_id, tool_id)
+    dst_folder.mkdir(parents=True, exist_ok=True)
+    if snap_path.exists():
+        for f in snap_path.iterdir():
+            if f.is_file() and f.name != "_meta.json":
+                shutil.copy2(f, dst_folder / f.name)
+    return True
+
+def render_history_widget(batch_id: str, tool_id: str, is_en: bool = False):
+    """Render the save/restore history widget for a tool page."""
+    with st.container():
+        col_h1, col_h2, col_h3 = st.columns([2, 3, 2])
+        with col_h1:
+            save_label = st.text_input(
+                "💾 " + ("Save label" if is_en else "保存标签"),
+                placeholder="e.g. v1 final" if is_en else "如: 第一版",
+                key=f"hist_label_{tool_id}",
+                label_visibility="collapsed",
+            )
+        with col_h2:
+            snapshots = list_history(batch_id, tool_id)
+            snap_options = ["—"] + [f"{s['meta'].get('label') or s['meta'].get('timestamp', '')} ({s['name'][-15:]})" for s in snapshots]
+            selected_snap = st.selectbox(
+                "📂 " + ("History" if is_en else "历史记录"),
+                snap_options,
+                key=f"hist_select_{tool_id}",
+                label_visibility="collapsed",
+            )
+        with col_h3:
+            c_save, c_restore = st.columns(2)
+            with c_save:
+                if st.button("💾 " + ("Save" if is_en else "保存"), key=f"hist_save_{tool_id}", use_container_width=True):
+                    snap = save_to_history(batch_id, tool_id, save_label)
+                    st.success(f"✅ {'Saved' if is_en else '已保存'}: {snap}")
+                    st.rerun()
+            with c_restore:
+                if st.button("🔄 " + ("Restore" if is_en else "恢复"), key=f"hist_restore_{tool_id}", use_container_width=True):
+                    if selected_snap != "—" and snapshots:
+                        idx = snap_options.index(selected_snap) - 1
+                        if 0 <= idx < len(snapshots):
+                            restore_from_history(batch_id, tool_id, snapshots[idx]["name"])
+                            st.success(f"✅ {'Restored' if is_en else '已恢复'}")
+                            st.rerun()
+
+
 # --- Pipeline Flow Visual Component ---
 PIPELINE_STEPS = [
     {"id": "zhiku", "name": "智库", "page": "📚 智库"},
@@ -788,6 +894,7 @@ elif not current_user:
 
 elif _page_idx == 1:
     st.markdown("""<div class="ss-page-header" style="color:#ffa726;"><h1>📚 """ + ("Query Library" if is_en else "智库 – 检索短语产出与验证") + """</h1><p>""" + ("Produce → Calibrate → Dedupe → Select → Verify Gap → Confirm" if is_en else "产出 → 校准 → 去重 → 选取 → 验证Gap → 确认进智造") + """</p></div>""", unsafe_allow_html=True)
+    render_history_widget(selected_batch, "zhiku", is_en)
     render_pipeline_flow("zhiku", selected_batch)
 
     # ============================================================
@@ -2256,6 +2363,7 @@ elif _page_idx == 2:
 # ============================================================
 elif _page_idx == 3:
     st.markdown("""<div class="ss-page-header" style="color:#ffcc02;"><h1>✍️ """ + ("Content Creation" if is_en else "智造 – Content Generation") + """</h1><p>""" + ("Generate SEO+GEO dual-optimized content based on AI Queries" if is_en else "基于 AI Queries 生成 SEO+GEO 双优化内容") + """</p></div>""", unsafe_allow_html=True)
+    render_history_widget(selected_batch, "zhizao", is_en)
     render_pipeline_flow("zhizao", selected_batch)
 
     # --- Upload custom phrases directly ---
@@ -2692,6 +2800,7 @@ elif _page_idx == 3:
 # ============================================================
 elif _page_idx == 4:
     st.markdown("""<div class="ss-page-header" style="color:#e91e63;"><h1>🔧 """ + ("Optimization" if is_en else "智优 – Score · Rewrite · Compliance") + """</h1><p>""" + ("One-click: Score → Rewrite → Compliance Review" if is_en else "一键自动完成 评分 → 重写优化 → 合规审查") + """</p></div>""", unsafe_allow_html=True)
+    render_history_widget(selected_batch, "zhiyou", is_en)
     render_pipeline_flow("zhiyou", selected_batch)
 
     # Clear history button
@@ -3240,6 +3349,7 @@ elif _page_idx == 4:
 # ============================================================
 elif _page_idx == 5:
     st.markdown("""<div class="ss-page-header" style="color:#29b6f6;"><h1>📦 """ + ("Publishing" if is_en else "智布 – 内容发布") + """</h1><p>""" + ("Convert optimized content to structured JSON and Word documents" if is_en else "将优化内容转换为结构化 JSON 和 Word 文档") + """</p></div>""", unsafe_allow_html=True)
+    render_history_widget(selected_batch, "zhibu", is_en)
     render_pipeline_flow("zhibu", selected_batch)
 
     # --- Upload content directly (skip 智优) ---
