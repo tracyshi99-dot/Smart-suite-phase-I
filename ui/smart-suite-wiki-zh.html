@@ -103,21 +103,24 @@
   <p><strong style="color:#00bcd4;">6. Measure</strong> — 智析 tracks performance vs SSR benchmark, automated weekly reports</p>
 </div>
 
-<!-- PERFORMANCE -->
+<!-- PERFORMANCE (YTD) -->
 <div class="ss-section">
-  <h3>📊 Q2 2026 Performance</h3>
+  <h3>📊 YTD Performance (thru WK29)</h3>
   <div style="display:flex;gap:16px;margin:12px 0;">
-    <div style="flex:1;padding:12px;border-radius:8px;background:rgba(76,175,80,0.05);border:1px solid rgba(76,175,80,0.15);text-align:center;">
-      <div style="font-size:24px;font-weight:800;color:#4caf50;">+29%</div>
-      <div style="font-size:10px;color:#5a6380;">GEO+Direct Q2 YoY</div>
+    <div style="flex:1;padding:14px;border-radius:8px;background:rgba(76,175,80,0.05);border:1px solid rgba(76,175,80,0.15);text-align:center;">
+      <div style="font-size:24px;font-weight:800;color:#4caf50;">1,477</div>
+      <div style="font-size:10px;color:#5a6380;">GEO Total YTD</div>
+      <div style="font-size:11px;color:#4caf50;margin-top:2px;">+194% YoY</div>
     </div>
-    <div style="flex:1;padding:12px;border-radius:8px;background:rgba(0,188,212,0.05);border:1px solid rgba(0,188,212,0.15);text-align:center;">
-      <div style="font-size:24px;font-weight:800;color:#00bcd4;">564</div>
-      <div style="font-size:10px;color:#5a6380;">Validated Queries</div>
+    <div style="flex:1;padding:14px;border-radius:8px;background:rgba(0,188,212,0.05);border:1px solid rgba(0,188,212,0.15);text-align:center;">
+      <div style="font-size:24px;font-weight:800;color:#00bcd4;">77,162</div>
+      <div style="font-size:10px;color:#5a6380;">GEO+Direct Total YTD</div>
+      <div style="font-size:11px;color:#00bcd4;margin-top:2px;">+9.5% YoY</div>
     </div>
-    <div style="flex:1;padding:12px;border-radius:8px;background:rgba(171,71,188,0.05);border:1px solid rgba(171,71,188,0.15);text-align:center;">
-      <div style="font-size:24px;font-weight:800;color:#ab47bc;">776+</div>
-      <div style="font-size:10px;color:#5a6380;">Content Produced</div>
+    <div style="flex:1;padding:14px;border-radius:8px;background:rgba(171,71,188,0.05);border:1px solid rgba(171,71,188,0.15);text-align:center;">
+      <div style="font-size:24px;font-weight:800;color:#ab47bc;">+2650</div>
+      <div style="font-size:10px;color:#5a6380;">vs SSR Total (bps)</div>
+      <div style="font-size:11px;color:#ab47bc;margin-top:2px;">outperform</div>
     </div>
   </div>
 </div>
@@ -127,56 +130,87 @@
 </div>
 </div>
 
-<!-- TOOL DETAILS -->
+<!-- TOOL DETAILS (Full Format) -->
 <div class="ss-section" style="animation-delay:0.3s;">
-  <h3>📚 智库 — Query Discovery & Forecasting</h3>
-  <p><strong style="color:#ffa726;">职责：</strong>发现卖家在 AI 搜索引擎中的真实检索需求，产出精准短语库</p>
-  <p><strong>核心能力：</strong>7 种来源并行产出（SEO裂变/AI逆向提取/社群问句/官方搜索词/AlsoAsked/生命周期推演/政策变化预测）→ 3 维校准（跨平台共识/35类别匹配/时效性）→ 语义去重 → 实测验证</p>
-  <p><strong>产出：</strong>564 条已验证检索短语（每条经过 7 平台实测确认）</p>
+  <h3 id="zhiku">📚 智库 — Query Intelligencer</h3>
+  <p style="color:#ffa726;font-size:12px;margin-bottom:8px;">DISCOVER → CALIBRATE → DEDUPE → VERIFY</p>
+  <p><strong>Mission:</strong> Discover what sellers actually search on AI engines. Produce a validated, precise query library.</p>
+  <p><strong>Input:</strong> SEO/SEM keywords, AI platform reverse-extraction, community/CS real questions, official site search terms, AlsoAsked/AnswerThePublic, seller lifecycle projections (Forecaster), policy change predictions</p>
+  <p><strong>Process:</strong></p>
+  <p>① Multi-source query generation (7 sources in parallel)<br>② 3-dimension calibration: Cross-platform consensus · 35-category matching · Timeliness check<br>③ Semantic deduplication (>85% similarity = merge)<br>④ 7-platform live validation via 智测</p>
+  <p><strong>Output:</strong> <code>zhiku_ai_queries.csv</code> — validated search phrases with source, accuracy score, category, selection status</p>
+  <p><strong>Platforms:</strong> CN: DeepSeek, Doubao, Yuanbao, Qianwen, Kimi · WW: ChatGPT, Gemini</p>
+  <p><strong>Key Metric:</strong> 564 validated queries (Q2), +90% vs Q1</p>
 </div>
 
 <div class="ss-section" style="animation-delay:0.4s;">
-  <h3>🔍 智测 — AI Coverage Verification</h3>
-  <p><strong style="color:#00bcd4;">职责：</strong>在 7 个 AI 平台模拟搜索，验证我方内容覆盖状态，发现 Gap</p>
-  <p><strong>核心能力：</strong>对每条短语在 DeepSeek/豆包/元宝/千问/Kimi (CN) + ChatGPT/Gemini (WW) 上执行真实搜索，检测品牌提及率、官网链接率、竞品出现、内容情感</p>
-  <p><strong>产出：</strong>Gap 状态报告（covered/partial_gap/full_gap）+ 竞品覆盖分析 + 情感分析</p>
+  <h3 id="zhice">🔍 智测 — AI Coverage Tester</h3>
+  <p style="color:#00bcd4;font-size:12px;margin-bottom:8px;">SIMULATE SEARCH JOURNEY → DETECT GAPS → TRACK COMPETITORS</p>
+  <p><strong>Mission:</strong> Verify our content coverage across 7 AI platforms. Identify gaps, competitor presence, and sentiment.</p>
+  <p><strong>Input:</strong> Validated queries from 智库</p>
+  <p><strong>Process:</strong></p>
+  <p>① Execute real search on each platform per query<br>② Detect: brand/product mention, official link presence, competitor mentions<br>③ Classify: covered / partial_gap / full_gap<br>④ Analyze: content sentiment (positive/neutral/negative toward Amazon)</p>
+  <p><strong>Output:</strong> <code>gap_result_{timestamp}.csv</code> — per-query × per-platform gap status, competitors found, sentiment</p>
+  <p><strong>Detection Logic:</strong> Brand keywords (亚马逊/Amazon/Global Selling/FBA/Seller Central...) + Competitor keywords (Shopee/Lazada/TikTok Shop/Alibaba/eBay/Walmart/Temu/Shopify)</p>
+  <p><strong>Tracking:</strong> Cumulative <code>prompt_tracking_history.csv</code> for brand mention rate trends over time</p>
 </div>
 
 <div class="ss-section" style="animation-delay:0.5s;">
-  <h3>✍️ 智造 — Content Creation Engine</h3>
-  <p><strong style="color:#ffcc02;">职责：</strong>基于验证短语批量生产 GEO 优化内容</p>
-  <p><strong>核心能力：</strong>人物画像矩阵（6画像×多阶段）+ 知识库 RAG + 模板约束（35类别各有指定内容源）+ 批量生产 pipeline（单批 50-80 篇）</p>
-  <p><strong>质量保障：</strong>Critical=5 类别（注册/费用/税务/合规）执行"三条铁律"：只读官方→只能总结→不能自由发挥</p>
+  <h3 id="zhizao">✍️ 智造 — Content Creator</h3>
+  <p style="color:#ffcc02;font-size:12px;margin-bottom:8px;">QUERY → PERSONA × TEMPLATE → GEO-OPTIMIZED ARTICLE</p>
+  <p><strong>Mission:</strong> Batch-produce GEO-optimized content that AI engines will cite.</p>
+  <p><strong>Input:</strong> Selected queries from 智库 + Knowledge base (18 category docs) + Reference materials</p>
+  <p><strong>Process:</strong></p>
+  <p>① Match query to persona (6 seller personas × lifecycle stages)<br>② Select template: auto-detect by keywords (registration/fees/logistics/advertising/listing) or freeform<br>③ RAG: retrieve relevant knowledge from official source URLs<br>④ Generate: 800-1500 word article, structured for AI readability (short paragraphs, lists, FAQ)<br>⑤ Anti-hallucination: Critical=5 categories enforce "3 iron rules" — read official only, summarize only, no interpretation</p>
+  <p><strong>Output:</strong> <code>zhizao_draft_content.csv</code> — title, content_draft, ai_query, word_count, version</p>
+  <p><strong>Capacity:</strong> 50-80 articles per batch · ~170/month (vs Q1: ~86/month)</p>
+  <p><strong>Template System:</strong> 35 content categories, each with designated official source URLs. 6 Critical=5 categories (registration, fees, audit, VAT, tax, compliance) have strictest constraints.</p>
 </div>
 
 <div class="ss-section" style="animation-delay:0.6s;">
-  <h3>🔧 智优 — Quality Optimization</h3>
-  <p><strong style="color:#e91e63;">职责：</strong>5 维自动评分 + 低分自动改写 + 合规审查</p>
-  <p><strong>评分维度：</strong>Intent Match (30%) · AI Readability (20%) · Authority (20%) · Actionability (20%) · Differentiation (10%)</p>
-  <p><strong>通过标准：</strong>overall ≥ 4.5 且 intent_match ≥ 4 且 authority ≥ 4。未达标 → 自动改写循环</p>
-  <p><strong>合规检查：</strong>禁用词检测 + 链接验证 + 官方信息一致性校验</p>
+  <h3 id="zhiyou">🔧 智优 — Quality Optimizer</h3>
+  <p style="color:#e91e63;font-size:12px;margin-bottom:8px;">SCORE → REWRITE → COMPLIANCE → APPROVE</p>
+  <p><strong>Mission:</strong> Ensure every article meets quality threshold. Auto-fix those that don't.</p>
+  <p><strong>Input:</strong> Draft articles from 智造</p>
+  <p><strong>5-Dimension Scoring:</strong></p>
+  <p>• Intent Match (30%) — Does it directly answer the AI query?<br>• AI Readability (20%) — Easy for AI to parse? Clear structure?<br>• Authority (20%) — Verifiable info? Platform-specific knowledge?<br>• Actionability (20%) — Clear next steps? Executable guidance?<br>• Differentiation (10%) — Unique vs generic? Would AI prefer this?</p>
+  <p><strong>Pass Threshold:</strong> overall_score ≥ 4.5 AND intent_match ≥ 4 AND authority ≥ 4</p>
+  <p><strong>Auto-Rewrite:</strong> Below threshold → rewrite with scorecard suggestions → re-score → loop until pass</p>
+  <p><strong>Compliance:</strong> Prohibited terms check (竞品名/个人销售计划/...) + Link validation (must be amazon domain) + Official info consistency</p>
+  <p><strong>Output:</strong> <code>zhiyou_optimized_content.csv</code> + <code>zhiyou_scorecard.csv</code></p>
+  <p><strong>Result:</strong> 29/35 categories fully automated (AI-only). 6 high-risk categories: POC spot-check only (no longer per-article review).</p>
 </div>
 
 <div class="ss-section" style="animation-delay:0.7s;">
-  <h3>📦 智布 — Structured Publishing</h3>
-  <p><strong style="color:#29b6f6;">职责：</strong>将优化内容转换为 CMS 可发布格式（JSON + Word）</p>
-  <p><strong>输出格式：</strong>包含 meta（标题/描述）、body（完整正文）、ai_friendly（5维评分）、compliance（合规状态）、source traceability（溯源链路）</p>
+  <h3 id="zhibu">📦 智布 — Publisher</h3>
+  <p style="color:#29b6f6;font-size:12px;margin-bottom:8px;">OPTIMIZED CONTENT → STRUCTURED JSON + WORD DOC</p>
+  <p><strong>Mission:</strong> Convert optimized articles to CMS-ready structured format with full traceability.</p>
+  <p><strong>Input:</strong> Optimized content from 智优</p>
+  <p><strong>Output Structure (JSON):</strong></p>
+  <p>• <code>meta</code>: title, description, keywords<br>• <code>body</code>: full optimized article<br>• <code>ai_friendly</code>: 5-dimension scores + overall<br>• <code>compliance</code>: status (PASS/FIXED), disclaimer, copyright<br>• <code>source_keywords</code>: original query traceability</p>
+  <p><strong>Additional Output:</strong> Word document (.docx) for offline review and manual CMS upload</p>
 </div>
 
 <div class="ss-section" style="animation-delay:0.8s;">
-  <h3>📈 智析 — Performance Analytics</h3>
-  <p><strong style="color:#ab47bc;">职责：</strong>自动化周报 + 效果度量 + 对标分析</p>
-  <p><strong>追踪指标：</strong>GEO Reg Start / Direct (CN+WW) Reg Start / Clean Launch / 转化率 / vs SSR Total (bps)</p>
-  <p><strong>维度：</strong>Weekly WoW · Monthly YoY · YTD YoY · Q1 vs Q2 QoQ</p>
+  <h3 id="zhixi">📈 智析 — Performance Analytics</h3>
+  <p style="color:#ab47bc;font-size:12px;margin-bottom:8px;">AUTOMATED WEEKLY REPORTS · MULTI-DIMENSION TRACKING · ATTRIBUTION</p>
+  <p><strong>Mission:</strong> Measure GEO impact. Automated reporting. Benchmark vs SSR Total.</p>
+  <p><strong>Metrics Tracked:</strong></p>
+  <p>• GEO Reg Start (CN + WW) — trackable AI search referrer traffic<br>• Direct (CN + WW) Reg Start — GEO-influenced no-referrer traffic<br>• Clean Launch — deeper funnel conversion<br>• Conversion Rate (RS → CL) — quality indicator<br>• vs SSR Total (bps) — relative outperformance</p>
+  <p><strong>Dimensions:</strong> Weekly WoW · Monthly YoY · YTD YoY · Quarterly QoQ</p>
+  <p><strong>Data Source:</strong> SSR Funnel Metrics (QuickSight export)</p>
+  <p><strong>Cadence:</strong> Auto-generated weekly (data refresh every Wednesday)</p>
 </div>
 
 <div class="ss-section" style="animation-delay:0.9s;">
-  <h3>📡 智传 — Smart Amplification <span style="font-size:10px;color:#ffa726;border:1px solid #ffa726;border-radius:4px;padding:1px 4px;">H2 开发中</span></h3>
-  <p><strong style="color:#5a6380;">职责：</strong>主动分发内容到 AI 引擎偏好的平台，缩短被收录的等待期</p>
+  <h3>📡 智传 — Smart Amplification <span style="font-size:10px;color:#ffa726;border:1px solid #ffa726;border-radius:4px;padding:1px 6px;">H2 In Development</span></h3>
+  <p><strong>Mission:</strong> Proactively distribute content to platforms AI engines prefer to crawl. Reduce time-to-index.</p>
+  <p><strong>Planned Capabilities:</strong> Multi-platform publishing · 48h post-publish validation · AI crawl priority optimization</p>
 </div>
 
 <div class="ss-section" style="animation-delay:1.0s;">
-  <h3>🧠 智中枢 — Orchestrator <span style="font-size:10px;color:#ffa726;border:1px solid #ffa726;border-radius:4px;padding:1px 4px;">H2 开发中</span></h3>
-  <p><strong style="color:#5a6380;">职责：</strong>跨模块自动编排、优先级排序、资源分配、ROI 预测。让 Smart Suite 从人驱动变为系统自主决策。</p>
+  <h3>🧠 智中枢 — Orchestrator <span style="font-size:10px;color:#ffa726;border:1px solid #ffa726;border-radius:4px;padding:1px 6px;">H2 In Development</span></h3>
+  <p><strong>Mission:</strong> Cross-module automated orchestration. Priority ranking, resource allocation, ROI prediction.</p>
+  <p><strong>Planned Capabilities:</strong> Auto-trigger downstream modules · Dynamic prioritization based on gap severity · Autonomous optimization decisions</p>
 </div>
 
