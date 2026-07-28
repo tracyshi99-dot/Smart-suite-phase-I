@@ -4475,6 +4475,9 @@ elif _page_idx == 7:
                         row = monthly_actual[monthly_actual["Channel"] == ch_name]
                         if row.empty:
                             row = monthly_actual[monthly_actual["Channel"] == display_name]
+                        if row.empty:
+                            # Try partial match
+                            row = monthly_actual[monthly_actual["Channel"].str.contains("Direct", na=False) & monthly_actual["Channel"].str.contains("CN", na=False)] if "Direct" in ch_name else pd.DataFrame()
                         if not row.empty:
                             cur_val = pd.to_numeric(row.iloc[0][last_m], errors="coerce")
                             prev_val = pd.to_numeric(row.iloc[0][prev_m], errors="coerce")
@@ -4510,6 +4513,8 @@ elif _page_idx == 7:
                     fig_m_dir = go.Figure()
                     for channel, color, dash in [("Direct Channel (CN+WW)", "#4a9eff", None), ("Total (GEO+Direct)", "#06b6d4", "dot")]:
                         row = monthly_actual[monthly_actual["Channel"] == channel]
+                        if row.empty and "Direct" in channel:
+                            row = monthly_actual[monthly_actual["Channel"].str.contains("Direct.*CN", na=False, regex=True)]
                         if not row.empty:
                             vals = [pd.to_numeric(row.iloc[0].get(c, 0), errors="coerce") for c in month_cols]
                             name = "Total (GEO+Direct)" if channel == "Total (GEO+Direct)" else "Direct (CN+WW)"
@@ -4542,7 +4547,7 @@ elif _page_idx == 7:
                 col1, col2, col3, col4 = st.columns(4)
                 total_row = df_ytd[df_ytd["Channel"].isin(["Total", "Total (GEO+Direct)"])]
                 cn_row = df_ytd[df_ytd["Channel"] == "CN GEO"]
-                ww_est_row = df_ytd[df_ytd["Channel"].isin(["Direct (CN+WW)", "Direct (CN+WW)"])]
+                ww_est_row = df_ytd[df_ytd["Channel"].isin(["Direct (CN+WW)", "Direct Channel (CN+WW)", "WW Website Direct"])]
                 ssr_row = df_ytd[df_ytd["Channel"].str.contains("SSR", na=False)]
 
                 with col1:
