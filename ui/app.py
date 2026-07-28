@@ -4401,7 +4401,7 @@ elif _page_idx == 7:
                 if len(df_w) >= 2:
                     last = df_w.iloc[-1]
                     prev = df_w.iloc[-2]
-                    kpi1, kpi2, kpi3, kpi4 = st.columns(4)
+                    kpi1, kpi2, kpi3, kpi4, kpi5 = st.columns(5)
                     with kpi1:
                         delta_t = int(last["Total"]) - int(prev["Total"])
                         pct_t = f"{delta_t/int(prev['Total']):+.0%}" if int(prev["Total"]) > 0 else "N/A"
@@ -4421,6 +4421,21 @@ elif _page_idx == 7:
                         wd_prev = int(prev.get("WW_Direct", prev.get("WW_Direct_EST", 0)))
                         wd_pct = f"{(wd_val-wd_prev)/wd_prev:+.0%}" if wd_prev > 0 else "N/A"
                         st.metric(f"Direct (CN+WW) ({last['Week']})", f"{wd_val:,}", f"{wd_pct} vs {prev['Week']}")
+                    with kpi5:
+                        # vs 大盘 (bps): use Total YoY from YTD data vs SSR YoY
+                        _ytd_bps = get_ytd_metrics()
+                        _our_row_bps = _ytd_bps[_ytd_bps["Channel"].isin(["Total (GEO+Direct)", "Total", "Total GEO"])]
+                        _ssr_row_bps = _ytd_bps[_ytd_bps["Channel"].str.contains("SSR", na=False)]
+                        if not _our_row_bps.empty and not _ssr_row_bps.empty:
+                            _our_yoy_str = str(_our_row_bps.iloc[0]["YoY"]).replace("%", "").replace("+", "").strip()
+                            _ssr_yoy_str = str(_ssr_row_bps.iloc[0]["YoY"]).replace("%", "").replace("+", "").strip()
+                            try:
+                                _bps_val = int((float(_our_yoy_str) / 100 - float(_ssr_yoy_str) / 100) * 10000)
+                                st.metric("vs 大盘", f"+{_bps_val} bps", "outperform SSR")
+                            except (ValueError, ZeroDivisionError):
+                                st.metric("vs 大盘", "N/A")
+                        else:
+                            st.metric("vs 大盘", "N/A")
 
                 st.divider()
 
@@ -4464,7 +4479,7 @@ elif _page_idx == 7:
                     last_m = month_cols[-1]
                     prev_m = month_cols[-2]
                     monthly_actual = monthly_data[monthly_data["Type"] == "Actual"] if "Type" in monthly_data.columns else monthly_data
-                    kpi1, kpi2, kpi3, kpi4 = st.columns(4)
+                    kpi1, kpi2, kpi3, kpi4, kpi5 = st.columns(5)
                     # Build lookup: try multiple channel name variants
                     def _find_monthly_row(channel_names, df):
                         for name in channel_names:
@@ -4492,6 +4507,21 @@ elif _page_idx == 7:
                             pm_label = prev_m.split(" ")[0] if " " in prev_m else prev_m
                             with kpi_col:
                                 st.metric(f"{display_name} ({m_label})", f"{int(cur_val):,}" if pd.notna(cur_val) else "N/A", f"{pct} vs {pm_label}")
+                    with kpi5:
+                        # vs 大盘 (bps): our Total YoY vs SSR YoY from YTD data
+                        _ytd_m_bps = get_ytd_metrics()
+                        _our_m_row = _ytd_m_bps[_ytd_m_bps["Channel"].isin(["Total (GEO+Direct)", "Total", "Total GEO"])]
+                        _ssr_m_row = _ytd_m_bps[_ytd_m_bps["Channel"].str.contains("SSR", na=False)]
+                        if not _our_m_row.empty and not _ssr_m_row.empty:
+                            _our_m_yoy = str(_our_m_row.iloc[0]["YoY"]).replace("%", "").replace("+", "").strip()
+                            _ssr_m_yoy = str(_ssr_m_row.iloc[0]["YoY"]).replace("%", "").replace("+", "").strip()
+                            try:
+                                _m_bps_val = int((float(_our_m_yoy) / 100 - float(_ssr_m_yoy) / 100) * 10000)
+                                st.metric("vs 大盘", f"+{_m_bps_val} bps", "outperform SSR")
+                            except (ValueError, ZeroDivisionError):
+                                st.metric("vs 大盘", "N/A")
+                        else:
+                            st.metric("vs 大盘", "N/A")
 
                 st.divider()
 
@@ -4555,7 +4585,7 @@ elif _page_idx == 7:
                     st.caption("📅 Data thru: **WK29 (2026-07-18)**")
 
                 # Dynamic KPI cards from YTD data — same 4 dimensions as Weekly/Monthly
-                col1, col2, col3, col4 = st.columns(4)
+                col1, col2, col3, col4, col5 = st.columns(5)
                 total_row = df_ytd[df_ytd["Channel"].isin(["Total", "Total (GEO+Direct)", "Total GEO"])]
                 cn_row = df_ytd[df_ytd["Channel"] == "CN GEO"]
                 ww_row = df_ytd[df_ytd["Channel"] == "WW GEO"]
@@ -4585,6 +4615,20 @@ elif _page_idx == 7:
                         st.metric("Direct (CN+WW)", f"{int(direct_row.iloc[0]['YTD_Actual']):,}", str(direct_row.iloc[0]['YoY']))
                     else:
                         st.metric("Direct (CN+WW)", "N/A")
+                with col5:
+                    # vs 大盘 (bps): our Total YoY vs SSR YoY
+                    _our_ytd_row = df_ytd[df_ytd["Channel"].isin(["Total (GEO+Direct)", "Total", "Total GEO"])]
+                    _ssr_ytd_row = df_ytd[df_ytd["Channel"].str.contains("SSR", na=False)]
+                    if not _our_ytd_row.empty and not _ssr_ytd_row.empty:
+                        _our_ytd_yoy = str(_our_ytd_row.iloc[0]["YoY"]).replace("%", "").replace("+", "").strip()
+                        _ssr_ytd_yoy = str(_ssr_ytd_row.iloc[0]["YoY"]).replace("%", "").replace("+", "").strip()
+                        try:
+                            _ytd_bps_val = int((float(_our_ytd_yoy) / 100 - float(_ssr_ytd_yoy) / 100) * 10000)
+                            st.metric("vs 大盘", f"+{_ytd_bps_val} bps", "outperform SSR")
+                        except (ValueError, ZeroDivisionError):
+                            st.metric("vs 大盘", "N/A")
+                    else:
+                        st.metric("vs 大盘", "N/A")
 
                 st.divider()
                 df_ytd_display = df_ytd.copy()
