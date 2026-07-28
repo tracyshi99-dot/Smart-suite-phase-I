@@ -4066,14 +4066,57 @@ elif _page_idx == 7:
         # Official Link section
         st.markdown("#### 🔗 " + ("Official Link" if is_en else "官方链接"))
         if _perf_merged:
+            # Clear buttons for link section
+            _zx_l1, _zx_l2, _zx_l3 = st.columns([1, 1, 4])
+            with _zx_l1:
+                _zhixi_link_clear_sel = st.button("🗑️ " + ("Clear Selected" if is_en else "选中清空"), key="zhixi_link_clear_sel")
+            with _zx_l2:
+                if st.button("🗑️ " + ("Clear ALL" if is_en else "全部清空"), key="zhixi_link_clear_all"):
+                    _user_zhice_dir3 = OUTPUT_PATH / selected_batch / "zhice"
+                    if _user_zhice_dir3.exists():
+                        archive_dir = _user_zhice_dir3 / "archive"
+                        archive_dir.mkdir(exist_ok=True)
+                        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+                        for gf in list(_user_zhice_dir3.glob("*.csv")):
+                            gf.rename(archive_dir / f"{gf.stem}_{ts}{gf.suffix}")
+                    _perf_file3 = OUTPUT_PATH / "requests" / current_user / "performance_data.json"
+                    if _perf_file3.exists():
+                        _perf_file3.write_text("[]", encoding="utf-8")
+                    if "zhice_gap_results" in st.session_state:
+                        del st.session_state["zhice_gap_results"]
+                    st.success("✅ " + ("All cleared" if is_en else "全部已清空"))
+                    st.rerun()
+
             df_link = pd.DataFrame([{
+                "_select": False,
                 "Query": r["Query"],
                 "Gap": r.get("Gap Status", "—"),
                 "Before": r.get("Link Before", "—"),
                 "After": r.get("Link After", "—"),
                 "Change": "🆕 改善" if r.get("Link Before") == "❌" and r.get("Link After") == "✅" else ("⚠️ 退步" if r.get("Link Before") == "✅" and r.get("Link After") == "❌" else ("→ 持平" if r.get("Link After") != "—" else "⏳ 待测")),
             } for r in _perf_merged])
-            st.dataframe(df_link, use_container_width=True, hide_index=True)
+            _zx_link_config = {"_select": st.column_config.CheckboxColumn("☑️", default=False)}
+            edited_zx_link = st.data_editor(df_link, column_config=_zx_link_config, use_container_width=True, hide_index=True, key="zhixi_link_editor")
+
+            # Handle link clear selected
+            if _zhixi_link_clear_sel:
+                if "_select" in edited_zx_link.columns and edited_zx_link["_select"].any():
+                    sel_queries = edited_zx_link[edited_zx_link["_select"] == True]["Query"].tolist()
+                    _user_zhice_dir3 = OUTPUT_PATH / selected_batch / "zhice"
+                    if _user_zhice_dir3.exists():
+                        for gf in sorted(_user_zhice_dir3.glob("gap_result_*.csv"), key=lambda f: f.stat().st_mtime, reverse=True):
+                            df_gf = load_csv_safe(gf)
+                            if not df_gf.empty and "ai_query" in df_gf.columns:
+                                mask = df_gf["ai_query"].str[:60].isin(sel_queries)
+                                if mask.any():
+                                    archive_dir = _user_zhice_dir3 / "archive"
+                                    archive_dir.mkdir(exist_ok=True)
+                                    df_gf[mask].to_csv(archive_dir / f"archived_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv", index=False, encoding="utf-8-sig")
+                                    df_gf[~mask].to_csv(gf, index=False, encoding="utf-8-sig")
+                    st.success(f"✅ {len(sel_queries)} {'cleared' if is_en else '条已清空'}")
+                    st.rerun()
+                else:
+                    st.warning("No items selected" if is_en else "未勾选任何条目")
         else:
             st.dataframe(pd.DataFrame([{"Query": "—", "Platform": "—", "Before": "—", "After": "—", "Change": "—"}]), use_container_width=True, hide_index=True)
 
