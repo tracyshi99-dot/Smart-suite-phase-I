@@ -3660,20 +3660,22 @@ elif _page_idx == 5:
     # Output display
     data = load_zhibu(selected_batch)
     if data:
-        col_title, col_clear = st.columns([4, 1])
+        col_title, col_clear1, col_clear2 = st.columns([4, 1, 1])
         with col_title:
             st.subheader("📤 Output Overview" if is_en else "📤 输出概览")
-        with col_clear:
-            if st.button("🗑️ Clear Preview" if is_en else "🗑️ 清空预览", key="clear_zhibu_preview"):
+        with col_clear1:
+            _zb_sel_clear = st.button("🗑️ " + ("Clear Selected" if is_en else "选中清空"), key="zhibu_output_clear_sel")
+        with col_clear2:
+            if st.button("🗑️ " + ("Clear ALL" if is_en else "全部清空"), key="zhibu_output_clear_all"):
                 zhibu_dir = OUTPUT_PATH / selected_batch / "04_zhibu"
                 if zhibu_dir.exists():
-                    # Move current files to archive (rename with timestamp)
                     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
                     archive_dir = zhibu_dir / "archive"
                     archive_dir.mkdir(exist_ok=True)
                     for f in list(zhibu_dir.glob("*.json")):
                         f.rename(archive_dir / f"{f.stem}_{ts}{f.suffix}")
-                st.success("Preview cleared (history archived)" if is_en else "已清空预览（历史已归档）")
+                st.success("✅ " + ("All cleared" if is_en else "全部已清空"))
+                st.rerun()
         col1, col2, col3 = st.columns(3)
         with col1:
             st.metric("Total Items" if is_en else "总条目", data.get("total_items", 0))
@@ -3712,6 +3714,32 @@ elif _page_idx == 5:
             )
             selected_count = edited_items["selected"].sum()
             st.caption(f"{'Selected' if is_en else '已选中'} {selected_count} / {len(edited_items)} {'articles' if is_en else '篇'}")
+
+            # Handle "Clear Selected" for zhibu output
+            if _zb_sel_clear:
+                if edited_items["selected"].any():
+                    # Remove selected items from JSON output
+                    sel_ids = edited_items[edited_items["selected"] == True]["content_id"].tolist()
+                    remaining_items = [item for item in items if item.get("content_id", "") not in sel_ids]
+                    # Rewrite JSON
+                    zhibu_dir = OUTPUT_PATH / selected_batch / "04_zhibu"
+                    json_files = list(zhibu_dir.glob("*.json")) if zhibu_dir.exists() else []
+                    if json_files:
+                        # Archive removed items
+                        archive_dir = zhibu_dir / "archive"
+                        archive_dir.mkdir(exist_ok=True)
+                        removed = [item for item in items if item.get("content_id", "") in sel_ids]
+                        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+                        (archive_dir / f"removed_{ts}.json").write_text(json.dumps(removed, ensure_ascii=False, indent=2), encoding="utf-8")
+                        # Update main JSON
+                        new_data = data.copy()
+                        new_data["items"] = remaining_items
+                        new_data["total_items"] = len(remaining_items)
+                        json_files[0].write_text(json.dumps(new_data, ensure_ascii=False, indent=2), encoding="utf-8")
+                    st.success(f"✅ {len(sel_ids)} {'cleared' if is_en else '条已清空'}")
+                    st.rerun()
+                else:
+                    st.warning("No items selected. Check the 'Selected' column." if is_en else "未选中任何条目，请先勾选")
 
         # JSON preview
         st.divider()
