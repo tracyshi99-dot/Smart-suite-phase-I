@@ -4578,7 +4578,7 @@ elif _page_idx == 7:
                         our_v = str(_m_our_yoy.iloc[0].get(c, "")).replace("%", "").replace("+", "")
                         ssr_v = str(_m_ssr_yoy.iloc[0].get(c, "")).replace("%", "").replace("+", "")
                         try:
-                            bps_row[c] = f"+{int(float(our_v) - float(ssr_v))} bps"
+                            bps_row[c] = f"+{int((float(our_v)/100 - float(ssr_v)/100) * 10000)} bps"
                         except:
                             bps_row[c] = "N/A"
                     st.dataframe(pd.DataFrame([bps_row]), use_container_width=True, hide_index=True)
