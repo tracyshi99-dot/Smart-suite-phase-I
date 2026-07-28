@@ -2695,21 +2695,45 @@ elif _page_idx == 3:
             if "version" in df_z.columns:
                 st.metric("Version" if is_en else "版本", df_z["version"].iloc[0] if len(df_z) > 0 else "N/A")
 
-        # Clear current content (archive to history)
-        if st.button("🗑️ Clear Current & Archive" if is_en else "🗑️ 清空当前内容（归档到历史）", key="clear_zhizao_current"):
-            zhizao_file = OUTPUT_PATH / selected_batch / "02_zhizao" / "zhizao_draft_content.csv"
-            if zhizao_file.exists():
-                archive_dir = OUTPUT_PATH / selected_batch / "02_zhizao" / "archive"
-                archive_dir.mkdir(parents=True, exist_ok=True)
-                ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-                zhizao_file.rename(archive_dir / f"zhizao_draft_content_{ts}.csv")
-                st.success("✅ Archived" if is_en else "✅ 已归档到历史")
-                st.rerun()
+        # Clear buttons
+        _zz_c1, _zz_c2, _zz_c3 = st.columns([1, 1, 4])
+        with _zz_c1:
+            _zhizao_clear_sel = st.button("🗑️ " + ("Clear Selected" if is_en else "选中清空"), key="zhizao_clear_sel")
+        with _zz_c2:
+            if st.button("🗑️ " + ("Clear ALL" if is_en else "全部清空"), key="zhizao_clear_all"):
+                zhizao_file = OUTPUT_PATH / selected_batch / "02_zhizao" / "zhizao_draft_content.csv"
+                if zhizao_file.exists():
+                    all_mask = pd.Series([True] * len(df_z))
+                    archive_selected_items(selected_batch, "zhizao", df_z, all_mask, is_en)
+                    df_z.head(0).to_csv(zhizao_file, index=False, encoding="utf-8-sig")
+                    st.success(f"✅ {len(df_z)} {'cleared' if is_en else '条已清空'}")
+                    st.rerun()
 
-        display_cols = [c for c in ["content_id", "ai_query", "title", "word_count", "version"]
+        # Editable list with _select column
+        if "_select" not in df_z.columns:
+            df_z.insert(0, "_select", False)
+        display_cols = ["_select"] + [c for c in ["ai_query", "title", "word_count", "version"]
                        if c in df_z.columns]
-        if display_cols:
-            st.dataframe(df_z[display_cols], use_container_width=True, hide_index=True)
+        _zz_col_config = {
+            "_select": st.column_config.CheckboxColumn("☑️", default=False),
+            "ai_query": st.column_config.TextColumn("Search Phrase" if is_en else "检索短语"),
+            "title": st.column_config.TextColumn("Title" if is_en else "标题"),
+            "word_count": st.column_config.NumberColumn("Words" if is_en else "字数"),
+            "version": st.column_config.TextColumn("Ver"),
+        }
+        edited_zz = st.data_editor(df_z[display_cols], column_config=_zz_col_config, use_container_width=True, hide_index=True, key="zhizao_list_editor")
+
+        # Handle "Clear Selected"
+        if _zhizao_clear_sel:
+            if "_select" in edited_zz.columns and edited_zz["_select"].any():
+                sel_mask = edited_zz["_select"] == True
+                zhizao_file = OUTPUT_PATH / selected_batch / "02_zhizao" / "zhizao_draft_content.csv"
+                df_remaining = archive_selected_items(selected_batch, "zhizao", df_z, sel_mask, is_en)
+                df_remaining.drop(columns=["_select"], errors="ignore").to_csv(zhizao_file, index=False, encoding="utf-8-sig")
+                st.success(f"✅ {sel_mask.sum()} {'cleared' if is_en else '条已清空'}")
+                st.rerun()
+            else:
+                st.warning("No items selected. Check ☑️ column first." if is_en else "未勾选任何条目，请先在表格中勾选 ☑️ 列")
 
         # Article preview — all articles (editable)
         st.divider()
