@@ -1,4 +1,4 @@
-"""
+﻿"""
 Smart Suite 智系列控制台 - Streamlit UI (重构版)
 单页线性流程，统一风格，CTA 跳转
 Run: streamlit run app.py
@@ -603,7 +603,7 @@ def get_ytd_metrics():
             return df
     # Default data (WK20 report baseline)
     return pd.DataFrame({
-        "Channel": ["CN GEO", "WW GEO", "WW Direct EST", "Total"],
+        "Channel": ["CN GEO", "WW GEO", "Direct (CN+WW)", "Total"],
         "YTD_Actual": [574, 364, 25863, 26801],
         "YTD_PY": [104, 188, 15945, 16237],
         "YoY": ["+452%", "+94%", "+62%", "+65%"],
@@ -620,7 +620,7 @@ def get_monthly_metrics():
     # Default data (WK20 report baseline)
     return pd.DataFrame({
         "Channel": ["CN (GEO)", "CN (GEO)", "CN (GEO)", "WW (GEO)", "WW (GEO)", "WW (GEO)",
-                    "Total GEO", "Total GEO", "Total GEO", "WW Website Direct", "WW Website Direct", "WW Website Direct",
+                    "Total GEO", "Total GEO", "Total GEO", "Direct (CN+WW)", "Direct (CN+WW)", "Direct (CN+WW)",
                     "Total (GEO+Direct)", "Total (GEO+Direct)", "Total (GEO+Direct)"],
         "Type": ["Actual", "PY", "YoY"] * 5,
         "M1 (Jan)": ["89", "13", "+585%", "83", "38", "+118%", "172", "51", "+237%", "4965", "1801", "+176%", "5137", "1852", "+177%"],
@@ -4217,7 +4217,7 @@ elif _page_idx == 7:
                                     ww_geo_by_week = ww_geo.groupby("Report Rank Name")["Actual"].sum().reset_index()
                                     ww_geo_by_week.columns = ["Week", "WW_GEO"]
 
-                                    # WW Direct EST (NA+EU+JP)
+                                    # Direct (CN+WW) (NA+EU+JP)
                                     ww_direct_est = channels_direct[channels_direct["Channel Category"].str.strip().isin(["NA Website", "EU Website", "JP Website"])]
                                     ww_direct_by_week = ww_direct_est.groupby("Report Rank Name")["Actual"].sum().reset_index()
                                     ww_direct_by_week.columns = ["Week", "WW_Direct_EST"]
@@ -4258,8 +4258,8 @@ elif _page_idx == 7:
                                     for label, cat_filter, rollup in [
                                         ("CN GEO", ["CN Website"], "GEO"),
                                         ("WW GEO", ["NA Website", "EU Website", "JP Website"], "GEO"),
-                                        ("WW Direct EST", ["NA Website", "EU Website", "JP Website"], "Direct"),
-                                        ("WW Direct EM", ["AU Website", "SA Website", "AE Website"], "Direct"),
+                                        ("Direct (CN+WW)", ["NA Website", "EU Website", "JP Website"], "Direct"),
+                                        ("Direct EM (removed)", ["AU Website", "SA Website", "AE Website"], "Direct"),
                                     ]:
                                         subset = df_ytd_raw[
                                             (df_ytd_raw["Channel Category"].str.strip().isin(cat_filter)) &
@@ -4420,7 +4420,7 @@ elif _page_idx == 7:
                         wd_val = int(last.get("WW_Direct", last.get("WW_Direct_EST", 0)))
                         wd_prev = int(prev.get("WW_Direct", prev.get("WW_Direct_EST", 0)))
                         wd_pct = f"{(wd_val-wd_prev)/wd_prev:+.0%}" if wd_prev > 0 else "N/A"
-                        st.metric(f"WW Direct ({last['Week']})", f"{wd_val:,}", f"{wd_pct} vs {prev['Week']}")
+                        st.metric(f"Direct (CN+WW) ({last['Week']})", f"{wd_val:,}", f"{wd_pct} vs {prev['Week']}")
 
                 st.divider()
 
@@ -4435,9 +4435,9 @@ elif _page_idx == 7:
                     fig_geo.update_layout(height=280, margin=dict(l=0, r=0, t=10, b=0), legend=dict(orientation="h", y=-0.2), yaxis_title="Reg Starts")
                     st.plotly_chart(fig_geo, use_container_width=True)
                 with col_chart2:
-                    st.caption("WW Direct + Total")
+                    st.caption("Direct (CN+WW) + Total")
                     fig_dir = go.Figure()
-                    fig_dir.add_trace(go.Scatter(x=df_w["Week"], y=df_w.get("WW_Direct", df_w.get("WW_Direct_EST", pd.Series([0]*len(df_w)))), mode="lines+markers", name="WW Direct", line=dict(color="#4a9eff", width=2)))
+                    fig_dir.add_trace(go.Scatter(x=df_w["Week"], y=df_w.get("WW_Direct", df_w.get("WW_Direct_EST", pd.Series([0]*len(df_w)))), mode="lines+markers", name="Direct (CN+WW)", line=dict(color="#4a9eff", width=2)))
                     fig_dir.add_trace(go.Scatter(x=df_w["Week"], y=df_w["Total"], mode="lines+markers", name="Total (GEO+Direct)", line=dict(color="#06b6d4", width=2, dash="dot")))
                     fig_dir.update_layout(height=280, margin=dict(l=0, r=0, t=10, b=0), legend=dict(orientation="h", y=-0.2), yaxis_title="Reg Starts")
                     st.plotly_chart(fig_dir, use_container_width=True)
@@ -4468,7 +4468,7 @@ elif _page_idx == 7:
                     channels_kpi = [
                         ("CN (GEO)", "CN GEO", kpi1),
                         ("WW (GEO)", "WW GEO", kpi2),
-                        ("WW Website Direct", "WW Direct", kpi3),
+                        ("Direct (CN+WW)", "Direct (CN+WW)", kpi3),
                         ("Total (GEO+Direct)", "Total", kpi4),
                     ]
                     for ch_name, display_name, kpi_col in channels_kpi:
@@ -4506,13 +4506,13 @@ elif _page_idx == 7:
                     fig_m_geo.update_layout(height=280, margin=dict(l=0, r=0, t=10, b=0), legend=dict(orientation="h", y=-0.2), yaxis_title="Reg Starts")
                     st.plotly_chart(fig_m_geo, use_container_width=True)
                 with col_chart2:
-                    st.caption("WW Direct + Total")
+                    st.caption("Direct (CN+WW) + Total")
                     fig_m_dir = go.Figure()
-                    for channel, color, dash in [("WW Website Direct", "#4a9eff", None), ("Total (GEO+Direct)", "#06b6d4", "dot")]:
+                    for channel, color, dash in [("Direct (CN+WW)", "#4a9eff", None), ("Total (GEO+Direct)", "#06b6d4", "dot")]:
                         row = monthly_actual[monthly_actual["Channel"] == channel]
                         if not row.empty:
                             vals = [pd.to_numeric(row.iloc[0].get(c, 0), errors="coerce") for c in month_cols]
-                            name = "Total (GEO+Direct)" if channel == "Total (GEO+Direct)" else "WW Direct"
+                            name = "Total (GEO+Direct)" if channel == "Total (GEO+Direct)" else "Direct (CN+WW)"
                             fig_m_dir.add_trace(go.Scatter(name=name, x=months_labels, y=vals, mode="lines+markers", line=dict(color=color, width=2, dash=dash)))
                     fig_m_dir.update_layout(height=280, margin=dict(l=0, r=0, t=10, b=0), legend=dict(orientation="h", y=-0.2), yaxis_title="Reg Starts")
                     st.plotly_chart(fig_m_dir, use_container_width=True)
@@ -4542,7 +4542,7 @@ elif _page_idx == 7:
                 col1, col2, col3, col4 = st.columns(4)
                 total_row = df_ytd[df_ytd["Channel"].isin(["Total", "Total (GEO+Direct)"])]
                 cn_row = df_ytd[df_ytd["Channel"] == "CN GEO"]
-                ww_est_row = df_ytd[df_ytd["Channel"].isin(["WW Direct EST", "WW Website Direct"])]
+                ww_est_row = df_ytd[df_ytd["Channel"].isin(["Direct (CN+WW)", "Direct (CN+WW)"])]
                 ssr_row = df_ytd[df_ytd["Channel"].str.contains("SSR", na=False)]
 
                 with col1:
@@ -4557,9 +4557,9 @@ elif _page_idx == 7:
                         st.metric("CN GEO", "N/A")
                 with col3:
                     if not ww_est_row.empty:
-                        st.metric("WW Direct", f"{int(ww_est_row.iloc[0]['YTD_Actual']):,}", str(ww_est_row.iloc[0]['YoY']))
+                        st.metric("Direct (CN+WW)", f"{int(ww_est_row.iloc[0]['YTD_Actual']):,}", str(ww_est_row.iloc[0]['YoY']))
                     else:
-                        st.metric("WW Direct", "N/A")
+                        st.metric("Direct (CN+WW)", "N/A")
                 with col4:
                     # Calculate BPS dynamically from Total vs SSR Total
                     if not total_row.empty and not ssr_row.empty:
@@ -4637,7 +4637,7 @@ elif _page_idx == 7:
                 _selected_channels = st.multiselect(
                     "Select Channels" if is_en else "选择渠道",
                     [c for c in _channels if "EM" not in c],
-                    default=[c for c in ["CN (GEO)", "WW (GEO)", "Total GEO", "WW Website Direct", "Total (GEO+Direct)", "SSR Total (大盘)"] if c in _channels],
+                    default=[c for c in ["CN (GEO)", "WW (GEO)", "Total GEO", "Direct (CN+WW)", "Total (GEO+Direct)", "SSR Total (大盘)"] if c in _channels],
                     key="rs_cl_channel_filter"
                 )
 
@@ -4826,11 +4826,11 @@ elif _page_idx == 7:
                     )
 
                     fig_trend = go.Figure()
-                    colors_rs = {"CN (GEO)": "#fbbf24", "WW (GEO)": "#a78bfa", "Total GEO": "#22c55e", "WW Website Direct": "#4a9eff", "Total (GEO+Direct)": "#06b6d4", "SSR Total (大盘)": "#888"}
-                    colors_cl = {"CN (GEO)": "#f59e0b", "WW (GEO)": "#7c3aed", "Total GEO": "#16a34a", "WW Website Direct": "#2563eb", "Total (GEO+Direct)": "#0891b2", "SSR Total (大盘)": "#666"}
+                    colors_rs = {"CN (GEO)": "#fbbf24", "WW (GEO)": "#a78bfa", "Total GEO": "#22c55e", "Direct (CN+WW)": "#4a9eff", "Total (GEO+Direct)": "#06b6d4", "SSR Total (大盘)": "#888"}
+                    colors_cl = {"CN (GEO)": "#f59e0b", "WW (GEO)": "#7c3aed", "Total GEO": "#16a34a", "Direct (CN+WW)": "#2563eb", "Total (GEO+Direct)": "#0891b2", "SSR Total (大盘)": "#666"}
 
-                    # Upper trend chart: only Total GEO and WW Direct
-                    _trend_channels = [ch for ch in _selected_channels if ch in ["Total GEO", "WW Website Direct"]]
+                    # Upper trend chart: only Total GEO and Direct (CN+WW)
+                    _trend_channels = [ch for ch in _selected_channels if ch in ["Total GEO", "Direct (CN+WW)"]]
                     for ch in _trend_channels:
                         if _trend_metric in ["Reg Start", "Both"]:
                             rs_row = _df_rs_full[(_df_rs_full["Channel"] == ch) & (_df_rs_full["Type"] == "Actual")]
@@ -4865,8 +4865,8 @@ elif _page_idx == 7:
                     st.divider()
                     st.markdown("**YoY Growth Trend**" if is_en else "**YoY 增长趋势**")
                     fig_yoy = go.Figure()
-                    # Lower YoY chart: only Total GEO, WW Direct, and SSR Total
-                    _yoy_channels = [ch for ch in _selected_channels if ch in ["Total GEO", "WW Website Direct", "SSR Total (大盘)"]]
+                    # Lower YoY chart: only Total GEO, Direct (CN+WW), and SSR Total
+                    _yoy_channels = [ch for ch in _selected_channels if ch in ["Total GEO", "Direct (CN+WW)", "SSR Total (大盘)"]]
                     for ch in _yoy_channels:
                         yoy_row = _df_rs_full[(_df_rs_full["Channel"] == ch) & (_df_rs_full["Type"] == "YoY")]
                         if not yoy_row.empty:
@@ -5969,13 +5969,13 @@ elif _page_idx == 7:
     | Channel | Assessment | Recommendation |
     |---|---|---|
     | CN GEO | 🟢 +452% YoY | Continue expanding AI search coverage |
-    | WW Direct EST | 🟢 +62% YoY | Maintain pace, content lag effect working |
+    | Direct (CN+WW) | 🟢 +62% YoY | Maintain pace, content lag effect working |
     | JP Direct | 🟢 Fastest growth | Prioritize JP content expansion |
             """ if is_en else """
     | 渠道 | 判断 | 建议 |
     |---|---|---|
     | CN GEO | 🟢 +452% YoY | 继续扩大 AI 搜索覆盖 |
-    | WW Direct EST | 🟢 +62% YoY | 保持节奏，内容滞后效应正在生效 |
+    | Direct (CN+WW) | 🟢 +62% YoY | 保持节奏，内容滞后效应正在生效 |
     | JP Direct | 🟢 增速最快 | 优先扩展 JP 内容 |
             """)
 
@@ -6412,11 +6412,10 @@ elif _page_idx == 8:
     **🟢 ACCELERATE:**
     - CN GEO: 4 consecutive weeks of growth → Expand CN keyword coverage
     - JP Direct: +67% WoW, +103% YoY → Prioritize JP content expansion
-    - WW Direct EST: +32% WoW → Maintain current pace
+    - Direct (CN+WW): +32% WoW → Maintain current pace
 
     **🟡 MONITOR:**
-    - WW Direct EM: Flat → Watch next week's trend
-    - EU GEO: Low absolute value (5/month) → Expand EU search phrases
+        - EU GEO: Low absolute value (5/month) → Expand EU search phrases
 
     **🔴 INVESTIGATE:**
     - AE Direct: YoY -61% → Investigate decline cause
@@ -6424,11 +6423,10 @@ elif _page_idx == 8:
     **🟢 ACCELERATE:**
     - CN GEO: 连续4周增长 → 增加 CN 关键词覆盖
     - JP Direct: +67% WoW, +103% YoY → 优先扩展 JP 内容
-    - WW Direct EST: +32% WoW → 保持当前节奏
+    - Direct (CN+WW): +32% WoW → 保持当前节奏
 
     **🟡 MONITOR:**
-    - WW Direct EM: 基本持平 → 观察下周趋势
-    - EU GEO: 绝对值低(5/月) → 扩大 EU 检索短语
+        - EU GEO: 绝对值低(5/月) → 扩大 EU 检索短语
 
     **🔴 INVESTIGATE:**
     - AE Direct: YoY -61% → 排查下降原因
