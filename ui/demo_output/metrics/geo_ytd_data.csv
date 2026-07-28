@@ -1,7 +1,10 @@
-Channel,YTD_Actual,YTD_PY,YoY
-CN GEO,753,155,+386%
-WW GEO,461,255,+81%
-Total GEO,1214,410,+196%
-WW Website Direct,37952,23347,+63%
-Total (GEO+Direct),39166,23757,+65%
-SSR Total (大盘),237627,292315,-19%
+Channel,YTD_Actual,YTD_PY,YoY,Notes
+CN GEO,914,212,+331.1%,CN Website GEO (NA+EU+JP regions) thru WK29
+WW GEO,563,291,+93.5%,NA/EU/JP Website GEO thru WK29
+Total GEO,1477,503,+193.6%,
+WW Website Direct,43727,27215,+60.7%,NA+EU+JP Website Direct thru WK29
+CN Website Direct,31958,42752,-25.2%,CN Website Direct (NA+EU+JP regions) thru WK29
+Direct Channel (CN+WW),75685,69967,+8.2%,Combined Direct - GEO-influenced channel
+Total (GEO+Direct),77162,70470,+9.5%,GEO + GEO-influenced Direct combined
+SSR Total (大盘),283049,340150,-17%,Organic + Paid all channels thru WK29
+Data_Cutoff,WK29 (2026-07-18),,,"From SSR_Funnel_Metrics_-_1785219466706.csv"

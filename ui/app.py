@@ -4468,7 +4468,7 @@ elif _page_idx == 7:
                     channels_kpi = [
                         ("CN (GEO)", "CN GEO", kpi1),
                         ("WW (GEO)", "WW GEO", kpi2),
-                        ("Direct (CN+WW)", "Direct (CN+WW)", kpi3),
+                        ("Direct Channel (CN+WW)", "Direct (CN+WW)", kpi3),
                         ("Total (GEO+Direct)", "Total", kpi4),
                     ]
                     for ch_name, display_name, kpi_col in channels_kpi:
@@ -4508,7 +4508,7 @@ elif _page_idx == 7:
                 with col_chart2:
                     st.caption("Direct (CN+WW) + Total")
                     fig_m_dir = go.Figure()
-                    for channel, color, dash in [("Direct (CN+WW)", "#4a9eff", None), ("Total (GEO+Direct)", "#06b6d4", "dot")]:
+                    for channel, color, dash in [("Direct Channel (CN+WW)", "#4a9eff", None), ("Total (GEO+Direct)", "#06b6d4", "dot")]:
                         row = monthly_actual[monthly_actual["Channel"] == channel]
                         if not row.empty:
                             vals = [pd.to_numeric(row.iloc[0].get(c, 0), errors="coerce") for c in month_cols]
