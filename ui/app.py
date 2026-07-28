@@ -234,7 +234,7 @@ def restore_from_history(batch_id: str, tool_id: str, snap_name: str):
     return True
 
 def render_history_widget(batch_id: str, tool_id: str, is_en: bool = False):
-    """Render archive-to-history widget: users can select items to archive or archive all."""
+    """Render a compact archive/history expander (view-only history list + restore)."""
     tool_folder_map = {
         "zhiku": "01_zhiku",
         "zhizao": "02_zhizao",
@@ -248,23 +248,6 @@ def render_history_widget(batch_id: str, tool_id: str, is_en: bool = False):
         "zhibu": "ai_query",
     }
     src_folder = OUTPUT_PATH / batch_id / tool_folder_map.get(tool_id, tool_id)
-
-    # Find the main CSV file for this tool
-    main_csv = None
-    if src_folder.exists():
-        csv_files = sorted(src_folder.glob("*.csv"))
-        if csv_files:
-            main_csv = csv_files[0]
-
-    # Load current data
-    df_current = pd.DataFrame()
-    if main_csv and main_csv.exists():
-        try:
-            df_current = pd.read_csv(main_csv, encoding="utf-8-sig")
-        except Exception:
-            pass
-
-    # Load history
     hist_csv = src_folder / "_archived.csv" if src_folder.exists() else None
     df_history = pd.DataFrame()
     if hist_csv and hist_csv.exists():
@@ -272,113 +255,77 @@ def render_history_widget(batch_id: str, tool_id: str, is_en: bool = False):
             df_history = pd.read_csv(hist_csv, encoding="utf-8-sig")
         except Exception:
             pass
-
     history_count = len(df_history)
-    current_count = len(df_current)
+    if history_count == 0:
+        return  # Don't show widget if no history
 
-    with st.expander(
-        f"🗂️ {'Archive & History' if is_en else '归档与历史'} — {'Current' if is_en else '当前'}: {current_count} | {'Archived' if is_en else '已归档'}: {history_count}",
-        expanded=False
-    ):
-        tab_archive, tab_history = st.tabs([
-            "📤 " + ("Archive Items" if is_en else "归档条目"),
-            "📂 " + ("History" if is_en else "历史记录") + f" ({history_count})",
-        ])
-
-        with tab_archive:
-            if df_current.empty:
-                st.caption("No data to archive." if is_en else "当前无数据可归档。")
-            else:
-                key_col = tool_key_col.get(tool_id, "ai_query")
-                if key_col not in df_current.columns:
-                    # fallback to first string column
-                    key_col = df_current.select_dtypes(include='object').columns[0] if len(df_current.select_dtypes(include='object').columns) > 0 else df_current.columns[0]
-
-                display_items = df_current[key_col].tolist()
-
-                # Select all / select specific
-                col_a1, col_a2 = st.columns([1, 1])
-                with col_a1:
-                    if st.button("📤 " + ("Archive ALL → History" if is_en else "全部归档到历史"), key=f"arch_all_{tool_id}", use_container_width=True):
-                        # Move all to history
-                        if hist_csv:
-                            df_new_hist = pd.concat([df_history, df_current], ignore_index=True)
-                            src_folder.mkdir(parents=True, exist_ok=True)
-                            df_new_hist.to_csv(hist_csv, index=False, encoding="utf-8-sig")
-                        else:
-                            src_folder.mkdir(parents=True, exist_ok=True)
-                            hist_csv_path = src_folder / "_archived.csv"
-                            df_current.to_csv(hist_csv_path, index=False, encoding="utf-8-sig")
-                        # Clear main CSV
-                        df_current.head(0).to_csv(main_csv, index=False, encoding="utf-8-sig")
-                        st.success(f"✅ {current_count} {'items archived' if is_en else '条已归档'}")
-                        st.rerun()
-                with col_a2:
-                    st.caption(f"{'Or select specific items below' if is_en else '或在下方选择特定条目归档'}")
-
-                # Multi-select for partial archive
-                selected_to_archive = st.multiselect(
-                    "Select items to archive" if is_en else "选择要归档的条目",
-                    options=display_items,
-                    key=f"arch_select_{tool_id}",
-                    label_visibility="collapsed",
-                )
-                if selected_to_archive:
-                    if st.button(f"📤 {'Archive selected' if is_en else '归档选中'} ({len(selected_to_archive)})", key=f"arch_sel_{tool_id}", type="primary"):
-                        # Split: selected → history, rest → stay
-                        mask = df_current[key_col].isin(selected_to_archive)
-                        df_to_archive = df_current[mask]
-                        df_remaining = df_current[~mask]
-                        # Append to history
-                        df_to_archive_stamped = df_to_archive.copy()
-                        df_to_archive_stamped["_archived_at"] = datetime.now().strftime("%Y-%m-%d %H:%M")
-                        df_new_hist = pd.concat([df_history, df_to_archive_stamped], ignore_index=True)
-                        src_folder.mkdir(parents=True, exist_ok=True)
-                        (src_folder / "_archived.csv").to_csv if False else None  # just for safety
-                        df_new_hist.to_csv(src_folder / "_archived.csv", index=False, encoding="utf-8-sig")
-                        # Update main CSV
-                        df_remaining.to_csv(main_csv, index=False, encoding="utf-8-sig")
-                        st.success(f"✅ {len(selected_to_archive)} {'items archived' if is_en else '条已归档'}")
-                        st.rerun()
-
-        with tab_history:
-            if df_history.empty:
-                st.caption("No archived items yet." if is_en else "暂无归档记录。")
-            else:
-                st.dataframe(df_history, use_container_width=True, hide_index=True, height=300)
-                # Restore from history
-                key_col = tool_key_col.get(tool_id, "ai_query")
-                if key_col not in df_history.columns:
-                    key_col = df_history.select_dtypes(include='object').columns[0] if len(df_history.select_dtypes(include='object').columns) > 0 else df_history.columns[0]
-                hist_items = df_history[key_col].tolist()
-                selected_to_restore = st.multiselect(
-                    "Select items to restore" if is_en else "选择要恢复的条目",
-                    options=hist_items,
-                    key=f"hist_restore_sel_{tool_id}",
-                    label_visibility="collapsed",
-                )
-                col_r1, col_r2 = st.columns([1, 1])
-                with col_r1:
-                    if selected_to_restore and st.button(f"🔄 {'Restore selected' if is_en else '恢复选中'} ({len(selected_to_restore)})", key=f"hist_rest_{tool_id}", type="primary"):
+    with st.expander(f"📂 {'History' if is_en else '历史记录'} ({history_count} {'items' if is_en else '条'})", expanded=False):
+        key_col = tool_key_col.get(tool_id, "ai_query")
+        if key_col not in df_history.columns and len(df_history.columns) > 0:
+            key_col = df_history.columns[0]
+        st.dataframe(df_history, use_container_width=True, hide_index=True, height=250)
+        # Restore options
+        if key_col in df_history.columns:
+            hist_items = df_history[key_col].tolist()
+            selected_to_restore = st.multiselect(
+                "Select to restore" if is_en else "选择恢复",
+                options=hist_items,
+                key=f"hist_restore_{tool_id}",
+                label_visibility="collapsed",
+            )
+            col_r1, col_r2 = st.columns(2)
+            with col_r1:
+                if selected_to_restore and st.button(f"🔄 {'Restore selected' if is_en else '恢复选中'} ({len(selected_to_restore)})", key=f"hist_rest_{tool_id}", type="primary"):
+                    # Load main csv
+                    main_csv = sorted(src_folder.glob("*.csv"))
+                    main_csv = [f for f in main_csv if not f.name.startswith("_")]
+                    if main_csv:
+                        df_current = load_csv_safe(main_csv[0])
                         mask = df_history[key_col].isin(selected_to_restore)
                         df_to_restore = df_history[mask].drop(columns=["_archived_at"], errors="ignore")
                         df_remaining_hist = df_history[~mask]
-                        # Add back to main
-                        df_restored = pd.concat([df_current, df_to_restore], ignore_index=True).drop_duplicates(subset=[key_col], keep="last")
-                        df_restored.to_csv(main_csv, index=False, encoding="utf-8-sig")
-                        # Update history
-                        df_remaining_hist.to_csv(src_folder / "_archived.csv", index=False, encoding="utf-8-sig")
-                        st.success(f"✅ {len(selected_to_restore)} {'items restored' if is_en else '条已恢复'}")
+                        df_merged = pd.concat([df_current, df_to_restore], ignore_index=True).drop_duplicates(subset=[key_col], keep="last")
+                        df_merged.to_csv(main_csv[0], index=False, encoding="utf-8-sig")
+                        df_remaining_hist.to_csv(hist_csv, index=False, encoding="utf-8-sig")
+                        st.success(f"✅ {len(selected_to_restore)} {'restored' if is_en else '条已恢复'}")
                         st.rerun()
-                with col_r2:
-                    if st.button("🔄 " + ("Restore ALL" if is_en else "全部恢复"), key=f"hist_rest_all_{tool_id}"):
+            with col_r2:
+                if st.button("🔄 " + ("Restore ALL" if is_en else "全部恢复"), key=f"hist_all_{tool_id}"):
+                    main_csv = sorted(src_folder.glob("*.csv"))
+                    main_csv = [f for f in main_csv if not f.name.startswith("_")]
+                    if main_csv:
+                        df_current = load_csv_safe(main_csv[0])
                         df_to_restore = df_history.drop(columns=["_archived_at"], errors="ignore")
-                        df_restored = pd.concat([df_current, df_to_restore], ignore_index=True).drop_duplicates(subset=[key_col], keep="last")
-                        df_restored.to_csv(main_csv, index=False, encoding="utf-8-sig")
-                        # Clear history
-                        pd.DataFrame().to_csv(src_folder / "_archived.csv", index=False, encoding="utf-8-sig")
+                        df_merged = pd.concat([df_current, df_to_restore], ignore_index=True).drop_duplicates(subset=[key_col], keep="last")
+                        df_merged.to_csv(main_csv[0], index=False, encoding="utf-8-sig")
+                        pd.DataFrame(columns=df_history.columns).to_csv(hist_csv, index=False, encoding="utf-8-sig")
                         st.success(f"✅ {'All restored' if is_en else '全部已恢复'}")
                         st.rerun()
+
+
+def archive_selected_items(batch_id: str, tool_id: str, df_full: pd.DataFrame, selected_mask, is_en: bool = False):
+    """Archive selected rows from the main dataframe to _archived.csv. Returns remaining df."""
+    tool_folder_map = {
+        "zhiku": "01_zhiku",
+        "zhizao": "02_zhizao",
+        "zhiyou": "03_zhiyou",
+        "zhibu": "04_zhibu",
+    }
+    src_folder = OUTPUT_PATH / batch_id / tool_folder_map.get(tool_id, tool_id)
+    src_folder.mkdir(parents=True, exist_ok=True)
+    hist_csv = src_folder / "_archived.csv"
+    df_history = pd.DataFrame()
+    if hist_csv.exists():
+        try:
+            df_history = pd.read_csv(hist_csv, encoding="utf-8-sig")
+        except Exception:
+            pass
+    df_to_archive = df_full[selected_mask].copy()
+    df_to_archive["_archived_at"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+    df_remaining = df_full[~selected_mask]
+    df_new_hist = pd.concat([df_history, df_to_archive], ignore_index=True)
+    df_new_hist.to_csv(hist_csv, index=False, encoding="utf-8-sig")
+    return df_remaining
 
 
 # --- Pipeline Flow Visual Component ---
@@ -1303,6 +1250,27 @@ elif _page_idx == 1:
                         df_zhiku_user["is_selected"] = "FALSE"
                         df_zhiku_user.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
                         st.rerun()
+                with col_sel3:
+                    _arch_col1, _arch_col2 = st.columns(2)
+                    with _arch_col1:
+                        if st.button("🗑️ " + ("Archive Selected" if is_en else "归档选中"), key="user_archive_sel"):
+                            sel_mask = df_zhiku_user["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])
+                            if sel_mask.any():
+                                zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
+                                df_remaining = archive_selected_items(selected_batch, "zhiku", df_zhiku_user, sel_mask, is_en)
+                                df_remaining.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
+                                st.success(f"✅ {sel_mask.sum()} {'archived' if is_en else '条已归档'}")
+                                st.rerun()
+                            else:
+                                st.warning("No items selected" if is_en else "未选中任何条目")
+                    with _arch_col2:
+                        if st.button("🗑️ " + ("Archive ALL" if is_en else "全部归档"), key="user_archive_all"):
+                            zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
+                            all_mask = pd.Series([True] * len(df_zhiku_user))
+                            df_remaining = archive_selected_items(selected_batch, "zhiku", df_zhiku_user, all_mask, is_en)
+                            df_remaining.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
+                            st.success(f"✅ {len(df_zhiku_user)} {'archived' if is_en else '条已归档'}")
+                            st.rerun()
 
                 col_config = {}
                 if "is_selected" in show_cols:
