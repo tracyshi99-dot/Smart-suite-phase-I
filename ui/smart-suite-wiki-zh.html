@@ -1,6 +1,11 @@
-﻿<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-serif;color:#e4e4e4;padding:20px 0;">
+﻿<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-serif;color:#e4e4e4;padding:20px 0;position:relative;overflow:hidden;">
 
 <style>
+@keyframes particleFloat { 0%{transform:translateY(0) translateX(0);opacity:0;} 20%{opacity:1;} 80%{opacity:1;} 100%{transform:translateY(-200px) translateX(50px);opacity:0;} }
+@keyframes scanLine { 0%{top:-2px;} 100%{top:100%;} }
+@keyframes gradientShift { 0%{background-position:0% 50%;} 50%{background-position:100% 50%;} 100%{background-position:0% 50%;} }
+@keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-6px);} }
+@keyframes borderGlow { 0%,100%{border-color:rgba(0,188,212,0.08);} 50%{border-color:rgba(0,188,212,0.3);} }
 @keyframes fadeInUp { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }
 @keyframes glow { 0%,100%{box-shadow:0 0 5px rgba(0,188,212,0.2);} 50%{box-shadow:0 0 20px rgba(0,188,212,0.4);} }
 @keyframes pulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.05);} }
@@ -8,19 +13,19 @@
 @keyframes countUp { from{opacity:0;transform:scale(0.5);} to{opacity:1;transform:scale(1);} }
 @keyframes flowPulse { 0%{opacity:0.5;} 50%{opacity:1;} 100%{opacity:0.5;} }
 
-.ss-hero { text-align:center; padding:40px 0 30px; animation:fadeInUp 0.8s ease; }
-.ss-hero h1 { font-size:38px; font-weight:800; background:linear-gradient(135deg,#00bcd4,#ab47bc); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:8px; }
+.ss-hero { text-align:center; padding:60px 0 40px; animation:fadeInUp 0.8s ease; position:relative; z-index:2; }
+.ss-hero h1 { font-size:38px; font-weight:800; background:linear-gradient(135deg,#00bcd4,#ab47bc,#00bcd4);background-size:200% 200%;animation:gradientShift 4s ease infinite; -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:8px; }
 .ss-hero p { color:#8892b0; font-size:15px; }
 
 .ss-kpi-row { display:flex; gap:12px; margin:24px 0; animation:fadeInUp 1s ease; }
-.ss-kpi { flex:1; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:14px; padding:18px 16px; text-align:center; transition:all 0.3s; animation:countUp 1.2s ease; }
+.ss-kpi { flex:1; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:14px; padding:18px 16px; text-align:center; transition:all 0.3s; animation:countUp 1.2s ease, borderGlow 4s infinite; }
 .ss-kpi:hover { border-color:rgba(0,188,212,0.3); transform:translateY(-3px); box-shadow:0 8px 24px rgba(0,0,0,0.3); }
 .ss-kpi .val { font-size:28px; font-weight:800; color:#00bcd4; }
 .ss-kpi .label { font-size:11px; color:#5a6380; margin-top:4px; text-transform:uppercase; letter-spacing:0.5px; }
 
 .ss-flow { display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:wrap; margin:30px 0; animation:fadeInUp 1.4s ease; }
 .ss-flow-item { padding:10px 14px; border-radius:10px; border:1.5px solid; font-size:12px; font-weight:600; text-align:center; transition:all 0.3s; cursor:default; }
-.ss-flow-item:hover { transform:scale(1.08); animation:glow 2s infinite; }
+.ss-flow-item { animation:float 3s ease infinite; } .ss-flow-item:hover { transform:scale(1.1); animation:glow 2s infinite; }
 .ss-flow-arr { color:#3a4560; font-size:16px; animation:flowPulse 2s infinite; }
 
 .ss-section { margin:36px 0; padding:24px; background:rgba(255,255,255,0.015); border:1px solid rgba(255,255,255,0.04); border-radius:16px; animation:fadeInUp 1.6s ease; }
@@ -39,6 +44,20 @@
 .ss-bar { height:6px; border-radius:3px; background:rgba(255,255,255,0.04); margin:6px 0; overflow:hidden; }
 .ss-bar-fill { height:100%; border-radius:3px; animation:slideRight 2s ease; }
 </style>
+
+<!-- Background effects -->
+<div style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;background-image:linear-gradient(rgba(0,188,212,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,188,212,0.03) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;"></div>
+<div style="position:absolute;left:0;width:100%;height:2px;background:linear-gradient(90deg,transparent,rgba(0,188,212,0.3),transparent);animation:scanLine 8s linear infinite;z-index:1;pointer-events:none;"></div>
+<div style="position:absolute;top:0;left:0;width:100%;height:400px;z-index:1;pointer-events:none;overflow:hidden;">
+  <div style="position:absolute;width:3px;height:3px;border-radius:50%;background:rgba(0,188,212,0.5);left:10%;animation:particleFloat 5s infinite;"></div>
+  <div style="position:absolute;width:3px;height:3px;border-radius:50%;background:rgba(0,188,212,0.5);left:25%;animation:particleFloat 7s infinite 1s;"></div>
+  <div style="position:absolute;width:4px;height:4px;border-radius:50%;background:rgba(171,71,188,0.4);left:40%;animation:particleFloat 6s infinite 2s;"></div>
+  <div style="position:absolute;width:2px;height:2px;border-radius:50%;background:rgba(0,188,212,0.6);left:55%;animation:particleFloat 8s infinite 0.5s;"></div>
+  <div style="position:absolute;width:3px;height:3px;border-radius:50%;background:rgba(171,71,188,0.5);left:70%;animation:particleFloat 5.5s infinite 1.5s;"></div>
+  <div style="position:absolute;width:3px;height:3px;border-radius:50%;background:rgba(0,188,212,0.4);left:85%;animation:particleFloat 6.5s infinite 3s;"></div>
+  <div style="position:absolute;width:2px;height:2px;border-radius:50%;background:rgba(0,188,212,0.6);left:50%;animation:particleFloat 7.5s infinite 2.5s;"></div>
+  <div style="position:absolute;width:4px;height:4px;border-radius:50%;background:rgba(76,175,80,0.3);left:15%;animation:particleFloat 6s infinite 4s;"></div>
+</div>
 
 <!-- HERO -->
 <div class="ss-hero">
