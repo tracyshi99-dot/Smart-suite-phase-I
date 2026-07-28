@@ -3580,10 +3580,45 @@ elif _page_idx == 5:
     st.subheader("📋 Optimized Content from Optimization" if is_en else "📋 智优输入内容")
     df_opt_in = load_optimized(selected_batch)
     if not df_opt_in.empty:
+        # Clear buttons
+        _zb_c1, _zb_c2, _zb_c3 = st.columns([1, 1, 4])
+        with _zb_c1:
+            _zhibu_clear_sel = st.button("🗑️ " + ("Clear Selected" if is_en else "选中清空"), key="zhibu_clear_sel")
+        with _zb_c2:
+            if st.button("🗑️ " + ("Clear ALL" if is_en else "全部清空"), key="zhibu_clear_all_btn"):
+                opt_file = OUTPUT_PATH / selected_batch / "03_zhiyou" / "zhiyou_optimized_content.csv"
+                if opt_file.exists():
+                    all_mask = pd.Series([True] * len(df_opt_in))
+                    archive_selected_items(selected_batch, "zhibu", df_opt_in, all_mask, is_en)
+                    df_opt_in.head(0).to_csv(opt_file, index=False, encoding="utf-8-sig")
+                    st.success(f"✅ {len(df_opt_in)} {'cleared' if is_en else '条已清空'}")
+                    st.rerun()
+
+        # Editable list with select column
         title_col = "optimized_title" if "optimized_title" in df_opt_in.columns else "title"
-        display_cols_zb = [c for c in [title_col, "ai_query", "word_count"] if c in df_opt_in.columns]
-        if display_cols_zb:
-            st.dataframe(df_opt_in[display_cols_zb], use_container_width=True, hide_index=True)
+        if "_select" not in df_opt_in.columns:
+            df_opt_in.insert(0, "_select", False)
+        _zb_display_cols = ["_select"] + [c for c in [title_col, "ai_query", "word_count"] if c in df_opt_in.columns]
+        _zb_col_config = {
+            "_select": st.column_config.CheckboxColumn("☑️", default=False),
+            title_col: st.column_config.TextColumn("Title" if is_en else "标题"),
+            "ai_query": st.column_config.TextColumn("Search Phrase" if is_en else "检索短语"),
+            "word_count": st.column_config.NumberColumn("Words" if is_en else "字数"),
+        }
+        edited_zb = st.data_editor(df_opt_in[_zb_display_cols], column_config=_zb_col_config, use_container_width=True, hide_index=True, key="zhibu_list_editor")
+
+        # Handle "Clear Selected"
+        if _zhibu_clear_sel:
+            if "_select" in edited_zb.columns and edited_zb["_select"].any():
+                sel_mask = edited_zb["_select"] == True
+                opt_file = OUTPUT_PATH / selected_batch / "03_zhiyou" / "zhiyou_optimized_content.csv"
+                df_remaining = archive_selected_items(selected_batch, "zhibu", df_opt_in, sel_mask, is_en)
+                df_remaining.drop(columns=["_select"], errors="ignore").to_csv(opt_file, index=False, encoding="utf-8-sig")
+                st.success(f"✅ {sel_mask.sum()} {'cleared' if is_en else '条已清空'}")
+                st.rerun()
+            else:
+                st.warning("No items selected. Check ☑️ column first." if is_en else "未勾选任何条目，请先在表格中勾选 ☑️ 列")
+
         st.caption(f"{len(df_opt_in)} {'optimized articles ready for publishing' if is_en else '篇优化文章待发布'}")
     else:
         st.caption("No optimized content. Upload or run Optimization first." if is_en else "暂无智优内容，请先上传或执行智优。")
