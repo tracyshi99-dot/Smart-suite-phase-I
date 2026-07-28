@@ -3994,16 +3994,22 @@ elif _page_idx == 7:
             _zhixi_clear_sel = st.button("🗑️ " + ("Clear Selected" if is_en else "选中清空"), key="zhixi_clear_sel")
         with _zx_c2:
             if st.button("🗑️ " + ("Clear ALL" if is_en else "全部清空"), key="zhixi_clear_all"):
-                # Archive all gap results to history
+                # Archive all gap results + tracking history to archive folder
                 _user_zhice_dir2 = OUTPUT_PATH / selected_batch / "zhice"
                 if _user_zhice_dir2.exists():
-                    _gap_files2 = sorted(_user_zhice_dir2.glob("gap_result_*.csv"), key=lambda f: f.stat().st_mtime, reverse=True)
-                    if _gap_files2:
-                        archive_dir = _user_zhice_dir2 / "archive"
-                        archive_dir.mkdir(exist_ok=True)
-                        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-                        for gf in _gap_files2:
-                            gf.rename(archive_dir / f"{gf.stem}_{ts}{gf.suffix}")
+                    archive_dir = _user_zhice_dir2 / "archive"
+                    archive_dir.mkdir(exist_ok=True)
+                    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    # Move all CSV files (gap results + tracking)
+                    for gf in list(_user_zhice_dir2.glob("*.csv")):
+                        gf.rename(archive_dir / f"{gf.stem}_{ts}{gf.suffix}")
+                # Also clear performance_data.json if exists
+                _perf_file2 = OUTPUT_PATH / "requests" / current_user / "performance_data.json"
+                if _perf_file2.exists():
+                    _perf_file2.write_text("[]", encoding="utf-8")
+                # Clear zhice session state
+                if "zhice_gap_results" in st.session_state:
+                    del st.session_state["zhice_gap_results"]
                 st.success("✅ " + ("All cleared to history" if is_en else "全部已清空到历史"))
                 st.rerun()
 
