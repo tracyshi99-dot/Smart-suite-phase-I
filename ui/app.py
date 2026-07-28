@@ -4508,16 +4508,27 @@ elif _page_idx == 7:
                             with kpi_col:
                                 st.metric(f"{display_name} ({m_label})", f"{int(cur_val):,}" if pd.notna(cur_val) else "N/A", f"{pct} vs {pm_label}")
                     with kpi5:
-                        # vs 大盘 (bps): our Total YoY vs SSR YoY from YTD data
+                        # vs 大盘 (bps): use latest month's YoY for Total vs SSR
+                        # Get our Total YoY for the latest month from monthly data
+                        monthly_yoy = monthly_data[monthly_data["Type"] == "YoY"] if "Type" in monthly_data.columns else pd.DataFrame()
+                        _our_m_yoy_row = _find_monthly_row(["Total (GEO+Direct)", "Total GEO", "Total"], monthly_yoy)
+                        _our_m_yoy_val = None
+                        if not _our_m_yoy_row.empty:
+                            _raw = str(_our_m_yoy_row.iloc[0].get(last_m, "")).replace("%", "").replace("+", "").strip()
+                            try:
+                                _our_m_yoy_val = float(_raw) / 100
+                            except (ValueError, TypeError):
+                                pass
+                        # Get SSR YoY from YTD data (only YTD-level available)
                         _ytd_m_bps = get_ytd_metrics()
-                        _our_m_row = _ytd_m_bps[_ytd_m_bps["Channel"].isin(["Total (GEO+Direct)", "Total", "Total GEO"])]
                         _ssr_m_row = _ytd_m_bps[_ytd_m_bps["Channel"].str.contains("SSR", na=False)]
-                        if not _our_m_row.empty and not _ssr_m_row.empty:
-                            _our_m_yoy = str(_our_m_row.iloc[0]["YoY"]).replace("%", "").replace("+", "").strip()
+                        if _our_m_yoy_val is not None and not _ssr_m_row.empty:
                             _ssr_m_yoy = str(_ssr_m_row.iloc[0]["YoY"]).replace("%", "").replace("+", "").strip()
                             try:
-                                _m_bps_val = int((float(_our_m_yoy) / 100 - float(_ssr_m_yoy) / 100) * 10000)
-                                st.metric("vs 大盘", f"+{_m_bps_val} bps", "outperform SSR")
+                                _ssr_decimal = float(_ssr_m_yoy) / 100
+                                _m_bps_val = int((_our_m_yoy_val - _ssr_decimal) * 10000)
+                                m_label = last_m.split(" ")[0] if " " in last_m else last_m
+                                st.metric(f"vs 大盘 ({m_label})", f"+{_m_bps_val} bps", "outperform SSR")
                             except (ValueError, ZeroDivisionError):
                                 st.metric("vs 大盘", "N/A")
                         else:
