@@ -564,17 +564,24 @@ def get_weekly_metrics():
             # Drop EM column if present
             if "WW_Direct_EM" in df.columns:
                 df = df.drop(columns=["WW_Direct_EM"])
+            # Use Direct_Total (CN+WW) as the primary Direct metric if available
+            if "Direct_Total" in df.columns:
+                df["Direct"] = df["Direct_Total"]
+                df["Direct_PY"] = df["Direct_Total_PY"] if "Direct_Total_PY" in df.columns else 0
+            elif "WW_Direct" in df.columns:
+                df["Direct"] = df["WW_Direct"]
+                df["Direct_PY"] = df["WW_Direct_PY"] if "WW_Direct_PY" in df.columns else 0
             # Ensure Total_GEO exists
             if "Total_GEO" not in df.columns and "CN_GEO" in df.columns and "WW_GEO" in df.columns:
                 df["Total_GEO"] = df["CN_GEO"] + df["WW_GEO"]
-            # Ensure Total exists
-            if "Total" not in df.columns and "Total_GEO" in df.columns and "WW_Direct" in df.columns:
-                df["Total"] = df["Total_GEO"] + df["WW_Direct"]
+            # Ensure Total exists (GEO + Direct)
+            if "Total" not in df.columns and "Total_GEO" in df.columns and "Direct" in df.columns:
+                df["Total"] = df["Total_GEO"] + df["Direct"]
             # Ensure PY columns have Total_GEO_PY and Total_PY
             if "Total_GEO_PY" not in df.columns and "CN_GEO_PY" in df.columns and "WW_GEO_PY" in df.columns:
                 df["Total_GEO_PY"] = df["CN_GEO_PY"] + df["WW_GEO_PY"]
-            if "Total_PY" not in df.columns and "Total_GEO_PY" in df.columns and "WW_Direct_PY" in df.columns:
-                df["Total_PY"] = df["Total_GEO_PY"] + df["WW_Direct_PY"]
+            if "Total_PY" not in df.columns and "Total_GEO_PY" in df.columns and "Direct_PY" in df.columns:
+                df["Total_PY"] = df["Total_GEO_PY"] + df["Direct_PY"]
             return df
     # Default data (WK20 report baseline)
     return pd.DataFrame({
@@ -582,7 +589,7 @@ def get_weekly_metrics():
         "CN_GEO": [32, 33, 33, 41], "CN_GEO_PY": [12, 6, 4, 11],
         "WW_GEO": [15, 18, 22, 31], "WW_GEO_PY": [8, 7, 5, 5],
         "Total_GEO": [47, 51, 55, 72], "Total_GEO_PY": [20, 13, 9, 16],
-        "WW_Direct": [1739, 1330, 1454, 1914], "WW_Direct_PY": [1048, 820, 920, 1100],
+        "Direct": [1739, 1330, 1454, 1914], "Direct_PY": [1048, 820, 920, 1100],
         "Total": [1786, 1381, 1509, 1986], "Total_PY": [1068, 833, 929, 1116],
     })
 
@@ -4367,7 +4374,7 @@ elif _page_idx == 7:
                     ("CN GEO", "CN_GEO", "CN_GEO_PY"),
                     ("WW GEO", "WW_GEO", "WW_GEO_PY"),
                     ("Total GEO", "Total_GEO", "Total_GEO_PY"),
-                    ("WW Direct", "WW_Direct", "WW_Direct_PY"),
+                    ("Direct (CN+WW)", "Direct", "Direct_PY"),
                     ("Total (GEO+Direct)", "Total", "Total_PY"),
                 ]
                 rows = []
