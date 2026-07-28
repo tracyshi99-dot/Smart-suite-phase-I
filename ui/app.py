@@ -4534,7 +4534,7 @@ elif _page_idx == 7:
                         our_v = str(_m_our_yoy.iloc[0].get(c, "")).replace("%", "").replace("+", "")
                         ssr_v = str(_m_ssr_yoy.iloc[0].get(c, "")).replace("%", "").replace("+", "")
                         try:
-                            bps_row[c] = f"+{int(float(our_v) - float(ssr_v))} ppts"
+                            bps_row[c] = f"+{int(float(our_v) - float(ssr_v))} bps"
                         except:
                             bps_row[c] = "N/A"
                     st.dataframe(pd.DataFrame([bps_row]), use_container_width=True, hide_index=True)
@@ -4574,9 +4574,9 @@ elif _page_idx == 7:
                             _our_yoy_val = float(_our_yoy_str)
                             _ssr_yoy_val = float(_ssr_yoy_str)
                             _bps = int(_our_yoy_val - _ssr_yoy_val)
-                            st.metric("vs 大盘", f"+{_bps} ppts", "跑赢 SSR")
+                            st.metric("vs 大盘", f"+{_bps} bps", "跑赢 SSR")
                         except:
-                            st.metric("vs 大盘", "+100 ppts", "跑赢 SSR")
+                            st.metric("vs 大盘", "+100 bps", "跑赢 SSR")
                     else:
                         st.metric("vs 大盘", "N/A")
 
