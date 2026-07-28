@@ -26,15 +26,25 @@ METRICS_PATH = OUTPUT_PATH / "metrics"
 DEMO_MODE = not OUTPUT_PATH.exists()
 
 if DEMO_MODE:
-    # Use temp dir for writable output, copy demo data there (only once)
+    # Use temp dir for writable output, copy demo data there
     import shutil
     _WRITABLE_OUTPUT = Path(tempfile.gettempdir()) / "smartsuite_output"
     _DEMO_SOURCE = Path(__file__).parent / "demo_output"
-    if not _WRITABLE_OUTPUT.exists():  # Only copy on first run
+    _DATA_VERSION = "v20260728_wk29"  # Bump this to force re-copy on deploy
+    _VERSION_FILE = _WRITABLE_OUTPUT / "_data_version.txt"
+    _needs_copy = not _WRITABLE_OUTPUT.exists()
+    if not _needs_copy and _VERSION_FILE.exists():
+        _needs_copy = _VERSION_FILE.read_text().strip() != _DATA_VERSION
+    elif not _needs_copy:
+        _needs_copy = True
+    if _needs_copy:
+        if _WRITABLE_OUTPUT.exists():
+            shutil.rmtree(_WRITABLE_OUTPUT)
         if _DEMO_SOURCE.exists():
             shutil.copytree(_DEMO_SOURCE, _WRITABLE_OUTPUT, dirs_exist_ok=True)
         else:
             _WRITABLE_OUTPUT.mkdir(parents=True, exist_ok=True)
+        _VERSION_FILE.write_text(_DATA_VERSION)
     OUTPUT_PATH = _WRITABLE_OUTPUT
     METRICS_PATH = OUTPUT_PATH / "metrics"
     if not INPUT_PATH.exists():
