@@ -3995,27 +3995,29 @@ elif _page_idx == 7:
         # Brand Mention section
         st.markdown("#### 🏷️ " + ("Brand/Product Name Mention" if is_en else "品牌/产品名称提及"))
 
-        # Load cleared items from session state
-        _cleared_key = f"zhixi_cleared_{current_user}"
-        if _cleared_key not in st.session_state:
-            st.session_state[_cleared_key] = []
+        # Separate cleared lists for brand and link
+        _cleared_brand_key = f"zhixi_cleared_brand_{current_user}"
+        _cleared_link_key = f"zhixi_cleared_link_{current_user}"
+        if _cleared_brand_key not in st.session_state:
+            st.session_state[_cleared_brand_key] = []
+        if _cleared_link_key not in st.session_state:
+            st.session_state[_cleared_link_key] = []
 
-        # Filter out cleared items
-        _active_perf = [r for r in _perf_merged if r["Query"] not in st.session_state[_cleared_key]]
-        _history_perf = [r for r in _perf_merged if r["Query"] in st.session_state[_cleared_key]]
+        # Filter active vs history for brand
+        _active_brand = [r for r in _perf_merged if r["Query"] not in st.session_state[_cleared_brand_key]]
+        _history_brand = [r for r in _perf_merged if r["Query"] in st.session_state[_cleared_brand_key]]
 
-        # Clear buttons for performance data
+        # Brand clear buttons
         _zx_c1, _zx_c2, _zx_c3 = st.columns([1, 1, 4])
         with _zx_c1:
-            _zhixi_clear_sel = st.button("🗑️ " + ("Clear Selected" if is_en else "选中清空"), key="zhixi_clear_sel")
+            _zhixi_brand_clear_sel = st.button("🗑️ " + ("Clear Selected" if is_en else "选中清空"), key="zhixi_brand_clear_sel")
         with _zx_c2:
-            if st.button("🗑️ " + ("Clear ALL" if is_en else "全部清空"), key="zhixi_clear_all"):
-                st.session_state[_cleared_key] = [r["Query"] for r in _perf_merged]
-                st.success("✅ " + ("All cleared to history" if is_en else "全部已清空到历史"))
+            if st.button("🗑️ " + ("Clear ALL" if is_en else "全部清空"), key="zhixi_brand_clear_all"):
+                st.session_state[_cleared_brand_key] = [r["Query"] for r in _perf_merged]
+                st.success("✅ " + ("Brand data cleared" if is_en else "品牌提及已清空"))
                 st.rerun()
 
-        if _active_perf:
-            # Add _select column for selective clearing
+        if _active_brand:
             df_brand = pd.DataFrame([{
                 "_select": False,
                 "Query": r["Query"],
@@ -4023,38 +4025,38 @@ elif _page_idx == 7:
                 "Before": r.get("Brand/Product Before", "—"),
                 "After": r.get("Brand/Product After", "—"),
                 "Change": "🆕 改善" if r.get("Brand/Product Before") == "❌" and r.get("Brand/Product After") == "✅" else ("⚠️ 退步" if r.get("Brand/Product Before") == "✅" and r.get("Brand/Product After") == "❌" else ("→ 持平" if r.get("Brand/Product After") != "—" else "⏳ 待测")),
-            } for r in _active_perf])
-            _zx_col_config = {
-                "_select": st.column_config.CheckboxColumn("☑️", default=False),
-            }
-            edited_zx_brand = st.data_editor(df_brand, column_config=_zx_col_config, use_container_width=True, hide_index=True, key="zhixi_brand_editor")
+            } for r in _active_brand])
+            edited_zx_brand = st.data_editor(df_brand, column_config={"_select": st.column_config.CheckboxColumn("☑️", default=False)}, use_container_width=True, hide_index=True, key="zhixi_brand_editor")
 
-            # Handle "Clear Selected"
-            if _zhixi_clear_sel:
+            if _zhixi_brand_clear_sel:
                 if "_select" in edited_zx_brand.columns and edited_zx_brand["_select"].any():
                     sel_queries = edited_zx_brand[edited_zx_brand["_select"] == True]["Query"].tolist()
-                    st.session_state[_cleared_key] = st.session_state[_cleared_key] + sel_queries
+                    st.session_state[_cleared_brand_key] = st.session_state[_cleared_brand_key] + sel_queries
                     st.success(f"✅ {len(sel_queries)} {'cleared' if is_en else '条已清空'}")
                     st.rerun()
                 else:
-                    st.warning("No items selected. Check ☑️ column first." if is_en else "未勾选任何条目，请先勾选 ☑️ 列")
+                    st.warning("Check ☑️ column first" if is_en else "请先勾选 ☑️ 列")
         else:
-            st.caption("No active data. All items in history below." if is_en else "当前无数据，全部在下方历史记录中。")
+            st.caption("No active data. Check history below." if is_en else "当前无数据，查看下方历史记录。")
 
         st.markdown("")
 
         # Official Link section
         st.markdown("#### 🔗 " + ("Official Link" if is_en else "官方链接"))
-        if _active_perf:
-            _zx_l1, _zx_l2, _zx_l3 = st.columns([1, 1, 4])
-            with _zx_l1:
-                _zhixi_link_clear_sel = st.button("🗑️ " + ("Clear Selected" if is_en else "选中清空"), key="zhixi_link_clear_sel")
-            with _zx_l2:
-                if st.button("🗑️ " + ("Clear ALL" if is_en else "全部清空"), key="zhixi_link_clear_all"):
-                    st.session_state[_cleared_key] = [r["Query"] for r in _perf_merged]
-                    st.success("✅ " + ("All cleared" if is_en else "全部已清空"))
-                    st.rerun()
 
+        # Filter active vs history for link
+        _active_link = [r for r in _perf_merged if r["Query"] not in st.session_state[_cleared_link_key]]
+
+        _zx_l1, _zx_l2, _zx_l3 = st.columns([1, 1, 4])
+        with _zx_l1:
+            _zhixi_link_clear_sel = st.button("🗑️ " + ("Clear Selected" if is_en else "选中清空"), key="zhixi_link_clear_sel")
+        with _zx_l2:
+            if st.button("🗑️ " + ("Clear ALL" if is_en else "全部清空"), key="zhixi_link_clear_all"):
+                st.session_state[_cleared_link_key] = [r["Query"] for r in _perf_merged]
+                st.success("✅ " + ("Link data cleared" if is_en else "链接提及已清空"))
+                st.rerun()
+
+        if _active_link:
             df_link = pd.DataFrame([{
                 "_select": False,
                 "Query": r["Query"],
@@ -4062,58 +4064,66 @@ elif _page_idx == 7:
                 "Before": r.get("Link Before", "—"),
                 "After": r.get("Link After", "—"),
                 "Change": "🆕 改善" if r.get("Link Before") == "❌" and r.get("Link After") == "✅" else ("⚠️ 退步" if r.get("Link Before") == "✅" and r.get("Link After") == "❌" else ("→ 持平" if r.get("Link After") != "—" else "⏳ 待测")),
-            } for r in _active_perf])
-            _zx_link_config = {"_select": st.column_config.CheckboxColumn("☑️", default=False)}
-            edited_zx_link = st.data_editor(df_link, column_config=_zx_link_config, use_container_width=True, hide_index=True, key="zhixi_link_editor")
+            } for r in _active_link])
+            edited_zx_link = st.data_editor(df_link, column_config={"_select": st.column_config.CheckboxColumn("☑️", default=False)}, use_container_width=True, hide_index=True, key="zhixi_link_editor")
 
             if _zhixi_link_clear_sel:
                 if "_select" in edited_zx_link.columns and edited_zx_link["_select"].any():
                     sel_queries = edited_zx_link[edited_zx_link["_select"] == True]["Query"].tolist()
-                    st.session_state[_cleared_key] = st.session_state[_cleared_key] + sel_queries
+                    st.session_state[_cleared_link_key] = st.session_state[_cleared_link_key] + sel_queries
                     st.success(f"✅ {len(sel_queries)} {'cleared' if is_en else '条已清空'}")
                     st.rerun()
                 else:
-                    st.warning("No items selected" if is_en else "未勾选任何条目")
+                    st.warning("Check ☑️ column first" if is_en else "请先勾选 ☑️ 列")
         else:
-            st.caption("No active data." if is_en else "当前无数据。")
+            st.caption("No active data. Check history below." if is_en else "当前无数据，查看下方历史记录。")
 
-        # --- History section (cleared items, can restore) ---
-        if _history_perf:
-            with st.expander(f"📂 {'History' if is_en else '历史记录'} ({len(_history_perf)} {'items' if is_en else '条'})", expanded=False):
+        # --- Unified History section at bottom ---
+        _all_history = list(set(st.session_state[_cleared_brand_key] + st.session_state[_cleared_link_key]))
+        if _all_history:
+            st.divider()
+            with st.expander(f"📂 {'History' if is_en else '历史记录'} ({len(_all_history)} {'items' if is_en else '条'})", expanded=False):
+                _hist_rows = [r for r in _perf_merged if r["Query"] in _all_history]
                 df_hist = pd.DataFrame([{
                     "Query": r["Query"],
                     "Gap": r.get("Gap Status", "—"),
-                    "Brand Before": r.get("Brand/Product Before", "—"),
-                    "Link Before": r.get("Link Before", "—"),
-                } for r in _history_perf])
+                    "Brand": r.get("Brand/Product Before", "—"),
+                    "Link": r.get("Link Before", "—"),
+                } for r in _hist_rows])
                 st.dataframe(df_hist, use_container_width=True, hide_index=True)
-                if st.button("🔄 " + ("Restore ALL from history" if is_en else "全部恢复"), key="zhixi_restore_all"):
-                    st.session_state[_cleared_key] = []
-                    st.rerun()
+                col_r1, col_r2 = st.columns(2)
+                with col_r1:
+                    if st.button("🔄 " + ("Restore Brand" if is_en else "恢复品牌提及"), key="zhixi_restore_brand"):
+                        st.session_state[_cleared_brand_key] = []
+                        st.rerun()
+                with col_r2:
+                    if st.button("🔄 " + ("Restore Link" if is_en else "恢复链接提及"), key="zhixi_restore_link"):
+                        st.session_state[_cleared_link_key] = []
+                        st.rerun()
 
         # --- Insights ---
         st.divider()
         st.markdown("#### 💡 Insights")
-        if _active_perf:
-            _total_active = len(_active_perf)
-            _brand_yes = sum(1 for r in _active_perf if r.get("Brand/Product Before") == "✅")
-            _link_yes = sum(1 for r in _active_perf if r.get("Link Before") == "✅")
-            _gap_full = sum(1 for r in _active_perf if r.get("Gap Status") == "full_gap")
-            _gap_partial = sum(1 for r in _active_perf if r.get("Gap Status") == "partial_gap")
+        if _active_brand or _active_link:
+            _total_active = len(_perf_merged)
+            _brand_yes = sum(1 for r in _perf_merged if r.get("Brand/Product Before") == "✅")
+            _link_yes = sum(1 for r in _perf_merged if r.get("Link Before") == "✅")
+            _gap_full = sum(1 for r in _perf_merged if r.get("Gap Status") == "full_gap")
+            _gap_partial = sum(1 for r in _perf_merged if r.get("Gap Status") == "partial_gap")
             _brand_rate = f"{_brand_yes*100//_total_active}%" if _total_active > 0 else "0%"
             _link_rate = f"{_link_yes*100//_total_active}%" if _total_active > 0 else "0%"
 
             st.markdown(f"""
-- **Brand/Product Mention Rate**: {_brand_rate} ({_brand_yes}/{_total_active} queries have brand mentioned in AI response)
-- **Official Link Rate**: {_link_rate} ({_link_yes}/{_total_active} queries show official link)
-- **Full Gap**: {_gap_full} queries — AI response has no brand mention AND no official link. High priority for content production.
-- **Partial Gap**: {_gap_partial} queries — Either brand or link present but not both. Optimize existing content.
-- **Next Steps**: Focus on Full Gap queries first → produce GEO content → re-verify after 2-4 weeks to track improvement.
+- **Brand/Product Mention Rate**: {_brand_rate} ({_brand_yes}/{_total_active} queries)
+- **Official Link Rate**: {_link_rate} ({_link_yes}/{_total_active} queries)
+- **Full Gap**: {_gap_full} queries — No brand AND no link. Priority for content production.
+- **Partial Gap**: {_gap_partial} queries — Either brand or link present. Optimize existing content.
+- **Next Steps**: Focus Full Gap → produce GEO content → re-verify after 2-4 weeks.
 """)
-        elif _history_perf:
-            st.caption("All items cleared to history. Restore or run new verifications in 智测." if is_en else "所有条目已清空到历史。可恢复或在智测中重新验证。")
+        elif _all_history:
+            st.caption("All items cleared to history. Restore or run new verification." if is_en else "所有条目已清空到历史。可恢复或重新验证。")
         else:
-            st.caption("Run verification in 智测 first to see insights here." if is_en else "请先在智测中验证短语，Insights 将自动生成。")
+            st.caption("Run verification in 智测 first." if is_en else "请先在智测中验证短语。")
 
         # Upload After data (post-content launch)
         with st.expander("📤 " + ("Upload After Data (post-launch)" if is_en else "上传 After 数据（内容上线后）"), expanded=False):
