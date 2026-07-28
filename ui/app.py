@@ -1253,7 +1253,7 @@ elif _page_idx == 1:
                 with col_sel3:
                     _arch_col1, _arch_col2 = st.columns(2)
                     with _arch_col1:
-                        if st.button("🗑️ " + ("Archive Selected" if is_en else "归档选中"), key="user_archive_sel"):
+                        if st.button("🗑️ " + ("Clear Selected" if is_en else "选中清空"), key="user_archive_sel"):
                             sel_mask = df_zhiku_user["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])
                             if sel_mask.any():
                                 zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
@@ -1264,7 +1264,7 @@ elif _page_idx == 1:
                             else:
                                 st.warning("No items selected" if is_en else "未选中任何条目")
                     with _arch_col2:
-                        if st.button("🗑️ " + ("Archive ALL" if is_en else "全部归档"), key="user_archive_all"):
+                        if st.button("🗑️ " + ("Clear ALL" if is_en else "全部清空"), key="user_archive_all"):
                             zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
                             all_mask = pd.Series([True] * len(df_zhiku_user))
                             df_remaining = archive_selected_items(selected_batch, "zhiku", df_zhiku_user, all_mask, is_en)
