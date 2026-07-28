@@ -2286,10 +2286,13 @@ elif _page_idx == 2:
             _zc_col1, _zc_col2, _zc_col3 = st.columns([1, 1, 4])
             with _zc_col1:
                 if st.button("🗑️ " + ("Clear Selected" if is_en else "选中清空"), key="zhice_clear_sel"):
-                    sel_mask = df_gap_display["to_produce"] == True
+                    # Use _select column from edited tables
+                    if "_select" in edited_gap.columns if 'edited_gap' in dir() else False:
+                        sel_mask = edited_gap["_select"] == True
+                    else:
+                        sel_mask = pd.Series([False] * len(df_gap_display))
                     if sel_mask.any():
                         df_remaining = archive_selected_items(selected_batch, "zhice", df_gap_display, sel_mask, is_en)
-                        # Save back
                         gap_files = sorted(zhice_dir.glob("gap_result_*.csv"), key=lambda f: f.stat().st_mtime, reverse=True)
                         if gap_files:
                             df_remaining.to_csv(gap_files[0], index=False, encoding="utf-8-sig")
@@ -2297,7 +2300,7 @@ elif _page_idx == 2:
                         st.success(f"✅ {sel_mask.sum()} {'cleared' if is_en else '条已清空'}")
                         st.rerun()
                     else:
-                        st.warning("No items selected" if is_en else "未勾选任何条目")
+                        st.warning("No items selected. Check the ☑️ column first." if is_en else "未勾选任何条目，请先在表格中勾选 ☑️ 列")
             with _zc_col2:
                 if st.button("🗑️ " + ("Clear ALL" if is_en else "全部清空"), key="zhice_clear_all"):
                     all_mask = pd.Series([True] * len(df_gap_display))
@@ -2310,7 +2313,13 @@ elif _page_idx == 2:
                     st.rerun()
 
             # --- Display results split by platform (collapsible) ---
+            # Add _select checkbox column for clear selection
+            if "_select" not in df_gap_display.columns:
+                df_gap_display["_select"] = False
+            show_cols_with_select = ["_select"] + show_cols
+
             col_config = {
+                "_select": st.column_config.CheckboxColumn("☑️", default=False),
                 "ai_query": st.column_config.TextColumn("Search Phrase" if is_en else "检索短语"),
                 "platform": st.column_config.TextColumn("Platform" if is_en else "验证平台"),
                 "gap_status": st.column_config.TextColumn("Gap Status" if is_en else "覆盖状态"),
@@ -2334,8 +2343,9 @@ elif _page_idx == 2:
                     df_plat = df_gap_display[df_gap_display["platform"] == plat]
                     gap_count = len(df_plat[df_plat["gap_status"].isin(["full_gap", "partial_gap"])]) if "gap_status" in df_plat.columns else 0
                     with st.expander(f"**{plat}** — {len(df_plat)} queries, {gap_count} gaps", expanded=True):
+                        _plat_show = [c for c in show_cols_with_select if c in df_plat.columns]
                         edited_plat = st.data_editor(
-                            df_plat[show_cols].reset_index(drop=True),
+                            df_plat[_plat_show].reset_index(drop=True),
                             column_config=col_config,
                             use_container_width=True, hide_index=True,
                             key=f"zhice_gap_editor_{plat}",
@@ -2343,7 +2353,22 @@ elif _page_idx == 2:
                         all_edited_dfs.append(edited_plat)
                 edited_gap = pd.concat(all_edited_dfs, ignore_index=True) if all_edited_dfs else pd.DataFrame()
             else:
-                edited_gap = st.data_editor(df_gap_display[show_cols], column_config=col_config, use_container_width=True, hide_index=True, key="zhice_gap_editor")
+                _all_show = [c for c in show_cols_with_select if c in df_gap_display.columns]
+                edited_gap = st.data_editor(df_gap_display[_all_show], column_config=col_config, use_container_width=True, hide_index=True, key="zhice_gap_editor")
+
+            # Handle "Clear Selected" using _select column from edited tables
+            if "_select" in edited_gap.columns:
+                _sel_count = edited_gap["_select"].sum()
+                if _sel_count > 0:
+                    if st.button(f"🗑️ {'Confirm clear' if is_en else '确认清空'} {int(_sel_count)} {'items' if is_en else '条'}", key="zhice_confirm_clear", type="primary"):
+                        sel_mask = edited_gap["_select"] == True
+                        df_remaining = archive_selected_items(selected_batch, "zhice", df_gap_display, sel_mask, is_en)
+                        gap_files = sorted(zhice_dir.glob("gap_result_*.csv"), key=lambda f: f.stat().st_mtime, reverse=True)
+                        if gap_files:
+                            df_remaining.to_csv(gap_files[0], index=False, encoding="utf-8-sig")
+                        st.session_state["zhice_gap_results"] = df_remaining
+                        st.success(f"✅ {int(_sel_count)} {'cleared' if is_en else '条已清空'}")
+                        st.rerun()
 
             # Count unique queries selected (not individual platform rows)
             produce_queries = edited_gap[edited_gap["to_produce"] == True]["ai_query"].nunique() if "to_produce" in edited_gap.columns and "ai_query" in edited_gap.columns else 0
