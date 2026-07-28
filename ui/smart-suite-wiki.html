@@ -1,4 +1,4 @@
-﻿<div style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;background:#0f1117;color:#fff;padding:0;border-radius:12px;max-width:100%;margin:0 auto;position:relative;"><div class="ss-stars"><div class="ss-meteor"></div><div class="ss-meteor"></div><div class="ss-meteor"></div><div class="ss-meteor"></div></div>
+﻿<div style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;color:#fff;padding:0;border-radius:12px;max-width:100%;margin:0 auto;position:relative;background:linear-gradient(-45deg,#0a0c14,#0f1525,#0a1020,#100a1a,#0f1117,#0a1520);background-size:400% 400%;animation:bgShift 15s ease infinite;"><div class="ss-stars"><div class="ss-meteor"></div><div class="ss-meteor"></div><div class="ss-meteor"></div><div class="ss-meteor"></div></div>
 <style>
 .ss-stars{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;overflow:hidden;border-radius:12px;}
 .ss-stars::before{content:"";position:absolute;width:3px;height:3px;border-radius:50%;top:0;left:0;
@@ -17,36 +17,12 @@ animation:twinkle 8s ease-in-out infinite alternate,drift 25s linear infinite re
 .ss-meteor:nth-child(3){top:90px;left:25%;height:1px;background:linear-gradient(90deg,rgba(0,188,212,0.8),rgba(255,255,255,0.3),transparent);animation:meteor2 20s ease-out infinite 9s;}
 .ss-meteor:nth-child(4){top:140px;left:65%;height:1px;background:linear-gradient(90deg,rgba(171,71,188,0.7),rgba(255,255,255,0.3),transparent);animation:meteor3 18s ease-out infinite 13s;}
 .ss-meteor:first-child{top:60px;left:40%;height:1px;animation:meteor2 12s ease-out infinite 1s;}
+@keyframes bgShift{0%{background-position:0% 50%}25%{background-position:100% 0%}50%{background-position:100% 100%}75%{background-position:0% 100%}100%{background-position:0% 50%}}
 @keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
 @keyframes glow{0%,100%{box-shadow:0 0 5px rgba(0,188,212,0.1)}50%{box-shadow:0 0 20px rgba(0,188,212,0.25)}}
 @keyframes fadeIn{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
 [id^="zhi"]{animation:fadeIn 0.6s ease both}
 [id="zhiku"]{animation-delay:0.1s}[id="zhizao"]{animation-delay:0.2s}[id="zhiyou"]{animation-delay:0.3s}[id="zhibu"]{animation-delay:0.4s}[id="zhichuan"]{animation-delay:0.5s}[id="zhixi"]{animation-delay:0.6s}[id="zhishu"]{animation-delay:0.7s}[id="s3"]{animation-delay:0.8s}
-/* === BOLD ANIMATIONS === */
-@keyframes neonPulse{0%,100%{text-shadow:0 0 4px #00bcd4,0 0 11px #00bcd4,0 0 19px #00bcd4,0 0 40px #00bcd4;}50%{text-shadow:0 0 2px #00bcd4,0 0 5px #00bcd4,0 0 10px #00bcd4,0 0 20px #00bcd4;}}
-@keyframes dataFlow{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
-@keyframes circuitGlow{0%{box-shadow:inset 0 0 0 rgba(0,188,212,0),0 0 0 rgba(0,188,212,0);}50%{box-shadow:inset 0 0 15px rgba(0,188,212,0.1),0 0 20px rgba(0,188,212,0.15);}100%{box-shadow:inset 0 0 0 rgba(0,188,212,0),0 0 0 rgba(0,188,212,0);}}
-@keyframes borderRun{0%{background-position:0% 0%;}100%{background-position:200% 0%;}  }
-@keyframes glitch{0%,90%,100%{transform:translate(0)}92%{transform:translate(-2px,1px)}94%{transform:translate(2px,-1px)}96%{transform:translate(-1px,-1px)}98%{transform:translate(1px,2px)}}
-
-/* Circuit lines on tool sections */
-[id^="zhi"]::before{content:"";position:absolute;top:0;left:20px;width:60%;height:1px;background:linear-gradient(90deg,transparent,rgba(0,188,212,0.6),rgba(171,71,188,0.4),transparent);background-size:200% 100%;animation:dataFlow 4s linear infinite;}
-[id^="zhi"]{position:relative;overflow:hidden;}
-
-/* Neon glow on KPI numbers */
-div[style*="font-size:24px;font-weight:700;color:#"]{animation:neonPulse 3s ease-in-out infinite;}
-
-/* Circuit glow on impact cards */
-div[style*="background:#1a1d2e;border:1px solid #2a2f4a;border-radius:10px;padding:16px"]{animation:circuitGlow 4s ease infinite;position:relative;}
-
-/* Glowing border animation on flow pipeline */
-div[style*="background:#1a1d2e;border-radius:12px;border:1px solid #2a2f4a;padding:32px"]{border-image:linear-gradient(90deg,#00bcd4,#ab47bc,#00bcd4) 1;animation:borderRun 3s linear infinite;background-size:200%;border:2px solid;border-image-slice:1;}
-
-/* Subtle glitch on logo */
-img[style*="border-radius:50%"]{animation:glitch 8s ease infinite;}
-
-/* Data flow line under each section */
-[id^="zhi"]::after{content:"";position:absolute;bottom:0;right:20px;width:40%;height:1px;background:linear-gradient(90deg,transparent,rgba(171,71,188,0.5),rgba(0,188,212,0.6),transparent);background-size:200% 100%;animation:dataFlow 5s linear infinite reverse;}
 </style>
 
 
