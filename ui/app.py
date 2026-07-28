@@ -4433,8 +4433,8 @@ elif _page_idx == 7:
                         ww_pct = f"{(ww_val-ww_prev)/ww_prev:+.0%}" if ww_prev > 0 else "N/A"
                         st.metric(f"WW GEO ({last['Week']})", f"{ww_val:,}", f"{ww_pct} vs {prev['Week']}")
                     with kpi4:
-                        wd_val = int(last.get("WW_Direct", last.get("WW_Direct_EST", 0)))
-                        wd_prev = int(prev.get("WW_Direct", prev.get("WW_Direct_EST", 0)))
+                        wd_val = int(last.get("Direct_Total", last.get("Direct", last.get("WW_Direct", 0))))
+                        wd_prev = int(prev.get("Direct_Total", prev.get("Direct", prev.get("WW_Direct", 0))))
                         wd_pct = f"{(wd_val-wd_prev)/wd_prev:+.0%}" if wd_prev > 0 else "N/A"
                         st.metric(f"Direct (CN+WW) ({last['Week']})", f"{wd_val:,}", f"{wd_pct} vs {prev['Week']}")
                     with kpi5:
@@ -4468,7 +4468,7 @@ elif _page_idx == 7:
                 with col_chart2:
                     st.caption("Direct (CN+WW) + Total")
                     fig_dir = go.Figure()
-                    fig_dir.add_trace(go.Scatter(x=df_w["Week"], y=df_w.get("WW_Direct", df_w.get("WW_Direct_EST", pd.Series([0]*len(df_w)))), mode="lines+markers", name="Direct (CN+WW)", line=dict(color="#4a9eff", width=2)))
+                    fig_dir.add_trace(go.Scatter(x=df_w["Week"], y=df_w.get("Direct_Total", df_w.get("Direct", df_w.get("WW_Direct", pd.Series([0]*len(df_w))))), mode="lines+markers", name="Direct (CN+WW)", line=dict(color="#4a9eff", width=2)))
                     fig_dir.add_trace(go.Scatter(x=df_w["Week"], y=df_w["Total"], mode="lines+markers", name="Total (GEO+Direct)", line=dict(color="#06b6d4", width=2, dash="dot")))
                     fig_dir.update_layout(height=280, margin=dict(l=0, r=0, t=10, b=0), legend=dict(orientation="h", y=-0.2), yaxis_title="Reg Starts")
                     st.plotly_chart(fig_dir, use_container_width=True)
