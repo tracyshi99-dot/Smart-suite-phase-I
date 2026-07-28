@@ -30,7 +30,7 @@ if DEMO_MODE:
     import shutil
     _WRITABLE_OUTPUT = Path(tempfile.gettempdir()) / "smartsuite_output"
     _DEMO_SOURCE = Path(__file__).parent / "demo_output"
-    _DATA_VERSION = "v20260728_wk29"  # Bump this to force re-copy on deploy
+    _DATA_VERSION = "v20260728_wk29b"  # Bump this to force re-copy on deploy
     _VERSION_FILE = _WRITABLE_OUTPUT / "_data_version.txt"
     _needs_copy = not _WRITABLE_OUTPUT.exists()
     if not _needs_copy and _VERSION_FILE.exists():
