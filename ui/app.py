@@ -4452,7 +4452,7 @@ elif _page_idx == 7:
                 if len(df_w) >= 2:
                     last = df_w.iloc[-1]
                     prev = df_w.iloc[-2]
-                    kpi1, kpi2, kpi3, kpi4, kpi5 = st.columns(5)
+                    kpi1, kpi2, kpi3, kpi4 = st.columns(4)
                     with kpi1:
                         delta_t = int(last["Total"]) - int(prev["Total"])
                         pct_t = f"{delta_t/int(prev['Total']):+.0%}" if int(prev["Total"]) > 0 else "N/A"
@@ -4472,21 +4472,6 @@ elif _page_idx == 7:
                         wd_prev = int(prev.get("Direct_Total", prev.get("Direct", prev.get("WW_Direct", 0))))
                         wd_pct = f"{(wd_val-wd_prev)/wd_prev:+.0%}" if wd_prev > 0 else "N/A"
                         st.metric(f"Direct (CN+WW) ({last['Week']})", f"{wd_val:,}", f"{wd_pct} vs {prev['Week']}")
-                    with kpi5:
-                        # vs 大盘 (bps): use Total YoY from YTD data vs SSR YoY
-                        _ytd_bps = get_ytd_metrics()
-                        _our_row_bps = _ytd_bps[_ytd_bps["Channel"].isin(["Total (GEO+Direct)", "Total", "Total GEO"])]
-                        _ssr_row_bps = _ytd_bps[_ytd_bps["Channel"].str.contains("SSR", na=False)]
-                        if not _our_row_bps.empty and not _ssr_row_bps.empty:
-                            _our_yoy_str = str(_our_row_bps.iloc[0]["YoY"]).replace("%", "").replace("+", "").strip()
-                            _ssr_yoy_str = str(_ssr_row_bps.iloc[0]["YoY"]).replace("%", "").replace("+", "").strip()
-                            try:
-                                _bps_val = int((float(_our_yoy_str) / 100 - float(_ssr_yoy_str) / 100) * 10000)
-                                st.metric("vs 大盘", f"+{_bps_val} bps", "outperform SSR")
-                            except (ValueError, ZeroDivisionError):
-                                st.metric("vs 大盘", "N/A")
-                        else:
-                            st.metric("vs 大盘", "N/A")
 
                 st.divider()
 
