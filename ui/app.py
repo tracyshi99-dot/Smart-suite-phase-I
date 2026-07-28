@@ -3995,32 +3995,26 @@ elif _page_idx == 7:
         # Brand Mention section
         st.markdown("#### 🏷️ " + ("Brand/Product Name Mention" if is_en else "品牌/产品名称提及"))
 
+        # Load cleared items from session state
+        _cleared_key = f"zhixi_cleared_{current_user}"
+        if _cleared_key not in st.session_state:
+            st.session_state[_cleared_key] = []
+
+        # Filter out cleared items
+        _active_perf = [r for r in _perf_merged if r["Query"] not in st.session_state[_cleared_key]]
+        _history_perf = [r for r in _perf_merged if r["Query"] in st.session_state[_cleared_key]]
+
         # Clear buttons for performance data
         _zx_c1, _zx_c2, _zx_c3 = st.columns([1, 1, 4])
         with _zx_c1:
             _zhixi_clear_sel = st.button("🗑️ " + ("Clear Selected" if is_en else "选中清空"), key="zhixi_clear_sel")
         with _zx_c2:
             if st.button("🗑️ " + ("Clear ALL" if is_en else "全部清空"), key="zhixi_clear_all"):
-                # Archive all gap results + tracking history to archive folder
-                _user_zhice_dir2 = OUTPUT_PATH / selected_batch / "zhice"
-                if _user_zhice_dir2.exists():
-                    archive_dir = _user_zhice_dir2 / "archive"
-                    archive_dir.mkdir(exist_ok=True)
-                    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    # Move all CSV files (gap results + tracking)
-                    for gf in list(_user_zhice_dir2.glob("*.csv")):
-                        gf.rename(archive_dir / f"{gf.stem}_{ts}{gf.suffix}")
-                # Also clear performance_data.json if exists
-                _perf_file2 = OUTPUT_PATH / "requests" / current_user / "performance_data.json"
-                if _perf_file2.exists():
-                    _perf_file2.write_text("[]", encoding="utf-8")
-                # Clear zhice session state
-                if "zhice_gap_results" in st.session_state:
-                    del st.session_state["zhice_gap_results"]
+                st.session_state[_cleared_key] = [r["Query"] for r in _perf_merged]
                 st.success("✅ " + ("All cleared to history" if is_en else "全部已清空到历史"))
                 st.rerun()
 
-        if _perf_merged:
+        if _active_perf:
             # Add _select column for selective clearing
             df_brand = pd.DataFrame([{
                 "_select": False,
@@ -4029,7 +4023,7 @@ elif _page_idx == 7:
                 "Before": r.get("Brand/Product Before", "—"),
                 "After": r.get("Brand/Product After", "—"),
                 "Change": "🆕 改善" if r.get("Brand/Product Before") == "❌" and r.get("Brand/Product After") == "✅" else ("⚠️ 退步" if r.get("Brand/Product Before") == "✅" and r.get("Brand/Product After") == "❌" else ("→ 持平" if r.get("Brand/Product After") != "—" else "⏳ 待测")),
-            } for r in _perf_merged])
+            } for r in _active_perf])
             _zx_col_config = {
                 "_select": st.column_config.CheckboxColumn("☑️", default=False),
             }
@@ -4039,51 +4033,25 @@ elif _page_idx == 7:
             if _zhixi_clear_sel:
                 if "_select" in edited_zx_brand.columns and edited_zx_brand["_select"].any():
                     sel_queries = edited_zx_brand[edited_zx_brand["_select"] == True]["Query"].tolist()
-                    # Remove from gap files
-                    _user_zhice_dir2 = OUTPUT_PATH / selected_batch / "zhice"
-                    if _user_zhice_dir2.exists():
-                        _gap_files2 = sorted(_user_zhice_dir2.glob("gap_result_*.csv"), key=lambda f: f.stat().st_mtime, reverse=True)
-                        for gf in _gap_files2:
-                            df_gf = load_csv_safe(gf)
-                            if not df_gf.empty and "ai_query" in df_gf.columns:
-                                # Archive removed rows
-                                mask = df_gf["ai_query"].str[:60].isin(sel_queries)
-                                if mask.any():
-                                    archive_dir = _user_zhice_dir2 / "archive"
-                                    archive_dir.mkdir(exist_ok=True)
-                                    df_gf[mask].to_csv(archive_dir / f"archived_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv", index=False, encoding="utf-8-sig")
-                                    df_gf[~mask].to_csv(gf, index=False, encoding="utf-8-sig")
+                    st.session_state[_cleared_key] = st.session_state[_cleared_key] + sel_queries
                     st.success(f"✅ {len(sel_queries)} {'cleared' if is_en else '条已清空'}")
                     st.rerun()
                 else:
                     st.warning("No items selected. Check ☑️ column first." if is_en else "未勾选任何条目，请先勾选 ☑️ 列")
         else:
-            st.dataframe(pd.DataFrame([{"Query": "—", "Platform": "—", "Before": "—", "After": "—", "Change": "—"}]), use_container_width=True, hide_index=True)
-            st.caption("请先在智测中验证短语，Before 数据将自动填入" if not is_en else "Run verification in 智测 first — Before data will auto-populate")
+            st.caption("No active data. All items in history below." if is_en else "当前无数据，全部在下方历史记录中。")
 
         st.markdown("")
 
         # Official Link section
         st.markdown("#### 🔗 " + ("Official Link" if is_en else "官方链接"))
-        if _perf_merged:
-            # Clear buttons for link section
+        if _active_perf:
             _zx_l1, _zx_l2, _zx_l3 = st.columns([1, 1, 4])
             with _zx_l1:
                 _zhixi_link_clear_sel = st.button("🗑️ " + ("Clear Selected" if is_en else "选中清空"), key="zhixi_link_clear_sel")
             with _zx_l2:
                 if st.button("🗑️ " + ("Clear ALL" if is_en else "全部清空"), key="zhixi_link_clear_all"):
-                    _user_zhice_dir3 = OUTPUT_PATH / selected_batch / "zhice"
-                    if _user_zhice_dir3.exists():
-                        archive_dir = _user_zhice_dir3 / "archive"
-                        archive_dir.mkdir(exist_ok=True)
-                        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-                        for gf in list(_user_zhice_dir3.glob("*.csv")):
-                            gf.rename(archive_dir / f"{gf.stem}_{ts}{gf.suffix}")
-                    _perf_file3 = OUTPUT_PATH / "requests" / current_user / "performance_data.json"
-                    if _perf_file3.exists():
-                        _perf_file3.write_text("[]", encoding="utf-8")
-                    if "zhice_gap_results" in st.session_state:
-                        del st.session_state["zhice_gap_results"]
+                    st.session_state[_cleared_key] = [r["Query"] for r in _perf_merged]
                     st.success("✅ " + ("All cleared" if is_en else "全部已清空"))
                     st.rerun()
 
@@ -4094,31 +4062,58 @@ elif _page_idx == 7:
                 "Before": r.get("Link Before", "—"),
                 "After": r.get("Link After", "—"),
                 "Change": "🆕 改善" if r.get("Link Before") == "❌" and r.get("Link After") == "✅" else ("⚠️ 退步" if r.get("Link Before") == "✅" and r.get("Link After") == "❌" else ("→ 持平" if r.get("Link After") != "—" else "⏳ 待测")),
-            } for r in _perf_merged])
+            } for r in _active_perf])
             _zx_link_config = {"_select": st.column_config.CheckboxColumn("☑️", default=False)}
             edited_zx_link = st.data_editor(df_link, column_config=_zx_link_config, use_container_width=True, hide_index=True, key="zhixi_link_editor")
 
-            # Handle link clear selected
             if _zhixi_link_clear_sel:
                 if "_select" in edited_zx_link.columns and edited_zx_link["_select"].any():
                     sel_queries = edited_zx_link[edited_zx_link["_select"] == True]["Query"].tolist()
-                    _user_zhice_dir3 = OUTPUT_PATH / selected_batch / "zhice"
-                    if _user_zhice_dir3.exists():
-                        for gf in sorted(_user_zhice_dir3.glob("gap_result_*.csv"), key=lambda f: f.stat().st_mtime, reverse=True):
-                            df_gf = load_csv_safe(gf)
-                            if not df_gf.empty and "ai_query" in df_gf.columns:
-                                mask = df_gf["ai_query"].str[:60].isin(sel_queries)
-                                if mask.any():
-                                    archive_dir = _user_zhice_dir3 / "archive"
-                                    archive_dir.mkdir(exist_ok=True)
-                                    df_gf[mask].to_csv(archive_dir / f"archived_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv", index=False, encoding="utf-8-sig")
-                                    df_gf[~mask].to_csv(gf, index=False, encoding="utf-8-sig")
+                    st.session_state[_cleared_key] = st.session_state[_cleared_key] + sel_queries
                     st.success(f"✅ {len(sel_queries)} {'cleared' if is_en else '条已清空'}")
                     st.rerun()
                 else:
                     st.warning("No items selected" if is_en else "未勾选任何条目")
         else:
-            st.dataframe(pd.DataFrame([{"Query": "—", "Platform": "—", "Before": "—", "After": "—", "Change": "—"}]), use_container_width=True, hide_index=True)
+            st.caption("No active data." if is_en else "当前无数据。")
+
+        # --- History section (cleared items, can restore) ---
+        if _history_perf:
+            with st.expander(f"📂 {'History' if is_en else '历史记录'} ({len(_history_perf)} {'items' if is_en else '条'})", expanded=False):
+                df_hist = pd.DataFrame([{
+                    "Query": r["Query"],
+                    "Gap": r.get("Gap Status", "—"),
+                    "Brand Before": r.get("Brand/Product Before", "—"),
+                    "Link Before": r.get("Link Before", "—"),
+                } for r in _history_perf])
+                st.dataframe(df_hist, use_container_width=True, hide_index=True)
+                if st.button("🔄 " + ("Restore ALL from history" if is_en else "全部恢复"), key="zhixi_restore_all"):
+                    st.session_state[_cleared_key] = []
+                    st.rerun()
+
+        # --- Insights ---
+        st.divider()
+        st.markdown("#### 💡 Insights")
+        if _active_perf:
+            _total_active = len(_active_perf)
+            _brand_yes = sum(1 for r in _active_perf if r.get("Brand/Product Before") == "✅")
+            _link_yes = sum(1 for r in _active_perf if r.get("Link Before") == "✅")
+            _gap_full = sum(1 for r in _active_perf if r.get("Gap Status") == "full_gap")
+            _gap_partial = sum(1 for r in _active_perf if r.get("Gap Status") == "partial_gap")
+            _brand_rate = f"{_brand_yes*100//_total_active}%" if _total_active > 0 else "0%"
+            _link_rate = f"{_link_yes*100//_total_active}%" if _total_active > 0 else "0%"
+
+            st.markdown(f"""
+- **Brand/Product Mention Rate**: {_brand_rate} ({_brand_yes}/{_total_active} queries have brand mentioned in AI response)
+- **Official Link Rate**: {_link_rate} ({_link_yes}/{_total_active} queries show official link)
+- **Full Gap**: {_gap_full} queries — AI response has no brand mention AND no official link. High priority for content production.
+- **Partial Gap**: {_gap_partial} queries — Either brand or link present but not both. Optimize existing content.
+- **Next Steps**: Focus on Full Gap queries first → produce GEO content → re-verify after 2-4 weeks to track improvement.
+""")
+        elif _history_perf:
+            st.caption("All items cleared to history. Restore or run new verifications in 智测." if is_en else "所有条目已清空到历史。可恢复或在智测中重新验证。")
+        else:
+            st.caption("Run verification in 智测 first to see insights here." if is_en else "请先在智测中验证短语，Insights 将自动生成。")
 
         # Upload After data (post-content launch)
         with st.expander("📤 " + ("Upload After Data (post-launch)" if is_en else "上传 After 数据（内容上线后）"), expanded=False):
