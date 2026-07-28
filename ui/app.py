@@ -4546,6 +4546,14 @@ elif _page_idx == 7:
                 st.subheader("📊 YTD Comparison" if is_en else "📊 YTD 对比")
                 df_ytd = get_ytd_metrics()
 
+                # Show data cutoff
+                _cutoff_row = df_ytd[df_ytd["Channel"] == "Data_Cutoff"]
+                if not _cutoff_row.empty:
+                    _cutoff = str(_cutoff_row.iloc[0].get("YTD_Actual", ""))
+                    st.caption(f"📅 Data thru: **{_cutoff}**")
+                else:
+                    st.caption("📅 Data thru: **WK29 (2026-07-18)**")
+
                 # Dynamic KPI cards from YTD data — same 4 dimensions as Weekly/Monthly
                 col1, col2, col3, col4 = st.columns(4)
                 total_row = df_ytd[df_ytd["Channel"].isin(["Total", "Total (GEO+Direct)", "Total GEO"])]
