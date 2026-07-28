@@ -310,6 +310,7 @@ def archive_selected_items(batch_id: str, tool_id: str, df_full: pd.DataFrame, s
         "zhizao": "02_zhizao",
         "zhiyou": "03_zhiyou",
         "zhibu": "04_zhibu",
+        "zhice": "zhice",
     }
     src_folder = OUTPUT_PATH / batch_id / tool_folder_map.get(tool_id, tool_id)
     src_folder.mkdir(parents=True, exist_ok=True)
@@ -2281,6 +2282,34 @@ elif _page_idx == 2:
 
         show_cols = [c for c in ["ai_query", "platform", "gap_status", "has_brand_mention", "has_official_link", "sentiment", "competitors", "competitor_gap", "to_produce"] if c in df_gap_display.columns]
         if show_cols:
+            # --- Clear buttons (above table) ---
+            _zc_col1, _zc_col2, _zc_col3 = st.columns([1, 1, 4])
+            with _zc_col1:
+                if st.button("🗑️ " + ("Clear Selected" if is_en else "选中清空"), key="zhice_clear_sel"):
+                    sel_mask = df_gap_display["to_produce"] == True
+                    if sel_mask.any():
+                        df_remaining = archive_selected_items(selected_batch, "zhice", df_gap_display, sel_mask, is_en)
+                        # Save back
+                        gap_files = sorted(zhice_dir.glob("gap_result_*.csv"), key=lambda f: f.stat().st_mtime, reverse=True)
+                        if gap_files:
+                            df_remaining.to_csv(gap_files[0], index=False, encoding="utf-8-sig")
+                        st.session_state["zhice_gap_results"] = df_remaining
+                        st.success(f"✅ {sel_mask.sum()} {'cleared' if is_en else '条已清空'}")
+                        st.rerun()
+                    else:
+                        st.warning("No items selected" if is_en else "未勾选任何条目")
+            with _zc_col2:
+                if st.button("🗑️ " + ("Clear ALL" if is_en else "全部清空"), key="zhice_clear_all"):
+                    all_mask = pd.Series([True] * len(df_gap_display))
+                    archive_selected_items(selected_batch, "zhice", df_gap_display, all_mask, is_en)
+                    gap_files = sorted(zhice_dir.glob("gap_result_*.csv"), key=lambda f: f.stat().st_mtime, reverse=True)
+                    if gap_files:
+                        pd.DataFrame(columns=df_gap_display.columns).to_csv(gap_files[0], index=False, encoding="utf-8-sig")
+                    st.session_state["zhice_gap_results"] = pd.DataFrame()
+                    st.success(f"✅ {len(df_gap_display)} {'cleared' if is_en else '条已清空'}")
+                    st.rerun()
+
+            # --- Display results split by platform (collapsible) ---
             col_config = {
                 "ai_query": st.column_config.TextColumn("Search Phrase" if is_en else "检索短语"),
                 "platform": st.column_config.TextColumn("Platform" if is_en else "验证平台"),
@@ -2292,7 +2321,30 @@ elif _page_idx == 2:
                 "competitors": st.column_config.TextColumn("Competitors" if is_en else "竞品出现"),
                 "sentiment": st.column_config.TextColumn("Tone" if is_en else "内容情感"),
             }
-            edited_gap = st.data_editor(df_gap_display[show_cols], column_config=col_config, use_container_width=True, hide_index=True, key="zhice_gap_editor")
+
+            # Group by platform
+            if "platform" in df_gap_display.columns:
+                platforms_in_data = df_gap_display["platform"].unique().tolist()
+                all_platforms_order = ["通义千问", "DeepSeek", "Kimi", "豆包", "元宝", "ChatGPT", "Perplexity", "Gemini"]
+                platforms_sorted = [p for p in all_platforms_order if p in platforms_in_data] + [p for p in platforms_in_data if p not in all_platforms_order]
+
+                # Collect edits from all platform tables
+                all_edited_dfs = []
+                for plat in platforms_sorted:
+                    df_plat = df_gap_display[df_gap_display["platform"] == plat]
+                    gap_count = len(df_plat[df_plat["gap_status"].isin(["full_gap", "partial_gap"])]) if "gap_status" in df_plat.columns else 0
+                    with st.expander(f"**{plat}** — {len(df_plat)} queries, {gap_count} gaps", expanded=True):
+                        edited_plat = st.data_editor(
+                            df_plat[show_cols].reset_index(drop=True),
+                            column_config=col_config,
+                            use_container_width=True, hide_index=True,
+                            key=f"zhice_gap_editor_{plat}",
+                        )
+                        all_edited_dfs.append(edited_plat)
+                edited_gap = pd.concat(all_edited_dfs, ignore_index=True) if all_edited_dfs else pd.DataFrame()
+            else:
+                edited_gap = st.data_editor(df_gap_display[show_cols], column_config=col_config, use_container_width=True, hide_index=True, key="zhice_gap_editor")
+
             # Count unique queries selected (not individual platform rows)
             produce_queries = edited_gap[edited_gap["to_produce"] == True]["ai_query"].nunique() if "to_produce" in edited_gap.columns and "ai_query" in edited_gap.columns else 0
             st.caption(f"{'Selected for production (unique phrases)' if is_en else '选中进入智造（不重复短语数）'}: {produce_queries}")
