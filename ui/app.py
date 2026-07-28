@@ -4466,10 +4466,10 @@ elif _page_idx == 7:
                     monthly_actual = monthly_data[monthly_data["Type"] == "Actual"] if "Type" in monthly_data.columns else monthly_data
                     kpi1, kpi2, kpi3, kpi4 = st.columns(4)
                     channels_kpi = [
-                        ("CN (GEO)", "CN GEO", kpi1),
-                        ("WW (GEO)", "WW GEO", kpi2),
-                        ("Direct Channel (CN+WW)", "Direct (CN+WW)", kpi3),
-                        ("Total (GEO+Direct)", "Total", kpi4),
+                        ("Total (GEO+Direct)", "Total", kpi1),
+                        ("CN (GEO)", "CN GEO", kpi2),
+                        ("WW (GEO)", "WW GEO", kpi3),
+                        ("Direct Channel (CN+WW)", "Direct (CN+WW)", kpi4),
                     ]
                     for ch_name, display_name, kpi_col in channels_kpi:
                         row = monthly_actual[monthly_actual["Channel"] == ch_name]
@@ -4543,42 +4543,37 @@ elif _page_idx == 7:
                 st.subheader("📊 YTD Comparison" if is_en else "📊 YTD 对比")
                 df_ytd = get_ytd_metrics()
 
-                # Dynamic KPI cards from YTD data
+                # Dynamic KPI cards from YTD data — same 4 dimensions as Weekly/Monthly
                 col1, col2, col3, col4 = st.columns(4)
-                total_row = df_ytd[df_ytd["Channel"].isin(["Total", "Total (GEO+Direct)"])]
+                total_row = df_ytd[df_ytd["Channel"].isin(["Total", "Total (GEO+Direct)", "Total GEO"])]
                 cn_row = df_ytd[df_ytd["Channel"] == "CN GEO"]
-                ww_est_row = df_ytd[df_ytd["Channel"].isin(["Direct (CN+WW)", "Direct Channel (CN+WW)", "WW Website Direct"])]
-                ssr_row = df_ytd[df_ytd["Channel"].str.contains("SSR", na=False)]
+                ww_row = df_ytd[df_ytd["Channel"] == "WW GEO"]
+                direct_row = df_ytd[df_ytd["Channel"].isin(["Direct (CN+WW)", "Direct Channel (CN+WW)", "WW Website Direct"])]
 
                 with col1:
-                    if not total_row.empty:
-                        st.metric("Total (GEO+Direct)", f"{int(total_row.iloc[0]['YTD_Actual']):,}", f"{total_row.iloc[0]['YoY']} YoY")
+                    # Use Total (GEO+Direct) first, fallback to Total GEO
+                    _t_row = df_ytd[df_ytd["Channel"].isin(["Total (GEO+Direct)"])]
+                    if _t_row.empty:
+                        _t_row = df_ytd[df_ytd["Channel"].isin(["Total", "Total GEO"])]
+                    if not _t_row.empty:
+                        st.metric("Total", f"{int(_t_row.iloc[0]['YTD_Actual']):,}", f"{_t_row.iloc[0]['YoY']} YoY")
                     else:
-                        st.metric("Total (GEO+Direct)", "N/A")
+                        st.metric("Total", "N/A")
                 with col2:
                     if not cn_row.empty:
                         st.metric("CN GEO", f"{int(cn_row.iloc[0]['YTD_Actual']):,}", str(cn_row.iloc[0]['YoY']))
                     else:
                         st.metric("CN GEO", "N/A")
                 with col3:
-                    if not ww_est_row.empty:
-                        st.metric("Direct (CN+WW)", f"{int(ww_est_row.iloc[0]['YTD_Actual']):,}", str(ww_est_row.iloc[0]['YoY']))
+                    if not ww_row.empty:
+                        st.metric("WW GEO", f"{int(ww_row.iloc[0]['YTD_Actual']):,}", str(ww_row.iloc[0]['YoY']))
+                    else:
+                        st.metric("WW GEO", "N/A")
+                with col4:
+                    if not direct_row.empty:
+                        st.metric("Direct (CN+WW)", f"{int(direct_row.iloc[0]['YTD_Actual']):,}", str(direct_row.iloc[0]['YoY']))
                     else:
                         st.metric("Direct (CN+WW)", "N/A")
-                with col4:
-                    # Calculate BPS dynamically from Total vs SSR Total
-                    if not total_row.empty and not ssr_row.empty:
-                        _our_yoy_str = str(total_row.iloc[0]['YoY']).replace('%', '').replace('+', '')
-                        _ssr_yoy_str = str(ssr_row.iloc[0]['YoY']).replace('%', '').replace('+', '')
-                        try:
-                            _our_yoy_val = float(_our_yoy_str)
-                            _ssr_yoy_val = float(_ssr_yoy_str)
-                            _bps = int(_our_yoy_val - _ssr_yoy_val)
-                            st.metric("vs 大盘", f"+{_bps} bps", "跑赢 SSR")
-                        except:
-                            st.metric("vs 大盘", "+100 bps", "跑赢 SSR")
-                    else:
-                        st.metric("vs 大盘", "N/A")
 
                 st.divider()
                 df_ytd_display = df_ytd.copy()
