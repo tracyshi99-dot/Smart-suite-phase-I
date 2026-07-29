@@ -817,6 +817,163 @@ def render_content_rules_editor(batch_id: str, is_en: bool, key_prefix: str):
             st.caption(("These rules are applied when AI generates or scores your content. Edit freely." if is_en else "这些规则在 AI 生成或评分内容时使用。可自由编辑。"))
 
 
+# --- Automation Rule Engine ---
+def _load_automation_rules(user: str) -> list:
+    """Load user's automation rules."""
+    rules_file = OUTPUT_PATH / "requests" / user / "automation_rules.json"
+    if rules_file.exists():
+        try:
+            return json.loads(rules_file.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    return []
+
+
+def _save_automation_rules(user: str, rules: list):
+    """Save user's automation rules."""
+    rules_file = OUTPUT_PATH / "requests" / user / "automation_rules.json"
+    rules_file.parent.mkdir(parents=True, exist_ok=True)
+    rules_file.write_text(json.dumps(rules, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _get_rule_execution_log(user: str) -> dict:
+    """Load execution log to prevent duplicate triggers."""
+    log_file = OUTPUT_PATH / "requests" / user / "automation_log.json"
+    if log_file.exists():
+        try:
+            return json.loads(log_file.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    return {}
+
+
+def _save_rule_execution_log(user: str, log: dict):
+    """Save execution log."""
+    log_file = OUTPUT_PATH / "requests" / user / "automation_log.json"
+    log_file.parent.mkdir(parents=True, exist_ok=True)
+    log_file.write_text(json.dumps(log, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _check_rule_condition(rule_name: str, batch_id: str) -> bool:
+    """Check if a rule's trigger condition is met."""
+    zhiku_file = OUTPUT_PATH / batch_id / "01_zhiku" / "zhiku_ai_queries.csv"
+    zhizao_file = OUTPUT_PATH / batch_id / "02_zhizao" / "zhizao_draft_content.csv"
+    zhiyou_file = OUTPUT_PATH / batch_id / "03_zhiyou" / "zhiyou_optimized_content.csv"
+    zhibu_dir = OUTPUT_PATH / batch_id / "04_zhibu"
+
+    if "智库 → 智造" in rule_name or "Research → Creation" in rule_name:
+        # Trigger: phrases exist and all selected
+        if zhiku_file.exists():
+            df = load_csv_safe(zhiku_file)
+            if not df.empty and len(df) >= 5:
+                if "is_selected" in df.columns:
+                    selected = df["is_selected"].astype(str).str.strip().str.upper().isin(["TRUE", "1", "YES"])
+                    return selected.sum() >= 5
+                return len(df) >= 5
+        return False
+
+    elif "智造 → 智优" in rule_name or "Creation → Optimization" in rule_name:
+        # Trigger: articles generated
+        if zhizao_file.exists():
+            df = load_csv_safe(zhizao_file)
+            return not df.empty and len(df) >= 1
+        return False
+
+    elif "智优 → 智布" in rule_name or "Optimization → Publishing" in rule_name:
+        # Trigger: all articles scored >= 4.0
+        if zhiyou_file.exists():
+            df = load_csv_safe(zhiyou_file)
+            if not df.empty and "overall_score" in df.columns:
+                scores = pd.to_numeric(df["overall_score"], errors="coerce").fillna(0)
+                return len(scores) > 0 and scores.min() >= 4.0
+        return False
+
+    elif "智布 → 发布" in rule_name or "Publishing → Distribute" in rule_name:
+        # Trigger: JSON output exists
+        if zhibu_dir.exists():
+            return any(zhibu_dir.glob("*.json"))
+        return False
+
+    return False
+
+
+def _execute_rule_action(rule_name: str, batch_id: str) -> tuple:
+    """Execute a rule's action. Returns (success: bool, message: str)."""
+    try:
+        from engine import run_zhizao, run_zhiyou_score, run_zhiyou_execute, run_zhibu
+
+        if "智库 → 智造" in rule_name or "智测 → 智造" in rule_name or "Research → Creation" in rule_name:
+            result = run_zhizao(batch_id, content_limit=5)
+            if result.get("success"):
+                return True, f"Auto-generated {result.get('articles_count', 0)} articles"
+            return False, result.get("error", "Unknown error")
+
+        elif "智造 → 智优" in rule_name or "Creation → Optimization" in rule_name:
+            result = run_zhiyou_score(batch_id)
+            if result.get("success"):
+                # Also run execute (rewrite)
+                run_zhiyou_execute(batch_id)
+                return True, f"Auto-scored and optimized {result.get('scored_count', 0)} articles"
+            return False, result.get("error", "Unknown error")
+
+        elif "智优 → 智布" in rule_name or "Optimization → Publishing" in rule_name:
+            result = run_zhibu(batch_id)
+            if result.get("success"):
+                return True, f"Auto-published {result.get('items_count', 0)} items"
+            return False, result.get("error", "Unknown error")
+
+        elif "智布 → 发布" in rule_name or "Publishing → Distribute" in rule_name:
+            return True, "Distribution placeholder — manual review recommended"
+
+        return False, "Unknown rule action"
+    except ImportError:
+        return False, "Engine module not available"
+    except Exception as e:
+        return False, str(e)
+
+
+def run_automation_check(user: str, batch_id: str, is_en: bool = False) -> list:
+    """Check all enabled rules and execute those whose conditions are met.
+    Returns list of execution results."""
+    rules = _load_automation_rules(user)
+    if not rules:
+        return []
+
+    log = _get_rule_execution_log(user)
+    results = []
+    log_changed = False
+    today = datetime.now().strftime("%Y-%m-%d")
+
+    for rule in rules:
+        if not rule.get("enabled", False):
+            continue
+
+        rule_name = rule.get("name", "")
+        # Check if already executed today (prevent repeated triggers)
+        last_exec = log.get(rule_name, {}).get("last_date", "")
+        if last_exec == today:
+            continue
+
+        # Check condition
+        if _check_rule_condition(rule_name, batch_id):
+            success, msg = _execute_rule_action(rule_name, batch_id)
+            results.append({
+                "rule": rule_name,
+                "success": success,
+                "message": msg,
+                "time": datetime.now().strftime("%H:%M:%S"),
+            })
+            # Update log
+            log[rule_name] = {"last_date": today, "last_result": "success" if success else "failed", "message": msg}
+            log_changed = True
+
+    if log_changed:
+        _save_rule_execution_log(user, log)
+        mark_data_changed()
+
+    return results
+
+
 # ============================================================
 # NAVIGATION PAGES
 # ============================================================
@@ -6592,6 +6749,24 @@ elif _page_idx == 8:
     st.markdown("""<div class="ss-page-header" style="color:#ff6b35;"><h1>🎯 """ + ("Decision Engine" if is_en else "智中枢 – Decision Engine") + """</h1><p>""" + ("Analytics data + 7 decision rules → weekly action plan" if is_en else "基于智析数据 + 7 条决策规则，生成周度行动计划") + """</p></div>""", unsafe_allow_html=True)
     render_pipeline_flow("zhongshu", selected_batch)
 
+    # --- Auto-refresh (every 5 minutes) for automation polling ---
+    try:
+        from streamlit_autorefresh import st_autorefresh
+        _auto_refresh_interval = 300000  # 5 minutes in ms
+        _refresh_count = st_autorefresh(interval=_auto_refresh_interval, limit=None, key="zhongshu_autorefresh")
+    except ImportError:
+        _refresh_count = 0
+
+    # --- Run automation check on page load / refresh ---
+    if current_user:
+        _auto_results = run_automation_check(current_user, selected_batch, is_en)
+        if _auto_results:
+            st.markdown("### ⚡ " + ("Auto-Executed Actions" if is_en else "自动执行结果"))
+            for r in _auto_results:
+                icon = "✅" if r["success"] else "❌"
+                st.markdown(f"{icon} **{r['rule']}** — {r['message']} ({r['time']})")
+            st.divider()
+
     # ============================================================
     # USER VIEW: Personal pipeline progress + automation rules
     # ============================================================
@@ -6674,6 +6849,26 @@ elif _page_idx == 8:
             _rules_file.parent.mkdir(parents=True, exist_ok=True)
             _rules_file.write_text(json.dumps(_rules, ensure_ascii=False, indent=2), encoding="utf-8")
             st.success("✅ Rules saved!" if is_en else "✅ 规则已保存！")
+
+        # --- Manual trigger button ---
+        st.divider()
+        col_run, col_status = st.columns([1, 3])
+        with col_run:
+            if st.button("⚡ " + ("Run Rules Now" if is_en else "立即执行规则检查"), type="primary", key="manual_run_rules"):
+                # Clear today's log to allow re-execution
+                _exec_log = _get_rule_execution_log(current_user)
+                _exec_log.clear()
+                _save_rule_execution_log(current_user, _exec_log)
+                st.rerun()
+        with col_status:
+            _exec_log = _get_rule_execution_log(current_user)
+            if _exec_log:
+                st.caption("📋 " + ("Last executions:" if is_en else "最近执行记录:"))
+                for rname, rinfo in _exec_log.items():
+                    _icon = "✅" if rinfo.get("last_result") == "success" else "❌"
+                    st.caption(f"  {_icon} {rname} — {rinfo.get('last_date', '')} — {rinfo.get('message', '')[:50]}")
+            else:
+                st.caption("No execution history yet." if is_en else "暂无执行记录")
 
         # Add custom rule
         st.divider()
