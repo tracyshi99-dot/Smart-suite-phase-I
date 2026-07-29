@@ -2888,18 +2888,23 @@ elif _page_idx == 3:
         # Editable list with _select column
         if "_select" not in df_z.columns:
             df_z.insert(0, "_select", False)
+        else:
+            df_z["_select"] = df_z["_select"].astype(bool)
         # Ensure numeric columns are properly typed
         if "word_count" in df_z.columns:
             df_z["word_count"] = pd.to_numeric(df_z["word_count"], errors="coerce").fillna(0).astype(int)
         display_cols = ["_select"] + [c for c in ["ai_query", "title", "word_count", "version"]
                        if c in df_z.columns]
-        _zz_col_config = {
-            "_select": st.column_config.CheckboxColumn("☑️", default=False),
-            "ai_query": st.column_config.TextColumn("Search Phrase" if is_en else "检索短语"),
-            "title": st.column_config.TextColumn("Title" if is_en else "标题"),
-            "word_count": st.column_config.NumberColumn("Words" if is_en else "字数"),
-            "version": st.column_config.TextColumn("Ver"),
-        }
+        # Only include column configs for columns that actually exist
+        _zz_col_config = {"_select": st.column_config.CheckboxColumn("☑️", default=False)}
+        if "ai_query" in display_cols:
+            _zz_col_config["ai_query"] = st.column_config.TextColumn("Search Phrase" if is_en else "检索短语")
+        if "title" in display_cols:
+            _zz_col_config["title"] = st.column_config.TextColumn("Title" if is_en else "标题")
+        if "word_count" in display_cols:
+            _zz_col_config["word_count"] = st.column_config.NumberColumn("Words" if is_en else "字数")
+        if "version" in display_cols:
+            _zz_col_config["version"] = st.column_config.TextColumn("Ver")
         edited_zz = st.data_editor(df_z[display_cols], column_config=_zz_col_config, use_container_width=True, hide_index=True, key="zhizao_list_editor")
 
         # Handle "Clear Selected"
