@@ -2888,6 +2888,9 @@ elif _page_idx == 3:
         # Editable list with _select column
         if "_select" not in df_z.columns:
             df_z.insert(0, "_select", False)
+        # Ensure numeric columns are properly typed
+        if "word_count" in df_z.columns:
+            df_z["word_count"] = pd.to_numeric(df_z["word_count"], errors="coerce").fillna(0).astype(int)
         display_cols = ["_select"] + [c for c in ["ai_query", "title", "word_count", "version"]
                        if c in df_z.columns]
         _zz_col_config = {
