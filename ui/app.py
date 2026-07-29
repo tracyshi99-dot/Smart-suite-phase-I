@@ -1245,7 +1245,6 @@ elif not current_user:
 
 elif _page_idx == 1:
     st.markdown("""<div class="ss-page-header" style="color:#ffa726;"><h1>📚 """ + ("Query Library" if is_en else "智库 – 检索短语产出与验证") + """</h1><p>""" + ("Produce → Calibrate → Dedupe → Select → Verify Gap → Confirm" if is_en else "产出 → 校准 → 去重 → 选取 → 验证Gap → 确认进智造") + """</p></div>""", unsafe_allow_html=True)
-    render_history_widget(selected_batch, "zhiku", is_en)
     render_pipeline_flow("zhiku", selected_batch)
 
     # ============================================================
@@ -2849,7 +2848,6 @@ elif _page_idx == 2:
 # ============================================================
 elif _page_idx == 3:
     st.markdown("""<div class="ss-page-header" style="color:#ffcc02;"><h1>✍️ """ + ("Content Creation" if is_en else "智造 – Content Generation") + """</h1><p>""" + ("Generate SEO+GEO dual-optimized content based on AI Queries" if is_en else "基于 AI Queries 生成 SEO+GEO 双优化内容") + """</p></div>""", unsafe_allow_html=True)
-    render_history_widget(selected_batch, "zhizao", is_en)
     render_pipeline_flow("zhizao", selected_batch)
 
     # --- User Content Rules Editor ---
@@ -3321,7 +3319,6 @@ elif _page_idx == 3:
 # ============================================================
 elif _page_idx == 4:
     st.markdown("""<div class="ss-page-header" style="color:#e91e63;"><h1>🔧 """ + ("Optimization" if is_en else "智优 – Score · Rewrite · Compliance") + """</h1><p>""" + ("One-click: Score → Rewrite → Compliance Review" if is_en else "一键自动完成 评分 → 重写优化 → 合规审查") + """</p></div>""", unsafe_allow_html=True)
-    render_history_widget(selected_batch, "zhiyou", is_en)
     render_pipeline_flow("zhiyou", selected_batch)
 
     # --- User Content Rules Editor ---
@@ -3900,7 +3897,6 @@ elif _page_idx == 4:
 # ============================================================
 elif _page_idx == 5:
     st.markdown("""<div class="ss-page-header" style="color:#29b6f6;"><h1>📦 """ + ("Publishing" if is_en else "智布 – 内容发布") + """</h1><p>""" + ("Convert optimized content to structured JSON and Word documents" if is_en else "将优化内容转换为结构化 JSON 和 Word 文档") + """</p></div>""", unsafe_allow_html=True)
-    render_history_widget(selected_batch, "zhibu", is_en)
     render_pipeline_flow("zhibu", selected_batch)
 
     # --- Upload content directly (skip 智优) ---
