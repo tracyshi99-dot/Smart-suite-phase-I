@@ -10,7 +10,7 @@ Smart Suite Automation Cron Job
 
 Windows Task Scheduler 设置：
   程序: python
-  参数: C:\Users\yujiashi\Desktop\SmartSuite_Phase1\automation_cron.py
+  参数: automation_cron.py
   触发: 每 1 小时 / 每天固定时间
 """
 import sys
