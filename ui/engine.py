@@ -1505,6 +1505,19 @@ def run_zhibu(batch_id: str, progress_callback=None) -> dict:
             keywords.append(' '.join(words[:4]))
         return keywords[:5]
 
+    def _safe_score(val):
+        """Safely convert a score value to number, handling NaN/None/strings."""
+        try:
+            if val is None:
+                return 0
+            f = float(val)
+            import math
+            if math.isnan(f):
+                return 0
+            return round(f, 1)
+        except (ValueError, TypeError):
+            return 0
+
     items = []
     for _, row in df_opt.iterrows():
         cid = row.get("content_id", "")
@@ -1542,14 +1555,7 @@ def run_zhibu(batch_id: str, progress_callback=None) -> dict:
                 "query_type": "branded",
                 "internal_links": ["https://gs.amazon.cn"],
             },
-            "ai_friendly": {
-                "intent_match_score": int(float(score_row.get("intent_match_score", 0) or 0)),
-                "ai_readability_score": int(float(score_row.get("ai_readability_score", 0) or 0)),
-                "authority_score": int(float(score_row.get("authority_score", 0) or 0)),
-                "actionability_score": int(float(score_row.get("actionability_score", 0) or 0)),
-                "differentiation_score": int(float(score_row.get("differentiation_score", 0) or 0)),
-                "overall_score": round(float(score_row.get("overall_score", 0) or 0), 1),
-            },
+            "ai_friendly": (lambda sr: {k: _safe_score(sr.get(k, 0)) for k in ["intent_match_score", "ai_readability_score", "authority_score", "actionability_score", "differentiation_score", "overall_score"]})(score_row),
             "geo_summary": content[:150].replace("\n", " ").strip(),
             "compliance": {
                 "status": "PASS",
