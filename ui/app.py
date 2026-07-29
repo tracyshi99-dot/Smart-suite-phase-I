@@ -3364,15 +3364,23 @@ elif _page_idx == 4:
             # Add include checkbox for zhiyou selection
             if "include_zhiyou" not in df_incoming.columns:
                 df_incoming["include_zhiyou"] = True
+            else:
+                df_incoming["include_zhiyou"] = df_incoming["include_zhiyou"].astype(bool)
+            if "word_count" in df_incoming.columns:
+                df_incoming["word_count"] = pd.to_numeric(df_incoming["word_count"], errors="coerce").fillna(0).astype(int)
             display_cols_in = [c for c in ["title", "ai_query", "word_count", "include_zhiyou"] if c in df_incoming.columns]
+            _zy_col_config = {}
+            if "title" in display_cols_in:
+                _zy_col_config["title"] = st.column_config.TextColumn("Title" if is_en else "标题", disabled=True)
+            if "ai_query" in display_cols_in:
+                _zy_col_config["ai_query"] = st.column_config.TextColumn("Search Phrase" if is_en else "检索短语", disabled=True)
+            if "word_count" in display_cols_in:
+                _zy_col_config["word_count"] = st.column_config.NumberColumn("Words" if is_en else "字数", disabled=True)
+            if "include_zhiyou" in display_cols_in:
+                _zy_col_config["include_zhiyou"] = st.column_config.CheckboxColumn("Include" if is_en else "纳入优化")
             edited_incoming = st.data_editor(
                 df_incoming[display_cols_in],
-                column_config={
-                    "title": st.column_config.TextColumn("Title" if is_en else "标题", disabled=True),
-                    "ai_query": st.column_config.TextColumn("Search Phrase" if is_en else "检索短语", disabled=True),
-                    "word_count": st.column_config.NumberColumn("Words" if is_en else "字数", disabled=True),
-                    "include_zhiyou": st.column_config.CheckboxColumn("Include" if is_en else "纳入优化"),
-                },
+                column_config=_zy_col_config,
                 use_container_width=True, hide_index=True,
                 key="zhiyou_incoming_editor",
             )
