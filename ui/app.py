@@ -1170,28 +1170,26 @@ elif _page_idx == 1:
             col_p1, col_p2 = st.columns(2)
             with col_p1:
                 _基础 = _pm.get("基础画像", {})
-                _id_options = _基础.get("身份", {}).get("params", [])
-                _co_options = _基础.get("企业类型", {}).get("params", [])
-                _role_options = _基础.get("职位", {}).get("params", [])
-                if is_en and not _id_options:
-                    _id_options = ["New Seller", "Experienced Seller", "Brand Owner", "Manufacturer", "Distributor"]
-                if is_en and not _co_options:
-                    _co_options = ["Small Business", "Mid-size Enterprise", "Large Corporation", "Individual/Sole Proprietor"]
-                if is_en and not _role_options:
-                    _role_options = ["CEO/Owner", "Ecommerce Manager", "Operations Staff", "Marketing Manager"]
+                if is_en:
+                    _id_options = ["New Seller (Pre-registration)", "New Seller (Registered)", "New Seller (Launched)", "< 1 Year Seller", "1-2 Year Seller", "2-3 Year Seller", "3+ Year Seller", "Service Provider"]
+                    _co_options = ["Brand + Factory", "Brand + Partner Factory", "Factory (No Brand)", "Distributor/Reseller", "Individual", "Other"]
+                    _role_options = ["Manager/Owner", "Operations Staff", "Other"]
+                else:
+                    _id_options = _基础.get("身份", {}).get("params", [])
+                    _co_options = _基础.get("企业类型", {}).get("params", [])
+                    _role_options = _基础.get("职位", {}).get("params", [])
                 sel_identity = st.selectbox("身份" if not is_en else "Identity", _id_options, key="persona_identity")
                 sel_company = st.selectbox("企业类型" if not is_en else "Company Type", _co_options, key="persona_company")
                 sel_role = st.selectbox("职位" if not is_en else "Role", _role_options, key="persona_role")
             with col_p2:
-                _rev_options = _基础.get("年销售额", {}).get("params", [])
-                _biz_options = _基础.get("公司类型", {}).get("params", [])
-                _ship_options = _基础.get("计划发货方式", {}).get("params", [])
-                if is_en and not _rev_options:
-                    _rev_options = ["< $100K", "$100K-$500K", "$500K-$2M", "$2M-$10M", "> $10M"]
-                if is_en and not _biz_options:
-                    _biz_options = ["Private Label", "Wholesale", "Retail Arbitrage", "Dropshipping", "Handmade"]
-                if is_en and not _ship_options:
-                    _ship_options = ["FBA", "FBM", "3PL", "Multi-channel Fulfillment"]
+                if is_en:
+                    _rev_options = ["< $500K", "< $1M", "< $10M", "> $10M"]
+                    _biz_options = ["Factory", "Trading Company", "Brand Owner", "Service Provider/Other"]
+                    _ship_options = ["FBA", "FBM (Self-fulfillment)", "Not Decided Yet"]
+                else:
+                    _rev_options = _基础.get("年销售额", {}).get("params", [])
+                    _biz_options = _基础.get("公司类型", {}).get("params", [])
+                    _ship_options = _基础.get("计划发货方式", {}).get("params", [])
                 sel_revenue = st.selectbox("年销售额" if not is_en else "Annual Revenue", _rev_options, key="persona_revenue")
                 sel_biz_type = st.selectbox("公司类型" if not is_en else "Business Model", _biz_options, key="persona_biz")
                 sel_shipping = st.selectbox("计划发货方式" if not is_en else "Fulfillment Method", _ship_options, key="persona_ship")
@@ -1199,14 +1197,14 @@ elif _page_idx == 1:
             # 兴趣画像
             st.markdown("##### 兴趣画像" if not is_en else "##### Interest Persona")
             _兴趣 = _pm.get("兴趣画像", {})
-            _site_options = _兴趣.get("站点", {}).get("params", [])
-            _content_options = _兴趣.get("内容分类", {}).get("params", [])
-            if is_en and not _site_options:
-                _site_options = ["US", "UK", "Germany", "Japan", "Canada", "Australia", "France", "Italy", "Spain", "India"]
-            if is_en and not _content_options:
-                _content_options = ["Getting Started", "Product Sourcing", "Listing Optimization", "PPC/Advertising", "FBA Logistics", "Brand Building", "Account Health", "Tax & Compliance"]
-            _site_default = ["美国站"] if not is_en and "美国站" in _site_options else ([_site_options[0]] if _site_options else [])
-            _content_default = ["新手指南"] if not is_en and "新手指南" in _content_options else ([_content_options[0]] if _content_options else [])
+            if is_en:
+                _site_options = ["US", "Canada", "Mexico", "UK", "Germany", "France", "Italy", "Spain", "Japan", "UAE", "Saudi Arabia", "Brazil", "Australia", "India"]
+                _content_options = ["Getting Started", "Product Sourcing", "Compliance", "Logistics & FBA", "Brand Building", "Peak Season & Traffic", "Business Buying", "Seller Encyclopedia", "Seller Growth Services", "Factory Zone", "Cross-border Payments", "Category Insights", "PPC & Advertising"]
+            else:
+                _site_options = _兴趣.get("站点", {}).get("params", [])
+                _content_options = _兴趣.get("内容分类", {}).get("params", [])
+            _site_default = ["美国站"] if not is_en and "美国站" in _site_options else (["US"] if is_en else ([_site_options[0]] if _site_options else []))
+            _content_default = ["新手指南"] if not is_en and "新手指南" in _content_options else (["Getting Started"] if is_en else ([_content_options[0]] if _content_options else []))
             sel_site = st.multiselect("目标站点" if not is_en else "Target Marketplace", _site_options, default=_site_default, key="persona_site")
             sel_content = st.multiselect("内容分类" if not is_en else "Content Category", _content_options, default=_content_default, key="persona_content")
 
