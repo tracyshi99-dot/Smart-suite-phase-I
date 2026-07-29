@@ -55,10 +55,8 @@ animation:twinkle 8s ease-in-out infinite alternate,drift 25s linear infinite re
 .ss-ripple:nth-child(2){animation-delay:1s;}
 .ss-ripple:nth-child(3){animation-delay:2s;}
 @keyframes rippleOut{0%{transform:scale(1);opacity:0.6;}100%{transform:scale(2.5);opacity:0;}}
-/* === Stat number shine === */
-.ss-stat-num{position:relative;overflow:hidden;}
-.ss-stat-num::after{content:"";position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent);animation:numShine 4s ease-in-out infinite;}
-@keyframes numShine{0%,70%{left:-100%;}100%{left:200%;}}
+/* === Stat number === */
+.ss-stat-num{position:relative;}
 /* === Workflow node pulse === */
 @keyframes nodePulse{0%,100%{box-shadow:0 0 0 0 rgba(0,188,212,0);}50%{box-shadow:0 0 12px 4px rgba(0,188,212,0.4);}}
 .ss-workflow-box a:nth-child(1){animation:nodePulse 6s ease-in-out infinite 0s;}
