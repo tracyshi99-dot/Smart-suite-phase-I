@@ -764,7 +764,37 @@ NAV_PAGES_EN = [
 # SIDEBAR
 # ============================================================
 with st.sidebar:
-    # Language toggle
+    # Language toggle — may be auto-set by user profile
+    # Determine default language index based on logged-in user
+    _user_lang_map = {}
+    _users_file = BASE_PATH / "output" / "users.json"
+    if _users_file.exists():
+        try:
+            _users_data = json.loads(_users_file.read_text(encoding="utf-8"))
+            ALLOWED_USERS = _users_data.get("allowed", [])
+            ADMIN_USERS = _users_data.get("admins", ["yujiashi", "admin"])
+            _user_lang_map = _users_data.get("user_lang", {})
+        except Exception:
+            ALLOWED_USERS = ["yujiashi", "admin", "fanting", "czhaamzn", "yuchy", "porzh", "linzhshi", "fenixau", "tianranh", "qiudanie", "quadaisy", "budhiraja", "mbudhira", "xinyill", "xdhuang", "gracezjy", "htp", "jinghuaf", "mxyzhang", "emilwliu", "qdhwzj", "panjf", "rickylan", "yountlim", "phunghd", "oanhhtk"]
+            ADMIN_USERS = ["yujiashi", "admin"]
+    else:
+        ALLOWED_USERS = ["yujiashi", "admin", "fanting", "czhaamzn", "yuchy", "porzh", "linzhshi", "fenixau", "tianranh", "qiudanie", "quadaisy", "budhiraja", "mbudhira", "xinyill", "xdhuang", "gracezjy", "htp", "jinghuaf", "mxyzhang", "emilwliu", "qdhwzj", "panjf", "rickylan", "yountlim", "phunghd", "oanhhtk"]
+        ADMIN_USERS = ["yujiashi", "admin"]
+        # Save initial file
+        _users_file.parent.mkdir(parents=True, exist_ok=True)
+        _users_file.write_text(json.dumps({"allowed": ALLOWED_USERS, "admins": ADMIN_USERS, "pending": [], "user_lang": {}}, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    # Auto-set language based on user profile (on first login)
+    _current_user_for_lang = st.session_state.get("app_user", "")
+    _default_lang_idx = 0  # 中文
+    if _current_user_for_lang and _user_lang_map.get(_current_user_for_lang) == "en":
+        _default_lang_idx = 1  # English
+    # If user just logged in and hasn't manually changed lang, auto-set
+    if "ui_lang_auto_set" not in st.session_state and _current_user_for_lang:
+        if _user_lang_map.get(_current_user_for_lang) == "en":
+            st.session_state["ui_lang"] = "English"
+            st.session_state["ui_lang_auto_set"] = True
+
     ui_lang = st.selectbox("🌐", ["中文", "English"], key="ui_lang", label_visibility="collapsed")
     is_en = (ui_lang == "English")
 
@@ -772,22 +802,6 @@ with st.sidebar:
     st.caption("GEO Content Pipeline · Phase I" if is_en else "智系列 · GEO Content Pipeline · Phase I")
 
     # --- Login ---
-    ADMIN_USERS = ["yujiashi", "admin"]  # Admin users see everything
-
-    # Load allowed users from file (dynamic whitelist)
-    _users_file = BASE_PATH / "output" / "users.json"
-    if _users_file.exists():
-        try:
-            _users_data = json.loads(_users_file.read_text(encoding="utf-8"))
-            ALLOWED_USERS = _users_data.get("allowed", [])
-            ADMIN_USERS = _users_data.get("admins", ADMIN_USERS)
-        except Exception:
-            ALLOWED_USERS = ["yujiashi", "admin", "fanting", "czhaamzn", "yuchy", "porzh", "linzhshi", "fenixau", "tianranh", "qiudanie", "quadaisy", "budhiraja", "mbudhira", "xinyill", "xdhuang", "gracezjy", "htp", "jinghuaf", "mxyzhang", "emilwliu", "qdhwzj", "panjf", "rickylan", "yountlim", "phunghd", "oanhhtk"]
-    else:
-        ALLOWED_USERS = ["yujiashi", "admin", "fanting", "czhaamzn", "yuchy", "porzh", "linzhshi", "fenixau", "tianranh", "qiudanie", "quadaisy", "budhiraja", "mbudhira", "xinyill", "xdhuang", "gracezjy", "htp", "jinghuaf", "mxyzhang", "emilwliu", "qdhwzj", "panjf", "rickylan", "yountlim", "phunghd", "oanhhtk"]
-        # Save initial file
-        _users_file.parent.mkdir(parents=True, exist_ok=True)
-        _users_file.write_text(json.dumps({"allowed": ALLOWED_USERS, "admins": ADMIN_USERS, "pending": []}, ensure_ascii=False, indent=2), encoding="utf-8")
 
     # Auto-login from URL param ?user=xxx
     _qp_login = st.query_params
@@ -795,12 +809,24 @@ with st.sidebar:
         _url_user = _qp_login["user"].lower()
         if _url_user in ALLOWED_USERS:
             st.session_state["app_user"] = _url_user
+            # Auto-set language for this user
+            if _user_lang_map.get(_url_user) == "en":
+                st.session_state["ui_lang"] = "English"
+                st.session_state["ui_lang_auto_set"] = True
 
     user_login = st.text_input("👤 Login", value=st.session_state.get("app_user", ""),
                                placeholder="Your login name", key="sidebar_login", label_visibility="collapsed")
     if user_login:
         if user_login.lower() in ALLOWED_USERS:
+            _prev_user = st.session_state.get("app_user", "")
             st.session_state["app_user"] = user_login.lower()
+            # Auto-set language when user changes
+            if _prev_user != user_login.lower():
+                if _user_lang_map.get(user_login.lower()) == "en":
+                    st.session_state["ui_lang"] = "English"
+                elif _user_lang_map.get(user_login.lower(), "zh") == "zh":
+                    st.session_state["ui_lang"] = "中文"
+                st.session_state["ui_lang_auto_set"] = True
         else:
             st.session_state["app_user"] = ""
             st.error("⚠️ Access denied" if is_en else "⚠️ 无权限，请联系管理员")
