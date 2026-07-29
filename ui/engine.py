@@ -1572,6 +1572,26 @@ def run_zhibu(batch_id: str, progress_callback=None) -> dict:
     combined_file = output_dir / "zhibu_output.json"
     combined_file.write_text(json.dumps(output_json, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
 
+    # Generate LEGO Sell Design format for each article
+    try:
+        from lego_converter import convert_article_to_lego_page
+        lego_dir = output_dir / "lego_sell_design"
+        lego_dir.mkdir(parents=True, exist_ok=True)
+        for item in items:
+            lego_page = convert_article_to_lego_page(
+                title=item["title"],
+                content=item["content"],
+                source_query=item["source_query"],
+                batch_id=batch_id
+            )
+            fname = item["name"][:60].replace("/", "").replace("\\", "").replace(":", "").replace("*", "").replace('"', "").replace("<", "").replace(">", "").replace("|", "").strip()
+            if not fname:
+                fname = f"article_{abs(hash(item['title'])) % 100000}"
+            lego_file = lego_dir / f"{fname}.json"
+            lego_file.write_text(json.dumps(lego_page, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
+    except Exception:
+        pass
+
     if progress_callback:
         progress_callback(1.0, "智布完成 ✅")
 
