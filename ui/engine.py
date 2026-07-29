@@ -775,7 +775,10 @@ Stay strictly on topic. Every paragraph must relate directly to the search query
                 actual_template = "none"
 
         if actual_template != "none" and actual_template in TEMPLATES:
-            template_instruction = f"\n\n{TEMPLATES[actual_template]}\n\n请严格按照上述模板结构生成内容，每个部分都必须有内容。"
+            if article_language == "English":
+                template_instruction = f"\n\nUse a structured article format with: Direct Answer → Details/Steps → Comparison Table → FAQ → CTA (https://sell.amazon.com)\n\nEnsure at least 1 table, 2 lists, and 3 FAQ items."
+            else:
+                template_instruction = f"\n\n{TEMPLATES[actual_template]}\n\n请严格按照上述模板结构生成内容，每个部分都必须有内容。"
 
         # Inject registration-specific knowledge base and writing rules
         if actual_template == "registration" and (_reg_knowledge or _reg_skill):
@@ -788,13 +791,33 @@ Stay strictly on topic. Every paragraph must relate directly to the search query
 
         user_prompt = f"""检索短语：「{query}」
 {template_instruction}
-请围绕上面这个检索短语写一篇完整文章。标题和正文必须精确围绕「{query}」展开。"""
+请围绕上面这个检索短语写一篇完整文章。标题和正文必须精确围绕「{query}」展开。""" if article_language != "English" else f"""Search phrase: "{query}"
+{template_instruction}
+Write a complete article focused precisely on the above search phrase. Title and body must directly address "{query}"."""
 
         # If reuse_template is provided, use adaptation mode
         if reuse_template and reuse_template.get("content"):
             base_content = reuse_template["content"][:3000]
             base_query = reuse_template.get("source_query", "")
-            user_prompt = f"""检索短语：「{query}」
+            if article_language == "English":
+                user_prompt = f"""Search phrase: "{query}"
+
+Below is an existing high-quality reference article (original phrase: "{base_query}"):
+---
+{base_content}
+---
+
+Adapt this reference article for the new search phrase "{query}":
+1. Keep the overall structure and format
+2. Rewrite all content to focus on "{query}"
+3. Replace irrelevant details, add information relevant to the new phrase
+4. Ensure the title contains core keywords from "{query}"
+5. Keep tables, lists, FAQ structure
+6. Keep the link https://sell.amazon.com
+
+Output: First line = new title (no #), then blank line, then full body."""
+            else:
+                user_prompt = f"""检索短语：「{query}」
 
 以下是一篇已有的优质参考文章（原短语：「{base_query}」）：
 ---
