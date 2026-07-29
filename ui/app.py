@@ -3625,14 +3625,23 @@ elif _page_idx == 5:
         with _zb_c1:
             _zhibu_clear_sel = st.button("🗑️ " + ("Clear Selected" if is_en else "选中清空"), key="zhibu_clear_sel")
         with _zb_c2:
-            if st.button("🗑️ " + ("Clear ALL" if is_en else "全部清空"), key="zhibu_clear_all_btn"):
-                opt_file = OUTPUT_PATH / selected_batch / "03_zhiyou" / "zhiyou_optimized_content.csv"
-                if opt_file.exists():
-                    all_mask = pd.Series([True] * len(df_opt_in))
-                    archive_selected_items(selected_batch, "zhibu", df_opt_in, all_mask, is_en)
-                    df_opt_in.head(0).to_csv(opt_file, index=False, encoding="utf-8-sig")
-                    st.success(f"✅ {len(df_opt_in)} {'cleared' if is_en else '条已清空'}")
-                    st.rerun()
+            _zhibu_clear_all = st.button("🗑️ " + ("Clear ALL" if is_en else "全部清空"), key="zhibu_clear_all_btn")
+
+        # Execute clear ALL (use session state to survive rerun from data_editor)
+        if _zhibu_clear_all:
+            st.session_state["_zhibu_do_clear_all"] = True
+            st.rerun()
+
+        if st.session_state.pop("_zhibu_do_clear_all", False):
+            opt_file = OUTPUT_PATH / selected_batch / "03_zhiyou" / "zhiyou_optimized_content.csv"
+            if opt_file.exists():
+                _cleared_count = len(df_opt_in)
+                all_mask = pd.Series([True] * len(df_opt_in))
+                archive_selected_items(selected_batch, "zhibu", df_opt_in, all_mask, is_en)
+                df_opt_in.head(0).to_csv(opt_file, index=False, encoding="utf-8-sig")
+                mark_data_changed()
+                st.success(f"✅ {_cleared_count} {'cleared' if is_en else '条已清空'}")
+                st.rerun()
 
         # Editable list with select column
         title_col = "optimized_title" if "optimized_title" in df_opt_in.columns else "title"
@@ -3647,13 +3656,18 @@ elif _page_idx == 5:
         }
         edited_zb = st.data_editor(df_opt_in[_zb_display_cols], column_config=_zb_col_config, use_container_width=True, hide_index=True, key="zhibu_list_editor")
 
-        # Handle "Clear Selected"
+        # Handle "Clear Selected" (use session state to survive data_editor rerun)
         if _zhibu_clear_sel:
+            st.session_state["_zhibu_do_clear_sel"] = True
+            st.rerun()
+
+        if st.session_state.pop("_zhibu_do_clear_sel", False):
             if "_select" in edited_zb.columns and edited_zb["_select"].any():
                 sel_mask = edited_zb["_select"] == True
                 opt_file = OUTPUT_PATH / selected_batch / "03_zhiyou" / "zhiyou_optimized_content.csv"
                 df_remaining = archive_selected_items(selected_batch, "zhibu", df_opt_in, sel_mask, is_en)
                 df_remaining.drop(columns=["_select"], errors="ignore").to_csv(opt_file, index=False, encoding="utf-8-sig")
+                mark_data_changed()
                 st.success(f"✅ {sel_mask.sum()} {'cleared' if is_en else '条已清空'}")
                 st.rerun()
             else:
@@ -3706,16 +3720,24 @@ elif _page_idx == 5:
         with col_clear1:
             _zb_sel_clear = st.button("🗑️ " + ("Clear Selected" if is_en else "选中清空"), key="zhibu_output_clear_sel")
         with col_clear2:
-            if st.button("🗑️ " + ("Clear ALL" if is_en else "全部清空"), key="zhibu_output_clear_all"):
-                zhibu_dir = OUTPUT_PATH / selected_batch / "04_zhibu"
-                if zhibu_dir.exists():
-                    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    archive_dir = zhibu_dir / "archive"
-                    archive_dir.mkdir(exist_ok=True)
-                    for f in list(zhibu_dir.glob("*.json")):
-                        f.rename(archive_dir / f"{f.stem}_{ts}{f.suffix}")
-                st.success("✅ " + ("All cleared" if is_en else "全部已清空"))
-                st.rerun()
+            _zb_out_clear_all = st.button("🗑️ " + ("Clear ALL" if is_en else "全部清空"), key="zhibu_output_clear_all")
+
+        # Handle output clear ALL via session state
+        if _zb_out_clear_all:
+            st.session_state["_zhibu_out_do_clear_all"] = True
+            st.rerun()
+
+        if st.session_state.pop("_zhibu_out_do_clear_all", False):
+            zhibu_dir = OUTPUT_PATH / selected_batch / "04_zhibu"
+            if zhibu_dir.exists():
+                ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+                archive_dir = zhibu_dir / "archive"
+                archive_dir.mkdir(exist_ok=True)
+                for f in list(zhibu_dir.glob("*.json")):
+                    f.rename(archive_dir / f"{f.stem}_{ts}{f.suffix}")
+            mark_data_changed()
+            st.success("✅ " + ("All cleared" if is_en else "全部已清空"))
+            st.rerun()
         col1, col2, col3 = st.columns(3)
         with col1:
             st.metric("Total Items" if is_en else "总条目", data.get("total_items", 0))
