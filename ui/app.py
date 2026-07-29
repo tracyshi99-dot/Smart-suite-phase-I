@@ -1103,25 +1103,28 @@ elif _page_idx == 1:
 
         with tab_seed:
             st.markdown("**输入词根，AI 自动裂变出检索短语**" if not is_en else "**Enter seed words, AI expands into search phrases**")
-            seed_word = st.text_input("词根" if not is_en else "Seed word", placeholder="e.g. FBA、选品、注册", key="user_seed_word")
-            seed_lang = st.multiselect("语言" if not is_en else "Language", ["中文", "English", "中英混合"],
-                                       default=["中文"], key="user_seed_lang")
+            seed_word = st.text_input("词根" if not is_en else "Seed word", placeholder="e.g. FBA、选品、注册" if not is_en else "e.g. FBA, product sourcing, listing optimization", key="user_seed_word")
+            _seed_lang_options = ["中文", "English", "中英混合"] if not is_en else ["English", "中文", "Mixed"]
+            _seed_lang_default = ["中文"] if not is_en else ["English"]
+            seed_lang = st.multiselect("语言" if not is_en else "Language", _seed_lang_options,
+                                       default=_seed_lang_default, key="user_seed_lang")
             seed_count = st.slider("裂变数量" if not is_en else "Count", 5, 30, 15, key="user_seed_count")
             if st.button("🌱 开始裂变" if not is_en else "🌱 Expand", type="primary", key="user_seed_btn"):
                 if seed_word:
                     try:
                         from engine import call_bedrock_claude
                         lang_instruction = ""
-                        if "中文" in seed_lang and "English" in seed_lang:
-                            lang_instruction = "生成中文和英文两种语言的短语，各占一半。"
-                        elif "中英混合" in seed_lang:
-                            lang_instruction = "生成中英文混合短语（如'亚马逊FBA怎么做'、'Amazon FBA费用'）。"
+                        if ("中文" in seed_lang and "English" in seed_lang) or "Mixed" in seed_lang or "中英混合" in seed_lang:
+                            lang_instruction = "Generate phrases in both Chinese and English, roughly half each." if is_en else "生成中文和英文两种语言的短语，各占一半。"
                         elif "English" in seed_lang:
                             lang_instruction = "All phrases must be in English."
                         else:
                             lang_instruction = "所有短语使用中文。"
 
-                        prompt = f"请为词根「{seed_word}」生成 {seed_count} 个卖家在 AI 搜索引擎中可能输入的口语化检索短语。{lang_instruction}每行一条，不要编号，不要解释。"
+                        if is_en:
+                            prompt = f"Generate {seed_count} conversational search phrases that sellers might type into AI search engines about '{seed_word}'. {lang_instruction} One phrase per line, no numbering, no explanation."
+                        else:
+                            prompt = f"请为词根「{seed_word}」生成 {seed_count} 个卖家在 AI 搜索引擎中可能输入的口语化检索短语。{lang_instruction}每行一条，不要编号，不要解释。"
                         with st.spinner("裂变中..." if not is_en else "Expanding..."):
                             response = call_bedrock_claude(prompt)
                         queries = [q.strip().lstrip("0123456789.-、）) ") for q in response.strip().split("\n") if q.strip() and len(q.strip()) > 4]
@@ -1167,27 +1170,64 @@ elif _page_idx == 1:
             col_p1, col_p2 = st.columns(2)
             with col_p1:
                 _基础 = _pm.get("基础画像", {})
-                sel_identity = st.selectbox("身份", _基础.get("身份", {}).get("params", []), key="persona_identity")
-                sel_company = st.selectbox("企业类型", _基础.get("企业类型", {}).get("params", []), key="persona_company")
-                sel_role = st.selectbox("职位", _基础.get("职位", {}).get("params", []), key="persona_role")
+                _id_options = _基础.get("身份", {}).get("params", [])
+                _co_options = _基础.get("企业类型", {}).get("params", [])
+                _role_options = _基础.get("职位", {}).get("params", [])
+                if is_en and not _id_options:
+                    _id_options = ["New Seller", "Experienced Seller", "Brand Owner", "Manufacturer", "Distributor"]
+                if is_en and not _co_options:
+                    _co_options = ["Small Business", "Mid-size Enterprise", "Large Corporation", "Individual/Sole Proprietor"]
+                if is_en and not _role_options:
+                    _role_options = ["CEO/Owner", "Ecommerce Manager", "Operations Staff", "Marketing Manager"]
+                sel_identity = st.selectbox("身份" if not is_en else "Identity", _id_options, key="persona_identity")
+                sel_company = st.selectbox("企业类型" if not is_en else "Company Type", _co_options, key="persona_company")
+                sel_role = st.selectbox("职位" if not is_en else "Role", _role_options, key="persona_role")
             with col_p2:
-                sel_revenue = st.selectbox("年销售额", _基础.get("年销售额", {}).get("params", []), key="persona_revenue")
-                sel_biz_type = st.selectbox("公司类型", _基础.get("公司类型", {}).get("params", []), key="persona_biz")
-                sel_shipping = st.selectbox("计划发货方式", _基础.get("计划发货方式", {}).get("params", []), key="persona_ship")
+                _rev_options = _基础.get("年销售额", {}).get("params", [])
+                _biz_options = _基础.get("公司类型", {}).get("params", [])
+                _ship_options = _基础.get("计划发货方式", {}).get("params", [])
+                if is_en and not _rev_options:
+                    _rev_options = ["< $100K", "$100K-$500K", "$500K-$2M", "$2M-$10M", "> $10M"]
+                if is_en and not _biz_options:
+                    _biz_options = ["Private Label", "Wholesale", "Retail Arbitrage", "Dropshipping", "Handmade"]
+                if is_en and not _ship_options:
+                    _ship_options = ["FBA", "FBM", "3PL", "Multi-channel Fulfillment"]
+                sel_revenue = st.selectbox("年销售额" if not is_en else "Annual Revenue", _rev_options, key="persona_revenue")
+                sel_biz_type = st.selectbox("公司类型" if not is_en else "Business Model", _biz_options, key="persona_biz")
+                sel_shipping = st.selectbox("计划发货方式" if not is_en else "Fulfillment Method", _ship_options, key="persona_ship")
 
             # 兴趣画像
             st.markdown("##### 兴趣画像" if not is_en else "##### Interest Persona")
             _兴趣 = _pm.get("兴趣画像", {})
-            sel_site = st.multiselect("目标站点", _兴趣.get("站点", {}).get("params", []), default=["美国站"], key="persona_site")
-            sel_content = st.multiselect("内容分类", _兴趣.get("内容分类", {}).get("params", []), default=["新手指南"], key="persona_content")
+            _site_options = _兴趣.get("站点", {}).get("params", [])
+            _content_options = _兴趣.get("内容分类", {}).get("params", [])
+            if is_en and not _site_options:
+                _site_options = ["US", "UK", "Germany", "Japan", "Canada", "Australia", "France", "Italy", "Spain", "India"]
+            if is_en and not _content_options:
+                _content_options = ["Getting Started", "Product Sourcing", "Listing Optimization", "PPC/Advertising", "FBA Logistics", "Brand Building", "Account Health", "Tax & Compliance"]
+            _site_default = ["美国站"] if not is_en and "美国站" in _site_options else ([_site_options[0]] if _site_options else [])
+            _content_default = ["新手指南"] if not is_en and "新手指南" in _content_options else ([_content_options[0]] if _content_options else [])
+            sel_site = st.multiselect("目标站点" if not is_en else "Target Marketplace", _site_options, default=_site_default, key="persona_site")
+            sel_content = st.multiselect("内容分类" if not is_en else "Content Category", _content_options, default=_content_default, key="persona_content")
 
             persona_count = st.slider("生成短语数" if not is_en else "Phrases to generate", 5, 30, 10, key="persona_gen_count")
 
             if st.button("🧠 画像推演生成" if not is_en else "🧠 Generate", type="primary", key="persona_gen_btn"):
                 try:
                     from engine import call_bedrock_claude
-                    persona_desc = f"身份={sel_identity}, 企业类型={sel_company}, 职位={sel_role}, 年销售额={sel_revenue}, 公司类型={sel_biz_type}, 发货方式={sel_shipping}, 目标站点={','.join(sel_site)}, 关注内容={','.join(sel_content)}"
-                    prompt = f"""请为以下画像的卖家推演 {persona_count} 个他们在 AI 搜索引擎中最可能输入的检索短语。
+                    if is_en:
+                        persona_desc = f"Identity={sel_identity}, Company={sel_company}, Role={sel_role}, Revenue={sel_revenue}, Business Model={sel_biz_type}, Fulfillment={sel_shipping}, Target Marketplace={','.join(sel_site)}, Content Focus={','.join(sel_content)}"
+                        prompt = f"""Generate {persona_count} conversational search phrases that a seller with the following profile would type into AI search engines.
+
+Profile: {persona_desc}
+
+Requirements:
+1. Natural, conversational (like a real person asking, 5-15 words each)
+2. Highly relevant to the persona's identity, marketplace, and content focus
+3. One phrase per line, no numbering, no explanation"""
+                    else:
+                        persona_desc = f"身份={sel_identity}, 企业类型={sel_company}, 职位={sel_role}, 年销售额={sel_revenue}, 公司类型={sel_biz_type}, 发货方式={sel_shipping}, 目标站点={','.join(sel_site)}, 关注内容={','.join(sel_content)}"
+                        prompt = f"""请为以下画像的卖家推演 {persona_count} 个他们在 AI 搜索引擎中最可能输入的检索短语。
 
 画像：{persona_desc}
 
