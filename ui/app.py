@@ -7152,6 +7152,52 @@ elif _page_idx == 12:
     for i, cat in enumerate(CATEGORIES_35, 1):
         st.text(f"{i:2d}. {cat}")
 
+    st.divider()
+    st.subheader("👥 User Management" if is_en else "👥 用户管理")
+    st.caption("Set user language preferences. Users marked as 'English' will auto-see English UI on login." if is_en else "设置用户默认语言。标记为英文的用户登录后自动显示英文界面。")
+
+    _um_file = BASE_PATH / "output" / "users.json"
+    if _um_file.exists():
+        _um_data = json.loads(_um_file.read_text(encoding="utf-8"))
+    else:
+        _um_data = {"allowed": ALLOWED_USERS, "admins": ADMIN_USERS, "pending": [], "user_lang": {}}
+
+    _um_allowed = _um_data.get("allowed", [])
+    _um_lang_map = _um_data.get("user_lang", {})
+
+    # Build editable DataFrame
+    _um_rows = []
+    for u in _um_allowed:
+        _um_rows.append({
+            "user": u,
+            "language": _um_lang_map.get(u, "zh"),
+            "is_admin": u in _um_data.get("admins", []),
+        })
+    _um_df = pd.DataFrame(_um_rows)
+
+    _um_edited = st.data_editor(
+        _um_df,
+        column_config={
+            "user": st.column_config.TextColumn("Login", disabled=True),
+            "language": st.column_config.SelectboxColumn("Default Language", options=["zh", "en"], required=True),
+            "is_admin": st.column_config.CheckboxColumn("Admin", disabled=True),
+        },
+        use_container_width=True,
+        hide_index=True,
+        key="user_mgmt_editor",
+    )
+
+    if st.button("💾 Save User Settings" if is_en else "💾 保存用户设置", key="save_user_lang"):
+        # Update user_lang from edited data
+        new_lang_map = {}
+        for _, row in _um_edited.iterrows():
+            if row["language"] == "en":
+                new_lang_map[row["user"]] = "en"
+        _um_data["user_lang"] = new_lang_map
+        _um_file.write_text(json.dumps(_um_data, ensure_ascii=False, indent=2), encoding="utf-8")
+        mark_data_changed()
+        st.success("✅ " + ("User language settings saved!" if is_en else "用户语言设置已保存！"))
+
 
 # ============================================================
 # FOOTER
