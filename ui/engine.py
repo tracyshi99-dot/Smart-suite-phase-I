@@ -1514,7 +1514,8 @@ def run_zhibu(batch_id: str, progress_callback=None) -> dict:
             return default if s.lower() in ("nan", "none", "null") else s
 
         cid = _safe_str(row.get("content_id", ""))
-        score_row = df_score[df_score["content_id"] == cid].iloc[0] if not df_score.empty and cid in df_score.get("content_id", pd.Series()).values else {}
+        _score_match = df_score[df_score["content_id"] == cid] if not df_score.empty and "content_id" in df_score.columns else pd.DataFrame()
+        score_row = _score_match.iloc[0].to_dict() if not _score_match.empty else {}
 
         title = _safe_str(row.get("optimized_title", row.get("title", "")))
         content = _safe_str(row.get("optimized_content", row.get("content_draft", "")))
@@ -1542,12 +1543,12 @@ def run_zhibu(batch_id: str, progress_callback=None) -> dict:
                 "internal_links": ["https://gs.amazon.cn"],
             },
             "ai_friendly": {
-                "intent_match_score": int(score_row.get("intent_match_score", 0)) if isinstance(score_row, dict) or hasattr(score_row, 'get') else 0,
-                "ai_readability_score": int(score_row.get("ai_readability_score", 0)) if isinstance(score_row, dict) or hasattr(score_row, 'get') else 0,
-                "authority_score": int(score_row.get("authority_score", 0)) if isinstance(score_row, dict) or hasattr(score_row, 'get') else 0,
-                "actionability_score": int(score_row.get("actionability_score", 0)) if isinstance(score_row, dict) or hasattr(score_row, 'get') else 0,
-                "differentiation_score": int(score_row.get("differentiation_score", 0)) if isinstance(score_row, dict) or hasattr(score_row, 'get') else 0,
-                "overall_score": float(score_row.get("overall_score", 0)) if isinstance(score_row, dict) or hasattr(score_row, 'get') else 0,
+                "intent_match_score": int(float(score_row.get("intent_match_score", 0) or 0)),
+                "ai_readability_score": int(float(score_row.get("ai_readability_score", 0) or 0)),
+                "authority_score": int(float(score_row.get("authority_score", 0) or 0)),
+                "actionability_score": int(float(score_row.get("actionability_score", 0) or 0)),
+                "differentiation_score": int(float(score_row.get("differentiation_score", 0) or 0)),
+                "overall_score": round(float(score_row.get("overall_score", 0) or 0), 1),
             },
             "geo_summary": content[:150].replace("\n", " ").strip(),
             "compliance": {
