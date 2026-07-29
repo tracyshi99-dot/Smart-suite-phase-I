@@ -722,6 +722,101 @@ def mark_data_changed():
     st.session_state["_data_changed"] = True
 
 
+# --- User-level Content Rules ---
+_DEFAULT_USER_CONTENT_RULES_EN = """# My Content Rules
+
+## Content Structure
+- Word count: 800-2000 words per article
+- Use inverted pyramid structure (key answer first)
+- Include: Direct Answer → Details → Table/List → FAQ
+
+## Tone & Style
+- Professional, authoritative, helpful
+- Write for AI engines to cite (clear, factual, structured)
+- Include brand links naturally
+
+## Quality Requirements
+- Minimum 3 structured elements (tables, lists, FAQs)
+- Include at least 1 comparison table
+- Every article must have a direct answer in the first paragraph
+
+## Compliance
+- No competitor brand names
+- No pricing promises
+- No unverified statistics
+"""
+
+_DEFAULT_USER_CONTENT_RULES_ZH = """# 我的内容规范
+
+## 内容结构
+- 字数：800-2000 字/篇
+- 使用倒金字塔结构（关键答案优先）
+- 包含：直接回答 → 详细说明 → 表格/列表 → FAQ
+
+## 语调风格
+- 专业、权威、有帮助
+- 面向 AI 引擎引用优化（清晰、事实性、结构化）
+- 自然植入品牌链接
+
+## 质量要求
+- 至少 3 个结构化元素（表格、列表、FAQ）
+- 至少包含 1 个对比表格
+- 每篇文章第一段必须有直接回答
+
+## 合规要求
+- 不提竞品品牌名
+- 不承诺价格
+- 不使用未验证的统计数据
+"""
+
+
+def get_user_content_rules_path(batch_id: str) -> Path:
+    """Get path for user-level content rules file."""
+    return OUTPUT_PATH / batch_id / "content_rules.md"
+
+
+def load_user_content_rules(batch_id: str, is_en: bool = False) -> str:
+    """Load user-level content rules. Returns default template if not exists."""
+    path = get_user_content_rules_path(batch_id)
+    if path.exists():
+        return path.read_text(encoding="utf-8")
+    return _DEFAULT_USER_CONTENT_RULES_EN if is_en else _DEFAULT_USER_CONTENT_RULES_ZH
+
+
+def save_user_content_rules(batch_id: str, content: str):
+    """Save user-level content rules."""
+    path = get_user_content_rules_path(batch_id)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+
+
+def render_content_rules_editor(batch_id: str, is_en: bool, key_prefix: str):
+    """Render an expandable content rules editor widget."""
+    with st.expander("📝 " + ("My Content Rules" if is_en else "我的内容规范") + " — " + ("Click to customize how AI generates & scores your content" if is_en else "点击自定义 AI 生成和评分内容的规则"), expanded=False):
+        current_rules = load_user_content_rules(batch_id, is_en)
+        edited_rules = st.text_area(
+            "Content Rules" if is_en else "内容规范",
+            value=current_rules,
+            height=300,
+            key=f"{key_prefix}_content_rules_editor",
+            label_visibility="collapsed",
+        )
+        col_save, col_reset, col_info = st.columns([1, 1, 3])
+        with col_save:
+            if st.button("💾 " + ("Save" if is_en else "保存"), key=f"{key_prefix}_save_rules"):
+                save_user_content_rules(batch_id, edited_rules)
+                mark_data_changed()
+                st.success("✅ " + ("Content rules saved!" if is_en else "内容规范已保存！"))
+        with col_reset:
+            if st.button("🔄 " + ("Reset to Default" if is_en else "恢复默认"), key=f"{key_prefix}_reset_rules"):
+                default = _DEFAULT_USER_CONTENT_RULES_EN if is_en else _DEFAULT_USER_CONTENT_RULES_ZH
+                save_user_content_rules(batch_id, default)
+                st.success("✅ " + ("Reset to default!" if is_en else "已恢复默认！"))
+                st.rerun()
+        with col_info:
+            st.caption(("These rules are applied when AI generates or scores your content. Edit freely." if is_en else "这些规则在 AI 生成或评分内容时使用。可自由编辑。"))
+
+
 # ============================================================
 # NAVIGATION PAGES
 # ============================================================
@@ -2562,6 +2657,9 @@ elif _page_idx == 3:
     render_history_widget(selected_batch, "zhizao", is_en)
     render_pipeline_flow("zhizao", selected_batch)
 
+    # --- User Content Rules Editor ---
+    render_content_rules_editor(selected_batch, is_en, "zhizao")
+
     # --- Upload custom phrases directly ---
     with st.expander("📤 Upload Phrases (skip Query Library)" if is_en else "📤 上传检索短语（跳过智库直接生产内容）", expanded=False):
         st.caption("Optional: Upload prepared search phrase CSV/Excel, then click Run Content Gen to produce content directly" if is_en else "可选：如果已有准备好的检索短语 CSV/Excel，上传到此处后点击执行智造即可直接生产内容，无需经过智库裂变流程")
@@ -3022,6 +3120,9 @@ elif _page_idx == 4:
     st.markdown("""<div class="ss-page-header" style="color:#e91e63;"><h1>🔧 """ + ("Optimization" if is_en else "智优 – Score · Rewrite · Compliance") + """</h1><p>""" + ("One-click: Score → Rewrite → Compliance Review" if is_en else "一键自动完成 评分 → 重写优化 → 合规审查") + """</p></div>""", unsafe_allow_html=True)
     render_history_widget(selected_batch, "zhiyou", is_en)
     render_pipeline_flow("zhiyou", selected_batch)
+
+    # --- User Content Rules Editor ---
+    render_content_rules_editor(selected_batch, is_en, "zhiyou")
 
     # Clear history button
     col_spacer, col_clear = st.columns([5, 1])
