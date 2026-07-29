@@ -175,7 +175,9 @@ def execute_action(rule_name: str, batch_id: str) -> tuple:
 
 
 def run_all_users():
-    """Run automation check for all users."""
+    """Run automation check for all users.
+    Each user's own rules (set in 智中枢) are checked and executed independently.
+    Admin only needs to run this script — users don't need to do anything."""
     users = load_users()
     today = datetime.now().strftime("%Y-%m-%d")
     total_executed = 0
@@ -183,6 +185,12 @@ def run_all_users():
     log.info(f"=== Automation check started ({len(users)} users) ===")
 
     for user in users:
+        batch_id = get_user_batch(user)
+        # Skip users without a batch directory
+        batch_dir = OUTPUT_PATH / batch_id
+        if not batch_dir.exists():
+            continue
+
         rules = load_rules(user)
         if not rules:
             continue
@@ -191,7 +199,6 @@ def run_all_users():
         if not enabled_rules:
             continue
 
-        batch_id = get_user_batch(user)
         exec_log = load_exec_log(user)
         log_changed = False
 
