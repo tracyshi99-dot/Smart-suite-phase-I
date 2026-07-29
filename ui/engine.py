@@ -1520,91 +1520,62 @@ def run_zhibu(batch_id: str, progress_callback=None) -> dict:
 
     items = []
     for _, row in df_opt.iterrows():
-        cid = row.get("content_id", "")
         # Sanitize pandas NaN values at read time
         def _safe_str(val, default=""):
             s = str(val) if val is not None else default
             return default if s.lower() in ("nan", "none", "null") else s
 
         cid = _safe_str(row.get("content_id", ""))
-        # Fix invalid content_id (e.g. contains Chinese text from scoring notes)
+        # Fix invalid content_id
         if not cid or not cid.startswith("C_") or len(cid) < 5:
             cid = f"C_{abs(hash(str(row.get('ai_query', '')) + str(row.get('title', '')))) % 100000:05d}"
-        _score_match = df_score[df_score["content_id"] == cid] if not df_score.empty and "content_id" in df_score.columns else pd.DataFrame()
-        score_row = _score_match.iloc[0].to_dict() if not _score_match.empty else {}
 
         title = _safe_str(row.get("optimized_title", row.get("title", "")))
         content = _safe_str(row.get("optimized_content", row.get("content_draft", "")))
         ai_query = _safe_str(row.get("ai_query", ""))
+        category = _safe_str(row.get("category", ""))
 
-        # Build Lego-compatible item structure (matches batch_001 format)
+        # Build item in baseJSON format (matches LEGO CMS template)
         item = {
-            "content_id": cid,
-            "query_id": _safe_str(row.get("query_id", "")),
-            "keyword_id": _safe_str(row.get("keyword_id", "")),
-            "keyword": ai_query,
-            "ai_query": ai_query,
-            "meta": {
-                "title": title[:70],
-                "description": content[:160].replace("\n", " ").strip(),
-            },
-            "structure": _extract_structure(content, title),
-            "body": content,
-            "faq": _extract_faq(content),
-            "cta": _safe_str(row.get("optimized_cta", ""), "立即前往亚马逊卖家平台了解更多：https://gs.amazon.cn"),
-            "seo": {
-                "keywords": _extract_keywords(ai_query, content),
-                "intent_type": "informational",
-                "query_type": "branded",
-                "internal_links": ["https://gs.amazon.cn"],
-            },
-            "ai_friendly": (lambda sr: {k: _safe_score(sr.get(k, 0)) for k in ["intent_match_score", "ai_readability_score", "authority_score", "actionability_score", "differentiation_score", "overall_score"]})(score_row),
-            "geo_summary": content[:150].replace("\n", " ").strip(),
-            "compliance": {
-                "status": "PASS",
-                "disclaimer": "The above content is for reference only and does not represent Amazon's advice.",
-                "copyright": "Copyright (c) 2026 Amazon. All rights Reserved.",
-            },
-            "quality_metrics": {
-                "word_count": len(content),
-                "table_count": content.count('|---'),
-                "list_count": len(re.findall(r'^\s*[-•\d]+[.、)]', content, re.MULTILINE)),
-                "link_count": len(re.findall(r'https?://', content)),
-            },
+            "name": ai_query or title,
+            "source_query": ai_query,
+            "title": title,
+            "content": content,
+            "category": category,
+            "word_count": len(content),
+            "created_from": f"{batch_id}/{cid}",
+            "created_at": timestamp(),
         }
         items.append(item)
 
+    # Save each item as individual JSON file (matching baseJSON template)
+    output_dir = OUTPUT_PATH / batch_id / "04_zhibu"
+    ensure_dir(output_dir)
+
+    # Also save a combined output for backward compatibility
+    for item in items:
+        # Filename = query or title (sanitized)
+        fname = item["name"][:60].replace("/", "").replace("\\", "").replace(":", "").replace("?", "？").replace("*", "").replace('"', "").replace("<", "").replace(">", "").replace("|", "").strip()
+        if not fname:
+            fname = f"article_{abs(hash(item['title'])) % 100000}"
+        item_file = output_dir / f"{fname}.json"
+        item_file.write_text(json.dumps(item, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
+
+    # Also save combined file for the UI display
     output_json = {
         "batch_id": batch_id,
         "created_at": timestamp(),
         "total_items": len(items),
+        "source_keywords": list(set(i["source_query"] for i in items if i["source_query"])),
         "items": items,
     }
-
-    # Sanitize: replace NaN/nan/None with empty string for Lego compatibility
-    import math
-    def _sanitize(obj):
-        if isinstance(obj, dict):
-            return {k: _sanitize(v) for k, v in obj.items()}
-        elif isinstance(obj, list):
-            return [_sanitize(v) for v in obj]
-        elif isinstance(obj, float) and (math.isnan(obj) or math.isinf(obj)):
-            return ""
-        elif isinstance(obj, str) and obj.lower() in ("nan", "none", "null"):
-            return ""
-        return obj
-
-    output_json = _sanitize(output_json)
-
-    output_dir = OUTPUT_PATH / batch_id / "04_zhibu"
-    ensure_dir(output_dir)
-    output_file = output_dir / "zhibu_output.json"
-    output_file.write_text(json.dumps(output_json, ensure_ascii=False, indent=4, default=str), encoding="utf-8")
+    combined_file = output_dir / "zhibu_output.json"
+    combined_file.write_text(json.dumps(output_json, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
 
     if progress_callback:
         progress_callback(1.0, "智布完成 ✅")
 
-    return {"success": True, "output_file": str(output_file), "items_count": len(items)}
+    return {"success": True, "output_file": str(combined_file), "items_count": len(items)}
 
 
 # ============================================================
