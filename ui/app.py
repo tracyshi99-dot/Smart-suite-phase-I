@@ -30,7 +30,7 @@ if DEMO_MODE:
     import shutil
     _WRITABLE_OUTPUT = Path(tempfile.gettempdir()) / "smartsuite_output"
     _DEMO_SOURCE = Path(__file__).parent / "demo_output"
-    _DATA_VERSION = "v20260728e"
+    _DATA_VERSION = "v20260728f"
     _VERSION_FILE = _WRITABLE_OUTPUT / "_data_version.txt"
     _current_ver = _VERSION_FILE.read_text().strip() if _VERSION_FILE.exists() else ""
     if _current_ver != _DATA_VERSION:
