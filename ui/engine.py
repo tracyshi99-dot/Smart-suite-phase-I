@@ -1527,6 +1527,9 @@ def run_zhibu(batch_id: str, progress_callback=None) -> dict:
             return default if s.lower() in ("nan", "none", "null") else s
 
         cid = _safe_str(row.get("content_id", ""))
+        # Fix invalid content_id (e.g. contains Chinese text from scoring notes)
+        if not cid or not cid.startswith("C_") or len(cid) < 5:
+            cid = f"C_{abs(hash(str(row.get('ai_query', '')) + str(row.get('title', '')))) % 100000:05d}"
         _score_match = df_score[df_score["content_id"] == cid] if not df_score.empty and "content_id" in df_score.columns else pd.DataFrame()
         score_row = _score_match.iloc[0].to_dict() if not _score_match.empty else {}
 
