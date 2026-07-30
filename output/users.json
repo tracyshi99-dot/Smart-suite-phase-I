@@ -26,7 +26,6 @@
     "budhiraja": "en",
     "mbudhira": "en",
     "quadaisy": "en",
-    "htp": "en",
     "shencm": "en", "chienlin": "en", "emilwliu": "en", "nijuno": "en", "zhjiayue": "en", "gracezjy": "en", "jessyhan": "en",
     "fengceci": "en", "effiezhu": "en", "jltian": "en", "qdhwzj": "en", "siyundai": "en", "tzuchunf": "en", "yudiwan": "en",
     "ykimche": "en", "liangles": "en", "rickylan": "en", "sylviayj": "en",
@@ -38,7 +37,7 @@
     "fenixau": "en"
   },
   "user_region": {
-    "htp": "ROA",
+    "htp": "CN",
     "shencm": "ROA", "chienlin": "ROA", "emilwliu": "ROA", "nijuno": "ROA", "zhjiayue": "ROA", "gracezjy": "ROA", "jessyhan": "ROA",
     "fengceci": "ROA", "effiezhu": "ROA", "jltian": "ROA", "qdhwzj": "ROA", "siyundai": "ROA", "tzuchunf": "ROA", "yudiwan": "ROA",
     "ykimche": "ROA", "liangles": "ROA", "rickylan": "ROA", "sylviayj": "ROA",
@@ -59,7 +58,6 @@
     "fenixau": "CN", "yanyx": "CN", "jiayizh": "CN", "jiayuch": "CN", "jiayunjy": "CN", "juliezl": "CN", "llzha": "CN", "meilig": "CN", "tianranh": "CN", "yihuaz": "CN", "caxiaoto": "CN"
   },
   "user_sub_region": {
-    "htp": "TW",
     "shencm": "TW", "chienlin": "TW", "emilwliu": "TW", "nijuno": "TW", "zhjiayue": "TW", "gracezjy": "TW", "jessyhan": "TW",
     "fengceci": "TW", "effiezhu": "TW", "jltian": "TW", "qdhwzj": "TW", "siyundai": "TW", "tzuchunf": "TW", "yudiwan": "TW",
     "ykimche": "TW", "liangles": "TW", "rickylan": "TW", "sylviayj": "TW",
