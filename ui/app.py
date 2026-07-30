@@ -2485,7 +2485,7 @@ elif _page_idx == 2:
                         q = str(row.get("ai_query", "")).strip().lower()
                         # Also strip punctuation for looser matching
                         import re as _re_match
-                        q_clean = _re_match.sub(r'[？?！!。，、\s]+', '', q).strip()
+                        q_clean = _re_match.sub(r'[？?！!。，、\s\u3000]+', '', q).strip()
                         ds = str(row.get("data_source", ""))
                         mapped_platform = _ahrefs_platform_map.get(ds, ds)
                         _ahrefs_coverage[(q, mapped_platform)] = {
@@ -2503,7 +2503,7 @@ elif _page_idx == 2:
                     # Also index by query only (for any-platform lookup)
                     for _, row in _df_ahrefs_zhice.iterrows():
                         q = str(row.get("ai_query", "")).strip().lower()
-                        q_clean = _re_match.sub(r'[？?！!。，、\s]+', '', q).strip()
+                        q_clean = _re_match.sub(r'[？?！!。，、\s\u3000]+', '', q).strip()
                         if (q, "_any") not in _ahrefs_coverage:
                             _ahrefs_coverage[(q, "_any")] = {
                                 "has_brand_mention": bool(row.get("has_brand_mention", False)),
@@ -2574,7 +2574,7 @@ elif _page_idx == 2:
                         # Check if Ahrefs already has data for this query+platform
                         _q_lower = query.strip().lower()
                         import re as _re_lookup
-                        _q_clean = _re_lookup.sub(r'[？?！!。，、\s]+', '', _q_lower).strip()
+                        _q_clean = _re_lookup.sub(r'[？?！!。，、\s\u3000]+', '', _q_lower).strip()
                         _ahrefs_hit = (_ahrefs_coverage.get((_q_lower, platform))
                                        or _ahrefs_coverage.get((_q_clean, platform))
                                        or _ahrefs_coverage.get((_q_lower, "_any"))
@@ -2797,7 +2797,7 @@ elif _page_idx == 2:
             else:
                 df_gap_display["to_produce"] = True
 
-        show_cols = [c for c in ["ai_query", "platform", "gap_status", "has_brand_mention", "has_official_link", "sentiment", "competitors", "competitor_gap", "to_produce"] if c in df_gap_display.columns]
+        show_cols = [c for c in ["ai_query", "platform", "gap_status", "has_brand_mention", "has_official_link", "sentiment", "competitors", "competitor_gap", "source", "to_produce"] if c in df_gap_display.columns]
         if show_cols:
             # --- Clear buttons (above table) ---
             _zc_col1, _zc_col2, _zc_col3 = st.columns([1, 1, 4])
