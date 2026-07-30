@@ -63,7 +63,8 @@ Region Adapter 是 Smart Suite 的区域配置适配层，实现基于用户 `us
 8. WHEN a user switches regions manually, THE Smart_Suite SHALL preserve the switch for the duration of the session but revert to the admin-assigned default on next login
 9. IF the Region_Adapter fails to load the requested Region_Config during a manual switch (due to missing or malformed file), THEN THE Smart_Suite SHALL display an error message and retain the previously active Region_Config
 10. THE Smart_Suite SHALL display the active region code as a label in the sidebar region selector so the user always knows which region is currently loaded
-11. FOR ROA users, THE Smart_Suite SHALL additionally display a sub_region selector (TW / KR / VN) allowing them to choose or change their sub_region, which persists in users.json
+11. FOR ROA users, THE Smart_Suite SHALL additionally display a sub_region selector (TW / KR / VN) in the sidebar below the region selector, allowing them to choose or change their sub_region; the selection SHALL persist to users.json so it remembers on next login
+12. WHEN an ROA user has not yet set a sub_region (first login or admin left it unset), THE Smart_Suite SHALL display a one-time onboarding prompt asking the user to select their sub_region (TW / KR / VN) before proceeding to any module; this selection also auto-sets the default content language (TW→zh-TW, KR→ko, VN→vi)
 
 ### Requirement 3: Region-Specific AI Platforms for Zhice
 
@@ -187,8 +188,8 @@ Region Adapter 是 Smart Suite 的区域配置适配层，实现基于用户 `us
 3. THE Region_Config for CN SHALL include content_languages: [{"code": "zh-CN", "name": "简体中文"}, {"code": "en", "name": "English"}]
 4. THE Region_Config for NA SHALL include content_languages: [{"code": "en", "name": "English"}]
 5. THE Region_Config for EU SHALL include content_languages: [{"code": "en", "name": "English"}]
-6. WHEN the Zhiku UI loads, THE Zhiku_Module SHALL display a content language selector populated with the content_languages from the active Region_Config, with the first entry as the default selection
-7. FOR ROA users with a sub_region set, THE Zhiku_Module SHALL pre-select the language matching their sub_region: TW → zh-TW, KR → ko, VN → vi
+6. WHEN the Zhiku UI loads, THE Zhiku_Module SHALL display a content language selector in the sidebar (below sub_region selector for ROA users), populated with the content_languages from the active Region_Config, with the first entry as the default selection
+7. FOR ROA users with a sub_region set, THE Zhiku_Module SHALL pre-select the language matching their sub_region: TW → zh-TW, KR → ko, VN → vi; the user can override this at any time via the sidebar language selector
 8. WHEN a user selects a content language and generates search phrases (seeds → AI queries), THE Zhiku_Module SHALL instruct the LLM to produce queries in the selected language, allowing natural mixing with English terms (e.g., "亚马逊 FBA 怎么发货", "아마존 PPC 광고 방법") since real users search with mixed-language phrases
 9. WHEN the Zhizao module generates article content from queries, THE Smart_Suite SHALL produce the full article (title, body, meta description) entirely in the selected content language — no language mixing allowed in article output. If the source query contains English terms (e.g., "FBA", "PPC"), the article SHALL either translate them or keep them as universally recognized proper nouns, but all prose SHALL be in the target language
 10. WHEN the Zhiyou module optimizes or rewrites content, THE Smart_Suite SHALL maintain the same language purity as the original article — the optimized output SHALL remain entirely in the original content_language without introducing mixed-language prose
