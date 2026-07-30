@@ -1481,8 +1481,18 @@ elif _page_idx == 1:
         with tab_seed:
             st.markdown(t("ui.enter_seed_words_ai"))
             seed_word = st.text_input(t("ui.seed_word"), placeholder=t("ui.eg_fba_product_sourcing"), key="user_seed_word")
-            _seed_lang_options = ["中文", "English", "中英混合"] if not is_en else ["English", "中文", "Mixed"]
-            _seed_lang_default = ["中文"] if not is_en else ["English"]
+            # Dynamic language options based on user's content language
+            _content_lang = st.session_state.get("content_language", "en")
+            _LANG_LABEL_MAP = {
+                "zh-CN": "中文", "zh-TW": "繁體中文", "ko": "한국어", "vi": "Tiếng Việt", "en": "English"
+            }
+            _primary_lang_label = _LANG_LABEL_MAP.get(_content_lang, "English")
+            # Build options: Primary language, English (if not already primary), Mixed
+            _seed_lang_options = [_primary_lang_label]
+            if _primary_lang_label != "English":
+                _seed_lang_options.append("English")
+            _seed_lang_options.append(f"{_primary_lang_label}+English Mixed" if _primary_lang_label != "English" else "Mixed")
+            _seed_lang_default = [_primary_lang_label]
             seed_lang = st.multiselect(t("ui.language"), _seed_lang_options,
                                        default=_seed_lang_default, key="user_seed_lang")
             seed_count = st.slider(t("ui.count"), 5, 30, 15, key="user_seed_count")
@@ -1490,18 +1500,35 @@ elif _page_idx == 1:
                 if seed_word:
                     try:
                         from engine import call_bedrock_claude
+                        # Build language instruction based on selected languages
                         lang_instruction = ""
-                        if ("中文" in seed_lang and "English" in seed_lang) or "Mixed" in seed_lang or "中英混合" in seed_lang:
-                            lang_instruction = t("ui.generate_phrases_in_both")
-                        elif "English" in seed_lang:
+                        _has_mixed = any("Mixed" in s for s in seed_lang)
+                        _has_english = "English" in seed_lang
+                        _has_primary = _primary_lang_label in seed_lang
+                        if _has_mixed or (_has_primary and _has_english):
+                            lang_instruction = f"Generate phrases in both {_primary_lang_label} and English, roughly half each."
+                        elif _has_english and not _has_primary:
                             lang_instruction = "All phrases must be in English."
-                        else:
+                        elif _content_lang == "ko":
+                            lang_instruction = "모든 검색 구문을 한국어로 생성하세요."
+                        elif _content_lang == "vi":
+                            lang_instruction = "Tạo tất cả các cụm từ tìm kiếm bằng tiếng Việt."
+                        elif _content_lang == "zh-TW":
+                            lang_instruction = "所有短語使用繁體中文。"
+                        elif _content_lang == "zh-CN":
                             lang_instruction = "所有短语使用中文。"
-
-                        if is_en:
-                            prompt = f"Generate {seed_count} conversational search phrases that sellers might type into AI search engines about '{seed_word}'. {lang_instruction} One phrase per line, no numbering, no explanation."
                         else:
+                            lang_instruction = "All phrases must be in English."
+
+                        # Build prompt in appropriate language
+                        if _content_lang.startswith("zh"):
                             prompt = f"请为词根「{seed_word}」生成 {seed_count} 个卖家在 AI 搜索引擎中可能输入的口语化检索短语。{lang_instruction}每行一条，不要编号，不要解释。"
+                        elif _content_lang == "ko":
+                            prompt = f"시드 단어 '{seed_word}'에 대해 판매자가 AI 검색 엔진에 입력할 수 있는 {seed_count}개의 구어체 검색 구문을 생성하세요. {lang_instruction} 한 줄에 하나씩, 번호 없이, 설명 없이."
+                        elif _content_lang == "vi":
+                            prompt = f"Tạo {seed_count} cụm từ tìm kiếm mà người bán có thể nhập vào công cụ tìm kiếm AI về '{seed_word}'. {lang_instruction} Mỗi cụm từ một dòng, không đánh số, không giải thích."
+                        else:
+                            prompt = f"Generate {seed_count} conversational search phrases that sellers might type into AI search engines about '{seed_word}'. {lang_instruction} One phrase per line, no numbering, no explanation."
                         with st.spinner(t("ui.expanding")):
                             response = call_bedrock_claude(prompt)
                         queries = [q.strip().lstrip("0123456789.-、）) ") for q in response.strip().split("\n") if q.strip() and len(q.strip()) > 4]
