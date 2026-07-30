@@ -1176,7 +1176,7 @@ with st.sidebar:
     _UI_CODE_TO_LANG = {v: k for k, v in _UI_LANG_TO_CODE.items()}
     ui_lang = st.selectbox("🌐 Language", _UI_LANG_OPTIONS, key="ui_lang")
     _ui_lang_code = _UI_LANG_TO_CODE.get(ui_lang, "en")
-    is_en = (_ui_lang_code == "en")
+    is_en = (_ui_lang_code != "zh-CN")  # All non-simplified-Chinese use English UI text as base
 
     # Activate i18n
     try:
