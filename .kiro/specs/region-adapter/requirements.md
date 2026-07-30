@@ -14,7 +14,7 @@ Region Adapter 是 Smart Suite 的区域配置适配层，实现基于用户 `us
 - **Admin_Panel**: Streamlit UI 中的管理员审批界面
 - **Zhice_Module**: 智测模块，AI 搜索旅程模拟引擎
 - **Zhiku_Module**: 智库模块，检索短语生成引擎
-- **AI_Platform_List**: 某区域对应的 AI 检索平台集合（如 CN 对应 DeepSeek/Doubao/Kimi/Yuanbao/Qianwen；NA/EU/TW/KR/VN 对应 ChatGPT/Gemini/Perplexity）
+- **AI_Platform_List**: 某区域对应的 AI 检索平台集合（CN 同时使用国内平台 DeepSeek/Doubao/Kimi/Yuanbao/Qianwen 和国际平台 ChatGPT/Gemini/Perplexity/Grok；TW/KR/VN/NA/EU 统一使用 ChatGPT/Gemini/Perplexity/Grok）
 - **Official_Links**: 各区域的亚马逊官方卖家门户链接列表（如 TW 为 sell.amazon.tw），用于内容检测中验证是否正确引用了对应国家官网链接
 - **Default_Seeds**: 各区域的默认种子检索短语列表
 - **Verification_Platforms**: 各区域用于智测验证的 AI 平台集合
@@ -60,13 +60,13 @@ Region Adapter 是 Smart Suite 的区域配置适配层，实现基于用户 `us
 #### Acceptance Criteria
 
 1. WHEN a Zhice simulation is initiated, THE Zhice_Module SHALL read the ai_platforms list from the active Region_Config and execute queries against every platform in that list
-2. THE Region_Config for CN SHALL include the platforms: deepseek, doubao, kimi, yuanbao, qianwen
-3. THE Region_Config for TW SHALL include the platforms: chatgpt, gemini, perplexity
-4. THE Region_Config for KR SHALL include the platforms: chatgpt, gemini, perplexity
-5. THE Region_Config for VN SHALL include the platforms: chatgpt, gemini, perplexity
-6. THE Region_Config for NA SHALL include the platforms: chatgpt, gemini, perplexity
-7. THE Region_Config for EU SHALL include the platforms: chatgpt, gemini, perplexity
-8. WHEN a user overrides the platform selection in the UI, THE Zhice_Module SHALL present all platforms from the full supported set (deepseek, doubao, kimi, yuanbao, qianwen, chatgpt, gemini, perplexity) with the user's region platforms pre-selected, and use the user's final selection instead of the Region_Config default
+2. THE Region_Config for CN SHALL include both domestic and international platforms: deepseek, doubao, kimi, yuanbao, qianwen, chatgpt, gemini, perplexity, grok
+3. THE Region_Config for TW SHALL include the platforms: chatgpt, gemini, perplexity, grok
+4. THE Region_Config for KR SHALL include the platforms: chatgpt, gemini, perplexity, grok
+5. THE Region_Config for VN SHALL include the platforms: chatgpt, gemini, perplexity, grok
+6. THE Region_Config for NA SHALL include the platforms: chatgpt, gemini, perplexity, grok
+7. THE Region_Config for EU SHALL include the platforms: chatgpt, gemini, perplexity, grok
+8. WHEN a user overrides the platform selection in the UI, THE Zhice_Module SHALL present all platforms from the full supported set (deepseek, doubao, kimi, yuanbao, qianwen, chatgpt, gemini, perplexity, grok) with the user's region platforms pre-selected, and use the user's final selection instead of the Region_Config default
 9. IF a user override results in fewer than 1 platform selected, THEN THE Zhice_Module SHALL prevent simulation execution and display an error message indicating that at least one platform must be selected
 10. IF the ai_platforms list in the active Region_Config is empty or contains a platform identifier not in the supported set, THEN THE Zhice_Module SHALL raise a validation error indicating the invalid platform entry and region code, and SHALL not proceed with the simulation
 
@@ -134,8 +134,8 @@ Region Adapter 是 Smart Suite 的区域配置适配层，实现基于用户 `us
 
 1. THE Region_Config SHALL include a verification_platforms list defining which platforms to use for automated verification runs
 2. WHEN a batch verification is triggered, THE Zhice_Module SHALL execute queries against all platforms in the verification_platforms list from the active Region_Config
-3. THE verification_platforms for CN SHALL include at least: deepseek, doubao, kimi
-4. THE verification_platforms for TW, KR, VN, NA, EU SHALL include at least: chatgpt, perplexity
+3. THE verification_platforms for CN SHALL include at least: deepseek, doubao, kimi, chatgpt, perplexity, grok
+4. THE verification_platforms for TW, KR, VN, NA, EU SHALL include at least: chatgpt, perplexity, grok
 5. IF a platform in verification_platforms fails to respond within 30 seconds during a batch verification run, THEN THE Zhice_Module SHALL mark that platform's result as "timeout" in the report, continue with remaining platforms, and include the timeout count in the batch summary
 6. WHEN a user overrides verification platforms in the UI, THE Zhice_Module SHALL use the user's selection instead of the Region_Config default, following the same validation rules as Requirement 3 criterion 9
 
