@@ -22,7 +22,7 @@ from detection_rules import check_brand_mention, check_official_link, get_brand_
 # --- Config ---
 AHREFS_API_BASE = "https://api.ahrefs.com/v3"
 DEFAULT_REPORT_ID = "019e4f11-83ad-7648-a3d4-5a0d3760861e"
-ALLOWED_USERS = ["rickylan"]  # Only these users can see Ahrefs data
+ALLOWED_USERS = ["rickylan", "yujiashi"]  # Only these users can see Ahrefs data
 
 # Brand definition
 BRAND_CONFIG = {
