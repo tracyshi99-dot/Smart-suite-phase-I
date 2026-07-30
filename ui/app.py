@@ -308,7 +308,7 @@ def render_history_widget(batch_id: str, tool_id: str, is_en: bool = False):
         if key_col in df_history.columns:
             hist_items = df_history[key_col].tolist()
             selected_to_restore = st.multiselect(
-                "Select to restore" if is_en else "选择恢复",
+                t("ui.select_to_restore"),
                 options=hist_items,
                 key=f"hist_restore_{tool_id}",
                 label_visibility="collapsed",
@@ -330,7 +330,7 @@ def render_history_widget(batch_id: str, tool_id: str, is_en: bool = False):
                         st.success(f"✅ {len(selected_to_restore)} {'restored' if is_en else '条已恢复'}")
                         st.rerun()
             with col_r2:
-                if st.button("🔄 " + ("Restore ALL" if is_en else "全部恢复"), key=f"hist_all_{tool_id}"):
+                if st.button("🔄 " + (t("ui.restore_all")), key=f"hist_all_{tool_id}"):
                     main_csv = sorted(src_folder.glob("*.csv"))
                     main_csv = [f for f in main_csv if not f.name.startswith("_")]
                     if main_csv:
@@ -850,10 +850,10 @@ def save_user_content_rules(batch_id: str, content: str):
 
 def render_content_rules_editor(batch_id: str, is_en: bool, key_prefix: str):
     """Render an expandable content rules editor widget."""
-    with st.expander("📝 " + ("My Content Rules" if is_en else "我的内容规范") + " — " + ("Click to customize how AI generates & scores your content" if is_en else "点击自定义 AI 生成和评分内容的规则"), expanded=False):
+    with st.expander("📝 " + (t("ui.my_content_rules")) + " — " + (t("ui.click_to_customize_how")), expanded=False):
         current_rules = load_user_content_rules(batch_id, is_en)
         edited_rules = st.text_area(
-            "Content Rules" if is_en else "内容规范",
+            t("ui.content_rules"),
             value=current_rules,
             height=300,
             key=f"{key_prefix}_content_rules_editor",
@@ -861,18 +861,18 @@ def render_content_rules_editor(batch_id: str, is_en: bool, key_prefix: str):
         )
         col_save, col_reset, col_info = st.columns([1, 1, 3])
         with col_save:
-            if st.button("💾 " + ("Save" if is_en else "保存"), key=f"{key_prefix}_save_rules"):
+            if st.button("💾 " + (t("ui.save")), key=f"{key_prefix}_save_rules"):
                 save_user_content_rules(batch_id, edited_rules)
                 mark_data_changed()
-                st.success("✅ " + ("Content rules saved!" if is_en else "内容规范已保存！"))
+                st.success("✅ " + (t("ui.content_rules_saved")))
         with col_reset:
-            if st.button("🔄 " + ("Reset to Default" if is_en else "恢复默认"), key=f"{key_prefix}_reset_rules"):
+            if st.button("🔄 " + (t("ui.reset_to_default")), key=f"{key_prefix}_reset_rules"):
                 default = _DEFAULT_USER_CONTENT_RULES_EN if is_en else _DEFAULT_USER_CONTENT_RULES_ZH
                 save_user_content_rules(batch_id, default)
-                st.success("✅ " + ("Reset to default!" if is_en else "已恢复默认！"))
+                st.success("✅ " + (t("ui.reset_to_default_1")))
                 st.rerun()
         with col_info:
-            st.caption(("These rules are applied when AI generates or scores your content. Edit freely." if is_en else "这些规则在 AI 生成或评分内容时使用。可自由编辑。"))
+            st.caption((t("ui.these_rules_are_applied")))
 
 
 # --- Automation Rule Engine ---
@@ -1176,7 +1176,7 @@ with st.sidebar:
     _UI_CODE_TO_LANG = {v: k for k, v in _UI_LANG_TO_CODE.items()}
     ui_lang = st.selectbox("🌐 Language", _UI_LANG_OPTIONS, key="ui_lang")
     _ui_lang_code = _UI_LANG_TO_CODE.get(ui_lang, "en")
-    is_en = (_ui_lang_code != "zh-CN")  # All non-simplified-Chinese use English UI text as base
+    is_en = (_ui_lang_code == "en")  # True only for English; t() handles all translations
 
     # Activate i18n
     try:
@@ -1217,7 +1217,7 @@ with st.sidebar:
                 st.session_state["ui_lang_auto_set"] = True
         else:
             st.session_state["app_user"] = ""
-            st.error("⚠️ Access denied" if is_en else "⚠️ 无权限，请联系管理员")
+            st.error(t("ui.access_denied"))
     current_user = st.session_state.get("app_user", "")
     is_admin = current_user.lower() in ADMIN_USERS if current_user else False
     if current_user:
@@ -1228,7 +1228,7 @@ with st.sidebar:
                 st.rerun()
 
     if DEMO_MODE:
-        st.caption("🎬 Demo" if is_en else "🎬 演示模式")
+        st.caption(t("ui.demo"))
 
     # --- Region / Sub-region / Content Language selectors ---
     if current_user:
@@ -1251,7 +1251,7 @@ with st.sidebar:
                 _sub_options = ["— Select —"] + SUPPORTED_SUB_REGIONS
                 _sub_idx = _sub_options.index(_current_sub) if _current_sub in _sub_options else 0
                 _sub_choice = st.selectbox(
-                    "🗺️ Sub-region" if is_en else "🗺️ 子区域",
+                    t("ui.subregion"),
                     _sub_options, index=_sub_idx, key="sub_region_select"
                 )
                 if _sub_choice != "— Select —" and _sub_choice != _current_sub:
@@ -1283,7 +1283,7 @@ with st.sidebar:
                     st.session_state["content_language"] = _cl_codes[_cl_default_idx]
                 _cl_current_idx = _cl_codes.index(st.session_state["content_language"]) if st.session_state["content_language"] in _cl_codes else _cl_default_idx
                 _cl_selection = st.selectbox(
-                    "📝 Content Language" if is_en else "📝 内容语言",
+                    t("ui.content_language"),
                     _cl_names, index=_cl_current_idx, key="content_lang_select"
                 )
                 _cl_selected_idx = _cl_names.index(_cl_selection)
@@ -1414,7 +1414,7 @@ if _page_idx == 0:
         wiki_html = wiki_path.read_text(encoding="utf-8")
         st.html(wiki_html)
     else:
-        st.title("🏠 Smart Suite Overview" if is_en else "🏠 Smart Suite 总览")
+        st.title(t("ui.smart_suite_overview"))
         st.warning("smart-suite-wiki.html not found")
 
     # (End of overview page)
@@ -1426,24 +1426,24 @@ elif not current_user:
     <div style="width:56px;height:56px;margin:0 auto 20px;border-radius:14px;background:linear-gradient(135deg,rgba(0,212,170,0.12),rgba(0,180,216,0.08));display:flex;align-items:center;justify-content:center;border:1px solid rgba(0,212,170,0.2);">
         <span style="font-size:24px;">🔒</span>
     </div>
-    <h2 style="color:#e8eaf6;font-weight:700;font-size:1.3rem;margin-bottom:8px;">""" + ("Please log in to access Smart Suite tools" if is_en else "请先登录") + """</h2>
-    <p style="color:#7b8ab8;font-size:13px;max-width:340px;margin:0 auto;">""" + ("Select your name below or enter login in the sidebar." if is_en else "从下方选择您的名称，或在左侧栏输入 Login。") + """</p>
+    <h2 style="color:#e8eaf6;font-weight:700;font-size:1.3rem;margin-bottom:8px;">""" + (t("ui.please_log_in_to")) + """</h2>
+    <p style="color:#7b8ab8;font-size:13px;max-width:340px;margin:0 auto;">""" + (t("ui.select_your_name_below")) + """</p>
     </div>""", unsafe_allow_html=True)
 
     col_login_l, col_login_m, col_login_r = st.columns([1, 2, 1])
     with col_login_m:
-        login_options = ["— 请选择 —" if not is_en else "— Select —"] + [u for u in ALLOWED_USERS if u not in ["admin", "yujiashi"]]
+        login_options = [t("ui.select")] + [u for u in ALLOWED_USERS if u not in ["admin", "yujiashi"]]
         login_choice = st.selectbox("Login", login_options, key="main_login_select", label_visibility="collapsed")
-        if st.button("🔓 " + ("Login" if is_en else "登录"), type="primary", use_container_width=True, key="main_login_btn"):
+        if st.button("🔓 " + (t("ui.login")), type="primary", use_container_width=True, key="main_login_btn"):
             if login_choice and login_choice != "— 请选择 —" and login_choice != "— Select —":
                 st.session_state["app_user"] = login_choice.lower()
                 st.rerun()
 
         # Apply for access
         st.divider()
-        st.caption("没有权限？" if not is_en else "No access?")
-        apply_name = st.text_input("申请 Login" if not is_en else "Apply login name", key="apply_login", placeholder="输入您想申请的登录名")
-        if st.button("📨 " + ("Apply for Access" if is_en else "申请权限"), key="apply_btn", use_container_width=True):
+        st.caption(t("ui.no_access"))
+        apply_name = st.text_input(t("ui.apply_login_name"), key="apply_login", placeholder="输入您想申请的登录名")
+        if st.button("📨 " + (t("ui.apply_for_access")), key="apply_btn", use_container_width=True):
             if apply_name:
                 _users_file = BASE_PATH / "output" / "users.json"
                 _users_file.parent.mkdir(parents=True, exist_ok=True)
@@ -1456,13 +1456,13 @@ elif not current_user:
                     pending.append({"name": apply_name.lower(), "applied_at": datetime.now().strftime("%Y-%m-%d %H:%M")})
                     ud["pending"] = pending
                     _users_file.write_text(json.dumps(ud, ensure_ascii=False, indent=2), encoding="utf-8")
-                    st.success("✅ " + ("Application submitted! Admin will review." if is_en else "申请已提交！等待管理员审批。"))
+                    st.success("✅ " + (t("ui.application_submitted_admin_will")))
                 else:
-                    st.info("Already applied or already has access." if is_en else "已申请或已有权限。")
+                    st.info(t("ui.already_applied_or_already"))
 
 
 elif _page_idx == 1:
-    st.markdown("""<div class="ss-page-header" style="color:#ffa726;"><h1>📚 """ + ("Query Library" if is_en else "智库 – 检索短语产出与验证") + """</h1><p>""" + ("Produce → Calibrate → Dedupe → Select → Verify Gap → Confirm" if is_en else "产出 → 校准 → 去重 → 选取 → 验证Gap → 确认进智造") + """</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="ss-page-header" style="color:#ffa726;"><h1>📚 """ + (t("ui.query_library")) + """</h1><p>""" + (t("ui.produce_calibrate_dedupe_select")) + """</p></div>""", unsafe_allow_html=True)
     render_pipeline_flow("zhiku", selected_batch)
 
     # --- Rules section removed (no longer needed for any region) ---
@@ -1473,26 +1473,26 @@ elif _page_idx == 1:
     # ============================================================
     if not is_admin:
         tab_seed, tab_persona, tab_upload = st.tabs([
-            "🌱 词根裂变" if not is_en else "🌱 Seed Expansion",
-            "🧠 画像裂变" if not is_en else "🧠 Persona Expansion",
-            "📋 上传检索短语" if not is_en else "📋 Upload Phrases",
+            t("ui.seed_expansion"),
+            t("ui.persona_expansion"),
+            t("ui.upload_phrases"),
         ])
 
         with tab_seed:
-            st.markdown("**输入词根，AI 自动裂变出检索短语**" if not is_en else "**Enter seed words, AI expands into search phrases**")
-            seed_word = st.text_input("词根" if not is_en else "Seed word", placeholder="e.g. FBA、选品、注册" if not is_en else "e.g. FBA, product sourcing, listing optimization", key="user_seed_word")
+            st.markdown(t("ui.enter_seed_words_ai"))
+            seed_word = st.text_input(t("ui.seed_word"), placeholder=t("ui.eg_fba_product_sourcing"), key="user_seed_word")
             _seed_lang_options = ["中文", "English", "中英混合"] if not is_en else ["English", "中文", "Mixed"]
             _seed_lang_default = ["中文"] if not is_en else ["English"]
-            seed_lang = st.multiselect("语言" if not is_en else "Language", _seed_lang_options,
+            seed_lang = st.multiselect(t("ui.language"), _seed_lang_options,
                                        default=_seed_lang_default, key="user_seed_lang")
-            seed_count = st.slider("裂变数量" if not is_en else "Count", 5, 30, 15, key="user_seed_count")
-            if st.button("🌱 开始裂变" if not is_en else "🌱 Expand", type="primary", key="user_seed_btn"):
+            seed_count = st.slider(t("ui.count"), 5, 30, 15, key="user_seed_count")
+            if st.button(t("ui.expand"), type="primary", key="user_seed_btn"):
                 if seed_word:
                     try:
                         from engine import call_bedrock_claude
                         lang_instruction = ""
                         if ("中文" in seed_lang and "English" in seed_lang) or "Mixed" in seed_lang or "中英混合" in seed_lang:
-                            lang_instruction = "Generate phrases in both Chinese and English, roughly half each." if is_en else "生成中文和英文两种语言的短语，各占一半。"
+                            lang_instruction = t("ui.generate_phrases_in_both")
                         elif "English" in seed_lang:
                             lang_instruction = "All phrases must be in English."
                         else:
@@ -1502,7 +1502,7 @@ elif _page_idx == 1:
                             prompt = f"Generate {seed_count} conversational search phrases that sellers might type into AI search engines about '{seed_word}'. {lang_instruction} One phrase per line, no numbering, no explanation."
                         else:
                             prompt = f"请为词根「{seed_word}」生成 {seed_count} 个卖家在 AI 搜索引擎中可能输入的口语化检索短语。{lang_instruction}每行一条，不要编号，不要解释。"
-                        with st.spinner("裂变中..." if not is_en else "Expanding..."):
+                        with st.spinner(t("ui.expanding")):
                             response = call_bedrock_claude(prompt)
                         queries = [q.strip().lstrip("0123456789.-、）) ") for q in response.strip().split("\n") if q.strip() and len(q.strip()) > 4]
                         if queries:
@@ -1533,7 +1533,7 @@ elif _page_idx == 1:
                         st.error(str(e))
 
         with tab_persona:
-            st.markdown("**根据用户画像维度组合推演检索短语**" if not is_en else "**Generate phrases based on persona dimensions**")
+            st.markdown(t("ui.generate_phrases_based_on"))
 
             # Load persona matrix
             _persona_file = INPUT_PATH / "persona_matrix.json"
@@ -1543,7 +1543,7 @@ elif _page_idx == 1:
                 _pm = {}
 
             # 基础画像
-            st.markdown("##### 基础画像" if not is_en else "##### Basic Persona")
+            st.markdown(t("ui.basic_persona"))
             col_p1, col_p2 = st.columns(2)
             with col_p1:
                 _基础 = _pm.get("基础画像", {})
@@ -1555,9 +1555,9 @@ elif _page_idx == 1:
                     _id_options = _基础.get("身份", {}).get("params", [])
                     _co_options = _基础.get("企业类型", {}).get("params", [])
                     _role_options = _基础.get("职位", {}).get("params", [])
-                sel_identity = st.selectbox("身份" if not is_en else "Identity", _id_options, key="persona_identity")
-                sel_company = st.selectbox("企业类型" if not is_en else "Company Type", _co_options, key="persona_company")
-                sel_role = st.selectbox("职位" if not is_en else "Role", _role_options, key="persona_role")
+                sel_identity = st.selectbox(t("ui.identity"), _id_options, key="persona_identity")
+                sel_company = st.selectbox(t("ui.company_type"), _co_options, key="persona_company")
+                sel_role = st.selectbox(t("ui.role"), _role_options, key="persona_role")
             with col_p2:
                 if is_en:
                     _rev_options = ["< $500K", "< $1M", "< $10M", "> $10M"]
@@ -1567,12 +1567,12 @@ elif _page_idx == 1:
                     _rev_options = _基础.get("年销售额", {}).get("params", [])
                     _biz_options = _基础.get("公司类型", {}).get("params", [])
                     _ship_options = _基础.get("计划发货方式", {}).get("params", [])
-                sel_revenue = st.selectbox("年销售额" if not is_en else "Annual Revenue", _rev_options, key="persona_revenue")
-                sel_biz_type = st.selectbox("公司类型" if not is_en else "Business Model", _biz_options, key="persona_biz")
-                sel_shipping = st.selectbox("计划发货方式" if not is_en else "Fulfillment Method", _ship_options, key="persona_ship")
+                sel_revenue = st.selectbox(t("ui.annual_revenue"), _rev_options, key="persona_revenue")
+                sel_biz_type = st.selectbox(t("ui.business_model"), _biz_options, key="persona_biz")
+                sel_shipping = st.selectbox(t("ui.fulfillment_method"), _ship_options, key="persona_ship")
 
             # 兴趣画像
-            st.markdown("##### 兴趣画像" if not is_en else "##### Interest Persona")
+            st.markdown(t("ui.interest_persona"))
             _兴趣 = _pm.get("兴趣画像", {})
             if is_en:
                 _site_options = ["US", "Canada", "Mexico", "UK", "Germany", "France", "Italy", "Spain", "Japan", "UAE", "Saudi Arabia", "Brazil", "Australia", "India"]
@@ -1582,12 +1582,12 @@ elif _page_idx == 1:
                 _content_options = _兴趣.get("内容分类", {}).get("params", [])
             _site_default = ["美国站"] if not is_en and "美国站" in _site_options else (["US"] if is_en else ([_site_options[0]] if _site_options else []))
             _content_default = ["新手指南"] if not is_en and "新手指南" in _content_options else (["Getting Started"] if is_en else ([_content_options[0]] if _content_options else []))
-            sel_site = st.multiselect("目标站点" if not is_en else "Target Marketplace", _site_options, default=_site_default, key="persona_site")
-            sel_content = st.multiselect("内容分类" if not is_en else "Content Category", _content_options, default=_content_default, key="persona_content")
+            sel_site = st.multiselect(t("ui.target_marketplace"), _site_options, default=_site_default, key="persona_site")
+            sel_content = st.multiselect(t("ui.content_category"), _content_options, default=_content_default, key="persona_content")
 
-            persona_count = st.slider("生成短语数" if not is_en else "Phrases to generate", 5, 30, 10, key="persona_gen_count")
+            persona_count = st.slider(t("ui.phrases_to_generate"), 5, 30, 10, key="persona_gen_count")
 
-            if st.button("🧠 画像推演生成" if not is_en else "🧠 Generate", type="primary", key="persona_gen_btn"):
+            if st.button(t("ui.generate"), type="primary", key="persona_gen_btn"):
                 try:
                     from engine import call_bedrock_claude
                     if is_en:
@@ -1610,7 +1610,7 @@ Requirements:
 1. 口语化，像真人提问（10-25字）
 2. 与该画像的身份、站点、关注内容高度相关
 3. 每行一条，不要编号，不要解释"""
-                    with st.spinner("推演中..." if not is_en else "Generating..."):
+                    with st.spinner(t("ui.generating")):
                         response = call_bedrock_claude(prompt)
                     queries = [q.strip().lstrip("0123456789.-、）) ") for q in response.strip().split("\n") if q.strip() and len(q.strip()) > 4]
                     if queries:
@@ -1639,16 +1639,16 @@ Requirements:
                     st.error(str(e))
 
         with tab_upload:
-            st.markdown("**直接上传已确定的检索短语 或 SEO/SEM 关键词**" if not is_en else "**Upload confirmed search phrases or SEO/SEM keywords**")
+            st.markdown(t("ui.upload_confirmed_search_phrases"))
 
-            upload_type = st.radio("上传类型" if not is_en else "Upload type",
-                                   ["检索短语 (AI Query)" if not is_en else "Search Phrases",
-                                    "SEO/SEM 关键词" if not is_en else "SEO/SEM Keywords"],
+            upload_type = st.radio(t("ui.upload_type"),
+                                   [t("ui.search_phrases"),
+                                    t("ui.seosem_keywords")],
                                    horizontal=True, key="user_upload_type")
 
             if upload_type.startswith("检索短语") or upload_type.startswith("Search"):
-                st.caption("CSV 文件需包含 `ai_query` 或 `query` 列" if not is_en else "CSV must contain `ai_query` or `query` column")
-                uploaded_phrases = st.file_uploader("上传 CSV" if not is_en else "Upload CSV", type=["csv"], key="user_upload_phrases")
+                st.caption(t("ui.csv_must_contain_ai_query"))
+                uploaded_phrases = st.file_uploader(t("ui.upload_csv"), type=["csv"], key="user_upload_phrases")
                 if uploaded_phrases:
                     try:
                         df_up = pd.read_csv(uploaded_phrases, encoding="utf-8-sig", on_bad_lines="skip")
@@ -1661,7 +1661,7 @@ Requirements:
                                 df_up["is_selected"] = "TRUE"
                             st.dataframe(df_up[["ai_query"]].head(10), use_container_width=True, hide_index=True)
                             st.caption(f"共 {len(df_up)} 条")
-                            if st.button("✅ 确认上传" if not is_en else "✅ Confirm Upload", type="primary", key="user_confirm_upload"):
+                            if st.button(t("ui.confirm_upload"), type="primary", key="user_confirm_upload"):
                                 zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
                                 zhiku_file.parent.mkdir(parents=True, exist_ok=True)
                                 existing = load_csv_safe(zhiku_file) if zhiku_file.exists() else pd.DataFrame()
@@ -1674,9 +1674,9 @@ Requirements:
                         st.error(str(e))
 
             else:  # SEO/SEM Keywords
-                st.caption("上传 SEO/SEM 关键词 CSV，系统将自动裂变为 AI 检索短语" if not is_en else "Upload SEO/SEM keywords CSV, system will expand into AI search phrases")
-                st.caption("CSV 建议包含 `Keyword` 或 `keyword` 列" if not is_en else "CSV should contain `Keyword` or `keyword` column")
-                uploaded_kw = st.file_uploader("上传关键词 CSV" if not is_en else "Upload Keywords CSV", type=["csv", "xlsx"], key="user_upload_kw")
+                st.caption(t("ui.upload_seosem_keywords_csv"))
+                st.caption(t("ui.csv_should_contain_keyword"))
+                uploaded_kw = st.file_uploader(t("ui.upload_keywords_csv"), type=["csv", "xlsx"], key="user_upload_kw")
                 if uploaded_kw:
                     try:
                         if uploaded_kw.name.endswith(".csv"):
@@ -1689,9 +1689,9 @@ Requirements:
                             st.dataframe(pd.DataFrame({"关键词": keywords[:10]}), use_container_width=True, hide_index=True)
                             st.caption(f"共 {len(keywords)} 个关键词")
 
-                            kw_expand_count = st.slider("每个关键词裂变短语数" if not is_en else "Phrases per keyword", 3, 10, 5, key="kw_expand_count")
+                            kw_expand_count = st.slider(t("ui.phrases_per_keyword"), 3, 10, 5, key="kw_expand_count")
 
-                            if st.button("🚀 裂变为检索短语" if not is_en else "🚀 Expand to Phrases", type="primary", key="user_kw_expand_btn"):
+                            if st.button(t("ui.expand_to_phrases"), type="primary", key="user_kw_expand_btn"):
                                 try:
                                     from engine import call_bedrock_claude
                                     kw_list = "\n".join(keywords[:20])
@@ -1706,7 +1706,7 @@ Requirements:
 3. 每行一条，不要编号，不要标注来源关键词
 
 直接输出短语列表。"""
-                                    with st.spinner("裂变中..." if not is_en else "Expanding..."):
+                                    with st.spinner(t("ui.expanding")):
                                         response = call_bedrock_claude(prompt)
                                     queries = [q.strip().lstrip("0123456789.-、）) ") for q in response.strip().split("\n") if q.strip() and len(q.strip()) > 4]
                                     if queries:
@@ -1728,7 +1728,7 @@ Requirements:
 
         # --- User: Phrase List, Selection, Filtering, CTA ---
         st.divider()
-        st.markdown("### " + ("Current Phrase Library" if is_en else "当前短语库"))
+        st.markdown("### " + (t("ui.current_phrase_library")))
 
         df_zhiku_user = load_zhiku_live(selected_batch)
 
@@ -1764,22 +1764,22 @@ Requirements:
             selected_count_u = df_zhiku_user[df_zhiku_user["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])].shape[0]
 
         sc1, sc2 = st.columns(2)
-        sc1.metric("Total" if is_en else "总量", total_phrases_u)
-        sc2.metric("Selected Phrases" if is_en else "已选中", selected_count_u)
+        sc1.metric(t("ui.total"), total_phrases_u)
+        sc2.metric(t("ui.selected_phrases"), selected_count_u)
 
         if not df_zhiku_user.empty:
             # Filter
             filter_col = st.columns([2, 2, 2])
             with filter_col[0]:
-                source_filter = st.selectbox("Source" if is_en else "来源筛选",
+                source_filter = st.selectbox(t("ui.source"),
                     ["All"] + (df_zhiku_user["source"].dropna().unique().tolist() if "source" in df_zhiku_user.columns else []),
                     key="user_source_filter")
             with filter_col[1]:
-                select_filter = st.selectbox("Status" if is_en else "选中状态",
-                    ["All" if is_en else "全部", "Selected Phrases" if is_en else "已选中", "Unselected" if is_en else "未选中"],
+                select_filter = st.selectbox(t("ui.status"),
+                    [t("ui.all"), t("ui.selected_phrases"), t("ui.unselected")],
                     key="user_select_filter")
             with filter_col[2]:
-                search_text = st.text_input("Search" if is_en else "搜索", key="user_search_text", placeholder="关键词搜索...")
+                search_text = st.text_input(t("ui.search"), key="user_search_text", placeholder="关键词搜索...")
 
             df_display = df_zhiku_user.copy()
             if source_filter != "All" and "source" in df_display.columns:
@@ -1817,13 +1817,13 @@ Requirements:
                 # Bulk select/deselect buttons
                 col_sel1, col_sel2, col_sel3 = st.columns([1, 1, 4])
                 with col_sel1:
-                    if st.button("☑️ " + ("Select All" if is_en else "全选"), key="user_select_all"):
+                    if st.button("☑️ " + (t("ui.select_all")), key="user_select_all"):
                         zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
                         df_zhiku_user["is_selected"] = "TRUE"
                         df_zhiku_user.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
                         st.rerun()
                 with col_sel2:
-                    if st.button("☐ " + ("Deselect All" if is_en else "全不选"), key="user_deselect_all"):
+                    if st.button("☐ " + (t("ui.deselect_all")), key="user_deselect_all"):
                         zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
                         df_zhiku_user["is_selected"] = "FALSE"
                         df_zhiku_user.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
@@ -1831,7 +1831,7 @@ Requirements:
                 with col_sel3:
                     _arch_col1, _arch_col2 = st.columns(2)
                     with _arch_col1:
-                        if st.button("🗑️ " + ("Clear Selected" if is_en else "选中清空"), key="user_archive_sel"):
+                        if st.button("🗑️ " + (t("ui.clear_selected")), key="user_archive_sel"):
                             sel_mask = df_zhiku_user["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])
                             if sel_mask.any():
                                 zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
@@ -1840,9 +1840,9 @@ Requirements:
                                 st.success(f"✅ {sel_mask.sum()} {'archived' if is_en else '条已归档'}")
                                 st.rerun()
                             else:
-                                st.warning("No items selected" if is_en else "未选中任何条目")
+                                st.warning(t("ui.no_items_selected"))
                     with _arch_col2:
-                        if st.button("🗑️ " + ("Clear ALL" if is_en else "全部清空"), key="user_archive_all"):
+                        if st.button("🗑️ " + (t("ui.clear_all")), key="user_archive_all"):
                             zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
                             all_mask = pd.Series([True] * len(df_zhiku_user))
                             df_remaining = archive_selected_items(selected_batch, "zhiku", df_zhiku_user, all_mask, is_en)
@@ -1852,14 +1852,14 @@ Requirements:
 
                 col_config = {}
                 if "is_selected" in show_cols:
-                    col_config["is_selected"] = st.column_config.CheckboxColumn("Selected" if is_en else "选中")
+                    col_config["is_selected"] = st.column_config.CheckboxColumn(t("ui.selected"))
                 edited_df = st.data_editor(df_display[show_cols].reset_index(drop=True),
                                            column_config=col_config,
                                            use_container_width=True, hide_index=True,
                                            key="user_zhiku_editor")
 
                 # Save changes
-                if st.button("💾 " + ("Save Changes" if is_en else "保存修改"), key="user_save_zhiku"):
+                if st.button("💾 " + (t("ui.save_changes")), key="user_save_zhiku"):
                     # Apply edits back
                     for col in show_cols:
                         if col in edited_df.columns:
@@ -1867,32 +1867,32 @@ Requirements:
                     zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
                     df_zhiku_user.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
                     mark_data_changed()
-                    st.success("✅ " + ("Changes saved successfully!" if is_en else "已保存！"))
+                    st.success("✅ " + (t("ui.changes_saved_successfully")))
                     st.rerun()
 
             # CTA to next step
             st.divider()
             if selected_count_u > 0:
-                if st.button("➡️ " + ("Next: Run AI Test (智测)" if is_en else "下一步：执行智测"), type="primary", key="user_cta_zhice"):
-                    jump_to("🔍 智测" if not is_en else "🔍 Testing")
+                if st.button("➡️ " + (t("ui.next_run_ai_test")), type="primary", key="user_cta_zhice"):
+                    jump_to(t("ui.testing"))
                     st.rerun()
             else:
-                st.info("Please select phrases first (check '选中' column)" if is_en else "请先选中短语（勾选「选中」列）后进入下一步")
+                st.info(t("ui.please_select_phrases_first"))
         else:
-            st.info("No phrases yet. Use the tabs above to generate or upload." if is_en else "暂无短语。请使用上方的标签页生成或上传。")
+            st.info(t("ui.no_phrases_yet_use"))
 
         # --- Clear & History ---
         st.divider()
-        with st.expander("🗑️ " + ("Clear & Archive / 📜 History" if is_en else "清除归档 / 📜 历史记录"), expanded=False):
+        with st.expander("🗑️ " + (t("ui.clear_archive_history")), expanded=False):
             if total_phrases_u > 0:
-                if st.button("🗑️ " + ("Clear All & Archive" if is_en else "清空当前短语（归档到历史）"), key="user_clear_zhiku"):
+                if st.button("🗑️ " + (t("ui.clear_all_archive")), key="user_clear_zhiku"):
                     zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
                     if zhiku_file.exists():
                         archive_dir = OUTPUT_PATH / selected_batch / "01_zhiku" / "archive"
                         archive_dir.mkdir(parents=True, exist_ok=True)
                         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
                         zhiku_file.rename(archive_dir / f"zhiku_ai_queries_{ts}.csv")
-                        st.success("✅ " + ("Archived. Page is now empty." if is_en else "已归档到历史记录，当前页面已清空。"))
+                        st.success("✅ " + (t("ui.archived_page_is_now")))
                         st.rerun()
 
             # Show archived history
@@ -1900,23 +1900,23 @@ Requirements:
             if archive_dir.exists():
                 archives = sorted(archive_dir.glob("*.csv"), reverse=True)
                 if archives:
-                    st.markdown("**📜 " + ("History" if is_en else "历史记录") + ":**")
+                    st.markdown("**📜 " + (t("ui.history")) + ":**")
                     for a in archives[:5]:
                         df_a = load_csv_safe(a)
                         count = len(df_a) if not df_a.empty else 0
-                        st.caption(f"🗂️ {a.stem.replace('zhiku_ai_queries_', '')} — {count} " + ("phrases" if is_en else "条短语"))
+                        st.caption(f"🗂️ {a.stem.replace('zhiku_ai_queries_', '')} — {count} " + (t("ui.phrases")))
                     # Restore option
-                    restore_file = st.selectbox("Restore" if is_en else "恢复历史版本",
+                    restore_file = st.selectbox(t("ui.restore"),
                                                [a.name for a in archives], key="user_restore_select")
-                    if st.button("🔄 " + ("Restore" if is_en else "恢复"), key="user_restore_btn"):
+                    if st.button("🔄 " + (t("ui.restore_1")), key="user_restore_btn"):
                         src = archive_dir / restore_file
                         dst = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
                         import shutil
                         shutil.copy2(str(src), str(dst))
-                        st.success("✅ " + ("Restored!" if is_en else "已恢复！"))
+                        st.success("✅ " + (t("ui.restored")))
                         st.rerun()
             else:
-                st.caption("No history yet." if is_en else "暂无历史记录。")
+                st.caption(t("ui.no_history_yet"))
 
     # ============================================================
     # ADMIN VIEW: Full interface (original)
@@ -1931,47 +1931,47 @@ Requirements:
             selected_count = df_zhiku_all[df_zhiku_all["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])].shape[0]
 
         sc1, sc2, sc3, sc4 = st.columns(4)
-        sc1.metric("Total Phrases" if is_en else "短语总量", total_phrases)
-        sc2.metric("Selected Phrases" if is_en else "已选中", selected_count)
-        sc3.metric("Categories" if is_en else "覆盖类别", df_zhiku_all["category"].dropna().nunique() if not df_zhiku_all.empty and "category" in df_zhiku_all.columns else 0)
-        sc4.metric("Sources" if is_en else "来源数", df_zhiku_all["source"].dropna().nunique() if not df_zhiku_all.empty and "source" in df_zhiku_all.columns else 0)
+        sc1.metric(t("ui.total_phrases"), total_phrases)
+        sc2.metric(t("ui.selected_phrases"), selected_count)
+        sc3.metric(t("ui.categories"), df_zhiku_all["category"].dropna().nunique() if not df_zhiku_all.empty and "category" in df_zhiku_all.columns else 0)
+        sc4.metric(t("ui.sources"), df_zhiku_all["source"].dropna().nunique() if not df_zhiku_all.empty and "source" in df_zhiku_all.columns else 0)
 
         # Clear current content (archive to history)
         if total_phrases > 0:
-            if st.button("🗑️ Clear Current & Archive" if is_en else "🗑️ 清空当前内容（归档到历史）", key="clear_zhiku_current"):
+            if st.button(t("ui.clear_current_archive"), key="clear_zhiku_current"):
                 zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
                 if zhiku_file.exists():
                     archive_dir = OUTPUT_PATH / selected_batch / "01_zhiku" / "archive"
                     archive_dir.mkdir(parents=True, exist_ok=True)
                     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
                     zhiku_file.rename(archive_dir / f"zhiku_ai_queries_{ts}.csv")
-                    st.success("✅ Archived to history. Page is now empty." if is_en else "✅ 已归档到历史记录，当前页面已清空。")
+                    st.success(t("ui.archived_to_history_page"))
                     st.rerun()
 
         # ============================================================
         # 🚀 一键全流程 (End-to-End)
         # ============================================================
-        with st.expander("🚀 One-Click Full Pipeline (Keywords → Word Doc)" if is_en else "🚀 一键全流程（关键词 → Word 文档）", expanded=False):
-            st.caption("Run all steps automatically: 智库 → 智造 → 智优 → 合规 → 智布" if is_en else "自动执行全部步骤：智库裂变 → 智造生成 → 智优评分+重写 → 合规审查 → 智布导出")
+        with st.expander(t("ui.oneclick_full_pipeline_keywords"), expanded=False):
+            st.caption(t("ui.run_all_steps_automatically"))
 
             col_e2e_1, col_e2e_2, col_e2e_3 = st.columns(3)
             with col_e2e_1:
-                e2e_kw_limit = st.number_input("Keywords" if is_en else "关键词数", 1, 50, 10, key="e2e_kw_limit")
+                e2e_kw_limit = st.number_input(t("ui.keywords"), 1, 50, 10, key="e2e_kw_limit")
             with col_e2e_2:
-                e2e_content_limit = st.number_input("Articles" if is_en else "文章数", 1, 20, 5, key="e2e_content_limit")
+                e2e_content_limit = st.number_input(t("ui.articles"), 1, 20, 5, key="e2e_content_limit")
             with col_e2e_3:
                 e2e_template_options = {
-                    "auto": "Auto-detect" if is_en else "智能匹配",
-                    "none": "No template" if is_en else "无模板",
-                    "registration": "Registration" if is_en else "注册流程",
-                    "fees": "Fees" if is_en else "费用成本",
-                    "logistics": "Logistics" if is_en else "物流仓储",
-                    "advertising": "Advertising" if is_en else "广告推广",
-                    "listing": "Listing" if is_en else "Listing优化",
+                    "auto": t("ui.autodetect"),
+                    "none": t("ui.no_template"),
+                    "registration": t("ui.registration"),
+                    "fees": t("ui.fees"),
+                    "logistics": t("ui.logistics"),
+                    "advertising": t("ui.advertising"),
+                    "listing": t("ui.listing"),
                 }
-                e2e_template = st.selectbox("Template" if is_en else "模板", list(e2e_template_options.keys()), format_func=lambda x: e2e_template_options[x], key="e2e_template")
+                e2e_template = st.selectbox(t("ui.template"), list(e2e_template_options.keys()), format_func=lambda x: e2e_template_options[x], key="e2e_template")
 
-            if st.button("🚀 Execute Full Pipeline" if is_en else "🚀 开始一键全流程", type="primary", key="btn_e2e"):
+            if st.button(t("ui.execute_full_pipeline"), type="primary", key="btn_e2e"):
                 try:
                     from engine import run_full_pipeline
                     e2e_progress = st.progress(0)
@@ -1981,7 +1981,7 @@ Requirements:
                         e2e_progress.progress(min(1.0, max(0.0, pct)))
                         e2e_status.text(msg)
 
-                    with st.spinner("Running full pipeline..." if is_en else "正在执行全流程..."):
+                    with st.spinner(t("ui.running_full_pipeline")):
                         result = run_full_pipeline(
                             selected_batch,
                             market="ALL",
@@ -1991,7 +1991,7 @@ Requirements:
                         )
 
                     if result.get("success"):
-                        st.success("✅ Full pipeline completed! Check each step for results." if is_en else "✅ 全流程执行完毕！请查看各步骤的输出结果。")
+                        st.success(t("ui.full_pipeline_completed_check"))
                         st.balloons()
                     else:
                         stopped = result.get("stopped_at", "Unknown")
@@ -2006,26 +2006,26 @@ Requirements:
         # ① 短语产出
         # ============================================================
         st.markdown("""<div class="ss-section">
-            <h3 style="color:#ffa726;">① """ + ("Search Phrase Generation" if is_en else "短语产出") + """</h3>
-            <p>""" + ("3 input modes: AI auto / Upload CSV / Manual input" if is_en else "三种输入模式：AI 自动 / 上传 CSV / 手动输入") + """</p>
+            <h3 style="color:#ffa726;">① """ + (t("ui.search_phrase_generation")) + """</h3>
+            <p>""" + (t("ui.3_input_modes_ai")) + """</p>
         </div>""", unsafe_allow_html=True)
 
         tab_p1, tab_p2, tab_p3, tab_p4 = st.tabs([
-            "⭐ P1 Core (95-90%)" if is_en else "⭐ P1 核心来源 (95-90%)",
-            "⭐ P2 Secondary (85-75%)" if is_en else "⭐ P2 次核心 (85-75%)",
-            "P3 Expand (60%)" if is_en else "P3 兜底扩写 (60%)",
-            "🧠 P4 Persona Predict" if is_en else "🧠 P4 画像推演",
+            t("ui.p1_core_9590"),
+            t("ui.p2_secondary_8575"),
+            t("ui.p3_expand_60"),
+            t("ui.p4_persona_predict"),
         ])
 
         # --- P1 核心来源 ---
         with tab_p1:
-            st.caption("AI platform native queries — highest accuracy" if is_en else "AI 平台原生问句 — 准确度最高")
+            st.caption(t("ui.ai_platform_native_queries"))
             col_dropdown, col_reverse, col_community = st.columns(3)
 
             with col_dropdown:
-                st.markdown("**A1: AI Dropdown**" if is_en else "**A1: AI 下拉联想**")
-                st.caption("95% · Collect from platforms, upload" if is_en else "准确度95% · 从各平台收集后上传")
-                uploaded_dropdown = st.file_uploader("Upload" if is_en else "上传CSV", type=["csv", "xlsx"], key="upload_a1")
+                st.markdown(t("ui.a1_ai_dropdown"))
+                st.caption(t("ui.95_collect_from_platforms"))
+                uploaded_dropdown = st.file_uploader(t("ui.upload"), type=["csv", "xlsx"], key="upload_a1")
                 if uploaded_dropdown:
                     try:
                         df_imp = pd.read_csv(uploaded_dropdown, encoding="utf-8-sig", on_bad_lines="skip") if uploaded_dropdown.name.endswith(".csv") else pd.read_excel(uploaded_dropdown, engine="openpyxl")
@@ -2044,17 +2044,17 @@ Requirements:
                         st.error(str(e))
 
             with col_reverse:
-                st.markdown("**A2: Reverse Recall**" if is_en else "**A2: 逆向召回**")
-                st.caption("92% · Input content → AI returns queries" if is_en else "准确度92% · 输入内容 → AI返回问句")
+                st.markdown(t("ui.a2_reverse_recall"))
+                st.caption(t("ui.92_input_content_ai"))
 
                 # Single input
-                reverse_content = st.text_area("Single content" if is_en else "单条内容", height=60, key="reverse_input_p1", placeholder="Paste one article text or URL...")
-                num_queries = st.select_slider("Queries per content" if is_en else "每条内容返回问句数", options=[5, 10, 15, 20], value=10, key="reverse_num")
-                if st.button("🔮 Run Single" if is_en else "🔮 单条执行", key="btn_reverse_single", disabled=not reverse_content):
+                reverse_content = st.text_area(t("ui.single_content"), height=60, key="reverse_input_p1", placeholder="Paste one article text or URL...")
+                num_queries = st.select_slider(t("ui.queries_per_content"), options=[5, 10, 15, 20], value=10, key="reverse_num")
+                if st.button(t("ui.run_single"), key="btn_reverse_single", disabled=not reverse_content):
                     try:
                         from engine import call_bedrock_claude
                         prompt = f"以下是一篇已发布内容：\n{reverse_content[:2000]}\n\n用户在AI搜索引擎中输入什么问句才能看到这篇内容？列出{num_queries}个口语化问句，按命中概率排序，每行一条。"
-                        with st.spinner("..." if is_en else "正在询问AI..."):
+                        with st.spinner(t("ui.str_127")):
                             response = call_bedrock_claude(prompt)
                         queries = [q.strip().lstrip("0123456789.-、）) ") for q in response.strip().split("\n") if q.strip() and len(q.strip()) > 5]
                         if queries:
@@ -2071,11 +2071,11 @@ Requirements:
                         st.error(str(e))
 
                 # Batch upload
-                st.caption("— or batch —" if is_en else "— 或批量 —")
-                up_reverse = st.file_uploader("Upload content list CSV" if is_en else "上传内容列表CSV（含content列）", type=["csv"], key="upload_a2_batch")
+                st.caption(t("ui.or_batch"))
+                up_reverse = st.file_uploader(t("ui.upload_content_list_csv"), type=["csv"], key="upload_a2_batch")
                 if up_reverse:
-                    st.caption("CSV should have a 'content' or 'url' column" if is_en else "CSV需含 content 或 url 列")
-                    if st.button("🔮 Run Batch" if is_en else "🔮 批量执行逆向召回", key="btn_reverse_batch"):
+                    st.caption(t("ui.csv_should_have_a"))
+                    if st.button(t("ui.run_batch"), key="btn_reverse_batch"):
                         try:
                             from engine import call_bedrock_claude
                             df_batch = pd.read_csv(up_reverse, encoding="utf-8-sig", on_bad_lines="skip")
@@ -2103,9 +2103,9 @@ Requirements:
                             st.error(str(e))
 
             with col_community:
-                st.markdown("**A3: AI Community Q&A**" if is_en else "**A3: AI 社区原生提问**")
-                st.caption("90% · Upload from Zhihu/Perplexity" if is_en else "准确度90% · 从知乎/Perplexity上传")
-                uploaded_a3 = st.file_uploader("Upload" if is_en else "上传CSV", type=["csv", "xlsx"], key="upload_a3")
+                st.markdown(t("ui.a3_ai_community_qa"))
+                st.caption(t("ui.90_upload_from_zhihuperplexity"))
+                uploaded_a3 = st.file_uploader(t("ui.upload"), type=["csv", "xlsx"], key="upload_a3")
                 if uploaded_a3:
                     try:
                         df_imp = pd.read_csv(uploaded_a3, encoding="utf-8-sig", on_bad_lines="skip") if uploaded_a3.name.endswith(".csv") else pd.read_excel(uploaded_a3, engine="openpyxl")
@@ -2125,10 +2125,10 @@ Requirements:
 
         # --- P2 次核心（上传为主）---
         with tab_p2:
-            st.caption("Real user behavior data — upload + AI expand" if is_en else "真实用户行为数据 — 上传 + AI 裂变")
+            st.caption(t("ui.real_user_behavior_data"))
 
             # Source type selection
-            upload_source = st.selectbox("Source Type" if is_en else "来源类型", [
+            upload_source = st.selectbox(t("ui.source_type"), [
                 "SEO/SEM 关键词裂变",
                 "官方渠道（站内搜索/客服FAQ/公众号）",
                 "社群/客服/直播问句",
@@ -2137,14 +2137,14 @@ Requirements:
             ], key="upload_source_type")
 
             # Upload
-            uploaded_phrases = st.file_uploader("Upload CSV/Excel" if is_en else "上传 CSV/Excel", type=["csv", "xlsx"], key="upload_phrases_new")
+            uploaded_phrases = st.file_uploader(t("ui.upload_csvexcel"), type=["csv", "xlsx"], key="upload_phrases_new")
 
             # SEO/SEM specific: expansion controls
             if upload_source == "SEO/SEM 关键词裂变":
-                st.caption("Upload keywords → AI expands into query phrases" if is_en else "上传关键词 → AI 裂变为口语问句")
+                st.caption(t("ui.upload_keywords_ai_expands"))
                 col_limit, col_action = st.columns([1, 1])
                 with col_limit:
-                    kw_per_batch = st.select_slider("Keywords per batch" if is_en else "每次裂变关键词数", options=[5, 10, 20, 30, 50], value=10, key="kw_per_batch_p2")
+                    kw_per_batch = st.select_slider(t("ui.keywords_per_batch"), options=[5, 10, 20, 30, 50], value=10, key="kw_per_batch_p2")
                 with col_action:
                     if uploaded_phrases:
                         df_kw = pd.read_csv(uploaded_phrases, on_bad_lines="skip") if uploaded_phrases.name.endswith(".csv") else pd.read_excel(uploaded_phrases, engine="openpyxl")
@@ -2152,10 +2152,10 @@ Requirements:
                         INPUT_PATH.mkdir(parents=True, exist_ok=True)
                         df_kw.to_csv(INPUT_PATH / "seo_sem_keywords.csv", index=False, encoding="utf-8-sig")
                         st.caption(f"✅ {len(df_kw)} keywords loaded")
-                        if st.button("🚀 Expand Keywords" if is_en else "🚀 裂变关键词", type="primary", key="btn_seo_p2"):
+                        if st.button(t("ui.expand_keywords"), type="primary", key="btn_seo_p2"):
                             try:
                                 from engine import run_zhiku
-                                with st.spinner("Expanding..." if is_en else "裂变中..."):
+                                with st.spinner(t("ui.expanding")):
                                     result = run_zhiku(selected_batch, market, kw_per_batch)
                                 if result["success"]:
                                     st.success(f"✅ +{result['query_count']} phrases")
@@ -2196,9 +2196,9 @@ Requirements:
         with tab_p3:
             col_free, col_seed = st.columns(2)
             with col_free:
-                st.markdown("**" + ("Free input (one per line)" if is_en else "自由输入（每行一条）") + "**")
-                manual_text = st.text_area("Phrases" if is_en else "短语", height=120, key="manual_phrases", placeholder="亚马逊怎么注册\nFBA费用多少\n跨境电商新手入门")
-                if st.button("➕ Add" if is_en else "➕ 添加", key="btn_manual_add", disabled=not manual_text):
+                st.markdown("**" + (t("ui.free_input_one_per")) + "**")
+                manual_text = st.text_area(t("ui.phrases_1"), height=120, key="manual_phrases", placeholder="亚马逊怎么注册\nFBA费用多少\n跨境电商新手入门")
+                if st.button(t("ui.add"), key="btn_manual_add", disabled=not manual_text):
                     phrases = [p.strip() for p in manual_text.strip().split("\n") if p.strip()]
                     if phrases:
                         new_df = pd.DataFrame({"ai_query": phrases, "source": "manual", "priority_score": 3.5, "is_selected": "FALSE"})
@@ -2214,16 +2214,16 @@ Requirements:
                         st.rerun()
 
             with col_seed:
-                st.markdown("**" + ("Seed word expansion" if is_en else "词根扩展") + "**")
-                seed_words = st.text_area("Seeds" if is_en else "词根（每行一个）", height=80, key="seed_input_new", placeholder="跨境电商\n亚马逊开店\n选品")
-                phrases_per_seed = st.select_slider("Phrases per seed" if is_en else "每个词根生成数", options=[5, 10, 15, 20, 30], value=15, key="seed_count_p3")
-                if st.button("🚀 Expand Seeds" if is_en else "🚀 裂变词根", key="btn_seed_expand", disabled=not seed_words):
+                st.markdown("**" + (t("ui.seed_word_expansion")) + "**")
+                seed_words = st.text_area(t("ui.seeds"), height=80, key="seed_input_new", placeholder="跨境电商\n亚马逊开店\n选品")
+                phrases_per_seed = st.select_slider(t("ui.phrases_per_seed"), options=[5, 10, 15, 20, 30], value=15, key="seed_count_p3")
+                if st.button(t("ui.expand_seeds"), key="btn_seed_expand", disabled=not seed_words):
                     seeds = [s.strip() for s in seed_words.strip().split("\n") if s.strip()]
                     if seeds:
                         try:
                             from engine import run_semantic_expansion
                             total_gen = 0
-                            with st.spinner("Expanding..." if is_en else "裂变中..."):
+                            with st.spinner(t("ui.expanding")):
                                 for seed in seeds:
                                     r = run_semantic_expansion(seed, market, phrases_per_seed, "zh", selected_batch)
                                     if r.get("success"):
@@ -2236,18 +2236,18 @@ Requirements:
 
         # --- P4 画像推演 ---
         with tab_p4:
-            st.caption("Based on persona matrix (identity × site × topic), predict search queries by priority." if is_en else "基于客户画像矩阵（身份 × 站点 × 话题），按优先级推演潜在检索短语。")
+            st.caption(t("ui.based_on_persona_matrix"))
 
             # Controls
             col_p4_1, col_p4_2, col_p4_3 = st.columns(3)
             with col_p4_1:
                 p4_level = st.selectbox(
-                    "Priority Level" if is_en else "优先级",
+                    t("ui.priority_level"),
                     ["P0", "P1", "P2", "ALL"],
                     key="p4_priority_level",
                 )
             with col_p4_2:
-                p4_max = st.number_input("Max Queries" if is_en else "最大生成数", 10, 200, 50, key="p4_max_queries")
+                p4_max = st.number_input(t("ui.max_queries"), 10, 200, 50, key="p4_max_queries")
             with col_p4_3:
                 # Load matrix for site options
                 try:
@@ -2261,18 +2261,18 @@ Requirements:
 
             col_p4_sites, col_p4_topics = st.columns(2)
             with col_p4_sites:
-                p4_sites = st.multiselect("Target Sites" if is_en else "目标站点", _all_sites, default=_all_sites[:3], key="p4_sites")
+                p4_sites = st.multiselect(t("ui.target_sites"), _all_sites, default=_all_sites[:3], key="p4_sites")
             with col_p4_topics:
-                p4_topics = st.multiselect("Target Topics" if is_en else "目标话题", _all_topics, default=_all_topics[:5], key="p4_topics")
+                p4_topics = st.multiselect(t("ui.target_topics"), _all_topics, default=_all_topics[:5], key="p4_topics")
 
             # Language selector
-            p4_language = st.radio("Output Language" if is_en else "输出语言", ["中文", "English", "中英双语"], horizontal=True, key="p4_language")
+            p4_language = st.radio(t("ui.output_language"), ["中文", "English", "中英双语"], horizontal=True, key="p4_language")
 
             # Run prediction
-            if st.button("🧠 Run Persona Prediction" if is_en else "🧠 执行画像推演", type="primary", key="btn_p4_predict"):
+            if st.button(t("ui.run_persona_prediction"), type="primary", key="btn_p4_predict"):
                 try:
                     from zhiku_predictor import run_persona_prediction, export_to_zhiku
-                    with st.spinner("Predicting..." if is_en else "推演中..."):
+                    with st.spinner(t("ui.predicting")):
                         result = run_persona_prediction(
                             priority_level=p4_level,
                             max_queries=p4_max,
@@ -2293,7 +2293,7 @@ Requirements:
                             else:
                                 st.info(f"All queries already in library ({total} total, no new additions)" if is_en else f"全部短语已在智库中（共 {total} 条，无新增。请换不同条件推演）")
                         else:
-                            st.info("No new predictions (all already in library). Try different sites/topics." if is_en else "无新预测短语（已全部在库）。请换不同站点/话题再试。")
+                            st.info(t("ui.no_new_predictions_all"))
 
                         st.rerun()
                     else:
@@ -2307,22 +2307,22 @@ Requirements:
         # ② 校准 + 去重
         # ============================================================
         st.markdown("""<div class="ss-section">
-            <h3 style="color:#ffa726;">② """ + ("Calibration & Deduplication" if is_en else "校准 + 去重") + """</h3>
+            <h3 style="color:#ffa726;">② """ + (t("ui.calibration_deduplication")) + """</h3>
         </div>""", unsafe_allow_html=True)
 
         if total_phrases > 0:
             col_b1, col_b2, col_b3, col_dedup = st.columns(4)
             with col_b1:
-                st.metric("B1 Platform Consensus" if is_en else "B1 跨平台共识", "—", help="Optional: requires API calls")
+                st.metric(t("ui.b1_platform_consensus"), "—", help="Optional: requires API calls")
             with col_b2:
                 cat_matched = df_zhiku_all["category"].notna().sum() if not df_zhiku_all.empty and "category" in df_zhiku_all.columns else 0
-                st.metric("B2 Category Match" if is_en else "B2 类别匹配", f"{cat_matched}/{total_phrases}")
+                st.metric(t("ui.b2_category_match"), f"{cat_matched}/{total_phrases}")
             with col_b3:
-                st.metric("B3 Timeliness" if is_en else "B3 时效性", f"{total_phrases}/{total_phrases}", help="Auto-check for expired terms")
+                st.metric(t("ui.b3_timeliness"), f"{total_phrases}/{total_phrases}", help="Auto-check for expired terms")
             with col_dedup:
-                st.metric("Dedupe" if is_en else "去重", f"{total_phrases} → ?")
+                st.metric(t("ui.dedupe"), f"{total_phrases} → ?")
 
-            if st.button("🔄 Run Calibrate & Dedupe" if is_en else "🔄 执行校准去重", key="btn_calibrate"):
+            if st.button(t("ui.run_calibrate_dedupe"), key="btn_calibrate"):
                 # Simple dedup on ai_query
                 zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
                 if zhiku_file.exists():
@@ -2335,7 +2335,7 @@ Requirements:
                     st.success(f"✅ Deduped: {before} → {after} (removed {before - after})" if is_en else f"✅ 去重完成：{before} → {after}（删除 {before - after} 条）")
                     st.rerun()
         else:
-            st.caption("No phrases yet. Use Step ① to produce phrases first." if is_en else "暂无短语，请先执行第①步产出短语。")
+            st.caption(t("ui.no_phrases_yet_use_1"))
 
         st.divider()
 
@@ -2343,7 +2343,7 @@ Requirements:
         # ③ 人工选取/修改
         # ============================================================
         st.markdown("""<div class="ss-section">
-            <h3 style="color:#ffa726;">③ """ + ("Review & Selection" if is_en else "审核 & 选取") + """</h3>
+            <h3 style="color:#ffa726;">③ """ + (t("ui.review_selection")) + """</h3>
         </div>""", unsafe_allow_html=True)
 
         df_q = load_zhiku_live(selected_batch)
@@ -2359,8 +2359,8 @@ Requirements:
 
             # Show counts
             col_src1, col_src2 = st.columns(2)
-            col_src1.metric("🎯 Tracked (已追踪到)" if is_en else "🎯 已追踪到", len(df_collected))
-            col_src2.metric("🔮 Predicted (预估推演)" if is_en else "🔮 预估推演", len(df_predicted))
+            col_src1.metric(t("ui.tracked_已追踪到"), len(df_collected))
+            col_src2.metric(t("ui.predicted_预估推演"), len(df_predicted))
 
             # Tabbed view
             tab_collected, tab_predicted, tab_all = st.tabs([
@@ -2370,7 +2370,7 @@ Requirements:
             ])
 
             with tab_collected:
-                st.caption("From real channels: SEO/SEM keywords, AI dropdown suggestions, reverse recall, community Q&A, manual input." if is_en else "来自真实渠道：SEO/SEM 关键词裂变、AI 平台下拉联想、逆向召回、社区原生提问、手动录入。")
+                st.caption(t("ui.from_real_channels_seosem"))
                 if not df_collected.empty:
                     edit_cols_c = [c for c in ["ai_query", "category", "source", "priority_score", "is_selected"] if c in df_collected.columns]
                     if edit_cols_c:
@@ -2378,10 +2378,10 @@ Requirements:
                             df_collected["is_selected"] = df_collected["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])
                         st.dataframe(df_collected[edit_cols_c], use_container_width=True, hide_index=True)
                 else:
-                    st.caption("No tracked phrases yet. Use P1/P2/P3 tabs above to add from real channels." if is_en else "暂无已追踪短语。请通过上方 P1/P2/P3 来源添加。")
+                    st.caption(t("ui.no_tracked_phrases_yet"))
 
             with tab_predicted:
-                st.caption("AI-predicted based on persona matrix × lifecycle × site × topic. Need verification before production." if is_en else "基于画像矩阵 × 生命周期 × 站点 × 话题推演预估。进入生产前需通过智测验证。")
+                st.caption(t("ui.aipredicted_based_on_persona"))
                 if not df_predicted.empty:
                     edit_cols_p = [c for c in ["ai_query", "category", "source", "priority_score", "estimated_volume", "is_selected"] if c in df_predicted.columns]
                     if edit_cols_p:
@@ -2389,20 +2389,20 @@ Requirements:
                             df_predicted["is_selected"] = df_predicted["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])
                         st.dataframe(df_predicted[edit_cols_p], use_container_width=True, hide_index=True)
                 else:
-                    st.caption("No predicted phrases yet. Use P4 Persona Prediction tab to generate." if is_en else "暂无预估短语。请通过 P4 画像推演生成。")
+                    st.caption(t("ui.no_predicted_phrases_yet"))
 
             with tab_all:
                 # Filters
                 col_f1, col_f2 = st.columns(2)
                 with col_f1:
-                    filter_options = ["All" if is_en else "全部", "✅ Selected" if is_en else "✅ 已选中", "⬜ Not selected" if is_en else "⬜ 未选中"]
+                    filter_options = [t("ui.all"), t("ui.selected_1"), t("ui.not_selected")]
                     if "source" in df_q.columns:
                         filter_options += sorted(df_q["source"].dropna().unique().tolist())
-                    sel_filter = st.selectbox("Filter" if is_en else "筛选", filter_options, key="zhiku_filter")
+                    sel_filter = st.selectbox(t("ui.filter"), filter_options, key="zhiku_filter")
                 with col_f2:
                     if "category" in df_q.columns:
-                        cat_options = ["All" if is_en else "全部"] + sorted(df_q["category"].dropna().unique().tolist())
-                        cat_filter = st.selectbox("Category" if is_en else "类别", cat_options, key="zhiku_cat_filter")
+                        cat_options = [t("ui.all")] + sorted(df_q["category"].dropna().unique().tolist())
+                        cat_filter = st.selectbox(t("ui.category"), cat_options, key="zhiku_cat_filter")
                     else:
                         cat_filter = "全部"
 
@@ -2420,14 +2420,14 @@ Requirements:
                 # Bulk actions
                 col_sa, col_sn, col_count = st.columns([1, 1, 4])
                 with col_sa:
-                    if st.button("✅ Select All" if is_en else "✅ 全选", key="btn_sel_all"):
+                    if st.button(t("ui.select_all_1"), key="btn_sel_all"):
                         zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
                         df_q["is_selected"] = df_q["is_selected"].astype(str)
                         df_q.loc[df_display.index, "is_selected"] = "TRUE"
                         df_q.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
                         st.rerun()
                 with col_sn:
-                    if st.button("⬜ Deselect All" if is_en else "⬜ 全不选", key="btn_desel_all"):
+                    if st.button(t("ui.deselect_all_1"), key="btn_desel_all"):
                         zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
                         df_q["is_selected"] = df_q["is_selected"].astype(str)
                         df_q.loc[df_display.index, "is_selected"] = "FALSE"
@@ -2442,17 +2442,17 @@ Requirements:
                 if edit_cols:
                     column_config = {}
                     if "category" in df_display.columns:
-                        column_config["category"] = st.column_config.SelectboxColumn("Category" if is_en else "类别", options=CATEGORIES_35)
+                        column_config["category"] = st.column_config.SelectboxColumn(t("ui.category"), options=CATEGORIES_35)
                     if "is_selected" in df_display.columns:
                         df_display["is_selected"] = df_display["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])
-                        column_config["is_selected"] = st.column_config.CheckboxColumn("Sel" if is_en else "选")
+                        column_config["is_selected"] = st.column_config.CheckboxColumn(t("ui.sel"))
                     if "source" in df_display.columns:
-                        column_config["source"] = st.column_config.TextColumn("Source" if is_en else "来源", disabled=True)
+                        column_config["source"] = st.column_config.TextColumn(t("ui.source_1"), disabled=True)
 
                     edited_df = st.data_editor(df_display[edit_cols], column_config=column_config, use_container_width=True, hide_index=True, num_rows="dynamic", key="zhiku_editor_new")
 
                     # Save button — saves checkbox edits to file
-                    if st.button("💾 Save Edits" if is_en else "💾 保存编辑", key="btn_save_edits"):
+                    if st.button(t("ui.save_edits"), key="btn_save_edits"):
                         zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
                         try:
                             # Ensure is_selected is string type in df_q before assignment
@@ -2468,16 +2468,16 @@ Requirements:
                                         df_q.loc[df_display.index[:len(vals)], col] = vals
                             df_q.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
                             mark_data_changed()
-                            st.success("✅ Saved" if is_en else "✅ 已保存")
+                            st.success(t("ui.saved"))
                             st.rerun()
                         except Exception as e:
                             st.error(str(e))
 
                 # Export
                 csv_export = df_display.to_csv(index=False).encode("utf-8-sig")
-                st.download_button("📥 Export CSV" if is_en else "📥 导出 CSV", csv_export, file_name=f"zhiku_{selected_batch}.csv", mime="text/csv")
+                st.download_button(t("ui.export_csv"), csv_export, file_name=f"zhiku_{selected_batch}.csv", mime="text/csv")
         else:
-            st.caption("No phrases yet." if is_en else "暂无短语。")
+            st.caption(t("ui.no_phrases_yet"))
 
         st.divider()
 
@@ -2485,12 +2485,12 @@ Requirements:
         # ④ CTA → 智测验证 / 直接智造
         # ============================================================
         st.markdown("""<div class="ss-section">
-            <h3 style="color:#4caf50;">④ """ + ("Next Step" if is_en else "下一步") + """</h3>
+            <h3 style="color:#4caf50;">④ """ + (t("ui.next_step")) + """</h3>
         </div>""", unsafe_allow_html=True)
 
         col_verify, col_skip = st.columns([2, 1])
         with col_verify:
-            if st.button("🔍 Send to 智测 Verify Gap" if is_en else "🔍 发送到智测验证 Gap", type="primary", key="cta_to_zhice"):
+            if st.button(t("ui.send_to_智测_verify"), type="primary", key="cta_to_zhice"):
                 # Use in-memory df_q which has auto-saved edits
                 if not df_q.empty and "ai_query" in df_q.columns:
                     df_sel = df_q.copy()
@@ -2510,16 +2510,16 @@ Requirements:
                         jump_to("🔍 智测")
                         st.rerun()
                     else:
-                        st.warning("No selected phrases. Use ✅ Select All or check boxes above." if is_en else "没有选中的短语。请先用 ✅全选 或在上方表格勾选。")
+                        st.warning(t("ui.no_selected_phrases_use"))
                 else:
-                    st.warning("No phrases in library" if is_en else "短语库为空")
+                    st.warning(t("ui.no_phrases_in_library"))
         with col_skip:
-            if st.button("⏭️ Skip to 智造" if is_en else "⏭️ 跳过直接智造", key="cta_skip_zhizao"):
+            if st.button(t("ui.skip_to_智造"), key="cta_skip_zhizao"):
                 jump_to("✍️ 智造")
                 st.rerun()
 
         # History
-        with st.expander("📜 History" if is_en else "📜 历史记录"):
+        with st.expander(t("ui.history_1")):
             batch_path = OUTPUT_PATH / selected_batch / "01_zhiku"
             all_files = []
             if batch_path.exists():
@@ -2532,7 +2532,7 @@ Requirements:
                 with col_hist_title:
                     st.caption(f"{len(all_files)} files")
                 with col_hist_clear:
-                    if st.button("🗑️ Clear All" if is_en else "🗑️ 清空全部", key="clear_zhiku_hist"):
+                    if st.button(t("ui.clear_all_1"), key="clear_zhiku_hist"):
                         if batch_path.exists():
                             for f in batch_path.glob("*.csv"):
                                 f.unlink()
@@ -2540,7 +2540,7 @@ Requirements:
                             if archive_path.exists():
                                 for f in archive_path.glob("*.csv"):
                                     f.unlink()
-                        st.success("History cleared" if is_en else "已清空")
+                        st.success(t("ui.history_cleared"))
                         st.rerun()
                 all_files.sort(key=lambda f: f.stat().st_mtime, reverse=True)
                 for f in all_files[:10]:
@@ -2549,14 +2549,14 @@ Requirements:
                     with col_i:
                         st.caption(f"📄 {f.name} · {f.stat().st_size/1024:.1f}KB · 🕐 {mtime}")
                     with col_r:
-                        if st.button("♻️ Reuse" if is_en else "♻️ 复用", key=f"reuse_zhiku_{f.name}"):
+                        if st.button(t("ui.reuse"), key=f"reuse_zhiku_{f.name}"):
                             live_path = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
                             safe_copy(f, live_path)
                             st.rerun()
                     with col_d:
                         st.download_button("⬇️", f.read_bytes(), file_name=f.name, mime="text/csv", key=f"dl_zhiku_{f.name}")
             else:
-                st.caption("No history records yet" if is_en else "暂无历史")
+                st.caption(t("ui.no_history_records_yet"))
 
     # --- Ahrefs Brand Radar Section (rickylan only) ---
     if AHREFS_AVAILABLE:
@@ -2567,7 +2567,7 @@ Requirements:
     # PAGE: 智测 (Gap Verification)
     # ============================================================
 elif _page_idx == 2:
-    st.markdown("""<div class="ss-page-header" style="color:#00d4aa;"><h1>🔍 """ + ("Gap Verification" if is_en else "智测 – AI 检索覆盖验证") + """</h1><p>""" + ("Verify search phrases against 7 AI platforms to discover content gaps" if is_en else "在 7 个 AI 平台验证检索短语的覆盖状态，发现内容 Gap") + """</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="ss-page-header" style="color:#00d4aa;"><h1>🔍 """ + (t("ui.gap_verification")) + """</h1><p>""" + (t("ui.verify_search_phrases_against")) + """</p></div>""", unsafe_allow_html=True)
     render_pipeline_flow("zhice", selected_batch)
 
     # --- Detection Rules (top of page, consistent with 智造/智优) ---
@@ -2576,7 +2576,7 @@ elif _page_idx == 2:
 
     # --- Input: phrases to verify ---
     st.markdown("""<div class="ss-section">
-        <h3 style="color:#00d4aa;">① """ + ("Phrases Pending Verification" if is_en else "待验证短语") + """</h3>
+        <h3 style="color:#00d4aa;">① """ + (t("ui.phrases_pending_verification")) + """</h3>
     </div>""", unsafe_allow_html=True)
 
     # Load selected phrases from zhiku (for both admin and user)
@@ -2607,12 +2607,12 @@ elif _page_idx == 2:
         st.caption(f"{'From 智库 (selected)' if is_en else '来自智库（已选中）'}: {len(queue_phrases)} phrases")
         st.dataframe(pd.DataFrame({"ai_query": queue_phrases}), use_container_width=True, hide_index=True, height=200)
     else:
-        st.info("No selected phrases. Go to 智库 and select phrases first." if is_en else "暂无已选中的短语。请先在智库中选中短语。")
+        st.info(t("ui.no_selected_phrases_go"))
 
     # Upload option (admin only)
     if is_admin:
-        with st.expander("📤 " + ("Upload additional phrases" if is_en else "上传额外待验证短语"), expanded=False):
-            up_verify = st.file_uploader("CSV with ai_query column" if is_en else "CSV（含 ai_query 列）", type=["csv", "xlsx"], key="zhice_upload_phrases")
+        with st.expander("📤 " + (t("ui.upload_additional_phrases")), expanded=False):
+            up_verify = st.file_uploader(t("ui.csv_with_ai_query_column"), type=["csv", "xlsx"], key="zhice_upload_phrases")
             if up_verify:
                 df_up = pd.read_csv(up_verify, encoding="utf-8-sig", on_bad_lines="skip") if up_verify.name.endswith(".csv") else pd.read_excel(up_verify, engine="openpyxl")
                 if "ai_query" in df_up.columns:
@@ -2688,15 +2688,15 @@ elif _page_idx == 2:
 
     # --- Execute verification ---
     st.markdown("""<div class="ss-section">
-        <h3 style="color:#00d4aa;">② """ + ("Run AI Platform Verification" if is_en else "执行验证") + """</h3>
+        <h3 style="color:#00d4aa;">② """ + (t("ui.run_ai_platform_verification")) + """</h3>
     </div>""", unsafe_allow_html=True)
 
     ZHICE_PLATFORMS = {"qianwen": "通义千问", "deepseek": "DeepSeek", "kimi": "Kimi", "doubao": "豆包", "chatgpt": "ChatGPT", "perplexity": "Perplexity", "gemini": "Gemini"}
-    selected_platforms = st.multiselect("Verification Platforms" if is_en else "验证平台", list(ZHICE_PLATFORMS.keys()), default=["qianwen", "deepseek"], format_func=lambda x: ZHICE_PLATFORMS[x], key="zhice_platforms")
+    selected_platforms = st.multiselect(t("ui.verification_platforms"), list(ZHICE_PLATFORMS.keys()), default=["qianwen", "deepseek"], format_func=lambda x: ZHICE_PLATFORMS[x], key="zhice_platforms")
 
     col_auto, col_manual = st.columns(2)
     with col_auto:
-        if st.button("🔍 Auto Verify (API)" if is_en else "🔍 AI 自动验证", type="primary", key="zhice_auto_run", disabled=not queue_phrases):
+        if st.button(t("ui.auto_verify_api"), type="primary", key="zhice_auto_run", disabled=not queue_phrases):
             try:
                 from zhice_engine import REAL_API_MAP
                 from engine import call_claude as _verify_claude
@@ -2879,14 +2879,14 @@ elif _page_idx == 2:
                 mark_data_changed()
                 st.rerun()
             except ImportError:
-                st.error("zhice_engine not available. Use manual upload instead." if is_en else "zhice_engine 不可用，请手动上传结果。")
+                st.error(t("ui.zhice_engine_not_available_use"))
             except Exception as e:
                 st.error(str(e))
 
     with col_manual:
-        st.markdown("**" + ("Upload verification results" if is_en else "上传验证结果") + "**")
-        st.caption("CSV with columns: ai_query, gap_status, has_brand_mention, has_official_link" if is_en else "CSV需含列：ai_query, gap_status, has_brand_mention, has_official_link")
-        up_result = st.file_uploader("Upload gap results" if is_en else "上传 Gap 结果", type=["csv", "xlsx"], key="zhice_upload_results")
+        st.markdown("**" + (t("ui.upload_verification_results")) + "**")
+        st.caption(t("ui.csv_with_columns_ai_query"))
+        up_result = st.file_uploader(t("ui.upload_gap_results"), type=["csv", "xlsx"], key="zhice_upload_results")
         if up_result:
             df_gap = pd.read_csv(up_result, encoding="utf-8-sig", on_bad_lines="skip") if up_result.name.endswith(".csv") else pd.read_excel(up_result, engine="openpyxl")
             st.session_state["zhice_gap_results"] = df_gap
@@ -2899,7 +2899,7 @@ elif _page_idx == 2:
 
     # --- Results & Select ---
     st.markdown("""<div class="ss-section">
-        <h3 style="color:#00d4aa;">③ """ + ("Gap Analysis Results & Selection" if is_en else "Gap 结果 & 选取") + """</h3>
+        <h3 style="color:#00d4aa;">③ """ + (t("ui.gap_analysis_results_selection")) + """</h3>
     </div>""", unsafe_allow_html=True)
 
     df_gap_display = st.session_state.get("zhice_gap_results", pd.DataFrame())
@@ -2922,13 +2922,13 @@ elif _page_idx == 2:
         # Summary metrics
         if "gap_status" in df_gap_display.columns:
             gc1, gc2, gc3, gc4, gc5 = st.columns(5)
-            gc1.metric("Total" if is_en else "总计", len(df_gap_display))
-            gc2.metric("✅ Covered" if is_en else "✅ 已覆盖", len(df_gap_display[df_gap_display["gap_status"] == "covered"]))
+            gc1.metric(t("ui.total_1"), len(df_gap_display))
+            gc2.metric(t("ui.covered"), len(df_gap_display[df_gap_display["gap_status"] == "covered"]))
             gc3.metric("⚠️ Partial", len(df_gap_display[df_gap_display["gap_status"] == "partial_gap"]))
             gc4.metric("❌ Full Gap", len(df_gap_display[df_gap_display["gap_status"] == "full_gap"]))
             # Competitor gap: competitors mentioned but Amazon not
             comp_gap_count = len(df_gap_display[df_gap_display["competitor_gap"] == True]) if "competitor_gap" in df_gap_display.columns else 0
-            gc5.metric("🔥 Competitor Gap" if is_en else "🔥 竞品覆盖我们未覆盖", comp_gap_count)
+            gc5.metric(t("ui.competitor_gap"), comp_gap_count)
 
         # Highlight competitor gaps
         if "competitor_gap" in df_gap_display.columns and df_gap_display["competitor_gap"].any():
@@ -2960,7 +2960,7 @@ elif _page_idx == 2:
             # --- Clear buttons (above table) ---
             _zc_col1, _zc_col2, _zc_col3 = st.columns([1, 1, 4])
             with _zc_col1:
-                if st.button("🗑️ " + ("Clear Selected" if is_en else "选中清空"), key="zhice_clear_sel"):
+                if st.button("🗑️ " + (t("ui.clear_selected")), key="zhice_clear_sel"):
                     # Use _select column from edited tables
                     if "_select" in edited_gap.columns if 'edited_gap' in dir() else False:
                         sel_mask = edited_gap["_select"] == True
@@ -2975,9 +2975,9 @@ elif _page_idx == 2:
                         st.success(f"✅ {sel_mask.sum()} {'cleared' if is_en else '条已清空'}")
                         st.rerun()
                     else:
-                        st.warning("No items selected. Check the ☑️ column first." if is_en else "未勾选任何条目，请先在表格中勾选 ☑️ 列")
+                        st.warning(t("ui.no_items_selected_check"))
             with _zc_col2:
-                if st.button("🗑️ " + ("Clear ALL" if is_en else "全部清空"), key="zhice_clear_all"):
+                if st.button("🗑️ " + (t("ui.clear_all")), key="zhice_clear_all"):
                     all_mask = pd.Series([True] * len(df_gap_display))
                     archive_selected_items(selected_batch, "zhice", df_gap_display, all_mask, is_en)
                     gap_files = sorted(zhice_dir.glob("gap_result_*.csv"), key=lambda f: f.stat().st_mtime, reverse=True)
@@ -2995,15 +2995,15 @@ elif _page_idx == 2:
 
             col_config = {
                 "_select": st.column_config.CheckboxColumn("☑️", default=False),
-                "ai_query": st.column_config.TextColumn("Search Phrase" if is_en else "检索短语"),
-                "platform": st.column_config.TextColumn("Platform" if is_en else "验证平台"),
-                "gap_status": st.column_config.TextColumn("Gap Status" if is_en else "覆盖状态"),
-                "has_brand_mention": st.column_config.CheckboxColumn("Brand/Product Mention" if is_en else "品牌/产品名称提及", disabled=True),
-                "has_official_link": st.column_config.CheckboxColumn("Official Link" if is_en else "官网链接", disabled=True),
-                "to_produce": st.column_config.CheckboxColumn("→ Produce" if is_en else "→ 生产"),
-                "competitor_gap": st.column_config.CheckboxColumn("Comp Gap" if is_en else "竞品Gap", disabled=True),
-                "competitors": st.column_config.TextColumn("Competitors" if is_en else "竞品出现"),
-                "sentiment": st.column_config.TextColumn("Tone" if is_en else "内容情感"),
+                "ai_query": st.column_config.TextColumn(t("ui.search_phrase")),
+                "platform": st.column_config.TextColumn(t("ui.platform")),
+                "gap_status": st.column_config.TextColumn(t("ui.gap_status")),
+                "has_brand_mention": st.column_config.CheckboxColumn(t("ui.brandproduct_mention"), disabled=True),
+                "has_official_link": st.column_config.CheckboxColumn(t("ui.official_link"), disabled=True),
+                "to_produce": st.column_config.CheckboxColumn(t("ui.produce")),
+                "competitor_gap": st.column_config.CheckboxColumn(t("ui.comp_gap"), disabled=True),
+                "competitors": st.column_config.TextColumn(t("ui.competitors")),
+                "sentiment": st.column_config.TextColumn(t("ui.tone")),
             }
 
             # Group by platform
@@ -3078,10 +3078,10 @@ elif _page_idx == 2:
                         jump_to("✍️ 智造")
                         st.rerun()
     else:
-        st.caption("No gap results yet. Execute verification above or upload results." if is_en else "暂无 Gap 结果。请执行验证或上传结果。")
+        st.caption(t("ui.no_gap_results_yet"))
 
     # --- Prompt Tracking Trends ---
-    with st.expander("📈 Prompt Tracking History" if is_en else "📈 短语追踪历史（品牌/产品名称提及率变化）", expanded=False):
+    with st.expander(t("ui.prompt_tracking_history"), expanded=False):
         tracking_file = zhice_dir / "prompt_tracking_history.csv" if zhice_dir.exists() else None
         if tracking_file and tracking_file.exists():
             df_track = load_csv_safe(tracking_file)
@@ -3099,27 +3099,27 @@ elif _page_idx == 2:
 
                 # Show metrics
                 tc1, tc2, tc3, tc4 = st.columns(4)
-                tc1.metric("Total Verification Runs" if is_en else "总验证次数", len(df_track))
-                tc2.metric("Unique Phrases Tested" if is_en else "不重复短语", df_track["ai_query"].nunique())
+                tc1.metric(t("ui.total_verification_runs"), len(df_track))
+                tc2.metric(t("ui.unique_phrases_tested"), df_track["ai_query"].nunique())
                 latest_brand_rate = by_date["brand_rate"].iloc[-1] if len(by_date) > 0 else 0
-                tc3.metric("Brand/Product Name Mention Rate" if is_en else "品牌/产品名称提及率", f"{latest_brand_rate}%")
+                tc3.metric(t("ui.brandproduct_name_mention_rate"), f"{latest_brand_rate}%")
                 latest_link_rate = by_date["link_rate"].iloc[-1] if len(by_date) > 0 else 0
-                tc4.metric("Official Link Citation Rate" if is_en else "官网链接显示率", f"{latest_link_rate}%")
+                tc4.metric(t("ui.official_link_citation_rate"), f"{latest_link_rate}%")
 
                 # Trend chart (both lines)
                 if len(by_date) > 1:
                     fig_track = go.Figure()
-                    fig_track.add_trace(go.Scatter(x=by_date["date"], y=by_date["brand_rate"], name="Brand/Product Name Rate" if is_en else "品牌/产品名称提及率", line=dict(color="#00bcd4")))
-                    fig_track.add_trace(go.Scatter(x=by_date["date"], y=by_date["link_rate"], name="Link Rate" if is_en else "官网链接率", line=dict(color="#ffa726")))
+                    fig_track.add_trace(go.Scatter(x=by_date["date"], y=by_date["brand_rate"], name=t("ui.brandproduct_name_rate"), line=dict(color="#00bcd4")))
+                    fig_track.add_trace(go.Scatter(x=by_date["date"], y=by_date["link_rate"], name=t("ui.link_rate"), line=dict(color="#ffa726")))
                     fig_track.update_layout(
-                        title="Brand & Link Rate Over Time" if is_en else "品牌/产品名称提及率 & 官网链接率变化趋势",
+                        title=t("ui.brand_link_rate_over"),
                         height=250, margin=dict(l=0, r=0, t=30, b=0),
                         yaxis_title="%", xaxis_title="Date",
                     )
                     st.plotly_chart(fig_track, use_container_width=True)
 
                 # Per-query tracking (brand + link)
-                st.caption("Per-query history (🟢=Brand ✅, 🔗=Link ✅):" if is_en else "单条短语追踪（🟢=品牌/产品名称提及, 🔗=官网链接）：")
+                st.caption(t("ui.perquery_history_brand_link"))
                 query_history = df_track.groupby(["ai_query", "date"]).agg(
                     brand=("has_brand_mention", "any"),
                     link=("has_official_link", "any"),
@@ -3133,16 +3133,16 @@ elif _page_idx == 2:
                     pivot = pivot.fillna("—")
                     st.dataframe(pivot, use_container_width=True)
             else:
-                st.caption("No tracking data yet. Run verification to start tracking." if is_en else "暂无追踪数据。执行验证后开始追踪。")
+                st.caption(t("ui.no_tracking_data_yet"))
         else:
-            st.caption("No tracking data yet. Run verification to start tracking." if is_en else "暂无追踪数据。执行验证后开始追踪。")
+            st.caption(t("ui.no_tracking_data_yet"))
 
     # History
-    with st.expander("📜 History" if is_en else "📜 历史记录"):
+    with st.expander(t("ui.history_1")):
         if zhice_dir.exists():
             col_hist, col_clear_hist = st.columns([4, 1])
             with col_clear_hist:
-                if st.button("🗑️ Clear All" if is_en else "🗑️ 清空全部", key="clear_zhice_history"):
+                if st.button(t("ui.clear_all_1"), key="clear_zhice_history"):
                     # Delete gap results, queue files, and journey files
                     deleted = 0
                     for pattern in ["gap_result_*.csv", "zhiku_verify_queue_*.json", "*.json"]:
@@ -3164,7 +3164,7 @@ elif _page_idx == 2:
                     with col_f:
                         st.caption(f"📄 {f.name} · {mtime}")
                     with col_r:
-                        if st.button("♻️ Reuse" if is_en else "♻️ 复用", key=f"reuse_zhice_{f.name}"):
+                        if st.button(t("ui.reuse"), key=f"reuse_zhice_{f.name}"):
                             # For gap results, copy to the active gap result
                             if f.suffix == ".csv":
                                 live_path = zhice_dir / "gap_result_latest.csv"
@@ -3184,9 +3184,9 @@ elif _page_idx == 2:
                             f.unlink()
                             st.rerun()
             else:
-                st.caption("No history records yet" if is_en else "暂无历史")
+                st.caption(t("ui.no_history_records_yet"))
         else:
-            st.caption("No history records yet" if is_en else "暂无历史")
+            st.caption(t("ui.no_history_records_yet"))
 
     # --- Ahrefs Brand Radar Section (rickylan only) ---
     if AHREFS_AVAILABLE:
@@ -3197,16 +3197,16 @@ elif _page_idx == 2:
 # PAGE: 智造 (Step 2) — 单页线性流程
 # ============================================================
 elif _page_idx == 3:
-    st.markdown("""<div class="ss-page-header" style="color:#ffcc02;"><h1>✍️ """ + ("Content Creation" if is_en else "智造 – Content Generation") + """</h1><p>""" + ("Generate SEO+GEO dual-optimized content based on AI Queries" if is_en else "基于 AI Queries 生成 SEO+GEO 双优化内容") + """</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="ss-page-header" style="color:#ffcc02;"><h1>✍️ """ + (t("ui.content_creation")) + """</h1><p>""" + (t("ui.generate_seogeo_dualoptimized_content")) + """</p></div>""", unsafe_allow_html=True)
     render_pipeline_flow("zhizao", selected_batch)
 
     # --- User Content Rules Editor ---
     render_content_rules_editor(selected_batch, is_en, "zhizao")
 
     # --- Upload custom phrases directly ---
-    with st.expander("📤 Upload Phrases (skip Query Library)" if is_en else "📤 上传检索短语（跳过智库直接生产内容）", expanded=False):
-        st.caption("Optional: Upload prepared search phrase CSV/Excel, then click Run Content Gen to produce content directly" if is_en else "可选：如果已有准备好的检索短语 CSV/Excel，上传到此处后点击执行智造即可直接生产内容，无需经过智库裂变流程")
-        upload_direct = st.file_uploader("Upload CSV (must contain ai_query column)" if is_en else "上传 CSV（需包含 ai_query 列）", type=["csv", "xlsx"], key="zhizao_direct_upload")
+    with st.expander(t("ui.upload_phrases_skip_query"), expanded=False):
+        st.caption(t("ui.optional_upload_prepared_search"))
+        upload_direct = st.file_uploader(t("ui.upload_csv_must_contain"), type=["csv", "xlsx"], key="zhizao_direct_upload")
         if upload_direct:
             try:
                 if upload_direct.name.endswith(".xlsx"):
@@ -3228,7 +3228,7 @@ elif _page_idx == 3:
                 st.error(f"{'Upload failed' if is_en else '上传失败'}: {e}")
 
     # --- Show selected phrases (editable) ---
-    st.subheader("📋 Selected Phrases" if is_en else "📋 智测选择短语")
+    st.subheader(t("ui.selected_phrases_1"))
     zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
     df_zhiku = load_csv_safe(zhiku_file) if zhiku_file.exists() else pd.DataFrame()
     if not df_zhiku.empty and "is_selected" in df_zhiku.columns:
@@ -3238,10 +3238,10 @@ elif _page_idx == 3:
             edited_phrases = st.data_editor(
                 df_selected[edit_cols_z].reset_index(drop=True),
                 column_config={
-                    "ai_query": st.column_config.TextColumn("Search Phrase" if is_en else "检索短语", width="large"),
-                    "category": st.column_config.TextColumn("Category" if is_en else "类别"),
-                    "priority_score": st.column_config.NumberColumn("Score" if is_en else "综合分"),
-                    "is_selected": st.column_config.CheckboxColumn("Selected" if is_en else "选中"),
+                    "ai_query": st.column_config.TextColumn(t("ui.search_phrase"), width="large"),
+                    "category": st.column_config.TextColumn(t("ui.category")),
+                    "priority_score": st.column_config.NumberColumn(t("ui.score")),
+                    "is_selected": st.column_config.CheckboxColumn(t("ui.selected")),
                 },
                 use_container_width=True, hide_index=True,
                 key="zhizao_phrase_editor",
@@ -3254,21 +3254,21 @@ elif _page_idx == 3:
             except Exception:
                 pass
         else:
-            st.caption("No selected phrases in Query Library. Please go back to select some." if is_en else "智库中无已选中短语，请返回智库选中后再执行。")
+            st.caption(t("ui.no_selected_phrases_in"))
     else:
-        st.caption("No query library data found." if is_en else "未找到智库数据。")
+        st.caption(t("ui.no_query_library_data"))
 
     st.divider()
 
     # --- Content Material Upload (reference docs for generation) ---
-    st.subheader("📎 " + ("Reference Materials Upload" if is_en else "内容素材上传"))
-    st.caption("Upload reference documents (Word/PDF/TXT/MD) that the AI can use when generating articles. Materials are matched to phrases by keywords." if is_en else "上传参考素材文档（Word/PDF/TXT/MD），AI 生成文章时会从中抓取相关信息。素材按关键词自动匹配对应短语。")
+    st.subheader("📎 " + (t("ui.reference_materials_upload")))
+    st.caption(t("ui.upload_reference_documents_wordpdftxtmd"))
 
     _materials_dir = OUTPUT_PATH / selected_batch / "materials"
     _materials_dir.mkdir(parents=True, exist_ok=True)
 
     uploaded_materials = st.file_uploader(
-        "Upload materials" if is_en else "上传素材文件",
+        t("ui.upload_materials"),
         type=["docx", "doc", "pdf", "txt", "md", "csv"],
         accept_multiple_files=True,
         key="upload_materials",
@@ -3288,12 +3288,12 @@ elif _page_idx == 3:
         for mf in _existing_materials[:10]:
             st.text(f"  📄 {mf.name} ({mf.stat().st_size // 1024} KB)")
     else:
-        st.caption("No materials uploaded yet. AI will use built-in knowledge base." if is_en else "暂无上传素材，AI 将使用内置知识库生成。")
+        st.caption(t("ui.no_materials_uploaded_yet"))
 
     st.divider()
 
     # Execution
-    st.subheader("▶️ Generate Content" if is_en else "▶️ 生成内容")
+    st.subheader(t("ui.generate_content"))
 
     # Show progress: how many already generated vs total selected
     df_existing_content = load_zhizao(selected_batch)
@@ -3303,28 +3303,28 @@ elif _page_idx == 3:
     if total_selected > 0:
         st.progress(min(1.0, already_generated / total_selected), text=f"{'Generated' if is_en else '已生成'} {already_generated}/{total_selected} {'articles' if is_en else '篇'}")
 
-    content_limit = st.number_input("Articles per batch" if is_en else "每批生成文章数", 1, 20, 5, key="zhizao_limit")
+    content_limit = st.number_input(t("ui.articles_per_batch"), 1, 20, 5, key="zhizao_limit")
 
     # Template selection
     template_options = {
-        "auto": "🤖 Auto-detect (智能匹配)" if is_en else "🤖 智能匹配（根据短语自动选模板）",
-        "none": "🆓 From Scratch (自由生成)" if is_en else "🆓 自由生成（无模板）",
-        "registration": "📋 Registration Flow (注册流程)" if is_en else "📋 注册流程模板",
-        "fees": "💰 Fees & Costs (费用成本)" if is_en else "💰 费用成本模板",
-        "logistics": "📦 Logistics & FBA (物流仓储)" if is_en else "📦 物流仓储模板",
-        "advertising": "📢 Advertising (广告推广)" if is_en else "📢 广告推广模板",
-        "listing": "🏷️ Listing Optimization (Listing优化)" if is_en else "🏷️ Listing优化模板",
+        "auto": t("ui.autodetect_智能匹配"),
+        "none": t("ui.from_scratch_自由生成"),
+        "registration": t("ui.registration_flow_注册流程"),
+        "fees": t("ui.fees_costs_费用成本"),
+        "logistics": t("ui.logistics_fba_物流仓储"),
+        "advertising": t("ui.advertising_广告推广"),
+        "listing": t("ui.listing_optimization_listing优化"),
     }
     selected_template = st.selectbox(
-        "Content Template" if is_en else "内容模板",
+        t("ui.content_template"),
         options=list(template_options.keys()),
         format_func=lambda x: template_options[x],
         key="zhizao_template",
     )
     if selected_template == "auto":
-        st.caption("🤖 Auto mode: template is matched per query based on keywords (注册→注册模板, 费用→费用模板, etc.)" if is_en else "🤖 智能模式：根据每条短语的关键词自动匹配最佳模板（注册→注册模板，费用→费用模板，物流→物流模板...）")
+        st.caption(t("ui.auto_mode_template_is"))
     elif selected_template != "none":
-        st.caption("✅ Fixed template: all articles use the same structure." if is_en else "✅ 固定模板：所有文章使用同一结构。")
+        st.caption(t("ui.fixed_template_all_articles"))
 
     remaining = max(0, total_selected - already_generated)
     if already_generated > 0 and remaining > 0:
@@ -3332,7 +3332,7 @@ elif _page_idx == 3:
     elif remaining == 0 and already_generated > 0:
         btn_label_z = f"🔄 {'Regenerate' if is_en else '重新生成'} ({already_generated} {'done' if is_en else '篇已完成'})"
     else:
-        btn_label_z = "🚀 Run Content Gen" if is_en else "🚀 执行智造"
+        btn_label_z = t("ui.run_content_gen")
 
     if st.button(btn_label_z, type="primary", key="run_zhizao"):
         try:
@@ -3344,7 +3344,7 @@ elif _page_idx == 3:
                 progress_bar.progress(min(1.0, max(0.0, pct)))
                 status_text.text(msg)
 
-            with st.spinner("Calling Bedrock Claude to generate content..." if is_en else "正在调用 Bedrock Claude 生成内容..."):
+            with st.spinner(t("ui.calling_bedrock_claude_to")):
                 reuse_tpl = st.session_state.get("reuse_template", None)
                 result = run_zhizao(selected_batch, content_limit, update_progress_z, selected_template, reuse_tpl)
 
@@ -3358,30 +3358,30 @@ elif _page_idx == 3:
             else:
                 st.error(f"❌ {'Failed' if is_en else '失败'}: {result['error']}")
         except ImportError:
-            st.error("engine module not ready" if is_en else "engine 模块未就绪")
+            st.error(t("ui.engine_module_not_ready"))
 
     st.divider()
 
     # Content display
     df_z = load_zhizao(selected_batch)
     if not df_z.empty:
-        st.subheader("📤 Generated Content List" if is_en else "📤 生成内容列表")
+        st.subheader(t("ui.generated_content_list"))
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.metric("Articles Generated" if is_en else "生成文章数", len(df_z))
+            st.metric(t("ui.articles_generated"), len(df_z))
         with col2:
             if "word_count" in df_z.columns:
-                st.metric("Avg Word Count" if is_en else "平均字数", f"{df_z['word_count'].mean():.0f}")
+                st.metric(t("ui.avg_word_count"), f"{df_z['word_count'].mean():.0f}")
         with col3:
             if "version" in df_z.columns:
-                st.metric("Version" if is_en else "版本", df_z["version"].iloc[0] if len(df_z) > 0 else "N/A")
+                st.metric(t("ui.version"), df_z["version"].iloc[0] if len(df_z) > 0 else "N/A")
 
         # Clear buttons
         _zz_c1, _zz_c2, _zz_c3 = st.columns([1, 1, 4])
         with _zz_c1:
-            _zhizao_clear_sel = st.button("🗑️ " + ("Clear Selected" if is_en else "选中清空"), key="zhizao_clear_sel")
+            _zhizao_clear_sel = st.button("🗑️ " + (t("ui.clear_selected")), key="zhizao_clear_sel")
         with _zz_c2:
-            if st.button("🗑️ " + ("Clear ALL" if is_en else "全部清空"), key="zhizao_clear_all"):
+            if st.button("🗑️ " + (t("ui.clear_all")), key="zhizao_clear_all"):
                 zhizao_file = OUTPUT_PATH / selected_batch / "02_zhizao" / "zhizao_draft_content.csv"
                 if zhizao_file.exists():
                     all_mask = pd.Series([True] * len(df_z))
@@ -3403,11 +3403,11 @@ elif _page_idx == 3:
         # Only include column configs for columns that actually exist
         _zz_col_config = {"_select": st.column_config.CheckboxColumn("☑️", default=False)}
         if "ai_query" in display_cols:
-            _zz_col_config["ai_query"] = st.column_config.TextColumn("Search Phrase" if is_en else "检索短语")
+            _zz_col_config["ai_query"] = st.column_config.TextColumn(t("ui.search_phrase"))
         if "title" in display_cols:
-            _zz_col_config["title"] = st.column_config.TextColumn("Title" if is_en else "标题")
+            _zz_col_config["title"] = st.column_config.TextColumn(t("ui.title"))
         if "word_count" in display_cols:
-            _zz_col_config["word_count"] = st.column_config.NumberColumn("Words" if is_en else "字数")
+            _zz_col_config["word_count"] = st.column_config.NumberColumn(t("ui.words"))
         if "version" in display_cols:
             _zz_col_config["version"] = st.column_config.TextColumn("Ver")
         edited_zz = st.data_editor(df_z[display_cols], column_config=_zz_col_config, use_container_width=True, hide_index=True, key="zhizao_list_editor")
@@ -3422,12 +3422,12 @@ elif _page_idx == 3:
                 st.success(f"✅ {sel_mask.sum()} {'cleared' if is_en else '条已清空'}")
                 st.rerun()
             else:
-                st.warning("No items selected. Check ☑️ column first." if is_en else "未勾选任何条目，请先在表格中勾选 ☑️ 列")
+                st.warning(t("ui.no_items_selected_check_1"))
 
         # Article preview — all articles (editable)
         st.divider()
         st.subheader(f"📖 {'Article Preview & Edit' if is_en else '文章预览 & 编辑'}（{len(df_z)} {'articles' if is_en else '篇'}）")
-        st.caption("Edit article content below, changes auto-saved" if is_en else "可直接在下方编辑文章内容，修改后自动保存")
+        st.caption(t("ui.edit_article_content_below"))
         if "title" in df_z.columns:
             zhizao_file = OUTPUT_PATH / selected_batch / "02_zhizao" / "zhizao_draft_content.csv"
             content_changed = False
@@ -3443,7 +3443,7 @@ elif _page_idx == 3:
                         if "content_draft" in df_z.columns:
                             original = str(row.get("content_draft", ""))
                             edited_content = st.text_area(
-                                "Body Content" if is_en else "正文内容",
+                                t("ui.body_content"),
                                 value=original,
                                 height=300,
                                 key=f"edit_article_{idx}",
@@ -3463,7 +3463,7 @@ elif _page_idx == 3:
                                 content_changed = True
 
                             # Save as template button
-                            if st.button("💾 Save as Template" if is_en else "💾 保存为模板", key=f"save_tpl_{idx}"):
+                            if st.button(t("ui.save_as_template"), key=f"save_tpl_{idx}"):
                                 tpl_dir = BASE_PATH / "templates"
                                 tpl_dir.mkdir(parents=True, exist_ok=True)
                                 tpl_name = str(row.get("ai_query", f"template_{idx}"))[:50].strip()
@@ -3489,14 +3489,14 @@ elif _page_idx == 3:
             # Auto-save if any content changed
             if content_changed:
                 df_z.to_csv(zhizao_file, index=False, encoding="utf-8-sig")
-                st.success("✅ Changes auto-saved" if is_en else "✅ 修改已自动保存")
+                st.success(t("ui.changes_autosaved"))
 
         # Upload / Clear (after preview)
         st.divider()
         col_ul, col_cl = st.columns(2)
         with col_ul:
             uploaded_zhizao = st.file_uploader(
-                "📤 Upload Modified File" if is_en else "📤 上传修改后文件（按标题自动匹配更新）", type=["csv"], key="upload_zhizao_edit"
+                t("ui.upload_modified_file"), type=["csv"], key="upload_zhizao_edit"
             )
             if uploaded_zhizao is not None:
                 df_new = pd.read_csv(uploaded_zhizao, on_bad_lines="skip", encoding="utf-8-sig")
@@ -3535,18 +3535,18 @@ elif _page_idx == 3:
                     st.success(f"✅ {'Uploaded' if is_en else '已上传'} {len(df_new)} {'records' if is_en else '条记录'}")
                 st.rerun()
         with col_cl:
-            if st.button("🗑️ Clear History" if is_en else "🗑️ 清空历史", key="clear_zhizao"):
+            if st.button(t("ui.clear_history"), key="clear_zhizao"):
                 zhizao_dir = OUTPUT_PATH / selected_batch / "02_zhizao"
                 if zhizao_dir.exists():
                     for f in zhizao_dir.glob("zhizao_draft_content*.csv"):
                         f.unlink()
-                st.success("History cleared" if is_en else "已清空")
+                st.success(t("ui.history_cleared"))
                 st.rerun()
 
         # --- 文章确认环节 ---
         st.divider()
-        st.subheader("✅ Article Confirmation" if is_en else "✅ 文章确认")
-        st.caption("Check confirmed articles; only confirmed ones proceed to Optimization" if is_en else "勾选确认通过的文章，只有确认的文章才会进入智优优化")
+        st.subheader(t("ui.article_confirmation"))
+        st.caption(t("ui.check_confirmed_articles_only"))
 
         # Add confirmed column if not exists
         if "confirmed" not in df_z.columns:
@@ -3566,8 +3566,8 @@ elif _page_idx == 3:
             df_confirm_edit = st.data_editor(
                 df_z[["title", "confirmed"]].reset_index(drop=True),
                 column_config={
-                    "title": st.column_config.TextColumn("Article Title" if is_en else "文章标题", disabled=True),
-                    "confirmed": st.column_config.CheckboxColumn("Confirmed" if is_en else "确认通过"),
+                    "title": st.column_config.TextColumn(t("ui.article_title"), disabled=True),
+                    "confirmed": st.column_config.CheckboxColumn(t("ui.confirmed")),
                 },
                 use_container_width=True,
                 hide_index=True,
@@ -3587,20 +3587,20 @@ elif _page_idx == 3:
 
     # CTA → 智优
     st.divider()
-    if st.button("➡️ Go to Optimization (Step 3)" if is_en else "➡️ 进入智优 (Step 3)", type="primary", key="cta_zhizao_to_zhiyou"):
+    if st.button(t("ui.go_to_optimization_step"), type="primary", key="cta_zhizao_to_zhiyou"):
         jump_to("🔧 智优")
         st.rerun()
 
     # 📜 历史记录 + 清空
-    with st.expander("📜 History" if is_en else "📜 历史记录"):
+    with st.expander(t("ui.history_1")):
         zhizao_dir = OUTPUT_PATH / selected_batch / "02_zhizao"
         col_h1, col_h2 = st.columns([4, 1])
         with col_h2:
-            if st.button("🗑️ Clear All" if is_en else "🗑️ 清空全部", key="clear_zhizao_hist"):
+            if st.button(t("ui.clear_all_1"), key="clear_zhizao_hist"):
                 if zhizao_dir.exists():
                     for f in zhizao_dir.glob("*.csv"):
                         f.unlink()
-                    st.success("History cleared" if is_en else "已清空")
+                    st.success(t("ui.history_cleared"))
         if zhizao_dir.exists():
             files = sorted(zhizao_dir.glob("*.csv"), key=lambda f: f.stat().st_mtime, reverse=True)
             for f in files:
@@ -3609,17 +3609,17 @@ elif _page_idx == 3:
                 with col_i:
                     st.caption(f"📄 {f.name} · {f.stat().st_size/1024:.1f}KB · 🕐 {mtime}")
                 with col_r:
-                    if st.button("♻️ Reuse" if is_en else "♻️ 复用", key=f"reuse_zhizao_{f.name}"):
+                    if st.button(t("ui.reuse"), key=f"reuse_zhizao_{f.name}"):
                         live_path = OUTPUT_PATH / selected_batch / "02_zhizao" / "zhizao_draft_content.csv"
                         safe_copy(f, live_path)
                         st.rerun()
                 with col_d:
                     st.download_button("⬇️", f.read_bytes(), file_name=f.name, mime="text/csv", key=f"dl_zhizao_{f.name}")
         else:
-            st.caption("No history records yet" if is_en else "暂无历史")
+            st.caption(t("ui.no_history_records_yet"))
 
     # 📚 Template Library
-    with st.expander("📚 Template Library" if is_en else "📚 模板库（已保存的文章模板）"):
+    with st.expander(t("ui.template_library")):
         tpl_dir = BASE_PATH / "templates"
         if tpl_dir.exists():
             tpl_files = sorted(tpl_dir.glob("*.json"), key=lambda f: f.stat().st_mtime, reverse=True)
@@ -3642,7 +3642,7 @@ elif _page_idx == 3:
                     with col_t2:
                         st.caption(f"🕐 {tpl_created[:10]}")
                     with col_t3:
-                        if st.button("♻️ Use" if is_en else "♻️ 复用", key=f"use_tpl_{tf.name}"):
+                        if st.button(t("ui.use"), key=f"use_tpl_{tf.name}"):
                             # Load template into session state for reuse
                             st.session_state["reuse_template"] = tpl_data
                             st.success(f"{'Template loaded! Go to Generate Content and it will be used as base.' if is_en else '模板已加载！生成内容时将以此为基础进行调整。'}")
@@ -3657,18 +3657,18 @@ elif _page_idx == 3:
             if "reuse_template" in st.session_state:
                 tpl = st.session_state["reuse_template"]
                 st.info(f"{'Active template' if is_en else '当前加载模板'}: **{tpl.get('name', '')}** — {'AI will adapt this content to new queries' if is_en else 'AI 将在此基础上针对新短语调整内容'}")
-                if st.button("❌ Clear loaded template" if is_en else "❌ 取消模板复用", key="clear_loaded_tpl"):
+                if st.button(t("ui.clear_loaded_template"), key="clear_loaded_tpl"):
                     del st.session_state["reuse_template"]
                     st.rerun()
         else:
-            st.caption("No templates saved yet. Generate content first, then save articles as templates." if is_en else "暂无模板。先生成内容，然后在文章预览中点击「保存为模板」。")
+            st.caption(t("ui.no_templates_saved_yet"))
 
 
 # ============================================================
 # PAGE: 智优 (Step 3) — 一键自动完成
 # ============================================================
 elif _page_idx == 4:
-    st.markdown("""<div class="ss-page-header" style="color:#e91e63;"><h1>🔧 """ + ("Optimization" if is_en else "智优 – Score · Rewrite · Compliance") + """</h1><p>""" + ("One-click: Score → Rewrite → Compliance Review" if is_en else "一键自动完成 评分 → 重写优化 → 合规审查") + """</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="ss-page-header" style="color:#e91e63;"><h1>🔧 """ + (t("ui.optimization")) + """</h1><p>""" + (t("ui.oneclick_score_rewrite_compliance")) + """</p></div>""", unsafe_allow_html=True)
     render_pipeline_flow("zhiyou", selected_batch)
 
     # --- User Content Rules Editor ---
@@ -3677,18 +3677,18 @@ elif _page_idx == 4:
     # Clear history button
     col_spacer, col_clear = st.columns([5, 1])
     with col_clear:
-        if st.button("🗑️ Clear All" if is_en else "🗑️ 清空历史", key="clear_zhiyou_all"):
+        if st.button(t("ui.clear_all_2"), key="clear_zhiyou_all"):
             zhiyou_dir = OUTPUT_PATH / selected_batch / "03_zhiyou"
             if zhiyou_dir.exists():
                 for f in zhiyou_dir.glob("*.csv"):
                     f.unlink()
-            st.success("History cleared" if is_en else "已清空")
+            st.success(t("ui.history_cleared"))
             st.rerun()
 
     # --- Upload content directly (skip 智造) ---
-    with st.expander("📤 Upload Content (skip Content Creation)" if is_en else "📤 上传内容（跳过智造直接优化）", expanded=False):
-        st.caption("Optional: Upload existing article CSV for scoring/rewrite/compliance review" if is_en else "可选：上传已有文章 CSV，直接进行评分/重写/合规审查")
-        upload_zhiyou = st.file_uploader("Upload CSV (must contain content_draft column)" if is_en else "上传 CSV（需含 content_draft 列）", type=["csv", "xlsx"], key="zhiyou_direct_upload")
+    with st.expander(t("ui.upload_content_skip_content"), expanded=False):
+        st.caption(t("ui.optional_upload_existing_article"))
+        upload_zhiyou = st.file_uploader(t("ui.upload_csv_must_contain_1"), type=["csv", "xlsx"], key="zhiyou_direct_upload")
         if upload_zhiyou:
             try:
                 if upload_zhiyou.name.endswith(".xlsx"):
@@ -3703,7 +3703,7 @@ elif _page_idx == 4:
                 st.error(f"{'Upload failed' if is_en else '上传失败'}: {e}")
 
     # --- Show incoming content from 智造 ---
-    st.subheader("📋 Content from Content Creation" if is_en else "📋 智造输入内容")
+    st.subheader(t("ui.content_from_content_creation"))
     df_incoming = load_zhizao(selected_batch)
     if not df_incoming.empty:
         # Only show articles confirmed in 智造
@@ -3721,13 +3721,13 @@ elif _page_idx == 4:
             display_cols_in = [c for c in ["title", "ai_query", "word_count", "include_zhiyou"] if c in df_incoming.columns]
             _zy_col_config = {}
             if "title" in display_cols_in:
-                _zy_col_config["title"] = st.column_config.TextColumn("Title" if is_en else "标题", disabled=True)
+                _zy_col_config["title"] = st.column_config.TextColumn(t("ui.title"), disabled=True)
             if "ai_query" in display_cols_in:
-                _zy_col_config["ai_query"] = st.column_config.TextColumn("Search Phrase" if is_en else "检索短语", disabled=True)
+                _zy_col_config["ai_query"] = st.column_config.TextColumn(t("ui.search_phrase"), disabled=True)
             if "word_count" in display_cols_in:
-                _zy_col_config["word_count"] = st.column_config.NumberColumn("Words" if is_en else "字数", disabled=True)
+                _zy_col_config["word_count"] = st.column_config.NumberColumn(t("ui.words"), disabled=True)
             if "include_zhiyou" in display_cols_in:
-                _zy_col_config["include_zhiyou"] = st.column_config.CheckboxColumn("Include" if is_en else "纳入优化")
+                _zy_col_config["include_zhiyou"] = st.column_config.CheckboxColumn(t("ui.include"))
             edited_incoming = st.data_editor(
                 df_incoming[display_cols_in],
                 column_config=_zy_col_config,
@@ -3737,15 +3737,15 @@ elif _page_idx == 4:
             selected_count = edited_incoming["include_zhiyou"].sum() if "include_zhiyou" in edited_incoming.columns else len(df_incoming)
             st.caption(f"{selected_count}/{len(df_incoming)} {'articles selected for optimization' if is_en else '篇已确认文章来自智造'}")
         else:
-            st.caption("No confirmed articles in Content Creation. Go back to confirm some." if is_en else "智造中无已确认文章，请返回智造确认后再执行。")
+            st.caption(t("ui.no_confirmed_articles_in"))
     else:
-        st.caption("No content from Content Creation. Upload or run Content Creation first." if is_en else "暂无智造内容，请先上传或执行智造。")
+        st.caption(t("ui.no_content_from_content"))
 
     st.divider()
 
     # One-click execution
-    st.subheader("▶️ One-Click Full Optimization" if is_en else "▶️ 一键执行智优全流程")
-    st.markdown("Auto-execute in order: **Score → Rewrite → Compliance Review**" if is_en else "自动按顺序执行：**评分 → 重写 → 合规审查**")
+    st.subheader(t("ui.oneclick_full_optimization"))
+    st.markdown(t("ui.autoexecute_in_order_score"))
 
     # Show progress
     df_opt_existing = load_optimized(selected_batch)
@@ -3760,7 +3760,7 @@ elif _page_idx == 4:
     elif opt_done >= selected_for_opt and opt_done > 0:
         btn_zhiyou = f"🔄 {'Re-optimize' if is_en else '重新优化'} ({opt_done} {'done' if is_en else '篇已完成'})"
     else:
-        btn_zhiyou = "🚀 One-Click Full Optimization" if is_en else "🚀 一键智优全流程"
+        btn_zhiyou = t("ui.oneclick_full_optimization_1")
 
     if st.button(btn_zhiyou, type="primary", key="run_zhiyou_all"):
         try:
@@ -3779,51 +3779,51 @@ elif _page_idx == 4:
                     zhizao_path.parent.mkdir(parents=True, exist_ok=True)
                     df_to_process.to_csv(zhizao_path, index=False, encoding="utf-8-sig")
 
-            status_text.text("Step 3: Scoring..." if is_en else "Step 3: 评分中...")
+            status_text.text(t("ui.step_3_scoring"))
             progress_bar.progress(0.1)
             r1 = run_zhiyou_score(selected_batch)
             if not r1["success"]:
                 st.error(f"{'Scoring failed' if is_en else '评分失败'}: {r1['error']}")
             else:
                 progress_bar.progress(0.4)
-                status_text.text("Step 3.5: Rewriting..." if is_en else "Step 3.5: 重写中...")
+                status_text.text(t("ui.step_35_rewriting"))
                 r2 = run_zhiyou_execute(selected_batch)
                 if not r2["success"]:
                     st.error(f"{'Rewrite failed' if is_en else '重写失败'}: {r2['error']}")
                 else:
                     progress_bar.progress(0.7)
-                    status_text.text("Step 3.6: Compliance review..." if is_en else "Step 3.6: 合规审查中...")
+                    status_text.text(t("ui.step_36_compliance_review"))
                     r3 = run_zhiyou_compliance(selected_batch)
                     if not r3["success"]:
                         st.error(f"{'Compliance failed' if is_en else '合规失败'}: {r3['error']}")
                     else:
                         progress_bar.progress(1.0)
                         status_text.text("")
-                        st.success("✅ Full Optimization complete!" if is_en else "✅ 智优全流程完成！")
+                        st.success(t("ui.full_optimization_complete"))
                         mark_data_changed()
         except ImportError:
-            st.error("engine module not ready" if is_en else "engine 模块未就绪")
+            st.error(t("ui.engine_module_not_ready"))
 
     st.divider()
 
     # Results display (expanders)
-    st.subheader("📊 Results" if is_en else "📊 结果查看")
+    st.subheader(t("ui.results"))
 
     # Scorecard
-    with st.expander("📊 Scorecard (Step 3)" if is_en else "📊 评分卡 (Step 3)", expanded=False):
+    with st.expander(t("ui.scorecard_step_3"), expanded=False):
         df_sc = load_scorecard(selected_batch)
         if not df_sc.empty:
             col1, col2, col3 = st.columns(3)
             with col1:
-                st.metric("Articles Scored" if is_en else "评分文章数", len(df_sc))
+                st.metric(t("ui.articles_scored"), len(df_sc))
             with col2:
                 if "overall_score" in df_sc.columns:
                     avg_score = pd.to_numeric(df_sc['overall_score'], errors='coerce').mean()
-                    st.metric("Avg Score" if is_en else "平均总分", f"{avg_score:.2f}/5" if pd.notna(avg_score) else "N/A")
+                    st.metric(t("ui.avg_score"), f"{avg_score:.2f}/5" if pd.notna(avg_score) else "N/A")
             with col3:
                 if "is_approved" in df_sc.columns:
                     approved = df_sc[df_sc["is_approved"].astype(str).str.upper() == "TRUE"].shape[0]
-                    st.metric("Passed" if is_en else "通过数", f"{approved}/{len(df_sc)}")
+                    st.metric(t("ui.passed"), f"{approved}/{len(df_sc)}")
 
             # Radar chart
             score_cols = [c for c in df_sc.columns if c.endswith("_score") and c != "overall_score"]
@@ -3844,18 +3844,18 @@ elif _page_idx == 4:
 
             st.dataframe(df_sc, use_container_width=True, hide_index=True)
         else:
-            st.info("No scorecard yet" if is_en else "暂无评分卡")
+            st.info(t("ui.no_scorecard_yet"))
 
     # Rewrite
-    with st.expander("✍️ Optimized Rewrite (Step 3.5)" if is_en else "✍️ 优化重写 (Step 3.5)", expanded=False):
+    with st.expander(t("ui.optimized_rewrite_step_35"), expanded=False):
         df_opt = load_optimized(selected_batch)
         if not df_opt.empty:
             col1, col2 = st.columns(2)
             with col1:
-                st.metric("Optimized Articles" if is_en else "优化文章数", len(df_opt))
+                st.metric(t("ui.optimized_articles"), len(df_opt))
             with col2:
                 if "word_count" in df_opt.columns:
-                    st.metric("Avg Word Count" if is_en else "平均字数", f"{df_opt['word_count'].mean():.0f}")
+                    st.metric(t("ui.avg_word_count"), f"{df_opt['word_count'].mean():.0f}")
 
             display_cols = [c for c in ["content_id", "optimized_title", "word_count",
                                         "table_count", "list_count", "link_count", "version"]
@@ -3863,10 +3863,10 @@ elif _page_idx == 4:
             if display_cols:
                 st.dataframe(df_opt[display_cols], use_container_width=True, hide_index=True)
         else:
-            st.info("No optimized rewrite output yet" if is_en else "暂无优化重写输出")
+            st.info(t("ui.no_optimized_rewrite_output"))
 
     # Compliance
-    with st.expander("⚖️ Compliance Review (Step 3.6)" if is_en else "⚖️ 合规审查 (Step 3.6)", expanded=False):
+    with st.expander(t("ui.compliance_review_step_36"), expanded=False):
         df_comp = load_compliance(selected_batch)
         if not df_comp.empty:
             col1, col2, col3 = st.columns(3)
@@ -3879,7 +3879,7 @@ elif _page_idx == 4:
                     st.metric("BLOCKED", int((df_comp["compliance_status"] == "BLOCKED").sum()))
             st.dataframe(df_comp, use_container_width=True, hide_index=True)
         else:
-            st.info("No compliance review results yet" if is_en else "暂无合规审查结果")
+            st.info(t("ui.no_compliance_review_results"))
 
     # --- 文章预览 & 编辑 + 确认 ---
     st.divider()
@@ -3890,9 +3890,9 @@ elif _page_idx == 4:
         # Clear buttons
         _zy_c1, _zy_c2, _zy_c3 = st.columns([1, 1, 4])
         with _zy_c1:
-            _zhiyou_clear_sel = st.button("🗑️ " + ("Clear Selected" if is_en else "选中清空"), key="zhiyou_clear_sel")
+            _zhiyou_clear_sel = st.button("🗑️ " + (t("ui.clear_selected")), key="zhiyou_clear_sel")
         with _zy_c2:
-            if st.button("🗑️ " + ("Clear ALL" if is_en else "全部清空"), key="zhiyou_clear_all_btn"):
+            if st.button("🗑️ " + (t("ui.clear_all")), key="zhiyou_clear_all_btn"):
                 opt_file = OUTPUT_PATH / selected_batch / "03_zhiyou" / "zhiyou_optimized_content.csv"
                 if opt_file.exists():
                     all_mask = pd.Series([True] * len(df_opt))
@@ -3908,9 +3908,9 @@ elif _page_idx == 4:
         _zy_display_cols = ["_select"] + [c for c in ["ai_query", title_col, "overall_score"] if c in df_opt.columns]
         _zy_col_config = {
             "_select": st.column_config.CheckboxColumn("☑️", default=False),
-            "ai_query": st.column_config.TextColumn("Search Phrase" if is_en else "检索短语"),
-            title_col: st.column_config.TextColumn("Title" if is_en else "标题"),
-            "overall_score": st.column_config.NumberColumn("Score" if is_en else "评分"),
+            "ai_query": st.column_config.TextColumn(t("ui.search_phrase")),
+            title_col: st.column_config.TextColumn(t("ui.title")),
+            "overall_score": st.column_config.NumberColumn(t("ui.score_1")),
         }
         edited_zy = st.data_editor(df_opt[_zy_display_cols], column_config=_zy_col_config, use_container_width=True, hide_index=True, key="zhiyou_list_editor")
 
@@ -3924,9 +3924,9 @@ elif _page_idx == 4:
                 st.success(f"✅ {sel_mask.sum()} {'cleared' if is_en else '条已清空'}")
                 st.rerun()
             else:
-                st.warning("No items selected. Check ☑️ column first." if is_en else "未勾选任何条目，请先在表格中勾选 ☑️ 列")
+                st.warning(t("ui.no_items_selected_check_1"))
 
-        st.caption("Edit optimized articles below, changes auto-saved" if is_en else "可直接编辑优化后的文章内容，修改自动保存")
+        st.caption(t("ui.edit_optimized_articles_below"))
 
         opt_file = OUTPUT_PATH / selected_batch / "03_zhiyou" / "zhiyou_optimized_content.csv"
         content_col = "optimized_content" if "optimized_content" in df_opt.columns else "content_draft"
@@ -3942,7 +3942,7 @@ elif _page_idx == 4:
                         st.caption(f"{'Search phrase' if is_en else '检索短语'}: {row.get('ai_query', '')}")
                     if content_col in df_opt.columns:
                         original = str(row.get(content_col, ""))
-                        edited = st.text_area("Content" if is_en else "内容", value=original, height=300,
+                        edited = st.text_area(t("ui.content"), value=original, height=300,
                                               key=f"zhiyou_edit_{idx}", label_visibility="collapsed")
                         if edited != original:
                             df_opt.at[idx, content_col] = edited
@@ -3956,12 +3956,12 @@ elif _page_idx == 4:
 
         if content_changed:
             df_opt.to_csv(opt_file, index=False, encoding="utf-8-sig")
-            st.success("✅ Changes auto-saved" if is_en else "✅ 修改已自动保存")
+            st.success(t("ui.changes_autosaved"))
 
         # 确认环节
         st.divider()
-        st.subheader("✅ Article Confirmation" if is_en else "✅ 文章确认")
-        st.caption("Check confirmed articles; confirmed ones proceed to Publishing" if is_en else "勾选确认通过的文章，确认后进入智布发布")
+        st.subheader(t("ui.article_confirmation"))
+        st.caption(t("ui.check_confirmed_articles_confirmed"))
 
         if "confirmed" not in df_opt.columns:
             df_opt["confirmed"] = True
@@ -3971,8 +3971,8 @@ elif _page_idx == 4:
             df_confirm = st.data_editor(
                 df_opt[[title_col, "confirmed"]].reset_index(drop=True),
                 column_config={
-                    title_col: st.column_config.TextColumn("Article Title" if is_en else "文章标题", disabled=True),
-                    "confirmed": st.column_config.CheckboxColumn("Confirmed" if is_en else "确认通过"),
+                    title_col: st.column_config.TextColumn(t("ui.article_title"), disabled=True),
+                    "confirmed": st.column_config.CheckboxColumn(t("ui.confirmed")),
                 },
                 use_container_width=True, hide_index=True,
                 key="zhiyou_confirm_editor",
@@ -3992,9 +3992,9 @@ elif _page_idx == 4:
         st.divider()
         col_poc_title, col_poc_refresh = st.columns([4, 1])
         with col_poc_title:
-            st.subheader("🔒 POC Review" if is_en else "🔒 POC 人工审核")
+            st.subheader(t("ui.poc_review"))
         with col_poc_refresh:
-            if st.button("🔄 Refresh Status" if is_en else "🔄 刷新审批状态", key="refresh_poc_status"):
+            if st.button(t("ui.refresh_status"), key="refresh_poc_status"):
                 st.rerun()
 
         # Critical-5 categories that require POC review
@@ -4038,12 +4038,12 @@ elif _page_idx == 4:
             pending = needs_review - approved
 
             col_r1, col_r2, col_r3 = st.columns(3)
-            col_r1.metric("Needs POC Review" if is_en else "需要 POC 审核", int(needs_review))
-            col_r2.metric("✅ Approved" if is_en else "✅ 已审批", int(approved))
-            col_r3.metric("⏳ Pending" if is_en else "⏳ 待审批", int(pending))
+            col_r1.metric(t("ui.needs_poc_review"), int(needs_review))
+            col_r2.metric(t("ui.approved"), int(approved))
+            col_r3.metric(t("ui.pending"), int(pending))
 
             # Editable table: user can manually mark articles for POC review
-            st.caption("Critical-5 auto-flagged. You can also manually select any article for POC review." if is_en else "Critical-5 类别自动标记。你也可以手动选择任何文章进入人工审核。")
+            st.caption(t("ui.critical5_autoflagged_you_can"))
 
             title_col_r = "optimized_title" if "optimized_title" in df_opt.columns else ("title" if "title" in df_opt.columns else "ai_query")
             review_cols = [c for c in [title_col_r, "category", "needs_poc_review", "poc_approved"] if c in df_opt.columns]
@@ -4052,22 +4052,22 @@ elif _page_idx == 4:
                 edited_review = st.data_editor(
                     df_opt[review_cols].reset_index(drop=True),
                     column_config={
-                        title_col_r: st.column_config.TextColumn("Article" if is_en else "文章", disabled=True),
-                        "category": st.column_config.TextColumn("Category" if is_en else "类别", disabled=True),
-                        "needs_poc_review": st.column_config.CheckboxColumn("POC Review" if is_en else "需要审核"),
-                        "poc_approved": st.column_config.CheckboxColumn("Approved" if is_en else "已审批"),
+                        title_col_r: st.column_config.TextColumn(t("ui.article"), disabled=True),
+                        "category": st.column_config.TextColumn(t("ui.category"), disabled=True),
+                        "needs_poc_review": st.column_config.CheckboxColumn(t("ui.poc_review_1")),
+                        "poc_approved": st.column_config.CheckboxColumn(t("ui.approved_1")),
                     },
                     use_container_width=True, hide_index=True,
                     key="zhiyou_poc_editor",
                 )
 
                 # Save button for POC edits
-                if st.button("💾 Save Review Status" if is_en else "💾 保存审核状态", key="btn_save_poc"):
+                if st.button(t("ui.save_review_status"), key="btn_save_poc"):
                     opt_file = OUTPUT_PATH / selected_batch / "03_zhiyou" / "zhiyou_optimized_content.csv"
                     df_opt["needs_poc_review"] = edited_review["needs_poc_review"].values
                     df_opt["poc_approved"] = edited_review["poc_approved"].values
                     df_opt.to_csv(opt_file, index=False, encoding="utf-8-sig")
-                    st.success("✅ Saved" if is_en else "✅ 已保存")
+                    st.success(t("ui.saved"))
                     st.rerun()
 
             # Submit to POC review queue
@@ -4111,14 +4111,14 @@ elif _page_idx == 4:
                         df_review = pd.concat([existing, df_review], ignore_index=True)
                     df_review.to_csv(review_file, index=False, encoding="utf-8-sig")
                     st.success(f"✅ {len(review_rows)} articles submitted to POC review queue" if is_en else f"✅ {len(review_rows)} 篇已提交到 POC 审核队列")
-                st.info("💡 POC reviewers: open **localhost:8502** to review and approve articles." if is_en else "💡 POC 审核人：请打开 **localhost:8502** 查看和审批文章。")
+                st.info(t("ui.poc_reviewers_open_localhost8502"))
 
             # --- Inline Quick Approve (works on Cloud without 8502) ---
             pending_for_approve = df_opt[(df_opt["needs_poc_review"] == True) & (df_opt["poc_approved"] == False)]
             if len(pending_for_approve) > 0:
                 st.divider()
-                st.markdown("**🔍 Quick Review & Approve**" if is_en else "**🔍 快速审核 & 审批（无需 8502）**")
-                st.caption("Review content below and approve/reject directly." if is_en else "直接在下方审核内容并审批，无需打开独立审核界面。")
+                st.markdown(t("ui.quick_review_approve"))
+                st.caption(t("ui.review_content_below_and"))
 
                 content_col_r = "optimized_content" if "optimized_content" in pending_for_approve.columns else "content_draft"
                 title_col_r = "optimized_title" if "optimized_title" in pending_for_approve.columns else "title"
@@ -4128,11 +4128,11 @@ elif _page_idx == 4:
                     with st.expander(f"⏳ {art_title}", expanded=False):
                         st.caption(f"Content ID: {row.get('content_id', '')} | Category: {row.get('category', 'N/A')}")
                         art_content = str(row.get(content_col_r, ""))
-                        st.text_area("Content Preview" if is_en else "内容预览", value=art_content[:3000], height=200, key=f"poc_preview_{idx}", disabled=True)
+                        st.text_area(t("ui.content_preview"), value=art_content[:3000], height=200, key=f"poc_preview_{idx}", disabled=True)
 
                         col_approve, col_reject = st.columns(2)
                         with col_approve:
-                            if st.button("✅ Approve" if is_en else "✅ 审批通过", key=f"poc_approve_{idx}", type="primary"):
+                            if st.button(t("ui.approve"), key=f"poc_approve_{idx}", type="primary"):
                                 df_opt.at[idx, "poc_approved"] = True
                                 opt_file = OUTPUT_PATH / selected_batch / "03_zhiyou" / "zhiyou_optimized_content.csv"
                                 df_opt.to_csv(opt_file, index=False, encoding="utf-8-sig")
@@ -4151,7 +4151,7 @@ elif _page_idx == 4:
                                 st.success(f"✅ Approved: {art_title[:30]}")
                                 st.rerun()
                         with col_reject:
-                            if st.button("❌ Reject" if is_en else "❌ 驳回", key=f"poc_reject_{idx}"):
+                            if st.button(t("ui.reject"), key=f"poc_reject_{idx}"):
                                 df_opt.at[idx, "poc_approved"] = False
                                 df_opt.at[idx, "needs_poc_review"] = False  # Remove from review queue
                                 opt_file = OUTPUT_PATH / selected_batch / "03_zhiyou" / "zhiyou_optimized_content.csv"
@@ -4166,8 +4166,8 @@ elif _page_idx == 4:
 
         # --- TAX Compliance Audit (QuickSight Integration) ---
         st.divider()
-        st.subheader("🏛️ TAX Compliance Audit" if is_en else "🏛️ TAX 合规审核")
-        st.caption("For registration/fees/VAT content — linked to QuickSight TAX review workflow" if is_en else "注册/费用/VAT 相关内容 — 关联 QuickSight TAX 审核流程")
+        st.subheader(t("ui.tax_compliance_audit"))
+        st.caption(t("ui.for_registrationfeesvat_content_linked"))
 
         # TAX-related categories
         TAX_CATEGORIES = ["新手怎么注册亚马逊", "亚马逊开店成本费用详解", "欧洲增值税VAT介绍",
@@ -4196,7 +4196,7 @@ elif _page_idx == 4:
             st.dataframe(pd.DataFrame(tax_articles), use_container_width=True, hide_index=True)
             st.caption(f"{len(tax_articles)} articles flagged for TAX compliance review" if is_en else f"{len(tax_articles)} 篇文章标记需要 TAX 合规审核")
         else:
-            st.caption("No TAX-related articles in current batch" if is_en else "当前批次无 TAX 相关文章")
+            st.caption(t("ui.no_taxrelated_articles_in"))
 
         # QuickSight Dashboard embed link
         with st.expander("📊 QuickSight TAX Review Dashboard", expanded=False):
@@ -4209,7 +4209,7 @@ elif _page_idx == 4:
 
 > ⚠️ 需要 Amazon 内网权限访问。QuickSight 为只读参考，实际审核在智优界面完成后同步。
 """)
-            st.caption("Note: QuickSight does not have a write API. Approval status is managed in Smart Suite and synced via batch export." if is_en else "注：QuickSight 无写入 API，审核状态在 Smart Suite 内管理，通过批次导出同步。")
+            st.caption(t("ui.note_quicksight_does_not"))
 
     # CTA → 智布 (only enabled when all POC reviews complete)
     st.divider()
@@ -4218,20 +4218,20 @@ elif _page_idx == 4:
         pending_count = ((df_opt["needs_poc_review"] == True) & (df_opt["poc_approved"] == False)).sum()
         can_proceed = (pending_count == 0)
 
-    if st.button("➡️ Go to Publishing (Step 4)" if is_en else "➡️ 进入智布 (Step 4)", type="primary", key="cta_zhiyou_to_zhibu", disabled=not can_proceed):
+    if st.button(t("ui.go_to_publishing_step"), type="primary", key="cta_zhiyou_to_zhibu", disabled=not can_proceed):
         jump_to("📦 智布")
         st.rerun()
 
     # 📜 历史记录 + 清空
-    with st.expander("📜 History" if is_en else "📜 历史记录"):
+    with st.expander(t("ui.history_1")):
         zhiyou_dir = OUTPUT_PATH / selected_batch / "03_zhiyou"
         col_h1, col_h2 = st.columns([4, 1])
         with col_h2:
-            if st.button("🗑️ Clear All" if is_en else "🗑️ 清空全部", key="clear_zhiyou_hist"):
+            if st.button(t("ui.clear_all_1"), key="clear_zhiyou_hist"):
                 if zhiyou_dir.exists():
                     for f in zhiyou_dir.glob("*.csv"):
                         f.unlink()
-                    st.success("History cleared" if is_en else "已清空")
+                    st.success(t("ui.history_cleared"))
         if zhiyou_dir.exists():
             files = sorted(zhiyou_dir.glob("*.csv"), key=lambda f: f.stat().st_mtime, reverse=True)
             for f in files:
@@ -4240,27 +4240,27 @@ elif _page_idx == 4:
                 with col_i:
                     st.caption(f"📄 {f.name} · {f.stat().st_size/1024:.1f}KB · 🕐 {mtime}")
                 with col_r:
-                    if st.button("♻️ Reuse" if is_en else "♻️ 复用", key=f"reuse_zhiyou_{f.name}"):
+                    if st.button(t("ui.reuse"), key=f"reuse_zhiyou_{f.name}"):
                         live_path = OUTPUT_PATH / selected_batch / "03_zhiyou" / "zhiyou_optimized_content.csv"
                         safe_copy(f, live_path)
                         st.rerun()
                 with col_d:
                     st.download_button("⬇️", f.read_bytes(), file_name=f.name, mime="text/csv", key=f"dl_zhiyou_{f.name}")
         else:
-            st.caption("No history records yet" if is_en else "暂无历史")
+            st.caption(t("ui.no_history_records_yet"))
 
 
 # ============================================================
 # PAGE: 智布 (Step 4)
 # ============================================================
 elif _page_idx == 5:
-    st.markdown("""<div class="ss-page-header" style="color:#29b6f6;"><h1>📦 """ + ("Publishing" if is_en else "智布 – 内容发布") + """</h1><p>""" + ("Convert optimized content to structured JSON and Word documents" if is_en else "将优化内容转换为结构化 JSON 和 Word 文档") + """</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="ss-page-header" style="color:#29b6f6;"><h1>📦 """ + (t("ui.publishing")) + """</h1><p>""" + (t("ui.convert_optimized_content_to")) + """</p></div>""", unsafe_allow_html=True)
     render_pipeline_flow("zhibu", selected_batch)
 
     # --- Upload content directly (skip 智优) ---
-    with st.expander("📤 Upload Content (skip Optimization)" if is_en else "📤 上传内容（跳过智优直接发布格式化）", expanded=False):
-        st.caption("Optional: Upload optimized article CSV, generate JSON/Word directly" if is_en else "可选：上传已优化完成的文章 CSV，直接生成 JSON/Word")
-        upload_zhibu = st.file_uploader("Upload CSV (must contain optimized_content column)" if is_en else "上传 CSV（需含 optimized_content 列）", type=["csv", "xlsx"], key="zhibu_direct_upload")
+    with st.expander(t("ui.upload_content_skip_optimization"), expanded=False):
+        st.caption(t("ui.optional_upload_optimized_article"))
+        upload_zhibu = st.file_uploader(t("ui.upload_csv_must_contain_2"), type=["csv", "xlsx"], key="zhibu_direct_upload")
         if upload_zhibu:
             try:
                 if upload_zhibu.name.endswith(".xlsx"):
@@ -4275,15 +4275,15 @@ elif _page_idx == 5:
                 st.error(f"{'Upload failed' if is_en else '上传失败'}: {e}")
 
     # --- Show incoming content from 智优 ---
-    st.subheader("📋 Optimized Content from Optimization" if is_en else "📋 智优输入内容")
+    st.subheader(t("ui.optimized_content_from_optimization"))
     df_opt_in = load_optimized(selected_batch)
     if not df_opt_in.empty:
         # Clear buttons
         _zb_c1, _zb_c2, _zb_c3 = st.columns([1, 1, 4])
         with _zb_c1:
-            _zhibu_clear_sel = st.button("🗑️ " + ("Clear Selected" if is_en else "选中清空"), key="zhibu_clear_sel")
+            _zhibu_clear_sel = st.button("🗑️ " + (t("ui.clear_selected")), key="zhibu_clear_sel")
         with _zb_c2:
-            _zhibu_clear_all = st.button("🗑️ " + ("Clear ALL" if is_en else "全部清空"), key="zhibu_clear_all_btn")
+            _zhibu_clear_all = st.button("🗑️ " + (t("ui.clear_all")), key="zhibu_clear_all_btn")
 
         # Execute clear ALL (use session state to survive rerun from data_editor)
         if _zhibu_clear_all:
@@ -4308,9 +4308,9 @@ elif _page_idx == 5:
         _zb_display_cols = ["_select"] + [c for c in [title_col, "ai_query", "word_count"] if c in df_opt_in.columns]
         _zb_col_config = {
             "_select": st.column_config.CheckboxColumn("☑️", default=False),
-            title_col: st.column_config.TextColumn("Title" if is_en else "标题"),
-            "ai_query": st.column_config.TextColumn("Search Phrase" if is_en else "检索短语"),
-            "word_count": st.column_config.NumberColumn("Words" if is_en else "字数"),
+            title_col: st.column_config.TextColumn(t("ui.title")),
+            "ai_query": st.column_config.TextColumn(t("ui.search_phrase")),
+            "word_count": st.column_config.NumberColumn(t("ui.words")),
         }
         edited_zb = st.data_editor(df_opt_in[_zb_display_cols], column_config=_zb_col_config, use_container_width=True, hide_index=True, key="zhibu_list_editor")
 
@@ -4329,16 +4329,16 @@ elif _page_idx == 5:
                 st.success(f"✅ {sel_mask.sum()} {'cleared' if is_en else '条已清空'}")
                 st.rerun()
             else:
-                st.warning("No items selected. Check ☑️ column first." if is_en else "未勾选任何条目，请先在表格中勾选 ☑️ 列")
+                st.warning(t("ui.no_items_selected_check_1"))
 
         st.caption(f"{len(df_opt_in)} {'optimized articles ready for publishing' if is_en else '篇优化文章待发布'}")
     else:
-        st.caption("No optimized content. Upload or run Optimization first." if is_en else "暂无智优内容，请先上传或执行智优。")
+        st.caption(t("ui.no_optimized_content_upload"))
 
     st.divider()
 
     # Execution
-    st.subheader("▶️ Generate Publishing Format" if is_en else "▶️ 生成发布格式")
+    st.subheader(t("ui.generate_publishing_format"))
     # Progress
     zhibu_data = load_zhibu(selected_batch)
     zhibu_done = len(zhibu_data.get("items", [])) if zhibu_data else 0
@@ -4354,18 +4354,18 @@ elif _page_idx == 5:
         elif zhibu_done >= zhibu_total and zhibu_done > 0:
             btn_zhibu = f"✅ {'All formatted' if is_en else '全部格式化完毕'}"
         else:
-            btn_zhibu = "🚀 Generate JSON" if is_en else "🚀 生成 JSON"
+            btn_zhibu = t("ui.generate_json")
         if st.button(btn_zhibu, type="primary", key="run_zhibu"):
             try:
                 from engine import run_zhibu
-                with st.spinner("Generating JSON..." if is_en else "正在生成 JSON..."):
+                with st.spinner(t("ui.generating_json")):
                     result = run_zhibu(selected_batch)
                 if result["success"]:
                     st.success(f"✅ {'Publishing complete!' if is_en else '智布完成！'} {result['items_count']} {'items' if is_en else '条目'}")
                 else:
                     st.error(f"❌ {'Failed' if is_en else '失败'}: {result['error']}")
             except ImportError:
-                st.error("engine module not ready" if is_en else "engine 模块未就绪")
+                st.error(t("ui.engine_module_not_ready"))
 
     st.divider()
 
@@ -4374,11 +4374,11 @@ elif _page_idx == 5:
     if data:
         col_title, col_clear1, col_clear2 = st.columns([4, 1, 1])
         with col_title:
-            st.subheader("📤 Output Overview" if is_en else "📤 输出概览")
+            st.subheader(t("ui.output_overview"))
         with col_clear1:
-            _zb_sel_clear = st.button("🗑️ " + ("Clear Selected" if is_en else "选中清空"), key="zhibu_output_clear_sel")
+            _zb_sel_clear = st.button("🗑️ " + (t("ui.clear_selected")), key="zhibu_output_clear_sel")
         with col_clear2:
-            _zb_out_clear_all = st.button("🗑️ " + ("Clear ALL" if is_en else "全部清空"), key="zhibu_output_clear_all")
+            _zb_out_clear_all = st.button("🗑️ " + (t("ui.clear_all")), key="zhibu_output_clear_all")
 
         # Handle output clear ALL via session state
         if _zb_out_clear_all:
@@ -4394,16 +4394,16 @@ elif _page_idx == 5:
                 for f in list(zhibu_dir.glob("*.json")):
                     f.rename(archive_dir / f"{f.stem}_{ts}{f.suffix}")
             mark_data_changed()
-            st.success("✅ " + ("All cleared" if is_en else "全部已清空"))
+            st.success("✅ " + (t("ui.all_cleared")))
             st.rerun()
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.metric("Total Items" if is_en else "总条目", data.get("total_items", 0))
+            st.metric(t("ui.total_items"), data.get("total_items", 0))
         with col2:
-            st.metric("Batch" if is_en else "批次", data.get("batch_id", "N/A"))
+            st.metric(t("ui.batch"), data.get("batch_id", "N/A"))
         with col3:
             kws = data.get("source_keywords", [])
-            st.metric("Source Keywords" if is_en else "源关键词", len(kws) if isinstance(kws, list) else 0)
+            st.metric(t("ui.source_keywords"), len(kws) if isinstance(kws, list) else 0)
 
         # --- Download buttons ---
         items = data.get("items", [])
@@ -4423,11 +4423,11 @@ elif _page_idx == 5:
                 df_items,
                 column_config={
                     "content_id": st.column_config.TextColumn("ID", disabled=True),
-                    "title": st.column_config.TextColumn("Title" if is_en else "标题", disabled=True),
-                    "word_count": st.column_config.NumberColumn("Word Count" if is_en else "字数", disabled=True),
-                    "overall_score": st.column_config.NumberColumn("Score" if is_en else "评分", disabled=True),
-                    "compliance": st.column_config.TextColumn("Compliance" if is_en else "合规", disabled=True),
-                    "selected": st.column_config.CheckboxColumn("Selected" if is_en else "选中"),
+                    "title": st.column_config.TextColumn(t("ui.title"), disabled=True),
+                    "word_count": st.column_config.NumberColumn(t("ui.word_count"), disabled=True),
+                    "overall_score": st.column_config.NumberColumn(t("ui.score_1"), disabled=True),
+                    "compliance": st.column_config.TextColumn(t("ui.compliance"), disabled=True),
+                    "selected": st.column_config.CheckboxColumn(t("ui.selected")),
                 },
                 use_container_width=True, hide_index=True,
                 key="zhibu_select_editor",
@@ -4466,11 +4466,11 @@ elif _page_idx == 5:
                     st.success(f"✅ {len(sel_ids)} {'cleared' if is_en else '条已清空'}")
                     st.rerun()
                 else:
-                    st.warning("No items selected. Check the 'Selected' column." if is_en else "未选中任何条目，请先勾选")
+                    st.warning(t("ui.no_items_selected_check_2"))
 
         # JSON preview
         st.divider()
-        st.subheader("🔍 JSON Preview" if is_en else "🔍 JSON 预览")
+        st.subheader(t("ui.json_preview"))
         if items:
             for i, item in enumerate(items):
                 title = item.get("meta", {}).get("title", f"Item {i+1}")
@@ -4495,7 +4495,7 @@ elif _page_idx == 5:
         docs = list(word_dir_opt.glob("*.docx"))
         if docs:
             st.divider()
-            st.subheader("📄 Final Word Documents" if is_en else "📄 Final Word 文档")
+            st.subheader(t("ui.final_word_documents"))
             for doc in docs:
                 st.download_button(
                     f"📄 {doc.name}", doc.read_bytes(),
@@ -4507,7 +4507,7 @@ elif _page_idx == 5:
     # CTA → next step
     st.divider()
     if not is_admin:
-        if st.button("📤 申请官网发布" if not is_en else "📤 Submit for Publishing", type="primary", key="cta_zhibu_publish_request"):
+        if st.button(t("ui.submit_for_publishing"), type="primary", key="cta_zhibu_publish_request"):
             # Save publish request
             _req_dir = OUTPUT_PATH / "requests" / current_user
             _req_dir.mkdir(parents=True, exist_ok=True)
@@ -4517,16 +4517,16 @@ elif _page_idx == 5:
                         "requested_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
                         "status": "pending"}
             _pub_req.write_text(_jr.dumps(req_data, ensure_ascii=False, indent=2), encoding="utf-8")
-            st.success("✅ 已提交发布申请！管理员审批后将发布到官网。" if not is_en else "✅ Publish request submitted!")
-            jump_to("📈 智析" if not is_en else "📈 Analytics")
+            st.success(t("ui.publish_request_submitted"))
+            jump_to(t("ui.analytics"))
             st.rerun()
     else:
-        if st.button("➡️ View Analytics (Step 6)" if is_en else "➡️ 查看智析 (Step 6)", type="primary", key="cta_zhibu_to_zhixi"):
+        if st.button(t("ui.view_analytics_step_6"), type="primary", key="cta_zhibu_to_zhixi"):
             jump_to("📈 智析")
             st.rerun()
 
     # 📜 历史记录（不清空，带复用）
-    with st.expander("📜 History" if is_en else "📜 历史记录"):
+    with st.expander(t("ui.history_1")):
         zhibu_dir = OUTPUT_PATH / selected_batch / "04_zhibu"
         all_hist_files = []
         if zhibu_dir.exists():
@@ -4544,7 +4544,7 @@ elif _page_idx == 5:
                 with col_i:
                     st.caption(f"📄 {f.name} · {f.stat().st_size/1024:.1f}KB · 🕐 {mtime}")
                 with col_r:
-                    if st.button("♻️ Reuse" if is_en else "♻️ 复用", key=f"reuse_zhibu_{f.name}"):
+                    if st.button(t("ui.reuse"), key=f"reuse_zhibu_{f.name}"):
                         live_dir = OUTPUT_PATH / selected_batch / "04_zhibu"
                         safe_copy(f, live_dir / f.name)
                         st.rerun()
@@ -4552,7 +4552,7 @@ elif _page_idx == 5:
                     mime = "application/json" if f.suffix == ".json" else "text/csv"
                     st.download_button("⬇️", f.read_bytes(), file_name=f.name, mime=mime, key=f"dl_zhibu_{f.name}")
         else:
-            st.caption("No history records yet" if is_en else "暂无历史")
+            st.caption(t("ui.no_history_records_yet"))
 
 
 # ============================================================
@@ -4560,14 +4560,14 @@ elif _page_idx == 5:
 # PAGE: 智析 (Step 6) — 重构版
 # ============================================================
 elif _page_idx == 7:
-    st.markdown("""<div class="ss-page-header" style="color:#ab47bc;"><h1>📈 """ + ("Analytics" if is_en else "智析 – Performance & Gap Analysis") + """</h1><p>""" + ("Output trends · Input tracking · AI citation monitoring · Gap opportunities" if is_en else "Output 趋势 · Input 追踪 · AI 引用监控 · Gap 机会点") + """</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="ss-page-header" style="color:#ab47bc;"><h1>📈 """ + (t("ui.analytics_1")) + """</h1><p>""" + (t("ui.output_trends_input_tracking")) + """</p></div>""", unsafe_allow_html=True)
     render_pipeline_flow("zhixi", selected_batch)
 
     # ============================================================
     # USER VIEW: Personal performance dashboard
     # ============================================================
     if not is_admin:
-        st.markdown("### " + ("My Performance Dashboard" if is_en else "我的 Performance"))
+        st.markdown("### " + (t("ui.my_performance_dashboard")))
 
         # Load user's data
         _u_zhiku = load_csv_safe(OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv")
@@ -4581,15 +4581,15 @@ elif _page_idx == 7:
             selected_phrases = len(_u_zhiku[_u_zhiku["is_selected"].astype(str).str.upper().isin(["TRUE", "1", "YES"])])
 
         kc1, kc2, kc3 = st.columns(3)
-        kc1.metric("Total Phrases Created" if is_en else "创建短语", total_phrases)
-        kc2.metric("Selected Phrases" if is_en else "已选中", selected_phrases)
-        kc3.metric("Articles Generated" if is_en else "产出文章", total_articles)
+        kc1.metric(t("ui.total_phrases_created"), total_phrases)
+        kc2.metric(t("ui.selected_phrases"), selected_phrases)
+        kc3.metric(t("ui.articles_generated_1"), total_articles)
 
         st.divider()
 
         # --- Citation Performance ---
-        st.markdown("### " + ("AI Citation Performance (Before vs After)" if is_en else "引用表现"))
-        st.caption("Before = from 智测 verification (baseline) · After = post-content launch (upload when available)" if is_en else "Before = 智测验证结果（基线）· After = 新内容上线后（有数据时上传）")
+        st.markdown("### " + (t("ui.ai_citation_performance_before")))
+        st.caption(t("ui.before_from_智测_verification"))
 
         # Auto-load Before data from THIS USER's zhice gap results only
         # Only search in user's own batch directory (per-user isolation)
@@ -4675,38 +4675,38 @@ elif _page_idx == 7:
             link_rate_before = f"{link_before*100//total_p}%" if total_p > 0 else "—"
 
             col_m1, col_m2, col_m3, col_m4, col_m5, col_m6 = st.columns(6)
-            col_m1.metric("Mention #" if is_en else "品牌/产品提及#", f"{brand_before}/{total_p}")
-            col_m2.metric("Mention Rate" if is_en else "提及率", brand_rate_before)
+            col_m1.metric(t("ui.mention"), f"{brand_before}/{total_p}")
+            col_m2.metric(t("ui.mention_rate"), brand_rate_before)
             if has_after > 0:
                 brand_rate_after = f"{brand_after*100//has_after}%" if has_after > 0 else "—"
-                col_m3.metric("After Rate" if is_en else "提及率(后)", brand_rate_after, delta=f"+{brand_after-brand_before}" if brand_after > brand_before else None)
+                col_m3.metric(t("ui.after_rate"), brand_rate_after, delta=f"+{brand_after-brand_before}" if brand_after > brand_before else None)
             else:
-                col_m3.metric("After Rate" if is_en else "提及率(后)", "⏳ 待测")
-            col_m4.metric("Link #" if is_en else "官网链接#", f"{link_before}/{total_p}")
-            col_m5.metric("Link Rate" if is_en else "链接率", link_rate_before)
+                col_m3.metric(t("ui.after_rate"), "⏳ 待测")
+            col_m4.metric(t("ui.link"), f"{link_before}/{total_p}")
+            col_m5.metric(t("ui.link_rate_1"), link_rate_before)
             if has_after > 0:
                 link_rate_after = f"{link_after*100//has_after}%" if has_after > 0 else "—"
-                col_m6.metric("After Rate" if is_en else "链接率(后)", link_rate_after, delta=f"+{link_after-link_before}" if link_after > link_before else None)
+                col_m6.metric(t("ui.after_rate_1"), link_rate_after, delta=f"+{link_after-link_before}" if link_after > link_before else None)
             else:
-                col_m6.metric("After Rate" if is_en else "链接率(后)", "⏳ 待测")
+                col_m6.metric(t("ui.after_rate_1"), "⏳ 待测")
 
         # --- Detailed Verification Results (per-platform table) ---
         if _before_data:
-            with st.expander("📋 " + ("Detailed Verification by Platform" if is_en else "分平台验证详情"), expanded=False):
+            with st.expander("📋 " + (t("ui.detailed_verification_by_platform")), expanded=False):
                 _detail_rows = []
                 for bd in _before_data:
                     _detail_rows.append({
-                        ("Search Phrase" if is_en else "检索短语"): bd["Query"],
-                        ("Platform" if is_en else "平台"): bd["Platform"],
-                        ("Brand/Product" if is_en else "品牌/产品"): bd.get("Brand/Product Before", bd.get("Brand Before", "—")),
-                        ("Official Link" if is_en else "官网链接"): bd.get("Link Before", "—"),
-                        ("Gap Status" if is_en else "覆盖状态"): bd.get("Gap Status", "—"),
+                        (t("ui.search_phrase")): bd["Query"],
+                        (t("ui.platform_1")): bd["Platform"],
+                        (t("ui.brandproduct")): bd.get("Brand/Product Before", bd.get("Brand Before", "—")),
+                        (t("ui.official_link")): bd.get("Link Before", "—"),
+                        (t("ui.gap_status")): bd.get("Gap Status", "—"),
                     })
                 st.dataframe(pd.DataFrame(_detail_rows), use_container_width=True, hide_index=True)
                 st.caption(f"{len(_detail_rows)} {'verification records' if is_en else '条验证记录'}")
 
         # Brand Mention section
-        st.markdown("#### 🏷️ " + ("Brand/Product Name Mention" if is_en else "品牌/产品名称提及"))
+        st.markdown("#### 🏷️ " + (t("ui.brandproduct_name_mention")))
 
         # Separate cleared lists for brand and link
         _cleared_brand_key = f"zhixi_cleared_brand_{current_user}"
@@ -4723,11 +4723,11 @@ elif _page_idx == 7:
         # Brand clear buttons
         _zx_c1, _zx_c2, _zx_c3 = st.columns([1, 1, 4])
         with _zx_c1:
-            _zhixi_brand_clear_sel = st.button("🗑️ " + ("Clear Selected" if is_en else "选中清空"), key="zhixi_brand_clear_sel")
+            _zhixi_brand_clear_sel = st.button("🗑️ " + (t("ui.clear_selected")), key="zhixi_brand_clear_sel")
         with _zx_c2:
-            if st.button("🗑️ " + ("Clear ALL" if is_en else "全部清空"), key="zhixi_brand_clear_all"):
+            if st.button("🗑️ " + (t("ui.clear_all")), key="zhixi_brand_clear_all"):
                 st.session_state[_cleared_brand_key] = [r["Query"] for r in _perf_merged]
-                st.success("✅ " + ("Brand data cleared" if is_en else "品牌提及已清空"))
+                st.success("✅ " + (t("ui.brand_data_cleared")))
                 st.rerun()
 
         if _active_brand:
@@ -4748,25 +4748,25 @@ elif _page_idx == 7:
                     st.success(f"✅ {len(sel_queries)} {'cleared' if is_en else '条已清空'}")
                     st.rerun()
                 else:
-                    st.warning("Check ☑️ column first" if is_en else "请先勾选 ☑️ 列")
+                    st.warning(t("ui.check_column_first"))
         else:
-            st.caption("No active data. Check history below." if is_en else "当前无数据，查看下方历史记录。")
+            st.caption(t("ui.no_active_data_check"))
 
         st.markdown("")
 
         # Official Link section
-        st.markdown("#### 🔗 " + ("Official Link" if is_en else "官方链接"))
+        st.markdown("#### 🔗 " + (t("ui.official_link_1")))
 
         # Filter active vs history for link
         _active_link = [r for r in _perf_merged if r["Query"] not in st.session_state[_cleared_link_key]]
 
         _zx_l1, _zx_l2, _zx_l3 = st.columns([1, 1, 4])
         with _zx_l1:
-            _zhixi_link_clear_sel = st.button("🗑️ " + ("Clear Selected" if is_en else "选中清空"), key="zhixi_link_clear_sel")
+            _zhixi_link_clear_sel = st.button("🗑️ " + (t("ui.clear_selected")), key="zhixi_link_clear_sel")
         with _zx_l2:
-            if st.button("🗑️ " + ("Clear ALL" if is_en else "全部清空"), key="zhixi_link_clear_all"):
+            if st.button("🗑️ " + (t("ui.clear_all")), key="zhixi_link_clear_all"):
                 st.session_state[_cleared_link_key] = [r["Query"] for r in _perf_merged]
-                st.success("✅ " + ("Link data cleared" if is_en else "链接提及已清空"))
+                st.success("✅ " + (t("ui.link_data_cleared")))
                 st.rerun()
 
         if _active_link:
@@ -4787,9 +4787,9 @@ elif _page_idx == 7:
                     st.success(f"✅ {len(sel_queries)} {'cleared' if is_en else '条已清空'}")
                     st.rerun()
                 else:
-                    st.warning("Check ☑️ column first" if is_en else "请先勾选 ☑️ 列")
+                    st.warning(t("ui.check_column_first"))
         else:
-            st.caption("No active data. Check history below." if is_en else "当前无数据，查看下方历史记录。")
+            st.caption(t("ui.no_active_data_check"))
 
         # --- Unified History section at bottom ---
         _all_history = list(set(st.session_state[_cleared_brand_key] + st.session_state[_cleared_link_key]))
@@ -4806,11 +4806,11 @@ elif _page_idx == 7:
                 st.dataframe(df_hist, use_container_width=True, hide_index=True)
                 col_r1, col_r2 = st.columns(2)
                 with col_r1:
-                    if st.button("🔄 " + ("Restore Brand" if is_en else "恢复品牌提及"), key="zhixi_restore_brand"):
+                    if st.button("🔄 " + (t("ui.restore_brand")), key="zhixi_restore_brand"):
                         st.session_state[_cleared_brand_key] = []
                         st.rerun()
                 with col_r2:
-                    if st.button("🔄 " + ("Restore Link" if is_en else "恢复链接提及"), key="zhixi_restore_link"):
+                    if st.button("🔄 " + (t("ui.restore_link")), key="zhixi_restore_link"):
                         st.session_state[_cleared_link_key] = []
                         st.rerun()
 
@@ -4834,20 +4834,20 @@ elif _page_idx == 7:
 - **Next Steps**: Focus Full Gap → produce GEO content → re-verify after 2-4 weeks.
 """)
         elif _all_history:
-            st.caption("All items cleared to history. Restore or run new verification." if is_en else "所有条目已清空到历史。可恢复或重新验证。")
+            st.caption(t("ui.all_items_cleared_to"))
         else:
-            st.caption("Run verification in 智测 first." if is_en else "请先在智测中验证短语。")
+            st.caption(t("ui.run_verification_in_智测"))
 
         # Upload After data (post-content launch)
-        with st.expander("📤 " + ("Upload After Data (post-launch)" if is_en else "上传 After 数据（内容上线后）"), expanded=False):
-            st.caption("Upload verification results AFTER content is published to compare with Before baseline" if is_en else "内容发布上线后，上传新的验证结果来对比 Before 基线")
-            st.caption("CSV columns: Query, Platform, Brand After, Link After" if is_en else "CSV 列: Query, Platform, Brand After, Link After")
-            up_perf = st.file_uploader("Upload CSV" if is_en else "上传 CSV", type=["csv"], key="user_upload_perf")
+        with st.expander("📤 " + (t("ui.upload_after_data_postlaunch")), expanded=False):
+            st.caption(t("ui.upload_verification_results_after"))
+            st.caption(t("ui.csv_columns_query_platform"))
+            up_perf = st.file_uploader(t("ui.upload_csv"), type=["csv"], key="user_upload_perf")
             if up_perf:
                 try:
                     df_up_perf = pd.read_csv(up_perf, encoding="utf-8-sig", on_bad_lines="skip")
                     st.dataframe(df_up_perf.head(5), use_container_width=True, hide_index=True)
-                    if st.button("✅ " + ("Confirm & Save Upload" if is_en else "确认上传"), key="confirm_perf_upload"):
+                    if st.button("✅ " + (t("ui.confirm_save_upload")), key="confirm_perf_upload"):
                         _perf_file.parent.mkdir(parents=True, exist_ok=True)
                         _perf_file.write_text(df_up_perf.to_json(orient="records", force_ascii=False), encoding="utf-8")
                         mark_data_changed()
@@ -4859,8 +4859,8 @@ elif _page_idx == 7:
         st.divider()
 
         # --- Custom Metrics ---
-        st.markdown("### " + ("Custom Metrics Tracking" if is_en else "指标追踪"))
-        st.caption("Select preset metrics or add custom ones" if is_en else "选择预设指标或手动添加")
+        st.markdown("### " + (t("ui.custom_metrics_tracking")))
+        st.caption(t("ui.select_preset_metrics_or"))
 
         _metrics_file = OUTPUT_PATH / "requests" / current_user / "custom_metrics.json"
         _custom_metrics = json.loads(_metrics_file.read_text(encoding="utf-8")) if _metrics_file.exists() else []
@@ -4872,13 +4872,13 @@ elif _page_idx == 7:
 
         col_add1, col_add2, col_add3 = st.columns([3, 1, 1])
         with col_add1:
-            m_name = st.selectbox("Metric" if is_en else "指标",
-                                  ["— 选择预设 —"] + preset_metrics + ["✏️ 自定义..." if not is_en else "✏️ Custom..."],
+            m_name = st.selectbox(t("ui.metric"),
+                                  ["— 选择预设 —"] + preset_metrics + [t("ui.custom")],
                                   key="metric_select")
             if m_name in ["✏️ 自定义...", "✏️ Custom..."]:
-                m_name = st.text_input("Custom Name" if is_en else "自定义名称", key="custom_m_name")
+                m_name = st.text_input(t("ui.custom_name"), key="custom_m_name")
         with col_add2:
-            m_date = st.date_input("Date" if is_en else "日期", key="m_date")
+            m_date = st.date_input(t("ui.date"), key="m_date")
         with col_add3:
             st.write("")
             if st.button("➕", key="add_metric_btn"):
@@ -4895,7 +4895,7 @@ elif _page_idx == 7:
 
         # --- CTA: Submit Request ---
         st.divider()
-        if st.button("📨 " + ("Submit Analytics Request to Admin" if is_en else "提交需求到管理员"), type="primary", key="user_submit_analytics_request"):
+        if st.button("📨 " + (t("ui.submit_analytics_request_to")), type="primary", key="user_submit_analytics_request"):
             _req_dir = OUTPUT_PATH / "requests" / current_user
             _req_dir.mkdir(parents=True, exist_ok=True)
             _req_file = OUTPUT_PATH / "request_tracking.json"
@@ -4913,7 +4913,7 @@ elif _page_idx == 7:
             _req_file.parent.mkdir(parents=True, exist_ok=True)
             _req_file.write_text(json.dumps(all_reqs, ensure_ascii=False, indent=2), encoding="utf-8")
             mark_data_changed()
-            st.success("✅ " + ("Request submitted to admin!" if is_en else "需求已提交到管理员！"))
+            st.success("✅ " + (t("ui.request_submitted_to_admin")))
 
     # ============================================================
     # ADMIN VIEW: Full analytics (original)
@@ -5125,13 +5125,13 @@ elif _page_idx == 7:
 
         # --- 7 Tabs (with GEO Data Analysis + RS vs CL) ---
         tab_output, tab_rs_cl, tab_input, tab_citation, tab_zhice_gap, tab_gap, tab_zhiyu = st.tabs([
-            "📊 Output Trends" if is_en else "📊 Output 趋势",
-            "📈 RS vs CL" if is_en else "📈 Reg Start vs Clean Launch",
-            "📥 Input Production" if is_en else "📥 Input 产出",
-            "🔗 Citation Summary" if is_en else "🔗 引用追踪总表",
-            "🔬 Phrase Detail" if is_en else "🔬 检索短语引用详情",
-            "💡 Gap & Opportunities" if is_en else "💡 Gap & 机会点",
-            "🔮 Query Forecaster" if is_en else "🔮 智预",
+            t("ui.output_trends"),
+            t("ui.rs_vs_cl"),
+            t("ui.input_production"),
+            t("ui.citation_summary"),
+            t("ui.phrase_detail"),
+            t("ui.gap_opportunities"),
+            t("ui.query_forecaster"),
         ])
 
         # ============================================================
@@ -5167,7 +5167,7 @@ elif _page_idx == 7:
                 return pd.DataFrame(rows)
 
             with sub_weekly:
-                st.subheader("📅 Weekly Trends" if is_en else "📅 Weekly 趋势")
+                st.subheader(t("ui.weekly_trends"))
                 df_w = get_weekly_metrics()
                 all_weeks = df_w["Week"].tolist()
 
@@ -5229,7 +5229,7 @@ elif _page_idx == 7:
                     st.dataframe(df_w_table, use_container_width=True, hide_index=True)
 
             with sub_monthly:
-                st.subheader("📆 Monthly Trends" if is_en else "📆 Monthly 趋势")
+                st.subheader(t("ui.monthly_trends"))
                 monthly_data = get_monthly_metrics()
                 month_cols = [c for c in monthly_data.columns if c not in ["Channel", "Type"]]
 
@@ -5343,7 +5343,7 @@ elif _page_idx == 7:
                     st.dataframe(pd.DataFrame([bps_row]), use_container_width=True, hide_index=True)
 
             with sub_ytd:
-                st.subheader("📊 YTD Comparison" if is_en else "📊 YTD 对比")
+                st.subheader(t("ui.ytd_comparison"))
                 df_ytd = get_ytd_metrics()
 
                 # Show data cutoff
@@ -5421,8 +5421,8 @@ elif _page_idx == 7:
         # TAB: Reg Start vs Clean Launch (Full Year)
         # ============================================================
         with tab_rs_cl:
-            st.subheader("📈 Reg Start vs Clean Launch – 2025 Full Year" if is_en else "📈 Reg Start vs Clean Launch – 2025全年数据")
-            st.caption("Monthly breakdown with YoY comparison and conversion rate trends" if is_en else "月度拆解，含 YoY 对比及转化率趋势")
+            st.subheader(t("ui.reg_start_vs_clean"))
+            st.caption(t("ui.monthly_breakdown_with_yoy"))
 
             # Load data files
             _rs_file = METRICS_PATH / "geo_regstart_full.csv"
@@ -5464,7 +5464,7 @@ elif _page_idx == 7:
                 # --- Channel filter ---
                 _channels = _df_rs_full[_df_rs_full["Type"] == "Actual"]["Channel"].unique().tolist()
                 _selected_channels = st.multiselect(
-                    "Select Channels" if is_en else "选择渠道",
+                    t("ui.select_channels"),
                     [c for c in _channels if "EM" not in c],
                     default=[c for c in ["CN (GEO)", "WW (GEO)", "Total GEO", "Direct (CN+WW)", "Total (GEO+Direct)", "SSR Total (大盘)"] if c in _channels],
                     key="rs_cl_channel_filter"
@@ -5649,7 +5649,7 @@ elif _page_idx == 7:
 
                     # Build monthly trend chart for selected channels
                     _trend_metric = st.radio(
-                        "Metric" if is_en else "指标",
+                        t("ui.metric"),
                         ["Reg Start", "Clean Launch", "Both"],
                         horizontal=True, key="rs_cl_trend_metric"
                     )
@@ -5692,7 +5692,7 @@ elif _page_idx == 7:
 
                     # YoY comparison
                     st.divider()
-                    st.markdown("**YoY Growth Trend**" if is_en else "**YoY 增长趋势**")
+                    st.markdown(t("ui.yoy_growth_trend"))
                     fig_yoy = go.Figure()
                     # Lower YoY chart: only Total GEO, Direct (CN+WW), and SSR Total
                     _yoy_channels = [ch for ch in _selected_channels if ch in ["Total GEO", "Direct (CN+WW)", "SSR Total (大盘)"]]
@@ -5724,18 +5724,18 @@ elif _page_idx == 7:
                     st.plotly_chart(fig_yoy, use_container_width=True)
 
             else:
-                st.warning("⚠️ Full year data not found. Run data extraction first." if is_en else "⚠️ 未找到全年数据文件。请先执行数据提取。")
+                st.warning(t("ui.full_year_data_not"))
                 st.info("Expected files: geo_regstart_full.csv, geo_cleanlaunch_full.csv, geo_conversion_full.csv in output/metrics/")
 
         # ============================================================
         # TAB: GEO Data Analysis (Mario-GEO style)
         # ============================================================
         with tab_input:
-            st.subheader("📥 GEO 效果追踪 & 内容产出" if is_en else "📥 GEO 效果追踪 & 内容产出")
+            st.subheader(t("ui.geo_效果追踪_内容产出"))
 
             # --- Auto Input Activity Statistics (from output folder) ---
-            st.markdown("**📊 Auto Input Stats (from pipeline output)**" if is_en else "**📊 自动统计（来自流水线产出）**")
-            st.caption("Automatically calculated from output files. No manual input needed." if is_en else "自动从 output 文件夹统计，无需手动填写。")
+            st.markdown(t("ui.auto_input_stats_from"))
+            st.caption(t("ui.automatically_calculated_from_output"))
 
             # Calculate stats across all batches
             _total_phrases = 0
@@ -5784,17 +5784,17 @@ elif _page_idx == 7:
                     _total_zhice_verified += len(list(zhice_dir.glob("*.json")))
 
             ac1, ac2, ac3, ac4, ac5 = st.columns(5)
-            ac1.metric("Total Phrases" if is_en else "总短语数", _total_phrases)
-            ac2.metric("Articles Created" if is_en else "已生成文章", _total_articles)
-            ac3.metric("Optimized" if is_en else "已优化", _total_optimized)
-            ac4.metric("Published" if is_en else "已发布", _total_published)
-            ac5.metric("Verified" if is_en else "已验证", _total_zhice_verified)
+            ac1.metric(t("ui.total_phrases_1"), _total_phrases)
+            ac2.metric(t("ui.articles_created"), _total_articles)
+            ac3.metric(t("ui.optimized"), _total_optimized)
+            ac4.metric(t("ui.published"), _total_published)
+            ac5.metric(t("ui.verified"), _total_zhice_verified)
 
             st.caption(f"{'Across' if is_en else '统计范围'}: {_batches_with_data} {'batches' if is_en else '个 batch'}")
 
             # --- One-Click Weekly Report ---
             st.divider()
-            st.markdown("**📋 One-Click Weekly Report**" if is_en else "**📋 一键生成周报**")
+            st.markdown(t("ui.oneclick_weekly_report"))
 
             # Auto-Attribution display
             try:
@@ -5804,17 +5804,17 @@ elif _page_idx == 7:
                 _attributions = generate_attribution(_df_w, _activities)
                 _actions = generate_action_items(_df_w, _activities)
 
-                with st.expander("🔍 Auto-Attribution (归因分析)" if is_en else "🔍 自动归因分析", expanded=True):
+                with st.expander(t("ui.autoattribution_归因分析"), expanded=True):
                     for attr in _attributions:
                         st.markdown(f"- {attr}")
                     st.divider()
-                    st.markdown("**Next Week Actions:**" if is_en else "**下周行动项：**")
+                    st.markdown(t("ui.next_week_actions"))
                     for act in _actions:
                         st.markdown(f"- {act}")
             except Exception:
                 pass
 
-            if st.button("📋 Generate Weekly Report" if is_en else "📋 生成本周报告", type="primary", key="btn_gen_weekly_report"):
+            if st.button(t("ui.generate_weekly_report"), type="primary", key="btn_gen_weekly_report"):
                 try:
                     from engine import call_claude
                     # Gather all metrics
@@ -5855,7 +5855,7 @@ elif _page_idx == 7:
     - 用 ↑ ↓ → 表示趋势
     - WoW 下降超过 20% 要标注 ⚠️
     """
-                    with st.spinner("Generating report..." if is_en else "正在生成周报..."):
+                    with st.spinner(t("ui.generating_report")):
                         report = call_claude("你是 GEO 业务分析师。", report_prompt, max_tokens=2000)
 
                     st.markdown(report)
@@ -5869,7 +5869,7 @@ elif _page_idx == 7:
                     st.success(f"✅ Report saved: {report_file.name}")
 
                     # Download button
-                    st.download_button("📥 Download Report" if is_en else "📥 下载报告",
+                    st.download_button(t("ui.download_report"),
                                        report.encode("utf-8"), file_name=f"weekly_report_{ts}.md",
                                        mime="text/markdown")
                 except Exception as e:
@@ -5877,8 +5877,8 @@ elif _page_idx == 7:
 
             # --- Prompt Re-run Dashboard ---
             st.divider()
-            st.markdown("**🔄 Prompt Re-run Dashboard**" if is_en else "**🔄 发布后效果追踪（Pre vs Post）**")
-            st.caption("Compare brand mention before and after content publication." if is_en else "对比内容发布前后的品牌/产品名称提及率变化，衡量 GEO 效果。")
+            st.markdown(t("ui.prompt_rerun_dashboard"))
+            st.caption(t("ui.compare_brand_mention_before"))
 
             try:
                 from zhixi_attribution import get_published_queries, compare_pre_post_verification
@@ -5895,18 +5895,18 @@ elif _page_idx == 7:
                             maintained = len(df_compare[df_compare["improvement"] == "➡️ 维持"])
                             declined = len(df_compare[df_compare["improvement"] == "❌ 下降"])
                             rc1, rc2, rc3 = st.columns(3)
-                            rc1.metric("✅ Improved" if is_en else "✅ 提升", improved)
-                            rc2.metric("➡️ Maintained" if is_en else "➡️ 维持", maintained)
-                            rc3.metric("❌ Declined" if is_en else "❌ 下降", declined)
+                            rc1.metric(t("ui.improved"), improved)
+                            rc2.metric(t("ui.maintained"), maintained)
+                            rc3.metric(t("ui.declined"), declined)
                             st.dataframe(df_compare, use_container_width=True, hide_index=True)
                         else:
-                            st.caption("Need at least 2 verification runs for the same queries to compare." if is_en else "需要对同一批短语运行至少 2 次验证才能对比效果。")
+                            st.caption(t("ui.need_at_least_2"))
                     else:
-                        st.caption("No tracking history yet. Run zhice verification first." if is_en else "暂无追踪数据。请先运行智测验证。")
+                        st.caption(t("ui.no_tracking_history_yet"))
                 else:
-                    st.caption("No published content yet. Complete the pipeline (智布) to track GEO effect." if is_en else "暂无已发布内容。完成智布发布后可追踪 GEO 效果。")
+                    st.caption(t("ui.no_published_content_yet"))
             except Exception:
-                st.caption("Attribution module not available." if is_en else "归因模块不可用。")
+                st.caption(t("ui.attribution_module_not_available"))
 
             st.divider()
 
@@ -6083,23 +6083,23 @@ elif _page_idx == 7:
             if not df_articles.empty:
                 col1, col2, col3 = st.columns(3)
                 with col1:
-                    st.metric("Total Articles" if is_en else "产出文章总数", len(df_articles))
+                    st.metric(t("ui.total_articles"), len(df_articles))
                 with col2:
                     if "category" in df_articles.columns:
-                        st.metric("Topics Covered" if is_en else "覆盖 Topic 数", df_articles["category"].nunique())
+                        st.metric(t("ui.topics_covered"), df_articles["category"].nunique())
                     else:
-                        st.metric("Topics Covered" if is_en else "覆盖 Topic 数", "N/A")
+                        st.metric(t("ui.topics_covered"), "N/A")
                 with col3:
                     if "word_count" in df_articles.columns:
                         df_articles["word_count"] = pd.to_numeric(df_articles["word_count"], errors="coerce")
-                        st.metric("Total Words" if is_en else "总字数", f"{df_articles['word_count'].sum():,.0f}")
+                        st.metric(t("ui.total_words"), f"{df_articles['word_count'].sum():,.0f}")
 
                 st.divider()
 
                 # Filter by topic
                 if "category" in df_articles.columns:
                     topics = ["全部"] + sorted(df_articles["category"].dropna().unique().tolist())
-                    topic_filter = st.selectbox("Filter by Topic" if is_en else "按 Topic 筛选", topics, key="zhixi_topic_filter")
+                    topic_filter = st.selectbox(t("ui.filter_by_topic"), topics, key="zhixi_topic_filter")
                     df_filtered = df_articles if topic_filter == "全部" else df_articles[df_articles["category"] == topic_filter]
                 else:
                     df_filtered = df_articles
@@ -6107,12 +6107,12 @@ elif _page_idx == 7:
                 # Time filter
                 col_t1, col_t2 = st.columns(2)
                 with col_t1:
-                    time_view = st.selectbox("Time Dimension" if is_en else "时间维度", ["全部", "指定日期", "指定周", "本月", "YTD"], key="zhixi_time")
+                    time_view = st.selectbox(t("ui.time_dimension"), ["全部", "指定日期", "指定周", "本月", "YTD"], key="zhixi_time")
                 with col_t2:
                     if time_view == "指定日期":
-                        selected_date = st.date_input("Select date" if is_en else "选择日期", key="zhixi_date")
+                        selected_date = st.date_input(t("ui.select_date"), key="zhixi_date")
                     elif time_view == "指定周":
-                        selected_week = st.selectbox("Select week" if is_en else "选择周", [f"WK{i}" for i in range(1, 25)], index=20, key="zhixi_week_select")
+                        selected_week = st.selectbox(t("ui.select_week"), [f"WK{i}" for i in range(1, 25)], index=20, key="zhixi_week_select")
 
                 # Display
                 display_cols = [c for c in ["title", "ai_query", "category", "word_count", "created_at"] if c in df_filtered.columns]
@@ -6122,7 +6122,7 @@ elif _page_idx == 7:
                 # Topic distribution chart
                 if "category" in df_articles.columns:
                     st.divider()
-                    st.markdown("**Article Topic Distribution**" if is_en else "**文章 Topic 分布**")
+                    st.markdown(t("ui.article_topic_distribution"))
                     cat_counts = df_articles["category"].value_counts().reset_index()
                     cat_counts.columns = ["Topic", "文章数"]
                     fig_topic = px.bar(cat_counts.head(15), x="Topic", y="文章数", color="文章数",
@@ -6130,14 +6130,14 @@ elif _page_idx == 7:
                     fig_topic.update_layout(height=280, margin=dict(l=0, r=0, t=10, b=0), showlegend=False, coloraxis_showscale=False)
                     st.plotly_chart(fig_topic, use_container_width=True)
             else:
-                st.info("No article production data. Please run Content Creation first." if is_en else "暂无文章产出数据。请先执行智造生成内容。")
+                st.info(t("ui.no_article_production_data"))
 
         # ============================================================
         # ============================================================
         # TAB 3: AI 引用追踪
         # ============================================================
         with tab_citation:
-            st.subheader("🔗 AI 引用追踪" if is_en else "🔗 AI 引用追踪")
+            st.subheader(t("ui.ai_引用追踪"))
 
             AI_PLATFORMS = ["元宝", "DeepSeek", "豆包", "ChatGPT", "Kimi", "千问", "Gemini"]
             _cite_months = ["Jan", "Feb", "Mar", "Apr", "May"]
@@ -6330,8 +6330,8 @@ elif _page_idx == 7:
         # ============================================================
         with tab_zhice_gap:
             st.markdown("""<div class="ss-section">
-                <h3 style="color:#ab47bc;">🔬 """ + ("Official Link Coverage Rate" if is_en else "官网链接覆盖率") + """</h3>
-                <p>""" + ("YTD search phrase coverage: how many have official Amazon links cited by AI" if is_en else "YTD 检索短语覆盖情况：有多少被 AI 引用时带有官方链接") + """</p>
+                <h3 style="color:#ab47bc;">🔬 """ + (t("ui.official_link_coverage_rate")) + """</h3>
+                <p>""" + (t("ui.ytd_search_phrase_coverage")) + """</p>
             </div>""", unsafe_allow_html=True)
 
             gap_file = METRICS_PATH / "gap_verification_cn.csv"
@@ -6344,16 +6344,16 @@ elif _page_idx == 7:
                     no_link = total_q - with_link
 
                     gc1, gc2, gc3, gc4 = st.columns(4)
-                    gc1.metric("YTD Total Phrases" if is_en else "YTD 总短语数", total_q)
-                    gc2.metric("With Official Link" if is_en else "有官方链接", f"{with_link} ({with_link*100//total_q if total_q else 0}%)")
-                    gc3.metric("No Link (Gap)" if is_en else "无链接 (Gap)", f"{no_link} ({no_link*100//total_q if total_q else 0}%)")
-                    gc4.metric("Platforms Monitored" if is_en else "监测平台数", "7")
+                    gc1.metric(t("ui.ytd_total_phrases"), total_q)
+                    gc2.metric(t("ui.with_official_link"), f"{with_link} ({with_link*100//total_q if total_q else 0}%)")
+                    gc3.metric(t("ui.no_link_gap"), f"{no_link} ({no_link*100//total_q if total_q else 0}%)")
+                    gc4.metric(t("ui.platforms_monitored"), "7")
 
                     st.divider()
 
                     # --- Category Breakdown Summary ---
                     # --- Category Breakdown Summary ---
-                    st.markdown("**" + ("Category Breakdown" if is_en else "📊 按类别统计") + "**")
+                    st.markdown("**" + (t("ui.category_breakdown")) + "**")
                     # Use actual category/sub_category from data
                     cat_col = "category" if "category" in df_gap_real.columns else None
                     sub_col = "sub_category" if "sub_category" in df_gap_real.columns else None
@@ -6370,27 +6370,27 @@ elif _page_idx == 7:
                             brand_rate = known_brand_rates.get(cat_name, 0)
                             brand_count = int(cat_total * brand_rate / 100)
                             summary_rows.append({
-                                "类别" if not is_en else "Category": cat_name,
-                                "短语数" if not is_en else "Phrases": cat_total,
-                                "有链接" if not is_en else "With Link": cat_with_link,
-                                "链接率" if not is_en else "Link Rate": f"{cat_with_link*100//cat_total if cat_total else 0}%",
-                                "品牌/产品名称提及" if not is_en else "Brand": brand_count,
-                                "品牌/产品名称提及率" if not is_en else "Brand/Product Name Rate": f"{brand_rate}%",
-                                "占比" if not is_en else "% Total": f"{cat_total*100//total_q if total_q else 0}%",
+                                t("ui.category"): cat_name,
+                                t("ui.phrases_2"): cat_total,
+                                t("ui.with_link"): cat_with_link,
+                                t("ui.link_rate_1"): f"{cat_with_link*100//cat_total if cat_total else 0}%",
+                                t("ui.brand"): brand_count,
+                                t("ui.brandproduct_name_rate"): f"{brand_rate}%",
+                                t("ui.total_2"): f"{cat_total*100//total_q if total_q else 0}%",
                             })
                         if summary_rows:
                             st.dataframe(pd.DataFrame(summary_rows), use_container_width=True, hide_index=True)
                     else:
-                        st.caption("No category column in data" if is_en else "数据中无类别列")
+                        st.caption(t("ui.no_category_column_in"))
 
             else:
-                st.info("Gap verification data not available." if is_en else "Gap 验证数据不可用。")
+                st.info(t("ui.gap_verification_data_not"))
 
             # --- Category AI Citation Analysis (from gap_verification_cn.csv + zhice data) ---
             st.divider()
             st.markdown("""<div class="ss-section">
-                <h3 style="color:#ab47bc;">📊 """ + ("Category AI Citation Ranking" if is_en else "35 类别 AI 引用概率排名") + """</h3>
-                <p>""" + ("Based on gap verification data: which categories are most cited by AI" if is_en else "基于 Gap 验证数据：哪些内容类别最容易被 AI 引用") + """</p>
+                <h3 style="color:#ab47bc;">📊 """ + (t("ui.category_ai_citation_ranking")) + """</h3>
+                <p>""" + (t("ui.based_on_gap_verification")) + """</p>
             </div>""", unsafe_allow_html=True)
 
             # --- Mapping: query topic → 35 categories ---
@@ -6512,15 +6512,15 @@ elif _page_idx == 7:
                     total_brand = len(_df_gap[_df_gap["category"] == "品牌"]) if "category" in _df_gap.columns else total_phrases
                     total_industry = len(_df_gap[_df_gap["category"] == "行业"]) if "category" in _df_gap.columns else 0
                     rc1, rc2, rc3, rc4 = st.columns(4)
-                    rc1.metric("Total Phrases" if is_en else "总检索短语数", total_phrases)
-                    rc2.metric("Brand Keywords" if is_en else "品牌词", total_brand)
-                    rc3.metric("Industry Keywords" if is_en else "行业词", total_industry)
+                    rc1.metric(t("ui.total_phrases_2"), total_phrases)
+                    rc2.metric(t("ui.brand_keywords"), total_brand)
+                    rc3.metric(t("ui.industry_keywords"), total_industry)
                     cat_count = len(set(list(_cat_analysis_data["品牌"].keys()) + list(_cat_analysis_data["行业"].keys())))
-                    rc4.metric("Categories Mapped" if is_en else "映射类别数", cat_count)
+                    rc4.metric(t("ui.categories_mapped"), cat_count)
 
                     # --- 品牌词 ---
                     st.divider()
-                    st.markdown("### 🏷️ " + ("Brand Keywords – Category Citation Ranking" if is_en else "品牌词 – 各类别 AI 引用率排名"))
+                    st.markdown("### 🏷️ " + (t("ui.brand_keywords_category_citation")))
                     if _cat_analysis_data["品牌"]:
                         brand_rows = []
                         for cat35, stats in _cat_analysis_data["品牌"].items():
@@ -6546,7 +6546,7 @@ elif _page_idx == 7:
                         df_b = pd.DataFrame(brand_rows).sort_values("_lk", ascending=False).reset_index(drop=True)
                         df_b.index = df_b.index + 1
                         st.dataframe(df_b[[c for c in df_b.columns if c != "_lk"]], use_container_width=True)
-                        st.markdown("**📈 " + ("Brand: Avg Link Rate by Category" if is_en else "品牌词：各类别平均官方链接率") + "**")
+                        st.markdown("**📈 " + (t("ui.brand_avg_link_rate")) + "**")
                         _cb = df_b[["类别", "_lk"]].copy()
                         _cb.columns = ["category", "link_rate"]
                         _cb = _cb.sort_values("link_rate", ascending=True)
@@ -6554,7 +6554,7 @@ elif _page_idx == 7:
 
                     # --- 行业词 ---
                     st.divider()
-                    st.markdown("### 🏭 " + ("Industry Keywords – Category Citation Ranking" if is_en else "行业词 – 各类别 AI 引用率排名"))
+                    st.markdown("### 🏭 " + (t("ui.industry_keywords_category_citation")))
                     if _cat_analysis_data["行业"]:
                         ind_rows = []
                         for cat35, stats in _cat_analysis_data["行业"].items():
@@ -6576,17 +6576,17 @@ elif _page_idx == 7:
                         df_i = pd.DataFrame(ind_rows).sort_values("_lk", ascending=False).reset_index(drop=True)
                         df_i.index = df_i.index + 1
                         st.dataframe(df_i[[c for c in df_i.columns if c != "_lk"]], use_container_width=True)
-                        st.markdown("**📈 " + ("Industry: Avg Link Rate by Category" if is_en else "行业词：各类别平均官方链接率") + "**")
+                        st.markdown("**📈 " + (t("ui.industry_avg_link_rate")) + "**")
                         _ci = df_i[["类别", "_lk"]].copy()
                         _ci.columns = ["category", "link_rate"]
                         _ci = _ci.sort_values("link_rate", ascending=True)
                         st.bar_chart(_ci.set_index("category"), horizontal=True, height=max(400, len(_ci) * 30))
                     else:
-                        st.caption("No industry keyword data." if is_en else "暂无行业词数据。")
+                        st.caption(t("ui.no_industry_keyword_data"))
 
                     # --- Insights ---
                     st.divider()
-                    st.markdown("**💡 " + ("Key Insights" if is_en else "关键洞察") + "**")
+                    st.markdown("**💡 " + (t("ui.key_insights")) + "**")
                     _all = []
                     for wt in ["品牌", "行业"]:
                         for c35, s in _cat_analysis_data[wt].items():
@@ -6596,33 +6596,33 @@ elif _page_idx == 7:
                         _top3 = _sorted[:3]
                         _bot3 = sorted([c for c in _sorted if c["n"] >= 3], key=lambda x: x["avg_lr"])[:3] if len([c for c in _sorted if c["n"] >= 3]) >= 3 else _sorted[-3:]
                         st.markdown(f"""
-    - {"引用率最高" if not is_en else "Highest"}：**{_top3[0]['cat']}** ({_top3[0]['type']}) {_top3[0]['avg_lr']:.1f}%，**{_top3[1]['cat']}** ({_top3[1]['type']}) {_top3[1]['avg_lr']:.1f}%，**{_top3[2]['cat']}** ({_top3[2]['type']}) {_top3[2]['avg_lr']:.1f}%
-    - {"引用率最低" if not is_en else "Lowest"}：**{_bot3[0]['cat']}** ({_bot3[0]['type']}) {_bot3[0]['avg_lr']:.1f}%
-    - {"品牌词 vs 行业词" if not is_en else "Brand vs Industry"}：{"品牌词整体引用率更高，AI 对品牌类查询更倾向引用官方来源；行业词竞争更激烈需更强内容权威性" if not is_en else "Brand keywords have higher citation rates overall"}
-    - {"建议" if not is_en else "Tip"}：{"对低引用率类别优化内容结构（FAQ/表格/分步骤）提升 AI 可读性" if not is_en else "Improve content structure for low-citation categories"}
+    - {t("ui.highest")}：**{_top3[0]['cat']}** ({_top3[0]['type']}) {_top3[0]['avg_lr']:.1f}%，**{_top3[1]['cat']}** ({_top3[1]['type']}) {_top3[1]['avg_lr']:.1f}%，**{_top3[2]['cat']}** ({_top3[2]['type']}) {_top3[2]['avg_lr']:.1f}%
+    - {t("ui.lowest")}：**{_bot3[0]['cat']}** ({_bot3[0]['type']}) {_bot3[0]['avg_lr']:.1f}%
+    - {t("ui.brand_vs_industry")}：{t("ui.brand_keywords_have_higher")}
+    - {t("ui.tip")}：{t("ui.improve_content_structure_for")}
     """)
             else:
-                st.caption("Gap verification data not available." if is_en else "暂无 Gap 验证数据。请上传 gap_verification_cn.csv。")
+                st.caption(t("ui.gap_verification_data_not_1"))
 
             # --- Detail Table (moved to bottom) ---
             st.divider()
-            st.markdown("**" + ("📋 Detail: Per-Phrase Link Status" if is_en else "📋 明细：逐条短语链接状态") + "**")
+            st.markdown("**" + (t("ui.detail_perphrase_link_status")) + "**")
             _gap_file_detail = METRICS_PATH / "gap_verification_cn.csv"
             if _gap_file_detail.exists():
                 _df_detail = load_csv_safe(_gap_file_detail)
                 if not _df_detail.empty:
                     col_filter1, col_filter2 = st.columns(2)
                     with col_filter1:
-                        gap_filter = st.selectbox("Status" if is_en else "筛选",
-                            ["All" if is_en else "全部", "Has Link" if is_en else "有链接", "No Link (Gap)" if is_en else "无链接 (Gap)"],
+                        gap_filter = st.selectbox(t("ui.status_1"),
+                            [t("ui.all"), t("ui.has_link"), t("ui.no_link_gap")],
                             key="zhixi_gap_filter2")
                     with col_filter2:
-                        cat_options_data = ["All" if is_en else "全部"]
+                        cat_options_data = [t("ui.all")]
                         if "sub_category" in _df_detail.columns:
                             cat_options_data += sorted(_df_detail["sub_category"].dropna().unique().tolist())
                         elif "category" in _df_detail.columns:
                             cat_options_data += sorted(_df_detail["category"].dropna().unique().tolist())
-                        gap_cat_filter = st.selectbox("Category" if is_en else "按类别", cat_options_data, key="zhixi_gap_cat_filter")
+                        gap_cat_filter = st.selectbox(t("ui.category_1"), cat_options_data, key="zhixi_gap_cat_filter")
                     df_gap_show = _df_detail.copy()
                     if "Has Link" in gap_filter or "有链接" in gap_filter:
                         df_gap_show = df_gap_show[df_gap_show["link_mentions"].astype(int) > 0]
@@ -6642,11 +6642,11 @@ elif _page_idx == 7:
         # TAB 4: Gap & 机会点
         # ============================================================
         with tab_gap:
-            st.subheader("💡 Gap & Opportunities" if is_en else "💡 Gap & 机会点")
-            st.markdown("Identify optimization opportunities based on citation tracking and content coverage analysis" if is_en else "基于引用追踪和内容覆盖分析，识别优化机会")
+            st.subheader(t("ui.gap_opportunities"))
+            st.markdown(t("ui.identify_optimization_opportunities_based"))
 
             # --- 1. AI Search Coverage from gap_verification_cn.csv + zhice ---
-            st.markdown("**🔍 AI Search Coverage**" if is_en else "**🔍 AI 搜索覆盖洞察**")
+            st.markdown(t("ui.ai_search_coverage"))
             _gap_f = METRICS_PATH / "gap_verification_cn.csv"
             _zhice_d = OUTPUT_PATH / "zhice"
             _has_gap_data = False
@@ -6683,11 +6683,11 @@ elif _page_idx == 7:
                                 pass
 
                     col_g1, col_g2, col_g3, col_g4 = st.columns(4)
-                    col_g1.metric("YTD Phrases Tested" if is_en else "YTD 检索短语数", _total)
-                    col_g2.metric("Link Coverage" if is_en else "官方链接覆盖率", f"{_link_pct:.1f}%")
+                    col_g1.metric(t("ui.ytd_phrases_tested"), _total)
+                    col_g2.metric(t("ui.link_coverage"), f"{_link_pct:.1f}%")
                     _brand_pct = _zhice_brand * 100 / _zhice_total if _zhice_total > 0 else 0
-                    col_g3.metric("Brand/Product Name Mention (智测)" if is_en else "品牌/产品名称提及率(智测)", f"{_brand_pct:.0f}%" if _zhice_total > 0 else "—")
-                    col_g4.metric("No Link (Gap)" if is_en else "无链接 Gap", f"{_no_link} ({100-_link_pct:.0f}%)")
+                    col_g3.metric(t("ui.brandproduct_name_mention_智测"), f"{_brand_pct:.0f}%" if _zhice_total > 0 else "—")
+                    col_g4.metric(t("ui.no_link_gap_1"), f"{_no_link} ({100-_link_pct:.0f}%)")
 
                     # Show gap queries from zhice
                     if _gap_queries_list:
@@ -6697,12 +6697,12 @@ elif _page_idx == 7:
                             st.dataframe(pd.DataFrame(unique_gq[:30]), use_container_width=True, hide_index=True)
 
             if not _has_gap_data:
-                st.caption("No gap verification data." if is_en else "暂无 Gap 验证数据。")
+                st.caption(t("ui.no_gap_verification_data"))
 
             st.divider()
 
             # --- 2. Content Type Performance ---
-            st.markdown("**📊 Content Type Performance**" if is_en else "**📊 内容类型表现对比**")
+            st.markdown(t("ui.content_type_performance"))
             _ct_file = METRICS_PATH / "content_type_analysis.csv"
             if _ct_file.exists():
                 _df_ct = load_csv_safe(_ct_file)
@@ -6712,11 +6712,11 @@ elif _page_idx == 7:
                     _BRAND_MENTION_RATE = 85.2
                     _INDUSTRY_MENTION_RATE = 91.8
                     _ct_display = pd.DataFrame({
-                        "内容类型" if not is_en else "Content Type": _df_ct["content_type"] if "content_type" in _df_ct.columns else [],
-                        "短语数" if not is_en else "Queries": _df_ct["total_queries"] if "total_queries" in _df_ct.columns else [],
-                        "品牌/产品名称提及率" if not is_en else "Brand/Product Name Rate": _df_ct.apply(lambda r: f"{float(r.get('brand_rate', 0)):.1f}%" if float(r.get('brand_rate', 0)) > 0 else f"{_BRAND_MENTION_RATE:.1f}%", axis=1),
-                        "官方链接率" if not is_en else "Link Rate": _df_ct["link_rate"].apply(lambda x: f"{float(x):.1f}%") if "link_rate" in _df_ct.columns else [],
-                        "特征说明" if not is_en else "Characteristics": _df_ct["characteristics"] if "characteristics" in _df_ct.columns else [],
+                        t("ui.content_type"): _df_ct["content_type"] if "content_type" in _df_ct.columns else [],
+                        t("ui.queries"): _df_ct["total_queries"] if "total_queries" in _df_ct.columns else [],
+                        t("ui.brandproduct_name_rate"): _df_ct.apply(lambda r: f"{float(r.get('brand_rate', 0)):.1f}%" if float(r.get('brand_rate', 0)) > 0 else f"{_BRAND_MENTION_RATE:.1f}%", axis=1),
+                        t("ui.link_rate_2"): _df_ct["link_rate"].apply(lambda x: f"{float(x):.1f}%") if "link_rate" in _df_ct.columns else [],
+                        t("ui.characteristics"): _df_ct["characteristics"] if "characteristics" in _df_ct.columns else [],
                     })
                     st.dataframe(_ct_display, use_container_width=True, hide_index=True)
                     # Insights
@@ -6725,17 +6725,17 @@ elif _page_idx == 7:
                         _best = _ct_sorted.iloc[0]
                         _worst = _ct_sorted.iloc[-1]
                         st.markdown(f"""
-    - {"Best performing" if is_en else "表现最好"}：**{_best['content_type']}** — {"link rate" if is_en else "链接率"} {_best['link_rate']}%
-    - {"Needs improvement" if is_en else "待改进"}：**{_worst['content_type']}** — {"link rate" if is_en else "链接率"} {_worst['link_rate']}%
-    - {"Key insight" if is_en else "关键洞察"}：{"Entry/navigation content has highest AI citation; industry comparison content gets brand mentions but few links" if is_en else "入口导航类内容 AI 引用链接率最高；行业对比类内容品牌被提及率高(91.8%)但链接率极低(3.1%)"}
+    - {t("ui.best_performing")}：**{_best['content_type']}** — {t("ui.link_rate_3")} {_best['link_rate']}%
+    - {t("ui.needs_improvement")}：**{_worst['content_type']}** — {t("ui.link_rate_3")} {_worst['link_rate']}%
+    - {t("ui.key_insight")}：{t("ui.entrynavigation_content_has_highest")}
     """)
             else:
-                st.caption("No content type analysis data." if is_en else "暂无内容类型分析数据。")
+                st.caption(t("ui.no_content_type_analysis"))
 
             st.divider()
 
             # --- 3. Category Coverage Gap (from gap_verification_cn.csv mapped to 35 cats) ---
-            st.markdown("**📊 Category Coverage Gap**" if is_en else "**📊 35类别覆盖 Gap**")
+            st.markdown(t("ui.category_coverage_gap"))
             if _has_gap_data:
                 # Map queries to 35 categories, find which have no data
                 _covered_cats = set()
@@ -6747,35 +6747,35 @@ elif _page_idx == 7:
                 _uncovered_cats = sorted(_all_cats - _covered_cats)
 
                 col_cv1, col_cv2, col_cv3 = st.columns(3)
-                col_cv1.metric("Covered" if is_en else "已覆盖", f"{len(_covered_cats)}/35")
-                col_cv2.metric("Uncovered" if is_en else "未覆盖", len(_uncovered_cats))
-                col_cv3.metric("Coverage Rate" if is_en else "覆盖率", f"{len(_covered_cats)*100//35}%")
+                col_cv1.metric(t("ui.covered_1"), f"{len(_covered_cats)}/35")
+                col_cv2.metric(t("ui.uncovered"), len(_uncovered_cats))
+                col_cv3.metric(t("ui.coverage_rate"), f"{len(_covered_cats)*100//35}%")
 
                 if _uncovered_cats:
                     with st.expander(f"❌ {'Uncovered categories' if is_en else '未覆盖类别（优先产出内容）'} ({len(_uncovered_cats)})", expanded=False):
                         for i, topic in enumerate(_uncovered_cats, 1):
                             st.markdown(f"{i}. {topic}")
                 else:
-                    st.success("✅ All 35 categories have search phrase coverage" if is_en else "✅ 35 个类别均有检索短语覆盖")
+                    st.success(t("ui.all_35_categories_have"))
             else:
-                st.caption("No data for category gap analysis." if is_en else "暂无数据用于类别 Gap 分析。")
+                st.caption(t("ui.no_data_for_category"))
 
             st.divider()
 
             # --- 4. Input Production Trends ---
-            st.markdown("**📈 Input Production Trends**" if is_en else "**📈 Input 产出趋势**")
+            st.markdown(t("ui.input_production_trends"))
             _input_file = METRICS_PATH / "geo_input_summary.csv"
             if _input_file.exists():
                 _df_input = load_csv_safe(_input_file)
                 if not _df_input.empty:
                     st.dataframe(_df_input, use_container_width=True, hide_index=True)
             else:
-                st.caption("No input summary data." if is_en else "暂无 Input 汇总数据。")
+                st.caption(t("ui.no_input_summary_data"))
 
             st.divider()
 
             # --- 5. Optimization Recommendations ---
-            st.markdown("**🚀 Optimization Recommendations**" if is_en else "**🚀 优化建议**")
+            st.markdown(t("ui.optimization_recommendations"))
             st.markdown("""
     | Priority | Gap Type | Action |
     |---|---|---|
@@ -6793,7 +6793,7 @@ elif _page_idx == 7:
             st.divider()
 
             # --- 6. Attribution ---
-            st.markdown("**🎯 Attribution Analysis**" if is_en else "**🎯 归因分析**")
+            st.markdown(t("ui.attribution_analysis"))
             st.markdown("""
     | Channel | Assessment | Recommendation |
     |---|---|---|
@@ -6809,7 +6809,7 @@ elif _page_idx == 7:
             """)
 
         # 📜 历史记录
-        with st.expander("📜 History" if is_en else "📜 历史记录"):
+        with st.expander(t("ui.history_1")):
             metrics_dir = OUTPUT_PATH / "metrics"
             if metrics_dir.exists():
                 files = sorted(metrics_dir.glob("*.csv"), key=lambda f: f.stat().st_mtime, reverse=True)
@@ -6819,51 +6819,51 @@ elif _page_idx == 7:
                     with col_i:
                         st.caption(f"📄 {f.name} · {f.stat().st_size/1024:.1f}KB · 🕐 {mtime}")
                     with col_r:
-                        if st.button("♻️ Reuse" if is_en else "♻️ 复用", key=f"reuse_zhixi_{f.name}"):
+                        if st.button(t("ui.reuse"), key=f"reuse_zhixi_{f.name}"):
                             # For analytics, just mark as notification - no live file to restore to
                             st.toast(f"{'Reused' if is_en else '已复用'}: {f.name}")
                     with col_d:
                         st.download_button("⬇️", f.read_bytes(), file_name=f.name, mime="text/csv", key=f"dl_zhixi_{f.name}")
             else:
-                st.caption("No history records yet" if is_en else "暂无历史")
+                st.caption(t("ui.no_history_records_yet"))
 
         # ============================================================
         # TAB 7: 智预 — Query Demand Forecaster
         # ============================================================
         with tab_zhiyu:
-            st.subheader("🔮 Query Demand Forecaster" if is_en else "🔮 智预 — 检索需求预测")
-            st.caption("Predict future search demand 2-4 weeks ahead based on seller lifecycle and market signals" if is_en else "基于卖家生命周期推演和市场变化信号，预测未来 2-4 周的检索需求")
+            st.subheader(t("ui.query_demand_forecaster"))
+            st.caption(t("ui.predict_future_search_demand"))
 
             st.markdown("---")
 
             # --- Two modes as tabs ---
             mode_signal, mode_lifecycle = st.tabs([
-                "📡 Signal-Driven" if is_en else "📡 信号驱动",
-                "🔄 Lifecycle Forecast" if is_en else "🔄 生命周期推演",
+                t("ui.signaldriven"),
+                t("ui.lifecycle_forecast"),
             ])
 
             # --- Mode 1: Signal-Driven ---
             with mode_signal:
-                st.markdown("**" + ("Input a market signal to predict future queries" if is_en else "输入市场信号，推演未来检索需求") + "**")
+                st.markdown("**" + (t("ui.input_a_market_signal")) + "**")
 
-                signal_type = st.selectbox("Signal Type" if is_en else "信号类型",
+                signal_type = st.selectbox(t("ui.signal_type"),
                     ["政策变化", "产品上线", "市场事件", "竞品动态", "季节性"],
                     key="zhiyu_signal_type")
 
-                signal_source = st.text_input("Source" if is_en else "信号来源 (URL 或描述)",
+                signal_source = st.text_input(t("ui.source_2"),
                     placeholder="https://sell.amazon.com/blog/... or 描述",
                     key="zhiyu_signal_src")
 
-                signal_summary = st.text_area("Signal Summary" if is_en else "信号摘要",
+                signal_summary = st.text_area(t("ui.signal_summary"),
                     placeholder="例：Amazon 宣布 2026 Q4 起 AU 站强制 GST 注册",
                     height=80, key="zhiyu_signal_summary")
 
-                target_market = st.selectbox("Target Market" if is_en else "目标市场",
+                target_market = st.selectbox(t("ui.target_market"),
                     ["CN", "NA", "EU", "JP", "AU", "ALL"], key="zhiyu_market")
 
-                if st.button("🔮 Predict Queries" if is_en else "🔮 推演衍生 Query", type="primary", key="zhiyu_predict"):
+                if st.button(t("ui.predict_queries"), type="primary", key="zhiyu_predict"):
                     if signal_summary:
-                        with st.spinner("Forecasting..." if is_en else "正在推演..."):
+                        with st.spinner(t("ui.forecasting")):
                             try:
                                 from engine import call_bedrock_claude
                                 prompt = f"""你是一个 AI 检索需求预测专家。基于以下市场信号，推演出卖家在未来 2-4 周可能会在 AI 搜索引擎上搜索的 Query。
@@ -6887,7 +6887,7 @@ elif _page_idx == 7:
                                     st.session_state["zhiyu_predictions"] = predictions
                                     st.success(f"✅ {'Generated' if is_en else '生成'} {len(predictions)} {'predicted queries' if is_en else '条预测 Query'}")
                                 else:
-                                    st.error("Failed to parse predictions" if is_en else "解析预测结果失败")
+                                    st.error(t("ui.failed_to_parse_predictions"))
                                     st.text(response[:500])
                             except ImportError:
                                 # Fallback: generate sample predictions
@@ -6903,12 +6903,12 @@ elif _page_idx == 7:
                             except Exception as e:
                                 st.error(f"Error: {e}")
                     else:
-                        st.warning("Please enter signal summary" if is_en else "请输入信号摘要")
+                        st.warning(t("ui.please_enter_signal_summary"))
 
                 # Show predictions (editable)
                 if "zhiyu_predictions" in st.session_state and st.session_state["zhiyu_predictions"]:
                     st.markdown("---")
-                    st.markdown("**" + ("Predicted Queries (editable)" if is_en else "预测结果（可编辑）") + ":**")
+                    st.markdown("**" + (t("ui.predicted_queries_editable")) + ":**")
 
                     predictions = st.session_state["zhiyu_predictions"]
                     edited_preds = []
@@ -6926,7 +6926,7 @@ elif _page_idx == 7:
 
                     col_export, col_save = st.columns(2)
                     with col_export:
-                        if st.button("🔍 Send to 智测 Verify" if is_en else "🔍 发送到智测验证 Gap", key="zhiyu_export"):
+                        if st.button(t("ui.send_to_智测_verify_1"), key="zhiyu_export"):
                             # Save predictions to zhice queue for verification
                             zhice_dir = OUTPUT_PATH.parent / "zhice"
                             zhice_dir.mkdir(parents=True, exist_ok=True)
@@ -6942,10 +6942,10 @@ elif _page_idx == 7:
                             }
                             queue_file.write_text(json.dumps(queue_data, ensure_ascii=False, indent=2), encoding='utf-8')
                             st.success(f"✅ {'Sent' if is_en else '已发送'} {len(queue_data['queries_to_verify'])} {'queries to 智测 for Gap verification' if is_en else '条到智测验证是否有 Gap'}")
-                            st.info("💡 " + ("Go to 智测 tab to run verification" if is_en else "请切换到智测 tab 执行验证"))
+                            st.info("💡 " + (t("ui.go_to_智测_tab")))
 
                     with col_save:
-                        if st.button("💾 Save Forecast" if is_en else "💾 保存预测", key="zhiyu_save"):
+                        if st.button(t("ui.save_forecast"), key="zhiyu_save"):
                             zhiyu_dir = OUTPUT_PATH.parent / "zhiyu"
                             zhiyu_dir.mkdir(parents=True, exist_ok=True)
                             ts = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -6963,7 +6963,7 @@ elif _page_idx == 7:
 
             # --- Mode 2: Lifecycle Forecast ---
             with mode_lifecycle:
-                st.markdown("**" + ("Select seller lifecycle stage to predict next queries" if is_en else "选择卖家生命周期阶段，推演下一步检索需求") + "**")
+                st.markdown("**" + (t("ui.select_seller_lifecycle_stage")) + "**")
 
                 stages = ["全部阶段", "认知期", "考虑期", "决策期", "注册期", "新手期", "成长期", "成熟期", "扩展期"]
                 stages_en = ["All Stages", "Awareness", "Consideration", "Decision", "Registration", "Onboarding", "Growth", "Mature", "Expansion"]
@@ -6972,21 +6972,21 @@ elif _page_idx == 7:
                 LC_PLATFORMS = {"all": "全部平台 (All)", "qianwen": "通义千问 (Qianwen)", "deepseek": "DeepSeek", "kimi": "Kimi", "doubao": "豆包 (Doubao)", "yuanbao": "元宝 (Yuanbao)", "chatgpt": "ChatGPT", "gemini": "Gemini", "bedrock": "Bedrock Claude"}
                 col_plat, col_stage, col_market = st.columns(3)
                 with col_plat:
-                    lc_platform = st.selectbox("AI Platform" if is_en else "AI 平台", list(LC_PLATFORMS.keys()), format_func=lambda x: LC_PLATFORMS[x], key="zhiyu_lc_platform")
+                    lc_platform = st.selectbox(t("ui.ai_platform"), list(LC_PLATFORMS.keys()), format_func=lambda x: LC_PLATFORMS[x], key="zhiyu_lc_platform")
                 with col_stage:
                     selected_stage = st.selectbox(
-                        "Current Stage" if is_en else "当前阶段",
+                        t("ui.current_stage"),
                         options=stages_en if is_en else stages,
                         index=4,
                         key="zhiyu_stage")
                 with col_market:
-                    lc_market = st.selectbox("Market" if is_en else "目标市场", ["CN", "NA", "EU", "JP", "ALL"], key="zhiyu_lc_market")
+                    lc_market = st.selectbox(t("ui.market"), ["CN", "NA", "EU", "JP", "ALL"], key="zhiyu_lc_market")
 
                 stage_idx = (stages_en if is_en else stages).index(selected_stage)
                 stage_zh = stages[stage_idx]
                 next_stage_zh = stages[min(stage_idx + 1, len(stages) - 1)]
 
-                if st.button("🔮 Generate Predictions" if is_en else "🔮 生成预测", type="primary", key="zhiyu_lc_gen"):
+                if st.button(t("ui.generate_predictions"), type="primary", key="zhiyu_lc_gen"):
                     prompt = f"""你是一个卖家行为预测专家。一个亚马逊卖家当前处于"{stage_zh}"阶段，目标市场是{lc_market}。
 
     请推演：这个卖家在即将进入"{next_stage_zh}"阶段时，会在AI搜索引擎上搜索什么问题？
@@ -7000,7 +7000,7 @@ elif _page_idx == 7:
                     try:
                         if lc_platform == "bedrock":
                             from engine import call_bedrock_claude
-                            with st.spinner("Calling Bedrock..." if is_en else "正在调用 Bedrock..."):
+                            with st.spinner(t("ui.calling_bedrock")):
                                 response = call_bedrock_claude(prompt)
                         else:
                             from zhice_engine import REAL_API_MAP
@@ -7030,7 +7030,7 @@ elif _page_idx == 7:
                             "扩展期": ["欧洲站VAT怎么办", "日本站怎么做", "新站点选哪个"],
                         }
                         st.session_state["zhiyu_lc_predictions"] = fallback.get(stage_zh, ["暂无预测"])
-                        st.info("AI unavailable, showing default predictions" if is_en else "AI 不可用，显示默认预测")
+                        st.info(t("ui.ai_unavailable_showing_default"))
                     except Exception as e:
                         st.error(str(e))
 
@@ -7045,7 +7045,7 @@ elif _page_idx == 7:
                         edited_lifecycle.append(eq)
 
                 if predicted:
-                    if st.button("📤 Export to 智库" if is_en else "📤 导出到智库", key="zhiyu_lc_export"):
+                    if st.button(t("ui.export_to_智库"), key="zhiyu_lc_export"):
                         zhiku_dir = OUTPUT_PATH / selected_batch / "01_zhiku"
                         zhiku_dir.mkdir(parents=True, exist_ok=True)
                         zhiku_file = zhiku_dir / "zhiku_ai_queries.csv"
@@ -7089,20 +7089,20 @@ elif _page_idx == 7:
                                     else:
                                         st.write(data)
                                 except Exception:
-                                    st.caption("Unable to parse" if is_en else "无法解析")
+                                    st.caption(t("ui.unable_to_parse"))
                         with col_fr:
-                            if st.button("♻️ Reuse" if is_en else "♻️ 复用", key=f"reuse_zhiyu_{f.name}"):
+                            if st.button(t("ui.reuse"), key=f"reuse_zhiyu_{f.name}"):
                                 try:
                                     data = json.loads(f.read_text(encoding="utf-8"))
                                     st.session_state["zhiyu_reuse_data"] = data
                                     st.toast(f"{'Loaded forecast' if is_en else '已加载预测'}: {f.stem}")
                                 except Exception:
-                                    st.error("Failed to load" if is_en else "加载失败")
+                                    st.error(t("ui.failed_to_load"))
                                 st.rerun()
                 else:
-                    st.caption("No forecast results yet" if is_en else "暂无预测结果")
+                    st.caption(t("ui.no_forecast_results_yet"))
             else:
-                st.caption("No forecast results yet" if is_en else "暂无预测结果")
+                st.caption(t("ui.no_forecast_results_yet"))
 
     # --- Ahrefs Brand Radar Section (rickylan only) ---
     if AHREFS_AVAILABLE:
@@ -7111,7 +7111,7 @@ elif _page_idx == 7:
     # PAGE: 智中枢
     # ============================================================
 elif _page_idx == 8:
-    st.markdown("""<div class="ss-page-header" style="color:#ff6b35;"><h1>🎯 """ + ("Decision Engine" if is_en else "智中枢 – Decision Engine") + """</h1><p>""" + ("Analytics data + 7 decision rules → weekly action plan" if is_en else "基于智析数据 + 7 条决策规则，生成周度行动计划") + """</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="ss-page-header" style="color:#ff6b35;"><h1>🎯 """ + (t("ui.decision_engine")) + """</h1><p>""" + (t("ui.analytics_data_7_decision")) + """</p></div>""", unsafe_allow_html=True)
     render_pipeline_flow("zhongshu", selected_batch)
 
     # --- Auto-refresh (every 5 minutes) for automation polling ---
@@ -7126,7 +7126,7 @@ elif _page_idx == 8:
     if current_user:
         _auto_results = run_automation_check(current_user, selected_batch, is_en)
         if _auto_results:
-            st.markdown("### ⚡ " + ("Auto-Executed Actions" if is_en else "自动执行结果"))
+            st.markdown("### ⚡ " + (t("ui.autoexecuted_actions")))
             for r in _auto_results:
                 icon = "✅" if r["success"] else "❌"
                 st.markdown(f"{icon} **{r['rule']}** — {r['message']} ({r['time']})")
@@ -7137,7 +7137,7 @@ elif _page_idx == 8:
     # ============================================================
     if not is_admin:
         # --- Pipeline Progress ---
-        st.markdown("### " + ("My Pipeline Progress" if is_en else "我的流水线进度"))
+        st.markdown("### " + (t("ui.my_pipeline_progress")))
 
         _u_zhiku = load_csv_safe(OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv")
         _u_zhizao = load_csv_safe(OUTPUT_PATH / selected_batch / "02_zhizao" / "zhizao_draft_content.csv")
@@ -7162,7 +7162,7 @@ elif _page_idx == 8:
         # Visual progress
         completed_steps = sum(1 for _, done, _ in steps_status if done)
         st.progress(completed_steps / len(steps_status))
-        st.caption(f"{completed_steps}/{len(steps_status)} " + ("steps completed" if is_en else "步已完成"))
+        st.caption(f"{completed_steps}/{len(steps_status)} " + (t("ui.steps_completed")))
 
         # Step cards
         cols = st.columns(5)
@@ -7175,19 +7175,19 @@ elif _page_idx == 8:
         st.divider()
 
         # --- Automation Rules ---
-        st.markdown("### " + ("Automation Rules" if is_en else "自动化规则"))
-        st.caption("Set rules to trigger next steps automatically" if is_en else "设置规则，满足条件时自动触发下一步")
+        st.markdown("### " + (t("ui.automation_rules")))
+        st.caption(t("ui.set_rules_to_trigger"))
 
         _rules_file = OUTPUT_PATH / "requests" / current_user / "automation_rules.json"
         _rules = json.loads(_rules_file.read_text(encoding="utf-8")) if _rules_file.exists() else []
 
         # Preset rules
         preset_rules = [
-            {"name": "智库 → 智测", "trigger": "短语数 ≥ 10 且全部已选中" if not is_en else "Phrases ≥ 10 and all selected", "action": "自动执行智测" if not is_en else "Auto-run 智测", "enabled": False},
-            {"name": "智测 → 智造", "trigger": "Gap 率 > 50%" if not is_en else "Gap rate > 50%", "action": "自动生产内容" if not is_en else "Auto-produce content", "enabled": False},
-            {"name": "智造 → 智优", "trigger": "文章全部生成完成" if not is_en else "All articles generated", "action": "自动评分优化" if not is_en else "Auto-score & optimize", "enabled": False},
-            {"name": "智优 → 智布", "trigger": "全部评分 ≥ 4.5" if not is_en else "All scores ≥ 4.5", "action": "自动格式化导出" if not is_en else "Auto-format & export", "enabled": False},
-            {"name": "智布 → 发布", "trigger": "导出完成" if not is_en else "Export done", "action": "自动提交发布申请" if not is_en else "Auto-submit publish request", "enabled": False},
+            {"name": "智库 → 智测", "trigger": t("ui.phrases_10_and_all"), "action": t("ui.autorun_智测"), "enabled": False},
+            {"name": "智测 → 智造", "trigger": t("ui.gap_rate_50"), "action": t("ui.autoproduce_content"), "enabled": False},
+            {"name": "智造 → 智优", "trigger": t("ui.all_articles_generated"), "action": t("ui.autoscore_optimize"), "enabled": False},
+            {"name": "智优 → 智布", "trigger": t("ui.all_scores_45"), "action": t("ui.autoformat_export"), "enabled": False},
+            {"name": "智布 → 发布", "trigger": t("ui.export_done"), "action": t("ui.autosubmit_publish_request"), "enabled": False},
         ]
 
         # Merge with saved state
@@ -7213,13 +7213,13 @@ elif _page_idx == 8:
         if rules_changed:
             _rules_file.parent.mkdir(parents=True, exist_ok=True)
             _rules_file.write_text(json.dumps(_rules, ensure_ascii=False, indent=2), encoding="utf-8")
-            st.success("✅ Rules saved!" if is_en else "✅ 规则已保存！")
+            st.success(t("ui.rules_saved"))
 
         # --- Manual trigger button ---
         st.divider()
         col_run, col_status = st.columns([1, 3])
         with col_run:
-            if st.button("⚡ " + ("Run Rules Now" if is_en else "立即执行规则检查"), type="primary", key="manual_run_rules"):
+            if st.button("⚡ " + (t("ui.run_rules_now")), type="primary", key="manual_run_rules"):
                 # Clear today's log to allow re-execution
                 _exec_log = _get_rule_execution_log(current_user)
                 _exec_log.clear()
@@ -7228,20 +7228,20 @@ elif _page_idx == 8:
         with col_status:
             _exec_log = _get_rule_execution_log(current_user)
             if _exec_log:
-                st.caption("📋 " + ("Last executions:" if is_en else "最近执行记录:"))
+                st.caption("📋 " + (t("ui.last_executions")))
                 for rname, rinfo in _exec_log.items():
                     _icon = "✅" if rinfo.get("last_result") == "success" else "❌"
                     st.caption(f"  {_icon} {rname} — {rinfo.get('last_date', '')} — {rinfo.get('message', '')[:50]}")
             else:
-                st.caption("No execution history yet." if is_en else "暂无执行记录")
+                st.caption(t("ui.no_execution_history_yet"))
 
         # Add custom rule
         st.divider()
-        st.markdown("**➕ " + ("Add Custom Rule" if is_en else "添加自定义规则") + "**")
-        cr_name = st.text_input("Rule Name" if is_en else "规则名称", key="cr_name", placeholder="e.g. 每周一自动裂变")
-        cr_trigger = st.text_input("Trigger Condition" if is_en else "触发条件", key="cr_trigger", placeholder="e.g. 每周一 or 短语数 < 5")
-        cr_action = st.text_input("Action" if is_en else "执行动作", key="cr_action", placeholder="e.g. 自动裂变 10 条新短语")
-        if st.button("➕ " + ("Add Rule" if is_en else "添加规则"), key="add_custom_rule"):
+        st.markdown("**➕ " + (t("ui.add_custom_rule")) + "**")
+        cr_name = st.text_input(t("ui.rule_name"), key="cr_name", placeholder="e.g. 每周一自动裂变")
+        cr_trigger = st.text_input(t("ui.trigger_condition"), key="cr_trigger", placeholder="e.g. 每周一 or 短语数 < 5")
+        cr_action = st.text_input(t("ui.action"), key="cr_action", placeholder="e.g. 自动裂变 10 条新短语")
+        if st.button("➕ " + (t("ui.add_rule")), key="add_custom_rule"):
             if cr_name and cr_trigger and cr_action:
                 _rules.append({"name": cr_name, "trigger": cr_trigger, "action": cr_action, "enabled": True})
                 try:
@@ -7252,7 +7252,7 @@ elif _page_idx == 8:
                     st.error(f"Save failed: {e}")
                 st.rerun()
             else:
-                st.warning("请填写所有字段" if not is_en else "Please fill all fields")
+                st.warning(t("ui.please_fill_all_fields"))
 
     # ============================================================
     # ADMIN VIEW: Original decision engine
@@ -7260,15 +7260,15 @@ elif _page_idx == 8:
     else:
 
         # Decision Rules
-        st.subheader("📜 7 Decision Rules" if is_en else "📜 7 条决策规则")
+        st.subheader(t("ui.7_decision_rules"))
         rules = [
-            ("Rule 1: Growth Acceleration", "Channel WoW > +30% for 2 consecutive weeks" if is_en else "渠道 WoW > +30% 连续2周", "Increase content output for that channel" if is_en else "增加该渠道内容产出", "🟢"),
-            ("Rule 2: Decline Alert", "Channel WoW < -20%" if is_en else "渠道 WoW < -20%", "Pause new content, investigate cause" if is_en else "暂停新内容，排查原因", "🔴"),
-            ("Rule 3: Low Absolute Volume", "GEO weekly < 50 and YoY > +50%" if is_en else "GEO 周 < 50 且 YoY > +50%", "Expand keyword coverage" if is_en else "扩大关键词覆盖", "🟡"),
-            ("Rule 4: High-Performing Site", "Site YoY > +100%" if is_en else "站点 YoY > +100%", "Prioritize content expansion for that site" if is_en else "优先扩展该站点内容", "🟢"),
-            ("Rule 5: Content Gap", "Market has traffic but no new content for 2 weeks" if is_en else "市场有流量但2周无新内容", "Restart full pipeline" if is_en else "重启全流程", "🟡"),
-            ("Rule 6: Benchmark Comparison", "Our YoY < benchmark YoY" if is_en else "我方 YoY < 大盘 YoY", "Strategy review" if is_en else "策略复盘", "🔴"),
-            ("Rule 7: Input-Output Lag", "Content published 2-3 weeks with no improvement" if is_en else "内容发布2-3周无提升", "Check content quality/rewrite" if is_en else "检查内容质量/重写", "🟡"),
+            ("Rule 1: Growth Acceleration", t("ui.channel_wow_30_for"), t("ui.increase_content_output_for"), "🟢"),
+            ("Rule 2: Decline Alert", t("ui.channel_wow_20"), t("ui.pause_new_content_investigate"), "🔴"),
+            ("Rule 3: Low Absolute Volume", t("ui.geo_weekly_50_and"), t("ui.expand_keyword_coverage"), "🟡"),
+            ("Rule 4: High-Performing Site", t("ui.site_yoy_100"), t("ui.prioritize_content_expansion_for"), "🟢"),
+            ("Rule 5: Content Gap", t("ui.market_has_traffic_but"), t("ui.restart_full_pipeline"), "🟡"),
+            ("Rule 6: Benchmark Comparison", t("ui.our_yoy_benchmark_yoy"), t("ui.strategy_review"), "🔴"),
+            ("Rule 7: Input-Output Lag", t("ui.content_published_23_weeks"), t("ui.check_content_qualityrewrite"), "🟡"),
         ]
         for name, condition, action, emoji in rules:
             with st.expander(f"{emoji} {name}"):
@@ -7315,7 +7315,7 @@ elif _page_idx == 8:
         """)
 
         st.divider()
-        st.subheader("🚀 Full Pipeline Quick Commands" if is_en else "🚀 全流程快捷指令")
+        st.subheader(t("ui.full_pipeline_quick_commands"))
         pipeline_cmds = [
             ("1. 智库", f"执行智库 {selected_batch}，market={market}，keyword_limit={kw_limit}"),
             ("2. 智造", f"执行智造 {selected_batch}，生成内容"),
@@ -7332,8 +7332,8 @@ elif _page_idx == 8:
 # PAGE: 批次对比
 # ============================================================
 elif page == "📊 批次对比" or (is_en and page == "📊 Batch Compare"):
-    st.title("📊 Batch Comparison" if is_en else "📊 批次对比")
-    st.caption("Compare output performance across different batches" if is_en else "对比不同批次的产出效果")
+    st.title(t("ui.batch_comparison"))
+    st.caption(t("ui.compare_output_performance_across"))
 
     col_b1, col_b2 = st.columns(2)
     with col_b1:
@@ -7350,33 +7350,33 @@ elif page == "📊 批次对比" or (is_en and page == "📊 Batch Compare"):
     col1, col2 = st.columns(2)
     with col1:
         st.subheader(f"📚 {batch_a}")
-        st.metric("Query Phrases" if is_en else "智库短语数", len(df_a))
+        st.metric(t("ui.query_phrases"), len(df_a))
         df_za = load_zhizao(batch_a)
-        st.metric("Articles" if is_en else "智造文章数", len(df_za))
+        st.metric(t("ui.articles_1"), len(df_za))
         df_sa = load_scorecard(batch_a)
         if not df_sa.empty and "overall_score" in df_sa.columns:
-            st.metric("Avg Score" if is_en else "平均评分", f"{df_sa['overall_score'].mean():.2f}")
+            st.metric(t("ui.avg_score_1"), f"{df_sa['overall_score'].mean():.2f}")
         else:
-            st.metric("Avg Score" if is_en else "平均评分", "N/A")
+            st.metric(t("ui.avg_score_1"), "N/A")
 
     with col2:
         st.subheader(f"📚 {batch_b}")
-        st.metric("Query Phrases" if is_en else "智库短语数", len(df_b))
+        st.metric(t("ui.query_phrases"), len(df_b))
         df_zb = load_zhizao(batch_b)
-        st.metric("Articles" if is_en else "智造文章数", len(df_zb))
+        st.metric(t("ui.articles_1"), len(df_zb))
         df_sb = load_scorecard(batch_b)
         if not df_sb.empty and "overall_score" in df_sb.columns:
-            st.metric("Avg Score" if is_en else "平均评分", f"{df_sb['overall_score'].mean():.2f}")
+            st.metric(t("ui.avg_score_1"), f"{df_sb['overall_score'].mean():.2f}")
         else:
-            st.metric("Avg Score" if is_en else "平均评分", "N/A")
+            st.metric(t("ui.avg_score_1"), "N/A")
 
 
 # ============================================================
 # PAGE: 发布追踪
 # ============================================================
 elif page == "📌 发布追踪" or (is_en and page == "📌 Publish Tracking"):
-    st.title("📌 Publish Tracking" if is_en else "📌 发布追踪")
-    st.caption("Track published content citations and performance" if is_en else "追踪已发布内容的引用和效果")
+    st.title(t("ui.publish_tracking"))
+    st.caption(t("ui.track_published_content_citations"))
 
     # Look for published tracking data
     tracking_file = OUTPUT_PATH / "publish_tracking.csv"
@@ -7385,18 +7385,18 @@ elif page == "📌 发布追踪" or (is_en and page == "📌 Publish Tracking"):
         if not df_track.empty:
             st.dataframe(df_track, use_container_width=True, hide_index=True)
         else:
-            st.info("Tracking data is empty" if is_en else "追踪数据为空")
+            st.info(t("ui.tracking_data_is_empty"))
     else:
-        st.info("No publish tracking data yet. System will auto-record after publishing." if is_en else "暂无发布追踪数据。发布后系统将自动记录。")
+        st.info(t("ui.no_publish_tracking_data"))
 
     st.divider()
-    st.subheader("Manually Add Publish Record" if is_en else "手动添加发布记录")
+    st.subheader(t("ui.manually_add_publish_record"))
     with st.form("add_publish_record"):
-        pub_title = st.text_input("Article Title" if is_en else "文章标题")
-        pub_url = st.text_input("Publish URL" if is_en else "发布 URL")
-        pub_date = st.date_input("Publish Date" if is_en else "发布日期")
-        pub_platform = st.selectbox("Platform" if is_en else "平台", ["官网", "知乎", "微信公众号", "其他"])
-        submitted = st.form_submit_button("Add Record" if is_en else "添加记录")
+        pub_title = st.text_input(t("ui.article_title"))
+        pub_url = st.text_input(t("ui.publish_url"))
+        pub_date = st.date_input(t("ui.publish_date"))
+        pub_platform = st.selectbox(t("ui.platform_1"), ["官网", "知乎", "微信公众号", "其他"])
+        submitted = st.form_submit_button(t("ui.add_record"))
         if submitted and pub_title:
             new_row = pd.DataFrame([{
                 "title": pub_title,
@@ -7419,11 +7419,11 @@ elif page == "📌 发布追踪" or (is_en and page == "📌 Publish Tracking"):
 # PAGE: 需求提交 (Request — per-user data)
 # ============================================================
 elif _page_idx == 10:
-    st.markdown("""<div class="ss-page-header" style="color:#00d4aa;"><h1>🔄 """ + ("Request Submission" if is_en else "需求提交") + """</h1><p>""" + ("Test → Opportunity → Content → Publish → Effect" if is_en else "智测发现 → 机会点 → 内容产出 → 效果对比 → 总结") + """</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="ss-page-header" style="color:#00d4aa;"><h1>🔄 """ + (t("ui.request_submission")) + """</h1><p>""" + (t("ui.test_opportunity_content_publish")) + """</p></div>""", unsafe_allow_html=True)
 
     # Login gate
     if not current_user:
-        st.warning("⚠️ " + ("Please enter your login in the sidebar first." if is_en else "请先在左侧栏输入您的 Login。"))
+        st.warning("⚠️ " + (t("ui.please_enter_your_login")))
         st.stop()
 
     # Per-user data directory
@@ -7453,7 +7453,7 @@ elif _page_idx == 10:
         if requests_dir.exists():
             user_dirs = [d.name for d in requests_dir.iterdir() if d.is_dir()]
             if user_dirs:
-                st.markdown("### " + ("All Users" if is_en else "所有用户"))
+                st.markdown("### " + (t("ui.all_users")))
                 for ud in sorted(user_dirs):
                     ud_tests = _req_user_dir.parent / ud / "tests.json"
                     ud_opps = _req_user_dir.parent / ud / "opportunities.json"
@@ -7473,22 +7473,22 @@ elif _page_idx == 10:
 
     # KPIs
     kc1, kc2, kc3, kc4 = st.columns(4)
-    kc1.metric("Tests" if is_en else "测试", len(user_tests))
+    kc1.metric(t("ui.tests"), len(user_tests))
     total_queries = sum(len(t.get("results", [])) for t in user_tests)
-    kc2.metric("Queries" if is_en else "短语", total_queries)
-    kc3.metric("Opportunities" if is_en else "机会点", len(user_opps))
+    kc2.metric(t("ui.queries_1"), total_queries)
+    kc3.metric(t("ui.opportunities"), len(user_opps))
     total_articles = sum(a.get("count", 0) for a in user_actions)
-    kc4.metric("Articles Generated" if is_en else "产出文章", total_articles)
+    kc4.metric(t("ui.articles_generated_1"), total_articles)
 
     # Quick actions
     st.divider()
-    st.caption("💡 " + ("For full step-by-step flow (test → analyze → produce → publish), use the dedicated console:" if is_en else "完整的五步操作流程（测试→分析→产出→发布），请使用独立操作台："))
+    st.caption("💡 " + (t("ui.for_full_stepbystep_flow")))
     st.markdown("**https://smart-suite-phase-i-rexnysnywiqjytrnb4up9a.streamlit.app/**")
 
     # Show recent tests
     if user_tests:
         st.divider()
-        st.markdown("#### " + ("Recent Tests" if is_en else "最近测试"))
+        st.markdown("#### " + (t("ui.recent_tests")))
         for t in user_tests[:5]:
             results = t.get("results", [])
             gaps = sum(1 for r in results if not r.get("has_official_link") and r.get("answer"))
@@ -7497,7 +7497,7 @@ elif _page_idx == 10:
     # Show opportunities status
     if user_opps:
         st.divider()
-        st.markdown("#### " + ("Opportunities" if is_en else "机会点状态"))
+        st.markdown("#### " + (t("ui.opportunities_1")))
         done = sum(1 for o in user_opps if o.get("status") != "待执行")
         pending = len(user_opps) - done
         st.markdown(f"✅ {'Done' if is_en else '已完成'}: {done} | ⏳ {'Pending' if is_en else '待执行'}: {pending}")
@@ -7507,7 +7507,7 @@ elif _page_idx == 10:
     # Show actions
     if user_actions:
         st.divider()
-        st.markdown("#### " + ("Action History" if is_en else "执行历史"))
+        st.markdown("#### " + (t("ui.action_history")))
         for a in user_actions[:10]:
             st.markdown(f"- **{a.get('date', '')}** — {a.get('count', 0)} {'articles' if is_en else '篇'}")
 
@@ -7515,19 +7515,19 @@ elif _page_idx == 10:
 # PAGE: 运营看板 (Operations Dashboard)
 # ============================================================
 elif _page_idx == 13:
-    st.markdown("""<div class="ss-page-header" style="color:#00d4aa;"><h1>📝 """ + ("Operations Dashboard" if is_en else "运营管理看板") + """</h1><p>""" + ("Team activity log, pipeline status, who did what" if is_en else "团队操作日志、流水线状态、谁执行了什么") + """</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="ss-page-header" style="color:#00d4aa;"><h1>📝 """ + (t("ui.operations_dashboard")) + """</h1><p>""" + (t("ui.team_activity_log_pipeline")) + """</p></div>""", unsafe_allow_html=True)
 
     tab_activity, tab_approval, tab_pipeline, tab_users, tab_link = st.tabs([
-        "📋 Activity Log" if is_en else "📋 操作日志",
-        "✅ Approvals" if is_en else "✅ 需求审批",
-        "📊 Pipeline Status" if is_en else "📊 流水线状态",
-        "👥 Users" if is_en else "👥 用户管理",
-        "🔗 Links" if is_en else "🔗 入口链接",
+        t("ui.activity_log"),
+        t("ui.approvals"),
+        t("ui.pipeline_status"),
+        t("ui.users"),
+        t("ui.links"),
     ])
 
     with tab_activity:
-        st.markdown("### " + ("Recent Operations" if is_en else "最近操作"))
-        st.caption("Who did what — audit trail from all interfaces" if is_en else "谁执行了什么 — 所有界面的操作记录")
+        st.markdown("### " + (t("ui.recent_operations")))
+        st.caption(t("ui.who_did_what_audit"))
 
         # Load audit log
         audit_file = Path(BASE_PATH) / "logs" / "audit.log"
@@ -7553,13 +7553,13 @@ elif _page_idx == 13:
                 st.dataframe(df_log, use_container_width=True, hide_index=True)
                 st.caption(f"{'Showing last 50 entries' if is_en else '显示最近 50 条'} ({len(log_entries)} {'total' if is_en else '总计'})")
             else:
-                st.info("No activity logged yet." if is_en else "暂无操作记录。")
+                st.info(t("ui.no_activity_logged_yet"))
         else:
-            st.info("No audit log found." if is_en else "未找到审计日志。")
+            st.info(t("ui.no_audit_log_found"))
 
     with tab_approval:
-        st.markdown("### ✅ " + ("Request Approvals" if is_en else "需求审批"))
-        st.caption("Review and approve content requests from team members (8503)" if is_en else "审核并批复团队成员 (8503) 提交的内容发布请求")
+        st.markdown("### ✅ " + (t("ui.request_approvals")))
+        st.caption(t("ui.review_and_approve_content"))
 
         # Load request tracking
         request_file = OUTPUT_PATH / "request_tracking.json"
@@ -7569,7 +7569,7 @@ elif _page_idx == 13:
             requests_data = []
 
         if not requests_data:
-            st.info("No pending requests." if is_en else "暂无待审批请求。")
+            st.info(t("ui.no_pending_requests"))
         else:
             # Show all requests
             pending = [r for r in requests_data if r.get("status") == "pending"]
@@ -7577,14 +7577,14 @@ elif _page_idx == 13:
             published = [r for r in requests_data if r.get("status") == "published"]
 
             kc1, kc2, kc3 = st.columns(3)
-            kc1.metric("Pending" if is_en else "待审批", len(pending))
-            kc2.metric("Approved" if is_en else "已批复", len(approved))
-            kc3.metric("Published" if is_en else "已发布", len(published))
+            kc1.metric(t("ui.pending_1"), len(pending))
+            kc2.metric(t("ui.approved_2"), len(approved))
+            kc3.metric(t("ui.published"), len(published))
 
             # Pending requests
             if pending:
                 st.divider()
-                st.markdown("**" + ("Pending Requests:" if is_en else "待审批请求：") + "**")
+                st.markdown("**" + (t("ui.pending_requests")) + "**")
                 for i, req in enumerate(pending):
                     with st.expander(f"📤 {req.get('user', 'unknown')} — {req.get('count', 0)} {'articles' if is_en else '篇'} ({req.get('submitted_at', '')})"):
                         st.markdown(f"**{'User' if is_en else '提交人'}:** {req.get('user', '')}")
@@ -7593,13 +7593,13 @@ elif _page_idx == 13:
                         st.markdown(f"**{'Batch' if is_en else '批次'}:** {req.get('batch', '')}")
 
                         if req.get("queries"):
-                            st.markdown("**" + ("Queries:" if is_en else "对应短语：") + "**")
+                            st.markdown("**" + (t("ui.queries_2")) + "**")
                             for q in req["queries"][:10]:
                                 st.markdown(f"  - {q}")
 
                         col_a, col_r = st.columns(2)
                         with col_a:
-                            if st.button("✅ " + ("Approve & Publish" if is_en else "批复并发布"), key=f"approve_{i}", type="primary"):
+                            if st.button("✅ " + (t("ui.approve_publish")), key=f"approve_{i}", type="primary"):
                                 req["status"] = "approved"
                                 req["approved_at"] = datetime.now().strftime("%Y-%m-%d %H:%M")
 
@@ -7608,7 +7608,7 @@ elif _page_idx == 13:
                                 try:
                                     from engine import run_zhibu
                                     batch = req.get("batch", get_batches()[0])
-                                    with st.spinner("执行智布+智传中..." if not is_en else "Running publish pipeline..."):
+                                    with st.spinner(t("ui.running_publish_pipeline")):
                                         zhibu_result = run_zhibu(batch, None)
                                     if zhibu_result.get("success"):
                                         publish_success = True
@@ -7634,29 +7634,29 @@ elif _page_idx == 13:
                                 if publish_success:
                                     st.success("✅ " + ("Approved + Published! Content sent to 智布+智传." if is_en else f"已批复并发布！{req.get('count',0)} 篇内容已完成智布+智传。"))
                                 else:
-                                    st.success("✅ " + ("Approved. Awaiting publish." if is_en else "已批复，等待发布。"))
+                                    st.success("✅ " + (t("ui.approved_awaiting_publish")))
                                 st.rerun()
                         with col_r:
-                            if st.button("❌ " + ("Reject" if is_en else "驳回"), key=f"reject_{i}"):
+                            if st.button("❌ " + (t("ui.reject_1")), key=f"reject_{i}"):
                                 req["status"] = "rejected"
                                 req["rejected_at"] = datetime.now().strftime("%Y-%m-%d %H:%M")
                                 request_file.write_text(json.dumps(requests_data, ensure_ascii=False, indent=2), encoding="utf-8")
-                                st.warning("❌ " + ("Rejected." if is_en else "已驳回。"))
+                                st.warning("❌ " + (t("ui.rejected")))
                                 st.rerun()
 
             # Published history
             if published:
                 st.divider()
-                st.markdown("**" + ("Published:" if is_en else "已发布：") + "**")
+                st.markdown("**" + (t("ui.published_1")) + "**")
                 df_pub = pd.DataFrame([{
                     "User": r.get("user", ""),
-                    "Articles" if is_en else "篇数": r.get("count", 0),
-                    "Published" if is_en else "发布时间": r.get("published_at", ""),
+                    t("ui.articles_2"): r.get("count", 0),
+                    t("ui.published_2"): r.get("published_at", ""),
                 } for r in published])
                 st.dataframe(df_pub, use_container_width=True, hide_index=True)
 
     with tab_pipeline:
-        st.markdown("### " + ("Pipeline Status per Batch" if is_en else "各批次流水线状态"))
+        st.markdown("### " + (t("ui.pipeline_status_per_batch")))
 
         for batch_id in get_batches()[:5]:
             status = get_batch_status(batch_id)
@@ -7669,9 +7669,9 @@ elif _page_idx == 13:
             st.divider()
 
     with tab_users:
-        st.markdown("### 👥 " + ("User Management" if is_en else "用户管理"))
+        st.markdown("### 👥 " + (t("ui.user_management")))
         if not is_admin:
-            st.warning("Only admin can manage users." if is_en else "仅管理员可管理用户。")
+            st.warning(t("ui.only_admin_can_manage"))
         else:
             # Load users data
             _users_file = BASE_PATH / "output" / "users.json"
@@ -7683,7 +7683,7 @@ elif _page_idx == 13:
             # Pending approvals
             _pending = _ud.get("pending", [])
             if _pending:
-                st.markdown("#### 📨 " + ("Pending Applications" if is_en else "待审批申请"))
+                st.markdown("#### 📨 " + (t("ui.pending_applications")))
                 for i, p in enumerate(_pending):
                     col_pa, col_pb, col_pc = st.columns([3, 1, 1])
                     with col_pa:
@@ -7704,7 +7704,7 @@ elif _page_idx == 13:
                 st.divider()
 
             # Current users
-            st.markdown("#### " + ("Current Users" if is_en else "当前用户"))
+            st.markdown("#### " + (t("ui.current_users")))
             for u in _ud.get("allowed", []):
                 role = "🔑 Admin" if u in _ud.get("admins", []) else "👤 User"
                 col_u1, col_u2 = st.columns([4, 1])
@@ -7720,7 +7720,7 @@ elif _page_idx == 13:
 
             # Add user manually
             st.divider()
-            st.markdown("#### ➕ " + ("Add User" if is_en else "手动添加"))
+            st.markdown("#### ➕ " + (t("ui.add_user")))
             col_add1, col_add2, col_add3 = st.columns([2, 1, 1])
             with col_add1:
                 new_user = st.text_input("Login name", key="add_user_input", placeholder="new_user_login")
@@ -7728,7 +7728,7 @@ elif _page_idx == 13:
                 new_role = st.selectbox("Role", ["User", "Admin"], key="add_user_role")
             with col_add3:
                 st.write("")
-                if st.button("➕ " + ("Add" if is_en else "添加"), key="add_user_btn"):
+                if st.button("➕ " + (t("ui.add_1")), key="add_user_btn"):
                     if new_user and new_user.lower() not in _ud.get("allowed", []):
                         _ud["allowed"].append(new_user.lower())
                         if new_role == "Admin":
@@ -7738,13 +7738,13 @@ elif _page_idx == 13:
                         st.rerun()
 
     with tab_link:
-        st.markdown("### " + ("Service Links" if is_en else "服务入口"))
+        st.markdown("### " + (t("ui.service_links")))
         st.markdown("""
 | Service | URL | Description |
 |---------|-----|-------------|
-| **Main Console** | http://localhost:8501 | """ + ("Management dashboard (this page)" if is_en else "管理看板（当前页面）") + """ |
-| **POC Review** | http://localhost:8502 | """ + ("POC content review & approval" if is_en else "POC 内容审核审批") + """ |
-| **Closed-Loop Console** | http://localhost:8503 | """ + ("Team operations: test→opportunity→content→effect" if is_en else "团队操作台：测试→机会→内容→效果 闭环") + """ |
+| **Main Console** | http://localhost:8501 | """ + (t("ui.management_dashboard_this_page")) + """ |
+| **POC Review** | http://localhost:8502 | """ + (t("ui.poc_content_review_approval")) + """ |
+| **Closed-Loop Console** | http://localhost:8503 | """ + (t("ui.team_operations_testopportunitycontenteffect")) + """ |
 """)
 
 
@@ -7752,9 +7752,9 @@ elif _page_idx == 13:
 # PAGE: 引用分析
 # ============================================================
 elif _page_idx == 11:
-    st.markdown("""<div class="ss-page-header" style="color:#4caf50;"><h1>🔍 """ + ("Citation Analysis" if is_en else "引用分析") + """</h1><p>""" + ("Analyze AI search engine citation of our content" if is_en else "分析 AI 搜索引擎对内容的引用情况") + """</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="ss-page-header" style="color:#4caf50;"><h1>🔍 """ + (t("ui.citation_analysis")) + """</h1><p>""" + (t("ui.analyze_ai_search_engine")) + """</p></div>""", unsafe_allow_html=True)
 
-    st.subheader("AI Engine Citation Monitoring" if is_en else "AI 引擎引用监控")
+    st.subheader(t("ui.ai_engine_citation_monitoring"))
     st.markdown("""
     Track citation status of our content across these AI search platforms:
     - **CN**: DeepSeek / 豆包 / Kimi / 元宝 / 通义千问
@@ -7772,18 +7772,18 @@ elif _page_idx == 11:
         if not df_cite.empty:
             col1, col2, col3 = st.columns(3)
             with col1:
-                st.metric("Total Citations" if is_en else "总引用次数", len(df_cite))
+                st.metric(t("ui.total_citations"), len(df_cite))
             with col2:
                 if "platform" in df_cite.columns:
-                    st.metric("Citation Platforms" if is_en else "引用平台数", df_cite["platform"].nunique())
+                    st.metric(t("ui.citation_platforms"), df_cite["platform"].nunique())
             with col3:
                 if "content_id" in df_cite.columns:
-                    st.metric("Cited Content Count" if is_en else "被引用内容数", df_cite["content_id"].nunique())
+                    st.metric(t("ui.cited_content_count"), df_cite["content_id"].nunique())
             st.dataframe(df_cite, use_container_width=True, hide_index=True)
         else:
-            st.info("No citation data" if is_en else "暂无引用数据")
+            st.info(t("ui.no_citation_data"))
     else:
-        st.info("No citation tracking data yet. Run journey research to auto-generate citation analysis." if is_en else "暂无引用追踪数据。运行智测后将自动生成引用分析。")
+        st.info(t("ui.no_citation_tracking_data"))
 
 
 # ============================================================
@@ -7791,9 +7791,9 @@ elif _page_idx == 11:
 # ============================================================
 elif _page_idx == 12:
     st.title("⚙️ Settings")
-    st.caption("System Configuration" if is_en else "系统配置")
+    st.caption(t("ui.system_configuration"))
 
-    st.subheader("🔑 API Configuration" if is_en else "🔑 API 配置")
+    st.subheader(t("ui.api_configuration"))
     st.markdown("""
     - **AWS Bedrock**: 使用本地 AWS credentials（SSO / env vars）
     - **Model**: Claude 3.5 Sonnet (`anthropic.claude-sonnet-4-20250514`)
@@ -7801,15 +7801,15 @@ elif _page_idx == 12:
     """)
 
     st.divider()
-    st.subheader("📂 Path Configuration" if is_en else "📂 路径配置")
+    st.subheader(t("ui.path_configuration"))
     st.text(f"{'Project Root' if is_en else '项目根目录'}: {BASE_PATH}")
     st.text(f"{'Output Dir' if is_en else '输出目录'}: {OUTPUT_PATH}")
     st.text(f"{'Input Dir' if is_en else '输入目录'}: {INPUT_PATH}")
 
     st.divider()
-    st.subheader("📊 Batch Management" if is_en else "📊 批次管理")
-    new_batch = st.text_input("Create New Batch" if is_en else "创建新批次", placeholder="batch_004", key="new_batch_input")
-    if st.button("Create Batch" if is_en else "创建批次", key="create_batch"):
+    st.subheader(t("ui.batch_management"))
+    new_batch = st.text_input(t("ui.create_new_batch"), placeholder="batch_004", key="new_batch_input")
+    if st.button(t("ui.create_batch"), key="create_batch"):
         if new_batch:
             new_path = OUTPUT_PATH / new_batch
             new_path.mkdir(parents=True, exist_ok=True)
@@ -7820,15 +7820,15 @@ elif _page_idx == 12:
             st.success(f"✅ {'Batch created' if is_en else '已创建批次'}: {new_batch}")
 
     st.divider()
-    st.subheader("📜 Steering Rules Editor" if is_en else "📜 Steering 规则编辑器")
-    st.caption("Edit AI behavior rules. Changes affect both Kiro and Streamlit content generation." if is_en else "编辑 AI 行为规则。修改后 Kiro 和 Streamlit 生成内容都会遵守新规则。")
+    st.subheader(t("ui.steering_rules_editor"))
+    st.caption(t("ui.edit_ai_behavior_rules"))
 
     # List steering files
     steering_dir = BASE_PATH / ".kiro" / "steering"
     if steering_dir.exists():
         steering_files = sorted([f.name for f in steering_dir.glob("*.md")])
         selected_steering = st.selectbox(
-            "Select file" if is_en else "选择文件",
+            t("ui.select_file"),
             steering_files,
             key="steering_file_select"
         )
@@ -7846,22 +7846,22 @@ elif _page_idx == 12:
 
             col_save, col_info = st.columns([1, 3])
             with col_save:
-                if st.button("💾 Save" if is_en else "💾 保存", key="save_steering"):
+                if st.button(t("ui.save_1"), key="save_steering"):
                     steering_path.write_text(edited_steering, encoding="utf-8")
-                    st.success("✅ Saved!" if is_en else "✅ 已保存！")
+                    st.success(t("ui.saved_1"))
             with col_info:
                 st.caption(f"{'File size' if is_en else '文件大小'}: {len(current_content):,} chars · {'Path' if is_en else '路径'}: {steering_path}")
     else:
-        st.warning("Steering directory not found" if is_en else "未找到 steering 目录")
+        st.warning(t("ui.steering_directory_not_found"))
 
     st.divider()
-    st.subheader("🏷️ Category System (35 Categories)" if is_en else "🏷️ 类别体系 (35类)")
+    st.subheader(t("ui.category_system_35_categories"))
     for i, cat in enumerate(CATEGORIES_35, 1):
         st.text(f"{i:2d}. {cat}")
 
     st.divider()
-    st.subheader("👥 User Management" if is_en else "👥 用户管理")
-    st.caption("Set user language preferences. Users marked as 'English' will auto-see English UI on login." if is_en else "设置用户默认语言。标记为英文的用户登录后自动显示英文界面。")
+    st.subheader(t("ui.user_management_1"))
+    st.caption(t("ui.set_user_language_preferences"))
 
     _um_file = BASE_PATH / "output" / "users.json"
     if _um_file.exists():
@@ -7894,7 +7894,7 @@ elif _page_idx == 12:
         key="user_mgmt_editor",
     )
 
-    if st.button("💾 Save User Settings" if is_en else "💾 保存用户设置", key="save_user_lang"):
+    if st.button(t("ui.save_user_settings"), key="save_user_lang"):
         # Update user_lang from edited data
         new_lang_map = {}
         for _, row in _um_edited.iterrows():
@@ -7903,7 +7903,7 @@ elif _page_idx == 12:
         _um_data["user_lang"] = new_lang_map
         _um_file.write_text(json.dumps(_um_data, ensure_ascii=False, indent=2), encoding="utf-8")
         mark_data_changed()
-        st.success("✅ " + ("User language settings saved!" if is_en else "用户语言设置已保存！"))
+        st.success("✅ " + (t("ui.user_language_settings_saved")))
 
 
 # ============================================================

@@ -1,0 +1,4650 @@
+{
+  "ui.select_to_restore": {
+    "en": "Select to restore",
+    "zh-CN": "选择恢复",
+    "zh-TW": "選擇恢复",
+    "ko": "Select to restore",
+    "vi": "Select to restore"
+  },
+  "ui.restore_all": {
+    "en": "Restore ALL",
+    "zh-CN": "全部恢复",
+    "zh-TW": "全部恢复",
+    "ko": "Restore ALL",
+    "vi": "Restore ALL"
+  },
+  "ui.my_content_rules": {
+    "en": "My Content Rules",
+    "zh-CN": "我的内容规范",
+    "zh-TW": "我的內容規範",
+    "ko": "My Content Rules",
+    "vi": "My Content Rules"
+  },
+  "ui.click_to_customize_how": {
+    "en": "Click to customize how AI generates & scores your content",
+    "zh-CN": "点击自定义 AI 生成和评分内容的规则",
+    "zh-TW": "点击自定义 AI 生成和評分內容的規則",
+    "ko": "Click to customize how AI generates & scores your content",
+    "vi": "Click to customize how AI generates & scores your content"
+  },
+  "ui.content_rules": {
+    "en": "Content Rules",
+    "zh-CN": "内容规范",
+    "zh-TW": "內容規範",
+    "ko": "콘텐츠 규칙",
+    "vi": "Quy tắc nội dung"
+  },
+  "ui.save": {
+    "en": "Save",
+    "zh-CN": "保存",
+    "zh-TW": "儲存",
+    "ko": "저장",
+    "vi": "Lưu"
+  },
+  "ui.content_rules_saved": {
+    "en": "Content rules saved!",
+    "zh-CN": "内容规范已保存！",
+    "zh-TW": "內容規範已儲存！",
+    "ko": "Content rules saved!",
+    "vi": "Content rules saved!"
+  },
+  "ui.reset_to_default": {
+    "en": "Reset to Default",
+    "zh-CN": "恢复默认",
+    "zh-TW": "恢复默认",
+    "ko": "초기화 to Default",
+    "vi": "Đặt lại to Default"
+  },
+  "ui.reset_to_default_1": {
+    "en": "Reset to default!",
+    "zh-CN": "已恢复默认！",
+    "zh-TW": "已恢复默认！",
+    "ko": "초기화 to default!",
+    "vi": "Đặt lại to default!"
+  },
+  "ui.these_rules_are_applied": {
+    "en": "These rules are applied when AI generates or scores your content. Edit freely.",
+    "zh-CN": "这些规则在 AI 生成或评分内容时使用。可自由编辑。",
+    "zh-TW": "这些規則在 AI 生成或評分內容时使用。可自由編輯。",
+    "ko": "These rules are applied when AI generates or scores your content. Edit freely.",
+    "vi": "These rules are applied when AI generates or scores your content. Edit freely."
+  },
+  "ui.access_denied": {
+    "en": "⚠️ Access denied",
+    "zh-CN": "⚠️ 无权限，请联系管理员",
+    "zh-TW": "⚠️ 無權限，请聯繫管理員",
+    "ko": "⚠️ Access denied",
+    "vi": "⚠️ Access denied"
+  },
+  "ui.demo": {
+    "en": "🎬 Demo",
+    "zh-CN": "🎬 演示模式",
+    "zh-TW": "🎬 展示模式",
+    "ko": "🎬 Demo",
+    "vi": "🎬 Demo"
+  },
+  "ui.subregion": {
+    "en": "🗺️ Sub-region",
+    "zh-CN": "🗺️ 子区域",
+    "zh-TW": "🗺️ 子區域",
+    "ko": "🗺️ Sub-region",
+    "vi": "🗺️ Sub-region"
+  },
+  "ui.content_language": {
+    "en": "📝 Content Language",
+    "zh-CN": "📝 内容语言",
+    "zh-TW": "📝 內容語言",
+    "ko": "📝 Content Language",
+    "vi": "📝 Content Language"
+  },
+  "ui.smart_suite_overview": {
+    "en": "🏠 Smart Suite Overview",
+    "zh-CN": "🏠 Smart Suite 总览",
+    "zh-TW": "🏠 Smart Suite 總覽",
+    "ko": "🏠 Smart Suite Overview",
+    "vi": "🏠 Smart Suite Overview"
+  },
+  "ui.please_log_in_to": {
+    "en": "Please log in to access Smart Suite tools",
+    "zh-CN": "请先登录",
+    "zh-TW": "请先登录",
+    "ko": "Please log in to access Smart Suite tools",
+    "vi": "Please log in to access Smart Suite tools"
+  },
+  "ui.select_your_name_below": {
+    "en": "Select your name below or enter login in the sidebar.",
+    "zh-CN": "从下方选择您的名称，或在左侧栏输入 Login。",
+    "zh-TW": "从下方選擇您的名称，或在左侧栏输入 Login。",
+    "ko": "Select your name below or enter login in the sidebar.",
+    "vi": "Select your name below or enter login in the sidebar."
+  },
+  "ui.select": {
+    "en": "— Select —",
+    "zh-CN": "— 请选择 —",
+    "zh-TW": "— 请選擇 —",
+    "ko": "— Select —",
+    "vi": "— Select —"
+  },
+  "ui.login": {
+    "en": "Login",
+    "zh-CN": "登录",
+    "zh-TW": "登录",
+    "ko": "로그인",
+    "vi": "Đăng nhập"
+  },
+  "ui.no_access": {
+    "en": "No access?",
+    "zh-CN": "没有权限？",
+    "zh-TW": "没有权限？",
+    "ko": "No access?",
+    "vi": "No access?"
+  },
+  "ui.apply_login_name": {
+    "en": "Apply login name",
+    "zh-CN": "申请 Login",
+    "zh-TW": "申请 Login",
+    "ko": "적용 login name",
+    "vi": "Áp dụng login name"
+  },
+  "ui.apply_for_access": {
+    "en": "Apply for Access",
+    "zh-CN": "申请权限",
+    "zh-TW": "申请权限",
+    "ko": "적용 for Access",
+    "vi": "Áp dụng for Access"
+  },
+  "ui.application_submitted_admin_will": {
+    "en": "Application submitted! Admin will review.",
+    "zh-CN": "申请已提交！等待管理员审批。",
+    "zh-TW": "申请已提交！等待管理員审批。",
+    "ko": "Application submitted! Admin will review.",
+    "vi": "Application submitted! Admin will review."
+  },
+  "ui.already_applied_or_already": {
+    "en": "Already applied or already has access.",
+    "zh-CN": "已申请或已有权限。",
+    "zh-TW": "已申请或已有权限。",
+    "ko": "Already applied or already has access.",
+    "vi": "Already applied or already has access."
+  },
+  "ui.query_library": {
+    "en": "Query Library",
+    "zh-CN": "智库 – 检索短语产出与验证",
+    "zh-TW": "智庫 – 檢索短語產出与驗證",
+    "ko": "쿼리 라이브러리",
+    "vi": "Thư viện truy vấn"
+  },
+  "ui.produce_calibrate_dedupe_select": {
+    "en": "Produce → Calibrate → Dedupe → Select → Verify Gap → Confirm",
+    "zh-CN": "产出 → 校准 → 去重 → 选取 → 验证Gap → 确认进智造",
+    "zh-TW": "產出 → 校準 → 去重 → 選取 → 驗證Gap → 確認进智造",
+    "ko": "Produce → Calibrate → Dedupe → Select → Verify Gap → Confirm",
+    "vi": "Produce → Calibrate → Dedupe → Select → Verify Gap → Confirm"
+  },
+  "ui.seed_expansion": {
+    "en": "🌱 Seed Expansion",
+    "zh-CN": "🌱 词根裂变",
+    "zh-TW": "🌱 詞根裂變",
+    "ko": "🌱 Seed Expansion",
+    "vi": "🌱 Seed Expansion"
+  },
+  "ui.persona_expansion": {
+    "en": "🧠 Persona Expansion",
+    "zh-CN": "🧠 画像裂变",
+    "zh-TW": "🧠 畫像裂變",
+    "ko": "🧠 Persona Expansion",
+    "vi": "🧠 Persona Expansion"
+  },
+  "ui.upload_phrases": {
+    "en": "📋 Upload Phrases",
+    "zh-CN": "📋 上传检索短语",
+    "zh-TW": "📋 上傳檢索短語",
+    "ko": "📋 Upload Phrases",
+    "vi": "📋 Upload Phrases"
+  },
+  "ui.enter_seed_words_ai": {
+    "en": "**Enter seed words, AI expands into search phrases**",
+    "zh-CN": "**输入词根，AI 自动裂变出检索短语**",
+    "zh-TW": "**输入詞根，AI 自动裂變出檢索短語**",
+    "ko": "**Enter seed words, AI expands into search phrases**",
+    "vi": "**Enter seed words, AI expands into search phrases**"
+  },
+  "ui.seed_word": {
+    "en": "Seed word",
+    "zh-CN": "词根",
+    "zh-TW": "詞根",
+    "ko": "시드 단어",
+    "vi": "Từ khóa gốc"
+  },
+  "ui.eg_fba_product_sourcing": {
+    "en": "e.g. FBA, product sourcing, listing optimization",
+    "zh-CN": "e.g. FBA、选品、注册",
+    "zh-TW": "e.g. FBA、选品、注册",
+    "ko": "e.g. FBA, product sourcing, listing optimization",
+    "vi": "e.g. FBA, product sourcing, listing optimization"
+  },
+  "ui.language": {
+    "en": "Language",
+    "zh-CN": "语言",
+    "zh-TW": "語言",
+    "ko": "언어",
+    "vi": "Ngôn ngữ"
+  },
+  "ui.count": {
+    "en": "Count",
+    "zh-CN": "裂变数量",
+    "zh-TW": "裂變數量",
+    "ko": "수량",
+    "vi": "Số lượng"
+  },
+  "ui.expand": {
+    "en": "🌱 Expand",
+    "zh-CN": "🌱 开始裂变",
+    "zh-TW": "🌱 開始裂變",
+    "ko": "🌱 Expand",
+    "vi": "🌱 Expand"
+  },
+  "ui.generate_phrases_in_both": {
+    "en": "Generate phrases in both Chinese and English, roughly half each.",
+    "zh-CN": "生成中文和英文两种语言的短语，各占一半。",
+    "zh-TW": "生成中文和英文两种語言的短語，各占一半。",
+    "ko": "생성 phrases in both Chinese and English, roughly half each.",
+    "vi": "Tạo phrases in both Chinese and English, roughly half each."
+  },
+  "ui.expanding": {
+    "en": "Expanding...",
+    "zh-CN": "裂变中...",
+    "zh-TW": "裂變中...",
+    "ko": "확장ing...",
+    "vi": "Mở rộnging..."
+  },
+  "ui.generate_phrases_based_on": {
+    "en": "**Generate phrases based on persona dimensions**",
+    "zh-CN": "**根据用户画像维度组合推演检索短语**",
+    "zh-TW": "**根据用户畫像维度组合推演檢索短語**",
+    "ko": "**Generate phrases based on persona dimensions**",
+    "vi": "**Generate phrases based on persona dimensions**"
+  },
+  "ui.basic_persona": {
+    "en": "##### Basic Persona",
+    "zh-CN": "##### 基础画像",
+    "zh-TW": "##### 基础畫像",
+    "ko": "##### Basic Persona",
+    "vi": "##### Basic Persona"
+  },
+  "ui.identity": {
+    "en": "Identity",
+    "zh-CN": "身份",
+    "zh-TW": "身份",
+    "ko": "Identity",
+    "vi": "Identity"
+  },
+  "ui.company_type": {
+    "en": "Company Type",
+    "zh-CN": "企业类型",
+    "zh-TW": "企业類型",
+    "ko": "Company Type",
+    "vi": "Company Type"
+  },
+  "ui.role": {
+    "en": "Role",
+    "zh-CN": "职位",
+    "zh-TW": "职位",
+    "ko": "Role",
+    "vi": "Role"
+  },
+  "ui.annual_revenue": {
+    "en": "Annual Revenue",
+    "zh-CN": "年销售额",
+    "zh-TW": "年销售额",
+    "ko": "Annual Revenue",
+    "vi": "Annual Revenue"
+  },
+  "ui.business_model": {
+    "en": "Business Model",
+    "zh-CN": "公司类型",
+    "zh-TW": "公司類型",
+    "ko": "Business Model",
+    "vi": "Business Model"
+  },
+  "ui.fulfillment_method": {
+    "en": "Fulfillment Method",
+    "zh-CN": "计划发货方式",
+    "zh-TW": "计划发货方式",
+    "ko": "Fulfillment Method",
+    "vi": "Fulfillment Method"
+  },
+  "ui.interest_persona": {
+    "en": "##### Interest Persona",
+    "zh-CN": "##### 兴趣画像",
+    "zh-TW": "##### 兴趣畫像",
+    "ko": "##### Interest Persona",
+    "vi": "##### Interest Persona"
+  },
+  "ui.target_marketplace": {
+    "en": "Target Marketplace",
+    "zh-CN": "目标站点",
+    "zh-TW": "目标站点",
+    "ko": "Target Marketplace",
+    "vi": "Target Marketplace"
+  },
+  "ui.content_category": {
+    "en": "Content Category",
+    "zh-CN": "内容分类",
+    "zh-TW": "內容分类",
+    "ko": "Content Category",
+    "vi": "Content Category"
+  },
+  "ui.phrases_to_generate": {
+    "en": "Phrases to generate",
+    "zh-CN": "生成短语数",
+    "zh-TW": "生成短語数",
+    "ko": "Phrases to generate",
+    "vi": "Phrases to generate"
+  },
+  "ui.generate": {
+    "en": "🧠 Generate",
+    "zh-CN": "🧠 画像推演生成",
+    "zh-TW": "🧠 畫像推演生成",
+    "ko": "🧠 Generate",
+    "vi": "🧠 Generate"
+  },
+  "ui.generating": {
+    "en": "Generating...",
+    "zh-CN": "推演中...",
+    "zh-TW": "推演中...",
+    "ko": "Generating...",
+    "vi": "Generating..."
+  },
+  "ui.upload_confirmed_search_phrases": {
+    "en": "**Upload confirmed search phrases or SEO/SEM keywords**",
+    "zh-CN": "**直接上传已确定的检索短语 或 SEO/SEM 关键词**",
+    "zh-TW": "**直接上傳已确定的檢索短語 或 SEO/SEM 關鍵詞**",
+    "ko": "**Upload confirmed search phrases or SEO/SEM keywords**",
+    "vi": "**Upload confirmed search phrases or SEO/SEM keywords**"
+  },
+  "ui.upload_type": {
+    "en": "Upload type",
+    "zh-CN": "上传类型",
+    "zh-TW": "上傳類型",
+    "ko": "업로드 type",
+    "vi": "Tải lên type"
+  },
+  "ui.search_phrases": {
+    "en": "Search Phrases",
+    "zh-CN": "检索短语 (AI Query)",
+    "zh-TW": "檢索短語 (AI Query)",
+    "ko": "검색 Phrases",
+    "vi": "Tìm kiếm Phrases"
+  },
+  "ui.seosem_keywords": {
+    "en": "SEO/SEM Keywords",
+    "zh-CN": "SEO/SEM 关键词",
+    "zh-TW": "SEO/SEM 關鍵詞",
+    "ko": "SEO/SEM Keywords",
+    "vi": "SEO/SEM Keywords"
+  },
+  "ui.csv_must_contain_ai_query": {
+    "en": "CSV must contain `ai_query` or `query` column",
+    "zh-CN": "CSV 文件需包含 `ai_query` 或 `query` 列",
+    "zh-TW": "CSV 文件需包含 `ai_query` 或 `query` 列",
+    "ko": "CSV must contain `ai_query` or `query` column",
+    "vi": "CSV must contain `ai_query` or `query` column"
+  },
+  "ui.upload_csv": {
+    "en": "Upload CSV",
+    "zh-CN": "上传 CSV",
+    "zh-TW": "上傳 CSV",
+    "ko": "업로드 CSV",
+    "vi": "Tải lên CSV"
+  },
+  "ui.confirm_upload": {
+    "en": "✅ Confirm Upload",
+    "zh-CN": "✅ 确认上传",
+    "zh-TW": "✅ 確認上傳",
+    "ko": "✅ Confirm Upload",
+    "vi": "✅ Confirm Upload"
+  },
+  "ui.upload_seosem_keywords_csv": {
+    "en": "Upload SEO/SEM keywords CSV, system will expand into AI search phrases",
+    "zh-CN": "上传 SEO/SEM 关键词 CSV，系统将自动裂变为 AI 检索短语",
+    "zh-TW": "上傳 SEO/SEM 關鍵詞 CSV，系统将自动裂變为 AI 檢索短語",
+    "ko": "업로드 SEO/SEM keywords CSV, system will expand into AI search phrases",
+    "vi": "Tải lên SEO/SEM keywords CSV, system will expand into AI search phrases"
+  },
+  "ui.csv_should_contain_keyword": {
+    "en": "CSV should contain `Keyword` or `keyword` column",
+    "zh-CN": "CSV 建议包含 `Keyword` 或 `keyword` 列",
+    "zh-TW": "CSV 建议包含 `Keyword` 或 `keyword` 列",
+    "ko": "CSV should contain `Keyword` or `keyword` column",
+    "vi": "CSV should contain `Keyword` or `keyword` column"
+  },
+  "ui.upload_keywords_csv": {
+    "en": "Upload Keywords CSV",
+    "zh-CN": "上传关键词 CSV",
+    "zh-TW": "上傳關鍵詞 CSV",
+    "ko": "업로드 Keywords CSV",
+    "vi": "Tải lên Keywords CSV"
+  },
+  "ui.phrases_per_keyword": {
+    "en": "Phrases per keyword",
+    "zh-CN": "每个关键词裂变短语数",
+    "zh-TW": "每个關鍵詞裂變短語数",
+    "ko": "Phrases per keyword",
+    "vi": "Phrases per keyword"
+  },
+  "ui.expand_to_phrases": {
+    "en": "🚀 Expand to Phrases",
+    "zh-CN": "🚀 裂变为检索短语",
+    "zh-TW": "🚀 裂變为檢索短語",
+    "ko": "🚀 Expand to Phrases",
+    "vi": "🚀 Expand to Phrases"
+  },
+  "ui.current_phrase_library": {
+    "en": "Current Phrase Library",
+    "zh-CN": "当前短语库",
+    "zh-TW": "當前短語库",
+    "ko": "현재 구문 라이브러리",
+    "vi": "Thư viện cụm từ hiện tại"
+  },
+  "ui.total": {
+    "en": "Total",
+    "zh-CN": "总量",
+    "zh-TW": "總量",
+    "ko": "합계",
+    "vi": "Tổng"
+  },
+  "ui.selected_phrases": {
+    "en": "Selected Phrases",
+    "zh-CN": "已选中",
+    "zh-TW": "已選中",
+    "ko": "선택된 구문",
+    "vi": "Cụm từ đã chọn"
+  },
+  "ui.source": {
+    "en": "Source",
+    "zh-CN": "来源筛选",
+    "zh-TW": "來源篩選",
+    "ko": "소스",
+    "vi": "Nguồn"
+  },
+  "ui.status": {
+    "en": "Status",
+    "zh-CN": "选中状态",
+    "zh-TW": "選中狀態",
+    "ko": "상태",
+    "vi": "Trạng thái"
+  },
+  "ui.all": {
+    "en": "All",
+    "zh-CN": "全部",
+    "zh-TW": "全部",
+    "ko": "전체",
+    "vi": "Tất cả"
+  },
+  "ui.unselected": {
+    "en": "Unselected",
+    "zh-CN": "未选中",
+    "zh-TW": "未選中",
+    "ko": "미선택",
+    "vi": "Chưa chọn"
+  },
+  "ui.search": {
+    "en": "Search",
+    "zh-CN": "搜索",
+    "zh-TW": "搜尋",
+    "ko": "검색",
+    "vi": "Tìm kiếm"
+  },
+  "ui.select_all": {
+    "en": "Select All",
+    "zh-CN": "全选",
+    "zh-TW": "全選",
+    "ko": "전체 선택",
+    "vi": "Chọn tất cả"
+  },
+  "ui.deselect_all": {
+    "en": "Deselect All",
+    "zh-CN": "全不选",
+    "zh-TW": "全不选",
+    "ko": "선택 해제",
+    "vi": "Bỏ chọn tất cả"
+  },
+  "ui.clear_selected": {
+    "en": "Clear Selected",
+    "zh-CN": "选中清空",
+    "zh-TW": "選中清空",
+    "ko": "선택 항목 삭제",
+    "vi": "Xóa mục đã chọn"
+  },
+  "ui.no_items_selected": {
+    "en": "No items selected",
+    "zh-CN": "未选中任何条目",
+    "zh-TW": "未選中任何条目",
+    "ko": "선택된 항목 없음",
+    "vi": "Chưa chọn mục nào"
+  },
+  "ui.clear_all": {
+    "en": "Clear ALL",
+    "zh-CN": "全部清空",
+    "zh-TW": "全部清空",
+    "ko": "전체 삭제",
+    "vi": "Xóa tất cả"
+  },
+  "ui.selected": {
+    "en": "Selected",
+    "zh-CN": "选中",
+    "zh-TW": "選中",
+    "ko": "선택됨",
+    "vi": "Đã chọn"
+  },
+  "ui.save_changes": {
+    "en": "Save Changes",
+    "zh-CN": "保存修改",
+    "zh-TW": "儲存修改",
+    "ko": "변경사항 저장",
+    "vi": "Lưu thay đổi"
+  },
+  "ui.changes_saved_successfully": {
+    "en": "Changes saved successfully!",
+    "zh-CN": "已保存！",
+    "zh-TW": "已儲存！",
+    "ko": "저장 완료!",
+    "vi": "Đã lưu thành công!"
+  },
+  "ui.next_run_ai_test": {
+    "en": "Next: Run AI Test (智测)",
+    "zh-CN": "下一步：执行智测",
+    "zh-TW": "下一步：执行智測",
+    "ko": "다음: Run AI Test (智测)",
+    "vi": "Tiếp theo: Run AI Test (智测)"
+  },
+  "ui.testing": {
+    "en": "🔍 Testing",
+    "zh-CN": "🔍 智测",
+    "zh-TW": "🔍 智測",
+    "ko": "🔍 Testing",
+    "vi": "🔍 Testing"
+  },
+  "ui.please_select_phrases_first": {
+    "en": "Please select phrases first (check '选中' column)",
+    "zh-CN": "请先选中短语（勾选「选中」列）后进入下一步",
+    "zh-TW": "请先選中短語（勾选「選中」列）后进入下一步",
+    "ko": "Please select phrases first (check '选中' column)",
+    "vi": "Please select phrases first (check '选中' column)"
+  },
+  "ui.no_phrases_yet_use": {
+    "en": "No phrases yet. Use the tabs above to generate or upload.",
+    "zh-CN": "暂无短语。请使用上方的标签页生成或上传。",
+    "zh-TW": "暂无短語。请使用上方的标签页生成或上傳。",
+    "ko": "No phrases yet. Use the tabs above to generate or upload.",
+    "vi": "No phrases yet. Use the tabs above to generate or upload."
+  },
+  "ui.clear_archive_history": {
+    "en": "Clear & Archive / 📜 History",
+    "zh-CN": "清除归档 / 📜 历史记录",
+    "zh-TW": "清除归档 / 📜 歷史紀錄",
+    "ko": "지우기 & Archive / 📜 History",
+    "vi": "Xóa & Archive / 📜 History"
+  },
+  "ui.clear_all_archive": {
+    "en": "Clear All & Archive",
+    "zh-CN": "清空当前短语（归档到历史）",
+    "zh-TW": "清空當前短語（归档到历史）",
+    "ko": "지우기 All & Archive",
+    "vi": "Xóa All & Archive"
+  },
+  "ui.archived_page_is_now": {
+    "en": "Archived. Page is now empty.",
+    "zh-CN": "已归档到历史记录，当前页面已清空。",
+    "zh-TW": "已归档到歷史紀錄，當前页面已清空。",
+    "ko": "Archived. Page is now empty.",
+    "vi": "Archived. Page is now empty."
+  },
+  "ui.history": {
+    "en": "History",
+    "zh-CN": "历史记录",
+    "zh-TW": "歷史紀錄",
+    "ko": "기록",
+    "vi": "Lịch sử"
+  },
+  "ui.phrases": {
+    "en": "phrases",
+    "zh-CN": "条短语",
+    "zh-TW": "条短語",
+    "ko": "phrases",
+    "vi": "phrases"
+  },
+  "ui.restore": {
+    "en": "Restore",
+    "zh-CN": "恢复历史版本",
+    "zh-TW": "恢复历史版本",
+    "ko": "Restore",
+    "vi": "Restore"
+  },
+  "ui.restore_1": {
+    "en": "Restore",
+    "zh-CN": "恢复",
+    "zh-TW": "恢复",
+    "ko": "Restore",
+    "vi": "Restore"
+  },
+  "ui.restored": {
+    "en": "Restored!",
+    "zh-CN": "已恢复！",
+    "zh-TW": "已恢复！",
+    "ko": "Restored!",
+    "vi": "Restored!"
+  },
+  "ui.no_history_yet": {
+    "en": "No history yet.",
+    "zh-CN": "暂无历史记录。",
+    "zh-TW": "暂无歷史紀錄。",
+    "ko": "No history yet.",
+    "vi": "No history yet."
+  },
+  "ui.total_phrases": {
+    "en": "Total Phrases",
+    "zh-CN": "短语总量",
+    "zh-TW": "短語總量",
+    "ko": "합계 Phrases",
+    "vi": "Tổng Phrases"
+  },
+  "ui.categories": {
+    "en": "Categories",
+    "zh-CN": "覆盖类别",
+    "zh-TW": "覆盖类别",
+    "ko": "Categories",
+    "vi": "Categories"
+  },
+  "ui.sources": {
+    "en": "Sources",
+    "zh-CN": "来源数",
+    "zh-TW": "來源数",
+    "ko": "소스s",
+    "vi": "Nguồns"
+  },
+  "ui.clear_current_archive": {
+    "en": "🗑️ Clear Current & Archive",
+    "zh-CN": "🗑️ 清空当前内容（归档到历史）",
+    "zh-TW": "🗑️ 清空當前內容（归档到历史）",
+    "ko": "🗑️ Clear Current & Archive",
+    "vi": "🗑️ Clear Current & Archive"
+  },
+  "ui.archived_to_history_page": {
+    "en": "✅ Archived to history. Page is now empty.",
+    "zh-CN": "✅ 已归档到历史记录，当前页面已清空。",
+    "zh-TW": "✅ 已归档到歷史紀錄，當前页面已清空。",
+    "ko": "✅ Archived to history. Page is now empty.",
+    "vi": "✅ Archived to history. Page is now empty."
+  },
+  "ui.oneclick_full_pipeline_keywords": {
+    "en": "🚀 One-Click Full Pipeline (Keywords → Word Doc)",
+    "zh-CN": "🚀 一键全流程（关键词 → Word 文档）",
+    "zh-TW": "🚀 一键全流程（關鍵詞 → Word 文档）",
+    "ko": "🚀 One-Click Full Pipeline (Keywords → Word Doc)",
+    "vi": "🚀 One-Click Full Pipeline (Keywords → Word Doc)"
+  },
+  "ui.run_all_steps_automatically": {
+    "en": "Run all steps automatically: 智库 → 智造 → 智优 → 合规 → 智布",
+    "zh-CN": "自动执行全部步骤：智库裂变 → 智造生成 → 智优评分+重写 → 合规审查 → 智布导出",
+    "zh-TW": "自动执行全部步骤：智庫裂變 → 智造生成 → 智優評分+重写 → 合规审查 → 智佈匯出",
+    "ko": "Run all steps automatically: 智库 → 智造 → 智优 → 合规 → 智布",
+    "vi": "Run all steps automatically: 智库 → 智造 → 智优 → 合规 → 智布"
+  },
+  "ui.keywords": {
+    "en": "Keywords",
+    "zh-CN": "关键词数",
+    "zh-TW": "關鍵詞数",
+    "ko": "Keywords",
+    "vi": "Keywords"
+  },
+  "ui.articles": {
+    "en": "Articles",
+    "zh-CN": "文章数",
+    "zh-TW": "文章数",
+    "ko": "Articles",
+    "vi": "Articles"
+  },
+  "ui.autodetect": {
+    "en": "Auto-detect",
+    "zh-CN": "智能匹配",
+    "zh-TW": "智能匹配",
+    "ko": "Auto-detect",
+    "vi": "Auto-detect"
+  },
+  "ui.no_template": {
+    "en": "No template",
+    "zh-CN": "无模板",
+    "zh-TW": "无模板",
+    "ko": "No template",
+    "vi": "No template"
+  },
+  "ui.registration": {
+    "en": "Registration",
+    "zh-CN": "注册流程",
+    "zh-TW": "注册流程",
+    "ko": "Registration",
+    "vi": "Registration"
+  },
+  "ui.fees": {
+    "en": "Fees",
+    "zh-CN": "费用成本",
+    "zh-TW": "费用成本",
+    "ko": "Fees",
+    "vi": "Fees"
+  },
+  "ui.logistics": {
+    "en": "Logistics",
+    "zh-CN": "物流仓储",
+    "zh-TW": "物流仓储",
+    "ko": "Logistics",
+    "vi": "Logistics"
+  },
+  "ui.advertising": {
+    "en": "Advertising",
+    "zh-CN": "广告推广",
+    "zh-TW": "广告推广",
+    "ko": "Advertising",
+    "vi": "Advertising"
+  },
+  "ui.listing": {
+    "en": "Listing",
+    "zh-CN": "Listing优化",
+    "zh-TW": "Listing優化",
+    "ko": "Listing",
+    "vi": "Listing"
+  },
+  "ui.template": {
+    "en": "Template",
+    "zh-CN": "模板",
+    "zh-TW": "模板",
+    "ko": "Template",
+    "vi": "Template"
+  },
+  "ui.execute_full_pipeline": {
+    "en": "🚀 Execute Full Pipeline",
+    "zh-CN": "🚀 开始一键全流程",
+    "zh-TW": "🚀 開始一键全流程",
+    "ko": "🚀 Execute Full Pipeline",
+    "vi": "🚀 Execute Full Pipeline"
+  },
+  "ui.running_full_pipeline": {
+    "en": "Running full pipeline...",
+    "zh-CN": "正在执行全流程...",
+    "zh-TW": "正在执行全流程...",
+    "ko": "Running full pipeline...",
+    "vi": "Running full pipeline..."
+  },
+  "ui.full_pipeline_completed_check": {
+    "en": "✅ Full pipeline completed! Check each step for results.",
+    "zh-CN": "✅ 全流程执行完毕！请查看各步骤的输出结果。",
+    "zh-TW": "✅ 全流程执行完毕！请查看各步骤的输出結果。",
+    "ko": "✅ Full pipeline completed! Check each step for results.",
+    "vi": "✅ Full pipeline completed! Check each step for results."
+  },
+  "ui.search_phrase_generation": {
+    "en": "Search Phrase Generation",
+    "zh-CN": "短语产出",
+    "zh-TW": "短語產出",
+    "ko": "검색 Phrase Generation",
+    "vi": "Tìm kiếm Phrase Generation"
+  },
+  "ui.3_input_modes_ai": {
+    "en": "3 input modes: AI auto / Upload CSV / Manual input",
+    "zh-CN": "三种输入模式：AI 自动 / 上传 CSV / 手动输入",
+    "zh-TW": "三种输入模式：AI 自动 / 上傳 CSV / 手动输入",
+    "ko": "3 input modes: AI auto / Upload CSV / Manual input",
+    "vi": "3 input modes: AI auto / Upload CSV / Manual input"
+  },
+  "ui.p1_core_9590": {
+    "en": "⭐ P1 Core (95-90%)",
+    "zh-CN": "⭐ P1 核心来源 (95-90%)",
+    "zh-TW": "⭐ P1 核心來源 (95-90%)",
+    "ko": "⭐ P1 Core (95-90%)",
+    "vi": "⭐ P1 Core (95-90%)"
+  },
+  "ui.p2_secondary_8575": {
+    "en": "⭐ P2 Secondary (85-75%)",
+    "zh-CN": "⭐ P2 次核心 (85-75%)",
+    "zh-TW": "⭐ P2 次核心 (85-75%)",
+    "ko": "⭐ P2 Secondary (85-75%)",
+    "vi": "⭐ P2 Secondary (85-75%)"
+  },
+  "ui.p3_expand_60": {
+    "en": "P3 Expand (60%)",
+    "zh-CN": "P3 兜底扩写 (60%)",
+    "zh-TW": "P3 兜底扩写 (60%)",
+    "ko": "P3 Expand (60%)",
+    "vi": "P3 Expand (60%)"
+  },
+  "ui.p4_persona_predict": {
+    "en": "🧠 P4 Persona Predict",
+    "zh-CN": "🧠 P4 画像推演",
+    "zh-TW": "🧠 P4 畫像推演",
+    "ko": "🧠 P4 Persona Predict",
+    "vi": "🧠 P4 Persona Predict"
+  },
+  "ui.ai_platform_native_queries": {
+    "en": "AI platform native queries — highest accuracy",
+    "zh-CN": "AI 平台原生问句 — 准确度最高",
+    "zh-TW": "AI 平台原生问句 — 准确度最高",
+    "ko": "AI platform native queries — highest accuracy",
+    "vi": "AI platform native queries — highest accuracy"
+  },
+  "ui.a1_ai_dropdown": {
+    "en": "**A1: AI Dropdown**",
+    "zh-CN": "**A1: AI 下拉联想**",
+    "zh-TW": "**A1: AI 下拉联想**",
+    "ko": "**A1: AI Dropdown**",
+    "vi": "**A1: AI Dropdown**"
+  },
+  "ui.95_collect_from_platforms": {
+    "en": "95% · Collect from platforms, upload",
+    "zh-CN": "准确度95% · 从各平台收集后上传",
+    "zh-TW": "准确度95% · 从各平台收集后上傳",
+    "ko": "95% · Collect from platforms, upload",
+    "vi": "95% · Collect from platforms, upload"
+  },
+  "ui.upload": {
+    "en": "Upload",
+    "zh-CN": "上传CSV",
+    "zh-TW": "上傳CSV",
+    "ko": "업로드",
+    "vi": "Tải lên"
+  },
+  "ui.a2_reverse_recall": {
+    "en": "**A2: Reverse Recall**",
+    "zh-CN": "**A2: 逆向召回**",
+    "zh-TW": "**A2: 逆向召回**",
+    "ko": "**A2: Reverse Recall**",
+    "vi": "**A2: Reverse Recall**"
+  },
+  "ui.92_input_content_ai": {
+    "en": "92% · Input content → AI returns queries",
+    "zh-CN": "准确度92% · 输入内容 → AI返回问句",
+    "zh-TW": "准确度92% · 输入內容 → AI返回问句",
+    "ko": "92% · Input content → AI returns queries",
+    "vi": "92% · Input content → AI returns queries"
+  },
+  "ui.single_content": {
+    "en": "Single content",
+    "zh-CN": "单条内容",
+    "zh-TW": "单条內容",
+    "ko": "Single content",
+    "vi": "Single content"
+  },
+  "ui.queries_per_content": {
+    "en": "Queries per content",
+    "zh-CN": "每条内容返回问句数",
+    "zh-TW": "每条內容返回问句数",
+    "ko": "Queries per content",
+    "vi": "Queries per content"
+  },
+  "ui.run_single": {
+    "en": "🔮 Run Single",
+    "zh-CN": "🔮 单条执行",
+    "zh-TW": "🔮 单条执行",
+    "ko": "🔮 Run Single",
+    "vi": "🔮 Run Single"
+  },
+  "ui.str_127": {
+    "en": "...",
+    "zh-CN": "正在询问AI...",
+    "zh-TW": "正在询问AI...",
+    "ko": "...",
+    "vi": "..."
+  },
+  "ui.or_batch": {
+    "en": "— or batch —",
+    "zh-CN": "— 或批量 —",
+    "zh-TW": "— 或批量 —",
+    "ko": "— or batch —",
+    "vi": "— or batch —"
+  },
+  "ui.upload_content_list_csv": {
+    "en": "Upload content list CSV",
+    "zh-CN": "上传内容列表CSV（含content列）",
+    "zh-TW": "上傳內容列表CSV（含content列）",
+    "ko": "업로드 content list CSV",
+    "vi": "Tải lên content list CSV"
+  },
+  "ui.csv_should_have_a": {
+    "en": "CSV should have a 'content' or 'url' column",
+    "zh-CN": "CSV需含 content 或 url 列",
+    "zh-TW": "CSV需含 content 或 url 列",
+    "ko": "CSV should have a 'content' or 'url' column",
+    "vi": "CSV should have a 'content' or 'url' column"
+  },
+  "ui.run_batch": {
+    "en": "🔮 Run Batch",
+    "zh-CN": "🔮 批量执行逆向召回",
+    "zh-TW": "🔮 批量执行逆向召回",
+    "ko": "🔮 Run Batch",
+    "vi": "🔮 Run Batch"
+  },
+  "ui.a3_ai_community_qa": {
+    "en": "**A3: AI Community Q&A**",
+    "zh-CN": "**A3: AI 社区原生提问**",
+    "zh-TW": "**A3: AI 社区原生提问**",
+    "ko": "**A3: AI Community Q&A**",
+    "vi": "**A3: AI Community Q&A**"
+  },
+  "ui.90_upload_from_zhihuperplexity": {
+    "en": "90% · Upload from Zhihu/Perplexity",
+    "zh-CN": "准确度90% · 从知乎/Perplexity上传",
+    "zh-TW": "准确度90% · 从知乎/Perplexity上傳",
+    "ko": "90% · Upload from Zhihu/Perplexity",
+    "vi": "90% · Upload from Zhihu/Perplexity"
+  },
+  "ui.real_user_behavior_data": {
+    "en": "Real user behavior data — upload + AI expand",
+    "zh-CN": "真实用户行为数据 — 上传 + AI 裂变",
+    "zh-TW": "真实用户行为数据 — 上傳 + AI 裂變",
+    "ko": "Real user behavior data — upload + AI expand",
+    "vi": "Real user behavior data — upload + AI expand"
+  },
+  "ui.source_type": {
+    "en": "Source Type",
+    "zh-CN": "来源类型",
+    "zh-TW": "來源類型",
+    "ko": "소스 Type",
+    "vi": "Nguồn Type"
+  },
+  "ui.upload_csvexcel": {
+    "en": "Upload CSV/Excel",
+    "zh-CN": "上传 CSV/Excel",
+    "zh-TW": "上傳 CSV/Excel",
+    "ko": "업로드 CSV/Excel",
+    "vi": "Tải lên CSV/Excel"
+  },
+  "ui.upload_keywords_ai_expands": {
+    "en": "Upload keywords → AI expands into query phrases",
+    "zh-CN": "上传关键词 → AI 裂变为口语问句",
+    "zh-TW": "上傳關鍵詞 → AI 裂變为口语问句",
+    "ko": "업로드 keywords → AI expands into query phrases",
+    "vi": "Tải lên keywords → AI expands into query phrases"
+  },
+  "ui.keywords_per_batch": {
+    "en": "Keywords per batch",
+    "zh-CN": "每次裂变关键词数",
+    "zh-TW": "每次裂變關鍵詞数",
+    "ko": "Keywords per batch",
+    "vi": "Keywords per batch"
+  },
+  "ui.expand_keywords": {
+    "en": "🚀 Expand Keywords",
+    "zh-CN": "🚀 裂变关键词",
+    "zh-TW": "🚀 裂變關鍵詞",
+    "ko": "🚀 Expand Keywords",
+    "vi": "🚀 Expand Keywords"
+  },
+  "ui.free_input_one_per": {
+    "en": "Free input (one per line)",
+    "zh-CN": "自由输入（每行一条）",
+    "zh-TW": "自由输入（每行一条）",
+    "ko": "Free input (one per line)",
+    "vi": "Free input (one per line)"
+  },
+  "ui.phrases_1": {
+    "en": "Phrases",
+    "zh-CN": "短语",
+    "zh-TW": "短語",
+    "ko": "Phrases",
+    "vi": "Phrases"
+  },
+  "ui.add": {
+    "en": "➕ Add",
+    "zh-CN": "➕ 添加",
+    "zh-TW": "➕ 添加",
+    "ko": "➕ Add",
+    "vi": "➕ Add"
+  },
+  "ui.seed_word_expansion": {
+    "en": "Seed word expansion",
+    "zh-CN": "词根扩展",
+    "zh-TW": "詞根扩展",
+    "ko": "시드 단어 expansion",
+    "vi": "Từ khóa gốc expansion"
+  },
+  "ui.seeds": {
+    "en": "Seeds",
+    "zh-CN": "词根（每行一个）",
+    "zh-TW": "詞根（每行一个）",
+    "ko": "Seeds",
+    "vi": "Seeds"
+  },
+  "ui.phrases_per_seed": {
+    "en": "Phrases per seed",
+    "zh-CN": "每个词根生成数",
+    "zh-TW": "每个詞根生成数",
+    "ko": "Phrases per seed",
+    "vi": "Phrases per seed"
+  },
+  "ui.expand_seeds": {
+    "en": "🚀 Expand Seeds",
+    "zh-CN": "🚀 裂变词根",
+    "zh-TW": "🚀 裂變詞根",
+    "ko": "🚀 Expand Seeds",
+    "vi": "🚀 Expand Seeds"
+  },
+  "ui.based_on_persona_matrix": {
+    "en": "Based on persona matrix (identity × site × topic), predict search queries by priority.",
+    "zh-CN": "基于客户画像矩阵（身份 × 站点 × 话题），按优先级推演潜在检索短语。",
+    "zh-TW": "基于客户畫像矩阵（身份 × 站点 × 话题），按优先级推演潜在檢索短語。",
+    "ko": "Based on persona matrix (identity × site × topic), predict search queries by priority.",
+    "vi": "Based on persona matrix (identity × site × topic), predict search queries by priority."
+  },
+  "ui.priority_level": {
+    "en": "Priority Level",
+    "zh-CN": "优先级",
+    "zh-TW": "优先级",
+    "ko": "Priority Level",
+    "vi": "Priority Level"
+  },
+  "ui.max_queries": {
+    "en": "Max Queries",
+    "zh-CN": "最大生成数",
+    "zh-TW": "最大生成数",
+    "ko": "Max Queries",
+    "vi": "Max Queries"
+  },
+  "ui.target_sites": {
+    "en": "Target Sites",
+    "zh-CN": "目标站点",
+    "zh-TW": "目标站点",
+    "ko": "Target Sites",
+    "vi": "Target Sites"
+  },
+  "ui.target_topics": {
+    "en": "Target Topics",
+    "zh-CN": "目标话题",
+    "zh-TW": "目标话题",
+    "ko": "Target Topics",
+    "vi": "Target Topics"
+  },
+  "ui.output_language": {
+    "en": "Output Language",
+    "zh-CN": "输出语言",
+    "zh-TW": "输出語言",
+    "ko": "Output Language",
+    "vi": "Output Language"
+  },
+  "ui.run_persona_prediction": {
+    "en": "🧠 Run Persona Prediction",
+    "zh-CN": "🧠 执行画像推演",
+    "zh-TW": "🧠 执行畫像推演",
+    "ko": "🧠 Run Persona Prediction",
+    "vi": "🧠 Run Persona Prediction"
+  },
+  "ui.predicting": {
+    "en": "Predicting...",
+    "zh-CN": "推演中...",
+    "zh-TW": "推演中...",
+    "ko": "Predicting...",
+    "vi": "Predicting..."
+  },
+  "ui.no_new_predictions_all": {
+    "en": "No new predictions (all already in library). Try different sites/topics.",
+    "zh-CN": "无新预测短语（已全部在库）。请换不同站点/话题再试。",
+    "zh-TW": "无新预测短語（已全部在库）。请换不同站点/话题再试。",
+    "ko": "No new predictions (all already in library). Try different sites/topics.",
+    "vi": "No new predictions (all already in library). Try different sites/topics."
+  },
+  "ui.calibration_deduplication": {
+    "en": "Calibration & Deduplication",
+    "zh-CN": "校准 + 去重",
+    "zh-TW": "校準 + 去重",
+    "ko": "Calibration & Deduplication",
+    "vi": "Calibration & Deduplication"
+  },
+  "ui.b1_platform_consensus": {
+    "en": "B1 Platform Consensus",
+    "zh-CN": "B1 跨平台共识",
+    "zh-TW": "B1 跨平台共识",
+    "ko": "B1 Platform Consensus",
+    "vi": "B1 Platform Consensus"
+  },
+  "ui.b2_category_match": {
+    "en": "B2 Category Match",
+    "zh-CN": "B2 类别匹配",
+    "zh-TW": "B2 类别匹配",
+    "ko": "B2 Category Match",
+    "vi": "B2 Category Match"
+  },
+  "ui.b3_timeliness": {
+    "en": "B3 Timeliness",
+    "zh-CN": "B3 时效性",
+    "zh-TW": "B3 时效性",
+    "ko": "B3 Timeliness",
+    "vi": "B3 Timeliness"
+  },
+  "ui.dedupe": {
+    "en": "Dedupe",
+    "zh-CN": "去重",
+    "zh-TW": "去重",
+    "ko": "Dedupe",
+    "vi": "Dedupe"
+  },
+  "ui.run_calibrate_dedupe": {
+    "en": "🔄 Run Calibrate & Dedupe",
+    "zh-CN": "🔄 执行校准去重",
+    "zh-TW": "🔄 执行校準去重",
+    "ko": "🔄 Run Calibrate & Dedupe",
+    "vi": "🔄 Run Calibrate & Dedupe"
+  },
+  "ui.no_phrases_yet_use_1": {
+    "en": "No phrases yet. Use Step ① to produce phrases first.",
+    "zh-CN": "暂无短语，请先执行第①步产出短语。",
+    "zh-TW": "暂无短語，请先执行第①步產出短語。",
+    "ko": "No phrases yet. Use Step ① to produce phrases first.",
+    "vi": "No phrases yet. Use Step ① to produce phrases first."
+  },
+  "ui.review_selection": {
+    "en": "Review & Selection",
+    "zh-CN": "审核 & 选取",
+    "zh-TW": "审核 & 選取",
+    "ko": "Review & Selection",
+    "vi": "Review & Selection"
+  },
+  "ui.tracked_已追踪到": {
+    "en": "🎯 Tracked (已追踪到)",
+    "zh-CN": "🎯 已追踪到",
+    "zh-TW": "🎯 已追踪到",
+    "ko": "🎯 Tracked (已追踪到)",
+    "vi": "🎯 Tracked (已追踪到)"
+  },
+  "ui.predicted_预估推演": {
+    "en": "🔮 Predicted (预估推演)",
+    "zh-CN": "🔮 预估推演",
+    "zh-TW": "🔮 预估推演",
+    "ko": "🔮 Predicted (预估推演)",
+    "vi": "🔮 Predicted (预估推演)"
+  },
+  "ui.from_real_channels_seosem": {
+    "en": "From real channels: SEO/SEM keywords, AI dropdown suggestions, reverse recall, community Q&A, manual input.",
+    "zh-CN": "来自真实渠道：SEO/SEM 关键词裂变、AI 平台下拉联想、逆向召回、社区原生提问、手动录入。",
+    "zh-TW": "来自真实渠道：SEO/SEM 關鍵詞裂變、AI 平台下拉联想、逆向召回、社区原生提问、手动录入。",
+    "ko": "From real channels: SEO/SEM keywords, AI dropdown suggestions, reverse recall, community Q&A, manual input.",
+    "vi": "From real channels: SEO/SEM keywords, AI dropdown suggestions, reverse recall, community Q&A, manual input."
+  },
+  "ui.no_tracked_phrases_yet": {
+    "en": "No tracked phrases yet. Use P1/P2/P3 tabs above to add from real channels.",
+    "zh-CN": "暂无已追踪短语。请通过上方 P1/P2/P3 来源添加。",
+    "zh-TW": "暂无已追踪短語。请通过上方 P1/P2/P3 來源添加。",
+    "ko": "No tracked phrases yet. Use P1/P2/P3 tabs above to add from real channels.",
+    "vi": "No tracked phrases yet. Use P1/P2/P3 tabs above to add from real channels."
+  },
+  "ui.aipredicted_based_on_persona": {
+    "en": "AI-predicted based on persona matrix × lifecycle × site × topic. Need verification before production.",
+    "zh-CN": "基于画像矩阵 × 生命周期 × 站点 × 话题推演预估。进入生产前需通过智测验证。",
+    "zh-TW": "基于畫像矩阵 × 生命周期 × 站点 × 话题推演预估。进入生产前需通过智測驗證。",
+    "ko": "AI-predicted based on persona matrix × lifecycle × site × topic. Need verification before production.",
+    "vi": "AI-predicted based on persona matrix × lifecycle × site × topic. Need verification before production."
+  },
+  "ui.no_predicted_phrases_yet": {
+    "en": "No predicted phrases yet. Use P4 Persona Prediction tab to generate.",
+    "zh-CN": "暂无预估短语。请通过 P4 画像推演生成。",
+    "zh-TW": "暂无预估短語。请通过 P4 畫像推演生成。",
+    "ko": "No predicted phrases yet. Use P4 Persona Prediction tab to generate.",
+    "vi": "No predicted phrases yet. Use P4 Persona Prediction tab to generate."
+  },
+  "ui.selected_1": {
+    "en": "✅ Selected",
+    "zh-CN": "✅ 已选中",
+    "zh-TW": "✅ 已選中",
+    "ko": "✅ Selected",
+    "vi": "✅ Selected"
+  },
+  "ui.not_selected": {
+    "en": "⬜ Not selected",
+    "zh-CN": "⬜ 未选中",
+    "zh-TW": "⬜ 未選中",
+    "ko": "⬜ Not selected",
+    "vi": "⬜ Not selected"
+  },
+  "ui.filter": {
+    "en": "Filter",
+    "zh-CN": "筛选",
+    "zh-TW": "篩選",
+    "ko": "Filter",
+    "vi": "Filter"
+  },
+  "ui.category": {
+    "en": "Category",
+    "zh-CN": "类别",
+    "zh-TW": "类别",
+    "ko": "Category",
+    "vi": "Category"
+  },
+  "ui.select_all_1": {
+    "en": "✅ Select All",
+    "zh-CN": "✅ 全选",
+    "zh-TW": "✅ 全選",
+    "ko": "✅ Select All",
+    "vi": "✅ Select All"
+  },
+  "ui.deselect_all_1": {
+    "en": "⬜ Deselect All",
+    "zh-CN": "⬜ 全不选",
+    "zh-TW": "⬜ 全不选",
+    "ko": "⬜ Deselect All",
+    "vi": "⬜ Deselect All"
+  },
+  "ui.sel": {
+    "en": "Sel",
+    "zh-CN": "选",
+    "zh-TW": "选",
+    "ko": "Sel",
+    "vi": "Sel"
+  },
+  "ui.source_1": {
+    "en": "Source",
+    "zh-CN": "来源",
+    "zh-TW": "來源",
+    "ko": "소스",
+    "vi": "Nguồn"
+  },
+  "ui.save_edits": {
+    "en": "💾 Save Edits",
+    "zh-CN": "💾 保存编辑",
+    "zh-TW": "💾 儲存編輯",
+    "ko": "💾 Save Edits",
+    "vi": "💾 Save Edits"
+  },
+  "ui.saved": {
+    "en": "✅ Saved",
+    "zh-CN": "✅ 已保存",
+    "zh-TW": "✅ 已儲存",
+    "ko": "✅ Saved",
+    "vi": "✅ Saved"
+  },
+  "ui.export_csv": {
+    "en": "📥 Export CSV",
+    "zh-CN": "📥 导出 CSV",
+    "zh-TW": "📥 匯出 CSV",
+    "ko": "📥 Export CSV",
+    "vi": "📥 Export CSV"
+  },
+  "ui.no_phrases_yet": {
+    "en": "No phrases yet.",
+    "zh-CN": "暂无短语。",
+    "zh-TW": "暂无短語。",
+    "ko": "No phrases yet.",
+    "vi": "No phrases yet."
+  },
+  "ui.next_step": {
+    "en": "Next Step",
+    "zh-CN": "下一步",
+    "zh-TW": "下一步",
+    "ko": "다음 Step",
+    "vi": "Tiếp theo Step"
+  },
+  "ui.send_to_智测_verify": {
+    "en": "🔍 Send to 智测 Verify Gap",
+    "zh-CN": "🔍 发送到智测验证 Gap",
+    "zh-TW": "🔍 发送到智測驗證 Gap",
+    "ko": "🔍 Send to 智测 Verify Gap",
+    "vi": "🔍 Send to 智测 Verify Gap"
+  },
+  "ui.no_selected_phrases_use": {
+    "en": "No selected phrases. Use ✅ Select All or check boxes above.",
+    "zh-CN": "没有选中的短语。请先用 ✅全选 或在上方表格勾选。",
+    "zh-TW": "没有選中的短語。请先用 ✅全選 或在上方表格勾选。",
+    "ko": "No selected phrases. Use ✅ Select All or check boxes above.",
+    "vi": "No selected phrases. Use ✅ Select All or check boxes above."
+  },
+  "ui.no_phrases_in_library": {
+    "en": "No phrases in library",
+    "zh-CN": "短语库为空",
+    "zh-TW": "短語库为空",
+    "ko": "No phrases in library",
+    "vi": "No phrases in library"
+  },
+  "ui.skip_to_智造": {
+    "en": "⏭️ Skip to 智造",
+    "zh-CN": "⏭️ 跳过直接智造",
+    "zh-TW": "⏭️ 跳过直接智造",
+    "ko": "⏭️ Skip to 智造",
+    "vi": "⏭️ Skip to 智造"
+  },
+  "ui.history_1": {
+    "en": "📜 History",
+    "zh-CN": "📜 历史记录",
+    "zh-TW": "📜 歷史紀錄",
+    "ko": "📜 History",
+    "vi": "📜 History"
+  },
+  "ui.clear_all_1": {
+    "en": "🗑️ Clear All",
+    "zh-CN": "🗑️ 清空全部",
+    "zh-TW": "🗑️ 清空全部",
+    "ko": "🗑️ Clear All",
+    "vi": "🗑️ Clear All"
+  },
+  "ui.history_cleared": {
+    "en": "History cleared",
+    "zh-CN": "已清空",
+    "zh-TW": "已清空",
+    "ko": "기록 cleared",
+    "vi": "Lịch sử cleared"
+  },
+  "ui.reuse": {
+    "en": "♻️ Reuse",
+    "zh-CN": "♻️ 复用",
+    "zh-TW": "♻️ 复用",
+    "ko": "♻️ Reuse",
+    "vi": "♻️ Reuse"
+  },
+  "ui.no_history_records_yet": {
+    "en": "No history records yet",
+    "zh-CN": "暂无历史",
+    "zh-TW": "暂无历史",
+    "ko": "No history records yet",
+    "vi": "No history records yet"
+  },
+  "ui.gap_verification": {
+    "en": "Gap Verification",
+    "zh-CN": "智测 – AI 检索覆盖验证",
+    "zh-TW": "智測 – AI 檢索覆盖驗證",
+    "ko": "Gap Verification",
+    "vi": "Gap Verification"
+  },
+  "ui.verify_search_phrases_against": {
+    "en": "Verify search phrases against 7 AI platforms to discover content gaps",
+    "zh-CN": "在 7 个 AI 平台验证检索短语的覆盖状态，发现内容 Gap",
+    "zh-TW": "在 7 个 AI 平台驗證檢索短語的覆盖狀態，发现內容 Gap",
+    "ko": "Verify search phrases against 7 AI platforms to discover content gaps",
+    "vi": "Verify search phrases against 7 AI platforms to discover content gaps"
+  },
+  "ui.phrases_pending_verification": {
+    "en": "Phrases Pending Verification",
+    "zh-CN": "待验证短语",
+    "zh-TW": "待驗證短語",
+    "ko": "Phrases Pending Verification",
+    "vi": "Phrases Pending Verification"
+  },
+  "ui.no_selected_phrases_go": {
+    "en": "No selected phrases. Go to 智库 and select phrases first.",
+    "zh-CN": "暂无已选中的短语。请先在智库中选中短语。",
+    "zh-TW": "暂无已選中的短語。请先在智庫中選中短語。",
+    "ko": "No selected phrases. Go to 智库 and select phrases first.",
+    "vi": "No selected phrases. Go to 智库 and select phrases first."
+  },
+  "ui.upload_additional_phrases": {
+    "en": "Upload additional phrases",
+    "zh-CN": "上传额外待验证短语",
+    "zh-TW": "上傳额外待驗證短語",
+    "ko": "업로드 additional phrases",
+    "vi": "Tải lên additional phrases"
+  },
+  "ui.csv_with_ai_query_column": {
+    "en": "CSV with ai_query column",
+    "zh-CN": "CSV（含 ai_query 列）",
+    "zh-TW": "CSV（含 ai_query 列）",
+    "ko": "CSV with ai_query column",
+    "vi": "CSV with ai_query column"
+  },
+  "ui.run_ai_platform_verification": {
+    "en": "Run AI Platform Verification",
+    "zh-CN": "执行验证",
+    "zh-TW": "执行驗證",
+    "ko": "Run AI Platform Verification",
+    "vi": "Run AI Platform Verification"
+  },
+  "ui.verification_platforms": {
+    "en": "Verification Platforms",
+    "zh-CN": "验证平台",
+    "zh-TW": "驗證平台",
+    "ko": "Verification Platforms",
+    "vi": "Verification Platforms"
+  },
+  "ui.auto_verify_api": {
+    "en": "🔍 Auto Verify (API)",
+    "zh-CN": "🔍 AI 自动验证",
+    "zh-TW": "🔍 AI 自动驗證",
+    "ko": "🔍 Auto Verify (API)",
+    "vi": "🔍 Auto Verify (API)"
+  },
+  "ui.zhice_engine_not_available_use": {
+    "en": "zhice_engine not available. Use manual upload instead.",
+    "zh-CN": "zhice_engine 不可用，请手动上传结果。",
+    "zh-TW": "zhice_engine 不可用，请手动上傳結果。",
+    "ko": "zhice_engine not available. Use manual upload instead.",
+    "vi": "zhice_engine not available. Use manual upload instead."
+  },
+  "ui.upload_verification_results": {
+    "en": "Upload verification results",
+    "zh-CN": "上传验证结果",
+    "zh-TW": "上傳驗證結果",
+    "ko": "업로드 verification results",
+    "vi": "Tải lên verification results"
+  },
+  "ui.csv_with_columns_ai_query": {
+    "en": "CSV with columns: ai_query, gap_status, has_brand_mention, has_official_link",
+    "zh-CN": "CSV需含列：ai_query, gap_status, has_brand_mention, has_official_link",
+    "zh-TW": "CSV需含列：ai_query, gap_status, has_brand_mention, has_official_link",
+    "ko": "CSV with columns: ai_query, gap_status, has_brand_mention, has_official_link",
+    "vi": "CSV with columns: ai_query, gap_status, has_brand_mention, has_official_link"
+  },
+  "ui.upload_gap_results": {
+    "en": "Upload gap results",
+    "zh-CN": "上传 Gap 结果",
+    "zh-TW": "上傳 Gap 結果",
+    "ko": "업로드 gap results",
+    "vi": "Tải lên gap results"
+  },
+  "ui.gap_analysis_results_selection": {
+    "en": "Gap Analysis Results & Selection",
+    "zh-CN": "Gap 结果 & 选取",
+    "zh-TW": "Gap 結果 & 選取",
+    "ko": "Gap Analysis Results & Selection",
+    "vi": "Gap Analysis Results & Selection"
+  },
+  "ui.total_1": {
+    "en": "Total",
+    "zh-CN": "总计",
+    "zh-TW": "总计",
+    "ko": "합계",
+    "vi": "Tổng"
+  },
+  "ui.covered": {
+    "en": "✅ Covered",
+    "zh-CN": "✅ 已覆盖",
+    "zh-TW": "✅ 已覆盖",
+    "ko": "✅ Covered",
+    "vi": "✅ Covered"
+  },
+  "ui.competitor_gap": {
+    "en": "🔥 Competitor Gap",
+    "zh-CN": "🔥 竞品覆盖我们未覆盖",
+    "zh-TW": "🔥 竞品覆盖我们未覆盖",
+    "ko": "🔥 Competitor Gap",
+    "vi": "🔥 Competitor Gap"
+  },
+  "ui.no_items_selected_check": {
+    "en": "No items selected. Check the ☑️ column first.",
+    "zh-CN": "未勾选任何条目，请先在表格中勾选 ☑️ 列",
+    "zh-TW": "未勾选任何条目，请先在表格中勾选 ☑️ 列",
+    "ko": "선택된 항목 없음. Check the ☑️ column first.",
+    "vi": "Chưa chọn mục nào. Check the ☑️ column first."
+  },
+  "ui.search_phrase": {
+    "en": "Search Phrase",
+    "zh-CN": "检索短语",
+    "zh-TW": "檢索短語",
+    "ko": "검색 Phrase",
+    "vi": "Tìm kiếm Phrase"
+  },
+  "ui.platform": {
+    "en": "Platform",
+    "zh-CN": "验证平台",
+    "zh-TW": "驗證平台",
+    "ko": "Platform",
+    "vi": "Platform"
+  },
+  "ui.gap_status": {
+    "en": "Gap Status",
+    "zh-CN": "覆盖状态",
+    "zh-TW": "覆盖狀態",
+    "ko": "Gap Status",
+    "vi": "Gap Status"
+  },
+  "ui.brandproduct_mention": {
+    "en": "Brand/Product Mention",
+    "zh-CN": "品牌/产品名称提及",
+    "zh-TW": "品牌/产品名称提及",
+    "ko": "Brand/Product Mention",
+    "vi": "Brand/Product Mention"
+  },
+  "ui.official_link": {
+    "en": "Official Link",
+    "zh-CN": "官网链接",
+    "zh-TW": "官网链接",
+    "ko": "Official Link",
+    "vi": "Official Link"
+  },
+  "ui.produce": {
+    "en": "→ Produce",
+    "zh-CN": "→ 生产",
+    "zh-TW": "→ 生产",
+    "ko": "→ Produce",
+    "vi": "→ Produce"
+  },
+  "ui.comp_gap": {
+    "en": "Comp Gap",
+    "zh-CN": "竞品Gap",
+    "zh-TW": "竞品Gap",
+    "ko": "Comp Gap",
+    "vi": "Comp Gap"
+  },
+  "ui.competitors": {
+    "en": "Competitors",
+    "zh-CN": "竞品出现",
+    "zh-TW": "竞品出现",
+    "ko": "Competitors",
+    "vi": "Competitors"
+  },
+  "ui.tone": {
+    "en": "Tone",
+    "zh-CN": "内容情感",
+    "zh-TW": "內容情感",
+    "ko": "Tone",
+    "vi": "Tone"
+  },
+  "ui.no_gap_results_yet": {
+    "en": "No gap results yet. Execute verification above or upload results.",
+    "zh-CN": "暂无 Gap 结果。请执行验证或上传结果。",
+    "zh-TW": "暂无 Gap 結果。请执行驗證或上傳結果。",
+    "ko": "No gap results yet. Execute verification above or upload results.",
+    "vi": "No gap results yet. Execute verification above or upload results."
+  },
+  "ui.prompt_tracking_history": {
+    "en": "📈 Prompt Tracking History",
+    "zh-CN": "📈 短语追踪历史（品牌/产品名称提及率变化）",
+    "zh-TW": "📈 短語追踪历史（品牌/产品名称提及率变化）",
+    "ko": "📈 Prompt Tracking History",
+    "vi": "📈 Prompt Tracking History"
+  },
+  "ui.total_verification_runs": {
+    "en": "Total Verification Runs",
+    "zh-CN": "总验证次数",
+    "zh-TW": "总驗證次数",
+    "ko": "합계 Verification Runs",
+    "vi": "Tổng Verification Runs"
+  },
+  "ui.unique_phrases_tested": {
+    "en": "Unique Phrases Tested",
+    "zh-CN": "不重复短语",
+    "zh-TW": "不重复短語",
+    "ko": "Unique Phrases Tested",
+    "vi": "Unique Phrases Tested"
+  },
+  "ui.brandproduct_name_mention_rate": {
+    "en": "Brand/Product Name Mention Rate",
+    "zh-CN": "品牌/产品名称提及率",
+    "zh-TW": "品牌/产品名称提及率",
+    "ko": "Brand/Product Name Mention Rate",
+    "vi": "Brand/Product Name Mention Rate"
+  },
+  "ui.official_link_citation_rate": {
+    "en": "Official Link Citation Rate",
+    "zh-CN": "官网链接显示率",
+    "zh-TW": "官网链接显示率",
+    "ko": "Official Link Citation Rate",
+    "vi": "Official Link Citation Rate"
+  },
+  "ui.brandproduct_name_rate": {
+    "en": "Brand/Product Name Rate",
+    "zh-CN": "品牌/产品名称提及率",
+    "zh-TW": "品牌/产品名称提及率",
+    "ko": "Brand/Product Name Rate",
+    "vi": "Brand/Product Name Rate"
+  },
+  "ui.link_rate": {
+    "en": "Link Rate",
+    "zh-CN": "官网链接率",
+    "zh-TW": "官网链接率",
+    "ko": "Link Rate",
+    "vi": "Link Rate"
+  },
+  "ui.brand_link_rate_over": {
+    "en": "Brand & Link Rate Over Time",
+    "zh-CN": "品牌/产品名称提及率 & 官网链接率变化趋势",
+    "zh-TW": "品牌/产品名称提及率 & 官网链接率变化趋势",
+    "ko": "Brand & Link Rate Over Time",
+    "vi": "Brand & Link Rate Over Time"
+  },
+  "ui.perquery_history_brand_link": {
+    "en": "Per-query history (🟢=Brand ✅, 🔗=Link ✅):",
+    "zh-CN": "单条短语追踪（🟢=品牌/产品名称提及, 🔗=官网链接）：",
+    "zh-TW": "单条短語追踪（🟢=品牌/产品名称提及, 🔗=官网链接）：",
+    "ko": "Per-query history (🟢=Brand ✅, 🔗=Link ✅):",
+    "vi": "Per-query history (🟢=Brand ✅, 🔗=Link ✅):"
+  },
+  "ui.no_tracking_data_yet": {
+    "en": "No tracking data yet. Run verification to start tracking.",
+    "zh-CN": "暂无追踪数据。执行验证后开始追踪。",
+    "zh-TW": "暂无追踪数据。执行驗證后開始追踪。",
+    "ko": "No tracking data yet. Run verification to start tracking.",
+    "vi": "No tracking data yet. Run verification to start tracking."
+  },
+  "ui.content_creation": {
+    "en": "Content Creation",
+    "zh-CN": "智造 – Content Generation",
+    "zh-TW": "智造 – Content Generation",
+    "ko": "Content Creation",
+    "vi": "Content Creation"
+  },
+  "ui.generate_seogeo_dualoptimized_content": {
+    "en": "Generate SEO+GEO dual-optimized content based on AI Queries",
+    "zh-CN": "基于 AI Queries 生成 SEO+GEO 双优化内容",
+    "zh-TW": "基于 AI Queries 生成 SEO+GEO 双優化內容",
+    "ko": "생성 SEO+GEO dual-optimized content based on AI Queries",
+    "vi": "Tạo SEO+GEO dual-optimized content based on AI Queries"
+  },
+  "ui.upload_phrases_skip_query": {
+    "en": "📤 Upload Phrases (skip Query Library)",
+    "zh-CN": "📤 上传检索短语（跳过智库直接生产内容）",
+    "zh-TW": "📤 上傳檢索短語（跳过智庫直接生产內容）",
+    "ko": "📤 Upload Phrases (skip Query Library)",
+    "vi": "📤 Upload Phrases (skip Query Library)"
+  },
+  "ui.optional_upload_prepared_search": {
+    "en": "Optional: Upload prepared search phrase CSV/Excel, then click Run Content Gen to produce content directly",
+    "zh-CN": "可选：如果已有准备好的检索短语 CSV/Excel，上传到此处后点击执行智造即可直接生产内容，无需经过智库裂变流程",
+    "zh-TW": "可选：如果已有准备好的檢索短語 CSV/Excel，上傳到此处后点击执行智造即可直接生产內容，无需经过智庫裂變流程",
+    "ko": "Optional: Upload prepared search phrase CSV/Excel, then click Run Content Gen to produce content directly",
+    "vi": "Optional: Upload prepared search phrase CSV/Excel, then click Run Content Gen to produce content directly"
+  },
+  "ui.upload_csv_must_contain": {
+    "en": "Upload CSV (must contain ai_query column)",
+    "zh-CN": "上传 CSV（需包含 ai_query 列）",
+    "zh-TW": "上傳 CSV（需包含 ai_query 列）",
+    "ko": "업로드 CSV (must contain ai_query column)",
+    "vi": "Tải lên CSV (must contain ai_query column)"
+  },
+  "ui.selected_phrases_1": {
+    "en": "📋 Selected Phrases",
+    "zh-CN": "📋 智测选择短语",
+    "zh-TW": "📋 智測選擇短語",
+    "ko": "📋 Selected Phrases",
+    "vi": "📋 Selected Phrases"
+  },
+  "ui.score": {
+    "en": "Score",
+    "zh-CN": "综合分",
+    "zh-TW": "综合分",
+    "ko": "점수",
+    "vi": "Điểm"
+  },
+  "ui.no_selected_phrases_in": {
+    "en": "No selected phrases in Query Library. Please go back to select some.",
+    "zh-CN": "智库中无已选中短语，请返回智库选中后再执行。",
+    "zh-TW": "智庫中无已選中短語，请返回智庫選中后再执行。",
+    "ko": "No selected phrases in Query Library. Please go back to select some.",
+    "vi": "No selected phrases in Query Library. Please go back to select some."
+  },
+  "ui.no_query_library_data": {
+    "en": "No query library data found.",
+    "zh-CN": "未找到智库数据。",
+    "zh-TW": "未找到智庫数据。",
+    "ko": "No query library data found.",
+    "vi": "No query library data found."
+  },
+  "ui.reference_materials_upload": {
+    "en": "Reference Materials Upload",
+    "zh-CN": "内容素材上传",
+    "zh-TW": "內容素材上傳",
+    "ko": "Reference Materials Upload",
+    "vi": "Reference Materials Upload"
+  },
+  "ui.upload_reference_documents_wordpdftxtmd": {
+    "en": "Upload reference documents (Word/PDF/TXT/MD) that the AI can use when generating articles. Materials are matched to phrases by keywords.",
+    "zh-CN": "上传参考素材文档（Word/PDF/TXT/MD），AI 生成文章时会从中抓取相关信息。素材按关键词自动匹配对应短语。",
+    "zh-TW": "上傳参考素材文档（Word/PDF/TXT/MD），AI 生成文章时会从中抓取相关信息。素材按關鍵詞自动匹配对应短語。",
+    "ko": "업로드 reference documents (Word/PDF/TXT/MD) that the AI can use when generating articles. Materials are matched to phrases by keywords.",
+    "vi": "Tải lên reference documents (Word/PDF/TXT/MD) that the AI can use when generating articles. Materials are matched to phrases by keywords."
+  },
+  "ui.upload_materials": {
+    "en": "Upload materials",
+    "zh-CN": "上传素材文件",
+    "zh-TW": "上傳素材文件",
+    "ko": "업로드 materials",
+    "vi": "Tải lên materials"
+  },
+  "ui.no_materials_uploaded_yet": {
+    "en": "No materials uploaded yet. AI will use built-in knowledge base.",
+    "zh-CN": "暂无上传素材，AI 将使用内置知识库生成。",
+    "zh-TW": "暂无上傳素材，AI 将使用内置知识库生成。",
+    "ko": "No materials uploaded yet. AI will use built-in knowledge base.",
+    "vi": "No materials uploaded yet. AI will use built-in knowledge base."
+  },
+  "ui.generate_content": {
+    "en": "▶️ Generate Content",
+    "zh-CN": "▶️ 生成内容",
+    "zh-TW": "▶️ 生成內容",
+    "ko": "▶️ Generate Content",
+    "vi": "▶️ Generate Content"
+  },
+  "ui.articles_per_batch": {
+    "en": "Articles per batch",
+    "zh-CN": "每批生成文章数",
+    "zh-TW": "每批生成文章数",
+    "ko": "Articles per batch",
+    "vi": "Articles per batch"
+  },
+  "ui.autodetect_智能匹配": {
+    "en": "🤖 Auto-detect (智能匹配)",
+    "zh-CN": "🤖 智能匹配（根据短语自动选模板）",
+    "zh-TW": "🤖 智能匹配（根据短語自动选模板）",
+    "ko": "🤖 Auto-detect (智能匹配)",
+    "vi": "🤖 Auto-detect (智能匹配)"
+  },
+  "ui.from_scratch_自由生成": {
+    "en": "🆓 From Scratch (自由生成)",
+    "zh-CN": "🆓 自由生成（无模板）",
+    "zh-TW": "🆓 自由生成（无模板）",
+    "ko": "🆓 From Scratch (自由生成)",
+    "vi": "🆓 From Scratch (自由生成)"
+  },
+  "ui.registration_flow_注册流程": {
+    "en": "📋 Registration Flow (注册流程)",
+    "zh-CN": "📋 注册流程模板",
+    "zh-TW": "📋 注册流程模板",
+    "ko": "📋 Registration Flow (注册流程)",
+    "vi": "📋 Registration Flow (注册流程)"
+  },
+  "ui.fees_costs_费用成本": {
+    "en": "💰 Fees & Costs (费用成本)",
+    "zh-CN": "💰 费用成本模板",
+    "zh-TW": "💰 费用成本模板",
+    "ko": "💰 Fees & Costs (费用成本)",
+    "vi": "💰 Fees & Costs (费用成本)"
+  },
+  "ui.logistics_fba_物流仓储": {
+    "en": "📦 Logistics & FBA (物流仓储)",
+    "zh-CN": "📦 物流仓储模板",
+    "zh-TW": "📦 物流仓储模板",
+    "ko": "📦 Logistics & FBA (物流仓储)",
+    "vi": "📦 Logistics & FBA (物流仓储)"
+  },
+  "ui.advertising_广告推广": {
+    "en": "📢 Advertising (广告推广)",
+    "zh-CN": "📢 广告推广模板",
+    "zh-TW": "📢 广告推广模板",
+    "ko": "📢 Advertising (广告推广)",
+    "vi": "📢 Advertising (广告推广)"
+  },
+  "ui.listing_optimization_listing优化": {
+    "en": "🏷️ Listing Optimization (Listing优化)",
+    "zh-CN": "🏷️ Listing优化模板",
+    "zh-TW": "🏷️ Listing優化模板",
+    "ko": "🏷️ Listing Optimization (Listing优化)",
+    "vi": "🏷️ Listing Optimization (Listing优化)"
+  },
+  "ui.content_template": {
+    "en": "Content Template",
+    "zh-CN": "内容模板",
+    "zh-TW": "內容模板",
+    "ko": "Content Template",
+    "vi": "Content Template"
+  },
+  "ui.auto_mode_template_is": {
+    "en": "🤖 Auto mode: template is matched per query based on keywords (注册→注册模板, 费用→费用模板, etc.)",
+    "zh-CN": "🤖 智能模式：根据每条短语的关键词自动匹配最佳模板（注册→注册模板，费用→费用模板，物流→物流模板...）",
+    "zh-TW": "🤖 智能模式：根据每条短語的關鍵詞自动匹配最佳模板（注册→注册模板，费用→费用模板，物流→物流模板...）",
+    "ko": "🤖 Auto mode: template is matched per query based on keywords (注册→注册模板, 费用→费用模板, etc.)",
+    "vi": "🤖 Auto mode: template is matched per query based on keywords (注册→注册模板, 费用→费用模板, etc.)"
+  },
+  "ui.fixed_template_all_articles": {
+    "en": "✅ Fixed template: all articles use the same structure.",
+    "zh-CN": "✅ 固定模板：所有文章使用同一结构。",
+    "zh-TW": "✅ 固定模板：所有文章使用同一结构。",
+    "ko": "✅ Fixed template: all articles use the same structure.",
+    "vi": "✅ Fixed template: all articles use the same structure."
+  },
+  "ui.run_content_gen": {
+    "en": "🚀 Run Content Gen",
+    "zh-CN": "🚀 执行智造",
+    "zh-TW": "🚀 执行智造",
+    "ko": "🚀 Run Content Gen",
+    "vi": "🚀 Run Content Gen"
+  },
+  "ui.calling_bedrock_claude_to": {
+    "en": "Calling Bedrock Claude to generate content...",
+    "zh-CN": "正在调用 Bedrock Claude 生成内容...",
+    "zh-TW": "正在调用 Bedrock Claude 生成內容...",
+    "ko": "Calling Bedrock Claude to generate content...",
+    "vi": "Calling Bedrock Claude to generate content..."
+  },
+  "ui.engine_module_not_ready": {
+    "en": "engine module not ready",
+    "zh-CN": "engine 模块未就绪",
+    "zh-TW": "engine 模块未就绪",
+    "ko": "engine module not ready",
+    "vi": "engine module not ready"
+  },
+  "ui.generated_content_list": {
+    "en": "📤 Generated Content List",
+    "zh-CN": "📤 生成内容列表",
+    "zh-TW": "📤 生成內容列表",
+    "ko": "📤 Generated Content List",
+    "vi": "📤 Generated Content List"
+  },
+  "ui.articles_generated": {
+    "en": "Articles Generated",
+    "zh-CN": "生成文章数",
+    "zh-TW": "生成文章数",
+    "ko": "Articles Generated",
+    "vi": "Articles Generated"
+  },
+  "ui.avg_word_count": {
+    "en": "Avg Word Count",
+    "zh-CN": "平均字数",
+    "zh-TW": "平均字数",
+    "ko": "Avg Word Count",
+    "vi": "Avg Word Count"
+  },
+  "ui.version": {
+    "en": "Version",
+    "zh-CN": "版本",
+    "zh-TW": "版本",
+    "ko": "Version",
+    "vi": "Version"
+  },
+  "ui.title": {
+    "en": "Title",
+    "zh-CN": "标题",
+    "zh-TW": "标题",
+    "ko": "Title",
+    "vi": "Title"
+  },
+  "ui.words": {
+    "en": "Words",
+    "zh-CN": "字数",
+    "zh-TW": "字数",
+    "ko": "Words",
+    "vi": "Words"
+  },
+  "ui.no_items_selected_check_1": {
+    "en": "No items selected. Check ☑️ column first.",
+    "zh-CN": "未勾选任何条目，请先在表格中勾选 ☑️ 列",
+    "zh-TW": "未勾选任何条目，请先在表格中勾选 ☑️ 列",
+    "ko": "선택된 항목 없음. Check ☑️ column first.",
+    "vi": "Chưa chọn mục nào. Check ☑️ column first."
+  },
+  "ui.edit_article_content_below": {
+    "en": "Edit article content below, changes auto-saved",
+    "zh-CN": "可直接在下方编辑文章内容，修改后自动保存",
+    "zh-TW": "可直接在下方編輯文章內容，修改后自动儲存",
+    "ko": "편집 article content below, changes auto-saved",
+    "vi": "Chỉnh sửa article content below, changes auto-saved"
+  },
+  "ui.body_content": {
+    "en": "Body Content",
+    "zh-CN": "正文内容",
+    "zh-TW": "正文內容",
+    "ko": "Body Content",
+    "vi": "Body Content"
+  },
+  "ui.save_as_template": {
+    "en": "💾 Save as Template",
+    "zh-CN": "💾 保存为模板",
+    "zh-TW": "💾 儲存为模板",
+    "ko": "💾 Save as Template",
+    "vi": "💾 Save as Template"
+  },
+  "ui.changes_autosaved": {
+    "en": "✅ Changes auto-saved",
+    "zh-CN": "✅ 修改已自动保存",
+    "zh-TW": "✅ 修改已自动儲存",
+    "ko": "✅ Changes auto-saved",
+    "vi": "✅ Changes auto-saved"
+  },
+  "ui.upload_modified_file": {
+    "en": "📤 Upload Modified File",
+    "zh-CN": "📤 上传修改后文件（按标题自动匹配更新）",
+    "zh-TW": "📤 上傳修改后文件（按标题自动匹配更新）",
+    "ko": "📤 Upload Modified File",
+    "vi": "📤 Upload Modified File"
+  },
+  "ui.clear_history": {
+    "en": "🗑️ Clear History",
+    "zh-CN": "🗑️ 清空历史",
+    "zh-TW": "🗑️ 清空历史",
+    "ko": "🗑️ Clear History",
+    "vi": "🗑️ Clear History"
+  },
+  "ui.article_confirmation": {
+    "en": "✅ Article Confirmation",
+    "zh-CN": "✅ 文章确认",
+    "zh-TW": "✅ 文章確認",
+    "ko": "✅ Article Confirmation",
+    "vi": "✅ Article Confirmation"
+  },
+  "ui.check_confirmed_articles_only": {
+    "en": "Check confirmed articles; only confirmed ones proceed to Optimization",
+    "zh-CN": "勾选确认通过的文章，只有确认的文章才会进入智优优化",
+    "zh-TW": "勾选確認通过的文章，只有確認的文章才会进入智優優化",
+    "ko": "Check confirmed articles; only confirmed ones proceed to Optimization",
+    "vi": "Check confirmed articles; only confirmed ones proceed to Optimization"
+  },
+  "ui.article_title": {
+    "en": "Article Title",
+    "zh-CN": "文章标题",
+    "zh-TW": "文章标题",
+    "ko": "Article Title",
+    "vi": "Article Title"
+  },
+  "ui.confirmed": {
+    "en": "Confirmed",
+    "zh-CN": "确认通过",
+    "zh-TW": "確認通过",
+    "ko": "확인ed",
+    "vi": "Xác nhậned"
+  },
+  "ui.go_to_optimization_step": {
+    "en": "➡️ Go to Optimization (Step 3)",
+    "zh-CN": "➡️ 进入智优 (Step 3)",
+    "zh-TW": "➡️ 进入智優 (Step 3)",
+    "ko": "➡️ Go to Optimization (Step 3)",
+    "vi": "➡️ Go to Optimization (Step 3)"
+  },
+  "ui.template_library": {
+    "en": "📚 Template Library",
+    "zh-CN": "📚 模板库（已保存的文章模板）",
+    "zh-TW": "📚 模板库（已儲存的文章模板）",
+    "ko": "📚 Template Library",
+    "vi": "📚 Template Library"
+  },
+  "ui.use": {
+    "en": "♻️ Use",
+    "zh-CN": "♻️ 复用",
+    "zh-TW": "♻️ 复用",
+    "ko": "♻️ Use",
+    "vi": "♻️ Use"
+  },
+  "ui.clear_loaded_template": {
+    "en": "❌ Clear loaded template",
+    "zh-CN": "❌ 取消模板复用",
+    "zh-TW": "❌ 取消模板复用",
+    "ko": "❌ Clear loaded template",
+    "vi": "❌ Clear loaded template"
+  },
+  "ui.no_templates_saved_yet": {
+    "en": "No templates saved yet. Generate content first, then save articles as templates.",
+    "zh-CN": "暂无模板。先生成内容，然后在文章预览中点击「保存为模板」。",
+    "zh-TW": "暂无模板。先生成內容，然后在文章预览中点击「儲存为模板」。",
+    "ko": "No templates saved yet. Generate content first, then save articles as templates.",
+    "vi": "No templates saved yet. Generate content first, then save articles as templates."
+  },
+  "ui.optimization": {
+    "en": "Optimization",
+    "zh-CN": "智优 – Score · Rewrite · Compliance",
+    "zh-TW": "智優 – Score · Rewrite · Compliance",
+    "ko": "최적화",
+    "vi": "Tối ưu hóa"
+  },
+  "ui.oneclick_score_rewrite_compliance": {
+    "en": "One-click: Score → Rewrite → Compliance Review",
+    "zh-CN": "一键自动完成 评分 → 重写优化 → 合规审查",
+    "zh-TW": "一键自动完成 評分 → 重写優化 → 合规审查",
+    "ko": "One-click: Score → Rewrite → Compliance Review",
+    "vi": "One-click: Score → Rewrite → Compliance Review"
+  },
+  "ui.clear_all_2": {
+    "en": "🗑️ Clear All",
+    "zh-CN": "🗑️ 清空历史",
+    "zh-TW": "🗑️ 清空历史",
+    "ko": "🗑️ Clear All",
+    "vi": "🗑️ Clear All"
+  },
+  "ui.upload_content_skip_content": {
+    "en": "📤 Upload Content (skip Content Creation)",
+    "zh-CN": "📤 上传内容（跳过智造直接优化）",
+    "zh-TW": "📤 上傳內容（跳过智造直接優化）",
+    "ko": "📤 Upload Content (skip Content Creation)",
+    "vi": "📤 Upload Content (skip Content Creation)"
+  },
+  "ui.optional_upload_existing_article": {
+    "en": "Optional: Upload existing article CSV for scoring/rewrite/compliance review",
+    "zh-CN": "可选：上传已有文章 CSV，直接进行评分/重写/合规审查",
+    "zh-TW": "可选：上傳已有文章 CSV，直接进行評分/重写/合规审查",
+    "ko": "Optional: Upload existing article CSV for scoring/rewrite/compliance review",
+    "vi": "Optional: Upload existing article CSV for scoring/rewrite/compliance review"
+  },
+  "ui.upload_csv_must_contain_1": {
+    "en": "Upload CSV (must contain content_draft column)",
+    "zh-CN": "上传 CSV（需含 content_draft 列）",
+    "zh-TW": "上傳 CSV（需含 content_draft 列）",
+    "ko": "업로드 CSV (must contain content_draft column)",
+    "vi": "Tải lên CSV (must contain content_draft column)"
+  },
+  "ui.content_from_content_creation": {
+    "en": "📋 Content from Content Creation",
+    "zh-CN": "📋 智造输入内容",
+    "zh-TW": "📋 智造输入內容",
+    "ko": "📋 Content from Content Creation",
+    "vi": "📋 Content from Content Creation"
+  },
+  "ui.include": {
+    "en": "Include",
+    "zh-CN": "纳入优化",
+    "zh-TW": "纳入優化",
+    "ko": "Include",
+    "vi": "Include"
+  },
+  "ui.no_confirmed_articles_in": {
+    "en": "No confirmed articles in Content Creation. Go back to confirm some.",
+    "zh-CN": "智造中无已确认文章，请返回智造确认后再执行。",
+    "zh-TW": "智造中无已確認文章，请返回智造確認后再执行。",
+    "ko": "No confirmed articles in Content Creation. Go back to confirm some.",
+    "vi": "No confirmed articles in Content Creation. Go back to confirm some."
+  },
+  "ui.no_content_from_content": {
+    "en": "No content from Content Creation. Upload or run Content Creation first.",
+    "zh-CN": "暂无智造内容，请先上传或执行智造。",
+    "zh-TW": "暂无智造內容，请先上傳或执行智造。",
+    "ko": "No content from Content Creation. Upload or run Content Creation first.",
+    "vi": "No content from Content Creation. Upload or run Content Creation first."
+  },
+  "ui.oneclick_full_optimization": {
+    "en": "▶️ One-Click Full Optimization",
+    "zh-CN": "▶️ 一键执行智优全流程",
+    "zh-TW": "▶️ 一键执行智優全流程",
+    "ko": "▶️ One-Click Full Optimization",
+    "vi": "▶️ One-Click Full Optimization"
+  },
+  "ui.autoexecute_in_order_score": {
+    "en": "Auto-execute in order: **Score → Rewrite → Compliance Review**",
+    "zh-CN": "自动按顺序执行：**评分 → 重写 → 合规审查**",
+    "zh-TW": "自动按顺序执行：**評分 → 重写 → 合规审查**",
+    "ko": "Auto-execute in order: **Score → Rewrite → Compliance Review**",
+    "vi": "Auto-execute in order: **Score → Rewrite → Compliance Review**"
+  },
+  "ui.oneclick_full_optimization_1": {
+    "en": "🚀 One-Click Full Optimization",
+    "zh-CN": "🚀 一键智优全流程",
+    "zh-TW": "🚀 一键智優全流程",
+    "ko": "🚀 One-Click Full Optimization",
+    "vi": "🚀 One-Click Full Optimization"
+  },
+  "ui.step_3_scoring": {
+    "en": "Step 3: Scoring...",
+    "zh-CN": "Step 3: 评分中...",
+    "zh-TW": "Step 3: 評分中...",
+    "ko": "Step 3: Scoring...",
+    "vi": "Step 3: Scoring..."
+  },
+  "ui.step_35_rewriting": {
+    "en": "Step 3.5: Rewriting...",
+    "zh-CN": "Step 3.5: 重写中...",
+    "zh-TW": "Step 3.5: 重写中...",
+    "ko": "Step 3.5: Rewriting...",
+    "vi": "Step 3.5: Rewriting..."
+  },
+  "ui.step_36_compliance_review": {
+    "en": "Step 3.6: Compliance review...",
+    "zh-CN": "Step 3.6: 合规审查中...",
+    "zh-TW": "Step 3.6: 合规审查中...",
+    "ko": "Step 3.6: Compliance review...",
+    "vi": "Step 3.6: Compliance review..."
+  },
+  "ui.full_optimization_complete": {
+    "en": "✅ Full Optimization complete!",
+    "zh-CN": "✅ 智优全流程完成！",
+    "zh-TW": "✅ 智優全流程完成！",
+    "ko": "✅ Full Optimization complete!",
+    "vi": "✅ Full Optimization complete!"
+  },
+  "ui.results": {
+    "en": "📊 Results",
+    "zh-CN": "📊 结果查看",
+    "zh-TW": "📊 結果查看",
+    "ko": "📊 Results",
+    "vi": "📊 Results"
+  },
+  "ui.scorecard_step_3": {
+    "en": "📊 Scorecard (Step 3)",
+    "zh-CN": "📊 评分卡 (Step 3)",
+    "zh-TW": "📊 評分卡 (Step 3)",
+    "ko": "📊 Scorecard (Step 3)",
+    "vi": "📊 Scorecard (Step 3)"
+  },
+  "ui.articles_scored": {
+    "en": "Articles Scored",
+    "zh-CN": "评分文章数",
+    "zh-TW": "評分文章数",
+    "ko": "Articles Scored",
+    "vi": "Articles Scored"
+  },
+  "ui.avg_score": {
+    "en": "Avg Score",
+    "zh-CN": "平均总分",
+    "zh-TW": "平均总分",
+    "ko": "Avg Score",
+    "vi": "Avg Score"
+  },
+  "ui.passed": {
+    "en": "Passed",
+    "zh-CN": "通过数",
+    "zh-TW": "通过数",
+    "ko": "Passed",
+    "vi": "Passed"
+  },
+  "ui.no_scorecard_yet": {
+    "en": "No scorecard yet",
+    "zh-CN": "暂无评分卡",
+    "zh-TW": "暂无評分卡",
+    "ko": "No scorecard yet",
+    "vi": "No scorecard yet"
+  },
+  "ui.optimized_rewrite_step_35": {
+    "en": "✍️ Optimized Rewrite (Step 3.5)",
+    "zh-CN": "✍️ 优化重写 (Step 3.5)",
+    "zh-TW": "✍️ 優化重写 (Step 3.5)",
+    "ko": "✍️ Optimized Rewrite (Step 3.5)",
+    "vi": "✍️ Optimized Rewrite (Step 3.5)"
+  },
+  "ui.optimized_articles": {
+    "en": "Optimized Articles",
+    "zh-CN": "优化文章数",
+    "zh-TW": "優化文章数",
+    "ko": "Optimized Articles",
+    "vi": "Optimized Articles"
+  },
+  "ui.no_optimized_rewrite_output": {
+    "en": "No optimized rewrite output yet",
+    "zh-CN": "暂无优化重写输出",
+    "zh-TW": "暂无優化重写输出",
+    "ko": "No optimized rewrite output yet",
+    "vi": "No optimized rewrite output yet"
+  },
+  "ui.compliance_review_step_36": {
+    "en": "⚖️ Compliance Review (Step 3.6)",
+    "zh-CN": "⚖️ 合规审查 (Step 3.6)",
+    "zh-TW": "⚖️ 合规审查 (Step 3.6)",
+    "ko": "⚖️ Compliance Review (Step 3.6)",
+    "vi": "⚖️ Compliance Review (Step 3.6)"
+  },
+  "ui.no_compliance_review_results": {
+    "en": "No compliance review results yet",
+    "zh-CN": "暂无合规审查结果",
+    "zh-TW": "暂无合规审查結果",
+    "ko": "No compliance review results yet",
+    "vi": "No compliance review results yet"
+  },
+  "ui.score_1": {
+    "en": "Score",
+    "zh-CN": "评分",
+    "zh-TW": "評分",
+    "ko": "점수",
+    "vi": "Điểm"
+  },
+  "ui.edit_optimized_articles_below": {
+    "en": "Edit optimized articles below, changes auto-saved",
+    "zh-CN": "可直接编辑优化后的文章内容，修改自动保存",
+    "zh-TW": "可直接編輯優化后的文章內容，修改自动儲存",
+    "ko": "편집 optimized articles below, changes auto-saved",
+    "vi": "Chỉnh sửa optimized articles below, changes auto-saved"
+  },
+  "ui.content": {
+    "en": "Content",
+    "zh-CN": "内容",
+    "zh-TW": "內容",
+    "ko": "Content",
+    "vi": "Content"
+  },
+  "ui.check_confirmed_articles_confirmed": {
+    "en": "Check confirmed articles; confirmed ones proceed to Publishing",
+    "zh-CN": "勾选确认通过的文章，确认后进入智布发布",
+    "zh-TW": "勾选確認通过的文章，確認后进入智佈發佈",
+    "ko": "Check confirmed articles; confirmed ones proceed to Publishing",
+    "vi": "Check confirmed articles; confirmed ones proceed to Publishing"
+  },
+  "ui.poc_review": {
+    "en": "🔒 POC Review",
+    "zh-CN": "🔒 POC 人工审核",
+    "zh-TW": "🔒 POC 人工审核",
+    "ko": "🔒 POC Review",
+    "vi": "🔒 POC Review"
+  },
+  "ui.refresh_status": {
+    "en": "🔄 Refresh Status",
+    "zh-CN": "🔄 刷新审批状态",
+    "zh-TW": "🔄 重新整理审批狀態",
+    "ko": "🔄 Refresh Status",
+    "vi": "🔄 Refresh Status"
+  },
+  "ui.needs_poc_review": {
+    "en": "Needs POC Review",
+    "zh-CN": "需要 POC 审核",
+    "zh-TW": "需要 POC 审核",
+    "ko": "Needs POC Review",
+    "vi": "Needs POC Review"
+  },
+  "ui.approved": {
+    "en": "✅ Approved",
+    "zh-CN": "✅ 已审批",
+    "zh-TW": "✅ 已审批",
+    "ko": "✅ Approved",
+    "vi": "✅ Approved"
+  },
+  "ui.pending": {
+    "en": "⏳ Pending",
+    "zh-CN": "⏳ 待审批",
+    "zh-TW": "⏳ 待審批",
+    "ko": "⏳ Pending",
+    "vi": "⏳ Pending"
+  },
+  "ui.critical5_autoflagged_you_can": {
+    "en": "Critical-5 auto-flagged. You can also manually select any article for POC review.",
+    "zh-CN": "Critical-5 类别自动标记。你也可以手动选择任何文章进入人工审核。",
+    "zh-TW": "Critical-5 类别自动标记。你也可以手动選擇任何文章进入人工审核。",
+    "ko": "Critical-5 auto-flagged. You can also manually select any article for POC review.",
+    "vi": "Critical-5 auto-flagged. You can also manually select any article for POC review."
+  },
+  "ui.article": {
+    "en": "Article",
+    "zh-CN": "文章",
+    "zh-TW": "文章",
+    "ko": "Article",
+    "vi": "Article"
+  },
+  "ui.poc_review_1": {
+    "en": "POC Review",
+    "zh-CN": "需要审核",
+    "zh-TW": "需要审核",
+    "ko": "POC Review",
+    "vi": "POC Review"
+  },
+  "ui.approved_1": {
+    "en": "Approved",
+    "zh-CN": "已审批",
+    "zh-TW": "已审批",
+    "ko": "승인d",
+    "vi": "Phê duyệtd"
+  },
+  "ui.save_review_status": {
+    "en": "💾 Save Review Status",
+    "zh-CN": "💾 保存审核状态",
+    "zh-TW": "💾 儲存审核狀態",
+    "ko": "💾 Save Review Status",
+    "vi": "💾 Save Review Status"
+  },
+  "ui.poc_reviewers_open_localhost8502": {
+    "en": "💡 POC reviewers: open **localhost:8502** to review and approve articles.",
+    "zh-CN": "💡 POC 审核人：请打开 **localhost:8502** 查看和审批文章。",
+    "zh-TW": "💡 POC 审核人：请打开 **localhost:8502** 查看和审批文章。",
+    "ko": "💡 POC reviewers: open **localhost:8502** to review and approve articles.",
+    "vi": "💡 POC reviewers: open **localhost:8502** to review and approve articles."
+  },
+  "ui.quick_review_approve": {
+    "en": "**🔍 Quick Review & Approve**",
+    "zh-CN": "**🔍 快速审核 & 审批（无需 8502）**",
+    "zh-TW": "**🔍 快速审核 & 审批（无需 8502）**",
+    "ko": "**🔍 Quick Review & Approve**",
+    "vi": "**🔍 Quick Review & Approve**"
+  },
+  "ui.review_content_below_and": {
+    "en": "Review content below and approve/reject directly.",
+    "zh-CN": "直接在下方审核内容并审批，无需打开独立审核界面。",
+    "zh-TW": "直接在下方审核內容并审批，无需打开独立审核界面。",
+    "ko": "Review content below and approve/reject directly.",
+    "vi": "Review content below and approve/reject directly."
+  },
+  "ui.content_preview": {
+    "en": "Content Preview",
+    "zh-CN": "内容预览",
+    "zh-TW": "內容预览",
+    "ko": "Content Preview",
+    "vi": "Content Preview"
+  },
+  "ui.approve": {
+    "en": "✅ Approve",
+    "zh-CN": "✅ 审批通过",
+    "zh-TW": "✅ 审批通过",
+    "ko": "✅ Approve",
+    "vi": "✅ Approve"
+  },
+  "ui.reject": {
+    "en": "❌ Reject",
+    "zh-CN": "❌ 驳回",
+    "zh-TW": "❌ 驳回",
+    "ko": "❌ Reject",
+    "vi": "❌ Reject"
+  },
+  "ui.tax_compliance_audit": {
+    "en": "🏛️ TAX Compliance Audit",
+    "zh-CN": "🏛️ TAX 合规审核",
+    "zh-TW": "🏛️ TAX 合规审核",
+    "ko": "🏛️ TAX Compliance Audit",
+    "vi": "🏛️ TAX Compliance Audit"
+  },
+  "ui.for_registrationfeesvat_content_linked": {
+    "en": "For registration/fees/VAT content — linked to QuickSight TAX review workflow",
+    "zh-CN": "注册/费用/VAT 相关内容 — 关联 QuickSight TAX 审核流程",
+    "zh-TW": "注册/费用/VAT 相关內容 — 关联 QuickSight TAX 审核流程",
+    "ko": "For registration/fees/VAT content — linked to QuickSight TAX review workflow",
+    "vi": "For registration/fees/VAT content — linked to QuickSight TAX review workflow"
+  },
+  "ui.no_taxrelated_articles_in": {
+    "en": "No TAX-related articles in current batch",
+    "zh-CN": "当前批次无 TAX 相关文章",
+    "zh-TW": "當前批次无 TAX 相关文章",
+    "ko": "No TAX-related articles in current batch",
+    "vi": "No TAX-related articles in current batch"
+  },
+  "ui.note_quicksight_does_not": {
+    "en": "Note: QuickSight does not have a write API. Approval status is managed in Smart Suite and synced via batch export.",
+    "zh-CN": "注：QuickSight 无写入 API，审核状态在 Smart Suite 内管理，通过批次导出同步。",
+    "zh-TW": "注：QuickSight 无写入 API，审核狀態在 Smart Suite 内管理，通过批次匯出同步。",
+    "ko": "Note: QuickSight does not have a write API. Approval status is managed in Smart Suite and synced via batch export.",
+    "vi": "Note: QuickSight does not have a write API. Approval status is managed in Smart Suite and synced via batch export."
+  },
+  "ui.go_to_publishing_step": {
+    "en": "➡️ Go to Publishing (Step 4)",
+    "zh-CN": "➡️ 进入智布 (Step 4)",
+    "zh-TW": "➡️ 进入智佈 (Step 4)",
+    "ko": "➡️ Go to Publishing (Step 4)",
+    "vi": "➡️ Go to Publishing (Step 4)"
+  },
+  "ui.publishing": {
+    "en": "Publishing",
+    "zh-CN": "智布 – 内容发布",
+    "zh-TW": "智佈 – 內容發佈",
+    "ko": "퍼블리싱",
+    "vi": "Xuất bản"
+  },
+  "ui.convert_optimized_content_to": {
+    "en": "Convert optimized content to structured JSON and Word documents",
+    "zh-CN": "将优化内容转换为结构化 JSON 和 Word 文档",
+    "zh-TW": "将優化內容转换为结构化 JSON 和 Word 文档",
+    "ko": "Convert optimized content to structured JSON and Word documents",
+    "vi": "Convert optimized content to structured JSON and Word documents"
+  },
+  "ui.upload_content_skip_optimization": {
+    "en": "📤 Upload Content (skip Optimization)",
+    "zh-CN": "📤 上传内容（跳过智优直接发布格式化）",
+    "zh-TW": "📤 上傳內容（跳过智優直接發佈格式化）",
+    "ko": "📤 Upload Content (skip Optimization)",
+    "vi": "📤 Upload Content (skip Optimization)"
+  },
+  "ui.optional_upload_optimized_article": {
+    "en": "Optional: Upload optimized article CSV, generate JSON/Word directly",
+    "zh-CN": "可选：上传已优化完成的文章 CSV，直接生成 JSON/Word",
+    "zh-TW": "可选：上傳已優化完成的文章 CSV，直接生成 JSON/Word",
+    "ko": "Optional: Upload optimized article CSV, generate JSON/Word directly",
+    "vi": "Optional: Upload optimized article CSV, generate JSON/Word directly"
+  },
+  "ui.upload_csv_must_contain_2": {
+    "en": "Upload CSV (must contain optimized_content column)",
+    "zh-CN": "上传 CSV（需含 optimized_content 列）",
+    "zh-TW": "上傳 CSV（需含 optimized_content 列）",
+    "ko": "업로드 CSV (must contain optimized_content column)",
+    "vi": "Tải lên CSV (must contain optimized_content column)"
+  },
+  "ui.optimized_content_from_optimization": {
+    "en": "📋 Optimized Content from Optimization",
+    "zh-CN": "📋 智优输入内容",
+    "zh-TW": "📋 智優输入內容",
+    "ko": "📋 Optimized Content from Optimization",
+    "vi": "📋 Optimized Content from Optimization"
+  },
+  "ui.no_optimized_content_upload": {
+    "en": "No optimized content. Upload or run Optimization first.",
+    "zh-CN": "暂无智优内容，请先上传或执行智优。",
+    "zh-TW": "暂无智優內容，请先上傳或执行智優。",
+    "ko": "No optimized content. Upload or run Optimization first.",
+    "vi": "No optimized content. Upload or run Optimization first."
+  },
+  "ui.generate_publishing_format": {
+    "en": "▶️ Generate Publishing Format",
+    "zh-CN": "▶️ 生成发布格式",
+    "zh-TW": "▶️ 生成發佈格式",
+    "ko": "▶️ Generate Publishing Format",
+    "vi": "▶️ Generate Publishing Format"
+  },
+  "ui.generate_json": {
+    "en": "🚀 Generate JSON",
+    "zh-CN": "🚀 生成 JSON",
+    "zh-TW": "🚀 生成 JSON",
+    "ko": "🚀 Generate JSON",
+    "vi": "🚀 Generate JSON"
+  },
+  "ui.generating_json": {
+    "en": "Generating JSON...",
+    "zh-CN": "正在生成 JSON...",
+    "zh-TW": "正在生成 JSON...",
+    "ko": "Generating JSON...",
+    "vi": "Generating JSON..."
+  },
+  "ui.output_overview": {
+    "en": "📤 Output Overview",
+    "zh-CN": "📤 输出概览",
+    "zh-TW": "📤 输出概览",
+    "ko": "📤 Output Overview",
+    "vi": "📤 Output Overview"
+  },
+  "ui.all_cleared": {
+    "en": "All cleared",
+    "zh-CN": "全部已清空",
+    "zh-TW": "全部已清空",
+    "ko": "All cleared",
+    "vi": "All cleared"
+  },
+  "ui.total_items": {
+    "en": "Total Items",
+    "zh-CN": "总条目",
+    "zh-TW": "总条目",
+    "ko": "합계 Items",
+    "vi": "Tổng Items"
+  },
+  "ui.batch": {
+    "en": "Batch",
+    "zh-CN": "批次",
+    "zh-TW": "批次",
+    "ko": "배치",
+    "vi": "Lô"
+  },
+  "ui.source_keywords": {
+    "en": "Source Keywords",
+    "zh-CN": "源关键词",
+    "zh-TW": "源關鍵詞",
+    "ko": "소스 Keywords",
+    "vi": "Nguồn Keywords"
+  },
+  "ui.word_count": {
+    "en": "Word Count",
+    "zh-CN": "字数",
+    "zh-TW": "字数",
+    "ko": "Word Count",
+    "vi": "Word Count"
+  },
+  "ui.compliance": {
+    "en": "Compliance",
+    "zh-CN": "合规",
+    "zh-TW": "合规",
+    "ko": "Compliance",
+    "vi": "Compliance"
+  },
+  "ui.no_items_selected_check_2": {
+    "en": "No items selected. Check the 'Selected' column.",
+    "zh-CN": "未选中任何条目，请先勾选",
+    "zh-TW": "未選中任何条目，请先勾选",
+    "ko": "선택된 항목 없음. Check the 'Selected' column.",
+    "vi": "Chưa chọn mục nào. Check the 'Selected' column."
+  },
+  "ui.json_preview": {
+    "en": "🔍 JSON Preview",
+    "zh-CN": "🔍 JSON 预览",
+    "zh-TW": "🔍 JSON 预览",
+    "ko": "🔍 JSON Preview",
+    "vi": "🔍 JSON Preview"
+  },
+  "ui.final_word_documents": {
+    "en": "📄 Final Word Documents",
+    "zh-CN": "📄 Final Word 文档",
+    "zh-TW": "📄 Final Word 文档",
+    "ko": "📄 Final Word Documents",
+    "vi": "📄 Final Word Documents"
+  },
+  "ui.submit_for_publishing": {
+    "en": "📤 Submit for Publishing",
+    "zh-CN": "📤 申请官网发布",
+    "zh-TW": "📤 申请官网發佈",
+    "ko": "📤 Submit for Publishing",
+    "vi": "📤 Submit for Publishing"
+  },
+  "ui.publish_request_submitted": {
+    "en": "✅ Publish request submitted!",
+    "zh-CN": "✅ 已提交发布申请！管理员审批后将发布到官网。",
+    "zh-TW": "✅ 已提交發佈申请！管理員审批后将發佈到官网。",
+    "ko": "✅ Publish request submitted!",
+    "vi": "✅ Publish request submitted!"
+  },
+  "ui.analytics": {
+    "en": "📈 Analytics",
+    "zh-CN": "📈 智析",
+    "zh-TW": "📈 智析",
+    "ko": "📈 Analytics",
+    "vi": "📈 Analytics"
+  },
+  "ui.view_analytics_step_6": {
+    "en": "➡️ View Analytics (Step 6)",
+    "zh-CN": "➡️ 查看智析 (Step 6)",
+    "zh-TW": "➡️ 查看智析 (Step 6)",
+    "ko": "➡️ View Analytics (Step 6)",
+    "vi": "➡️ View Analytics (Step 6)"
+  },
+  "ui.analytics_1": {
+    "en": "Analytics",
+    "zh-CN": "智析 – Performance & Gap Analysis",
+    "zh-TW": "智析 – Performance & Gap Analysis",
+    "ko": "분석",
+    "vi": "Phân tích"
+  },
+  "ui.output_trends_input_tracking": {
+    "en": "Output trends · Input tracking · AI citation monitoring · Gap opportunities",
+    "zh-CN": "Output 趋势 · Input 追踪 · AI 引用监控 · Gap 机会点",
+    "zh-TW": "Output 趋势 · Input 追踪 · AI 引用监控 · Gap 机会点",
+    "ko": "Output trends · Input tracking · AI citation monitoring · Gap opportunities",
+    "vi": "Output trends · Input tracking · AI citation monitoring · Gap opportunities"
+  },
+  "ui.my_performance_dashboard": {
+    "en": "My Performance Dashboard",
+    "zh-CN": "我的 Performance",
+    "zh-TW": "我的 Performance",
+    "ko": "My Performance Dashboard",
+    "vi": "My Performance Dashboard"
+  },
+  "ui.total_phrases_created": {
+    "en": "Total Phrases Created",
+    "zh-CN": "创建短语",
+    "zh-TW": "创建短語",
+    "ko": "합계 Phrases Created",
+    "vi": "Tổng Phrases Created"
+  },
+  "ui.articles_generated_1": {
+    "en": "Articles Generated",
+    "zh-CN": "产出文章",
+    "zh-TW": "產出文章",
+    "ko": "Articles Generated",
+    "vi": "Articles Generated"
+  },
+  "ui.ai_citation_performance_before": {
+    "en": "AI Citation Performance (Before vs After)",
+    "zh-CN": "引用表现",
+    "zh-TW": "引用表现",
+    "ko": "AI Citation Performance (Before vs After)",
+    "vi": "AI Citation Performance (Before vs After)"
+  },
+  "ui.before_from_智测_verification": {
+    "en": "Before = from 智测 verification (baseline) · After = post-content launch (upload when available)",
+    "zh-CN": "Before = 智测验证结果（基线）· After = 新内容上线后（有数据时上传）",
+    "zh-TW": "Before = 智測驗證結果（基线）· After = 新內容上线后（有数据时上傳）",
+    "ko": "Before = from 智测 verification (baseline) · After = post-content launch (upload when available)",
+    "vi": "Before = from 智测 verification (baseline) · After = post-content launch (upload when available)"
+  },
+  "ui.mention": {
+    "en": "Mention #",
+    "zh-CN": "品牌/产品提及#",
+    "zh-TW": "品牌/产品提及#",
+    "ko": "Mention #",
+    "vi": "Mention #"
+  },
+  "ui.mention_rate": {
+    "en": "Mention Rate",
+    "zh-CN": "提及率",
+    "zh-TW": "提及率",
+    "ko": "Mention Rate",
+    "vi": "Mention Rate"
+  },
+  "ui.after_rate": {
+    "en": "After Rate",
+    "zh-CN": "提及率(后)",
+    "zh-TW": "提及率(后)",
+    "ko": "After Rate",
+    "vi": "After Rate"
+  },
+  "ui.link": {
+    "en": "Link #",
+    "zh-CN": "官网链接#",
+    "zh-TW": "官网链接#",
+    "ko": "Link #",
+    "vi": "Link #"
+  },
+  "ui.link_rate_1": {
+    "en": "Link Rate",
+    "zh-CN": "链接率",
+    "zh-TW": "链接率",
+    "ko": "Link Rate",
+    "vi": "Link Rate"
+  },
+  "ui.after_rate_1": {
+    "en": "After Rate",
+    "zh-CN": "链接率(后)",
+    "zh-TW": "链接率(后)",
+    "ko": "After Rate",
+    "vi": "After Rate"
+  },
+  "ui.detailed_verification_by_platform": {
+    "en": "Detailed Verification by Platform",
+    "zh-CN": "分平台验证详情",
+    "zh-TW": "分平台驗證详情",
+    "ko": "Detailed Verification by Platform",
+    "vi": "Detailed Verification by Platform"
+  },
+  "ui.platform_1": {
+    "en": "Platform",
+    "zh-CN": "平台",
+    "zh-TW": "平台",
+    "ko": "Platform",
+    "vi": "Platform"
+  },
+  "ui.brandproduct": {
+    "en": "Brand/Product",
+    "zh-CN": "品牌/产品",
+    "zh-TW": "品牌/产品",
+    "ko": "Brand/Product",
+    "vi": "Brand/Product"
+  },
+  "ui.brandproduct_name_mention": {
+    "en": "Brand/Product Name Mention",
+    "zh-CN": "品牌/产品名称提及",
+    "zh-TW": "品牌/产品名称提及",
+    "ko": "Brand/Product Name Mention",
+    "vi": "Brand/Product Name Mention"
+  },
+  "ui.brand_data_cleared": {
+    "en": "Brand data cleared",
+    "zh-CN": "品牌提及已清空",
+    "zh-TW": "品牌提及已清空",
+    "ko": "Brand data cleared",
+    "vi": "Brand data cleared"
+  },
+  "ui.check_column_first": {
+    "en": "Check ☑️ column first",
+    "zh-CN": "请先勾选 ☑️ 列",
+    "zh-TW": "请先勾选 ☑️ 列",
+    "ko": "Check ☑️ column first",
+    "vi": "Check ☑️ column first"
+  },
+  "ui.no_active_data_check": {
+    "en": "No active data. Check history below.",
+    "zh-CN": "当前无数据，查看下方历史记录。",
+    "zh-TW": "當前无数据，查看下方歷史紀錄。",
+    "ko": "No active data. Check history below.",
+    "vi": "No active data. Check history below."
+  },
+  "ui.official_link_1": {
+    "en": "Official Link",
+    "zh-CN": "官方链接",
+    "zh-TW": "官方連結",
+    "ko": "Official Link",
+    "vi": "Official Link"
+  },
+  "ui.link_data_cleared": {
+    "en": "Link data cleared",
+    "zh-CN": "链接提及已清空",
+    "zh-TW": "链接提及已清空",
+    "ko": "Link data cleared",
+    "vi": "Link data cleared"
+  },
+  "ui.restore_brand": {
+    "en": "Restore Brand",
+    "zh-CN": "恢复品牌提及",
+    "zh-TW": "恢复品牌提及",
+    "ko": "Restore Brand",
+    "vi": "Restore Brand"
+  },
+  "ui.restore_link": {
+    "en": "Restore Link",
+    "zh-CN": "恢复链接提及",
+    "zh-TW": "恢复链接提及",
+    "ko": "Restore Link",
+    "vi": "Restore Link"
+  },
+  "ui.all_items_cleared_to": {
+    "en": "All items cleared to history. Restore or run new verification.",
+    "zh-CN": "所有条目已清空到历史。可恢复或重新验证。",
+    "zh-TW": "所有条目已清空到历史。可恢复或重新驗證。",
+    "ko": "All items cleared to history. Restore or run new verification.",
+    "vi": "All items cleared to history. Restore or run new verification."
+  },
+  "ui.run_verification_in_智测": {
+    "en": "Run verification in 智测 first.",
+    "zh-CN": "请先在智测中验证短语。",
+    "zh-TW": "请先在智測中驗證短語。",
+    "ko": "Run verification in 智测 first.",
+    "vi": "Run verification in 智测 first."
+  },
+  "ui.upload_after_data_postlaunch": {
+    "en": "Upload After Data (post-launch)",
+    "zh-CN": "上传 After 数据（内容上线后）",
+    "zh-TW": "上傳 After 数据（內容上线后）",
+    "ko": "업로드 After Data (post-launch)",
+    "vi": "Tải lên After Data (post-launch)"
+  },
+  "ui.upload_verification_results_after": {
+    "en": "Upload verification results AFTER content is published to compare with Before baseline",
+    "zh-CN": "内容发布上线后，上传新的验证结果来对比 Before 基线",
+    "zh-TW": "內容發佈上线后，上傳新的驗證結果来对比 Before 基线",
+    "ko": "업로드 verification results AFTER content is published to compare with Before baseline",
+    "vi": "Tải lên verification results AFTER content is published to compare with Before baseline"
+  },
+  "ui.csv_columns_query_platform": {
+    "en": "CSV columns: Query, Platform, Brand After, Link After",
+    "zh-CN": "CSV 列: Query, Platform, Brand After, Link After",
+    "zh-TW": "CSV 列: Query, Platform, Brand After, Link After",
+    "ko": "CSV columns: Query, Platform, Brand After, Link After",
+    "vi": "CSV columns: Query, Platform, Brand After, Link After"
+  },
+  "ui.confirm_save_upload": {
+    "en": "Confirm & Save Upload",
+    "zh-CN": "确认上传",
+    "zh-TW": "確認上傳",
+    "ko": "확인 & Save Upload",
+    "vi": "Xác nhận & Save Upload"
+  },
+  "ui.custom_metrics_tracking": {
+    "en": "Custom Metrics Tracking",
+    "zh-CN": "指标追踪",
+    "zh-TW": "指标追踪",
+    "ko": "Custom Metrics Tracking",
+    "vi": "Custom Metrics Tracking"
+  },
+  "ui.select_preset_metrics_or": {
+    "en": "Select preset metrics or add custom ones",
+    "zh-CN": "选择预设指标或手动添加",
+    "zh-TW": "選擇预设指标或手动添加",
+    "ko": "Select preset metrics or add custom ones",
+    "vi": "Select preset metrics or add custom ones"
+  },
+  "ui.metric": {
+    "en": "Metric",
+    "zh-CN": "指标",
+    "zh-TW": "指标",
+    "ko": "Metric",
+    "vi": "Metric"
+  },
+  "ui.custom": {
+    "en": "✏️ Custom...",
+    "zh-CN": "✏️ 自定义...",
+    "zh-TW": "✏️ 自定义...",
+    "ko": "✏️ Custom...",
+    "vi": "✏️ Custom..."
+  },
+  "ui.custom_name": {
+    "en": "Custom Name",
+    "zh-CN": "自定义名称",
+    "zh-TW": "自定义名称",
+    "ko": "Custom Name",
+    "vi": "Custom Name"
+  },
+  "ui.date": {
+    "en": "Date",
+    "zh-CN": "日期",
+    "zh-TW": "日期",
+    "ko": "Date",
+    "vi": "Date"
+  },
+  "ui.submit_analytics_request_to": {
+    "en": "Submit Analytics Request to Admin",
+    "zh-CN": "提交需求到管理员",
+    "zh-TW": "提交需求到管理員",
+    "ko": "제출 Analytics Request to Admin",
+    "vi": "Gửi Analytics Request to Admin"
+  },
+  "ui.request_submitted_to_admin": {
+    "en": "Request submitted to admin!",
+    "zh-CN": "需求已提交到管理员！",
+    "zh-TW": "需求已提交到管理員！",
+    "ko": "Request submitted to admin!",
+    "vi": "Request submitted to admin!"
+  },
+  "ui.output_trends": {
+    "en": "📊 Output Trends",
+    "zh-CN": "📊 Output 趋势",
+    "zh-TW": "📊 Output 趋势",
+    "ko": "📊 Output Trends",
+    "vi": "📊 Output Trends"
+  },
+  "ui.rs_vs_cl": {
+    "en": "📈 RS vs CL",
+    "zh-CN": "📈 Reg Start vs Clean Launch",
+    "zh-TW": "📈 Reg Start vs Clean Launch",
+    "ko": "📈 RS vs CL",
+    "vi": "📈 RS vs CL"
+  },
+  "ui.input_production": {
+    "en": "📥 Input Production",
+    "zh-CN": "📥 Input 产出",
+    "zh-TW": "📥 Input 產出",
+    "ko": "📥 Input Production",
+    "vi": "📥 Input Production"
+  },
+  "ui.citation_summary": {
+    "en": "🔗 Citation Summary",
+    "zh-CN": "🔗 引用追踪总表",
+    "zh-TW": "🔗 引用追踪总表",
+    "ko": "🔗 Citation Summary",
+    "vi": "🔗 Citation Summary"
+  },
+  "ui.phrase_detail": {
+    "en": "🔬 Phrase Detail",
+    "zh-CN": "🔬 检索短语引用详情",
+    "zh-TW": "🔬 檢索短語引用详情",
+    "ko": "🔬 Phrase Detail",
+    "vi": "🔬 Phrase Detail"
+  },
+  "ui.gap_opportunities": {
+    "en": "💡 Gap & Opportunities",
+    "zh-CN": "💡 Gap & 机会点",
+    "zh-TW": "💡 Gap & 机会点",
+    "ko": "💡 Gap & Opportunities",
+    "vi": "💡 Gap & Opportunities"
+  },
+  "ui.query_forecaster": {
+    "en": "🔮 Query Forecaster",
+    "zh-CN": "🔮 智预",
+    "zh-TW": "🔮 智预",
+    "ko": "🔮 Query Forecaster",
+    "vi": "🔮 Query Forecaster"
+  },
+  "ui.weekly_trends": {
+    "en": "📅 Weekly Trends",
+    "zh-CN": "📅 Weekly 趋势",
+    "zh-TW": "📅 Weekly 趋势",
+    "ko": "📅 Weekly Trends",
+    "vi": "📅 Weekly Trends"
+  },
+  "ui.monthly_trends": {
+    "en": "📆 Monthly Trends",
+    "zh-CN": "📆 Monthly 趋势",
+    "zh-TW": "📆 Monthly 趋势",
+    "ko": "📆 Monthly Trends",
+    "vi": "📆 Monthly Trends"
+  },
+  "ui.ytd_comparison": {
+    "en": "📊 YTD Comparison",
+    "zh-CN": "📊 YTD 对比",
+    "zh-TW": "📊 YTD 对比",
+    "ko": "📊 YTD Comparison",
+    "vi": "📊 YTD Comparison"
+  },
+  "ui.reg_start_vs_clean": {
+    "en": "📈 Reg Start vs Clean Launch – 2025 Full Year",
+    "zh-CN": "📈 Reg Start vs Clean Launch – 2025全年数据",
+    "zh-TW": "📈 Reg Start vs Clean Launch – 2025全年数据",
+    "ko": "📈 Reg Start vs Clean Launch – 2025 Full Year",
+    "vi": "📈 Reg Start vs Clean Launch – 2025 Full Year"
+  },
+  "ui.monthly_breakdown_with_yoy": {
+    "en": "Monthly breakdown with YoY comparison and conversion rate trends",
+    "zh-CN": "月度拆解，含 YoY 对比及转化率趋势",
+    "zh-TW": "月度拆解，含 YoY 对比及转化率趋势",
+    "ko": "Monthly breakdown with YoY comparison and conversion rate trends",
+    "vi": "Monthly breakdown with YoY comparison and conversion rate trends"
+  },
+  "ui.select_channels": {
+    "en": "Select Channels",
+    "zh-CN": "选择渠道",
+    "zh-TW": "選擇渠道",
+    "ko": "Select Channels",
+    "vi": "Select Channels"
+  },
+  "ui.yoy_growth_trend": {
+    "en": "**YoY Growth Trend**",
+    "zh-CN": "**YoY 增长趋势**",
+    "zh-TW": "**YoY 增长趋势**",
+    "ko": "**YoY Growth Trend**",
+    "vi": "**YoY Growth Trend**"
+  },
+  "ui.full_year_data_not": {
+    "en": "⚠️ Full year data not found. Run data extraction first.",
+    "zh-CN": "⚠️ 未找到全年数据文件。请先执行数据提取。",
+    "zh-TW": "⚠️ 未找到全年数据文件。请先执行数据提取。",
+    "ko": "⚠️ Full year data not found. Run data extraction first.",
+    "vi": "⚠️ Full year data not found. Run data extraction first."
+  },
+  "ui.geo_效果追踪_内容产出": {
+    "en": "📥 GEO 效果追踪 & 内容产出",
+    "zh-CN": "📥 GEO 效果追踪 & 内容产出",
+    "zh-TW": "📥 GEO 效果追踪 & 內容產出",
+    "ko": "📥 GEO 效果追踪 & 内容产出",
+    "vi": "📥 GEO 效果追踪 & 内容产出"
+  },
+  "ui.auto_input_stats_from": {
+    "en": "**📊 Auto Input Stats (from pipeline output)**",
+    "zh-CN": "**📊 自动统计（来自流水线产出）**",
+    "zh-TW": "**📊 自动统计（来自流水线產出）**",
+    "ko": "**📊 Auto Input Stats (from pipeline output)**",
+    "vi": "**📊 Auto Input Stats (from pipeline output)**"
+  },
+  "ui.automatically_calculated_from_output": {
+    "en": "Automatically calculated from output files. No manual input needed.",
+    "zh-CN": "自动从 output 文件夹统计，无需手动填写。",
+    "zh-TW": "自动从 output 文件夹统计，无需手动填写。",
+    "ko": "Automatically calculated from output files. No manual input needed.",
+    "vi": "Automatically calculated from output files. No manual input needed."
+  },
+  "ui.total_phrases_1": {
+    "en": "Total Phrases",
+    "zh-CN": "总短语数",
+    "zh-TW": "总短語数",
+    "ko": "합계 Phrases",
+    "vi": "Tổng Phrases"
+  },
+  "ui.articles_created": {
+    "en": "Articles Created",
+    "zh-CN": "已生成文章",
+    "zh-TW": "已生成文章",
+    "ko": "Articles Created",
+    "vi": "Articles Created"
+  },
+  "ui.optimized": {
+    "en": "Optimized",
+    "zh-CN": "已优化",
+    "zh-TW": "已優化",
+    "ko": "Optimized",
+    "vi": "Optimized"
+  },
+  "ui.published": {
+    "en": "Published",
+    "zh-CN": "已发布",
+    "zh-TW": "已發佈",
+    "ko": "Published",
+    "vi": "Published"
+  },
+  "ui.verified": {
+    "en": "Verified",
+    "zh-CN": "已验证",
+    "zh-TW": "已驗證",
+    "ko": "Verified",
+    "vi": "Verified"
+  },
+  "ui.oneclick_weekly_report": {
+    "en": "**📋 One-Click Weekly Report**",
+    "zh-CN": "**📋 一键生成周报**",
+    "zh-TW": "**📋 一键生成周报**",
+    "ko": "**📋 One-Click Weekly Report**",
+    "vi": "**📋 One-Click Weekly Report**"
+  },
+  "ui.autoattribution_归因分析": {
+    "en": "🔍 Auto-Attribution (归因分析)",
+    "zh-CN": "🔍 自动归因分析",
+    "zh-TW": "🔍 自动归因分析",
+    "ko": "🔍 Auto-Attribution (归因分析)",
+    "vi": "🔍 Auto-Attribution (归因分析)"
+  },
+  "ui.next_week_actions": {
+    "en": "**Next Week Actions:**",
+    "zh-CN": "**下周行动项：**",
+    "zh-TW": "**下周行动项：**",
+    "ko": "**Next Week Actions:**",
+    "vi": "**Next Week Actions:**"
+  },
+  "ui.generate_weekly_report": {
+    "en": "📋 Generate Weekly Report",
+    "zh-CN": "📋 生成本周报告",
+    "zh-TW": "📋 生成本周报告",
+    "ko": "📋 Generate Weekly Report",
+    "vi": "📋 Generate Weekly Report"
+  },
+  "ui.generating_report": {
+    "en": "Generating report...",
+    "zh-CN": "正在生成周报...",
+    "zh-TW": "正在生成周报...",
+    "ko": "Generating report...",
+    "vi": "Generating report..."
+  },
+  "ui.download_report": {
+    "en": "📥 Download Report",
+    "zh-CN": "📥 下载报告",
+    "zh-TW": "📥 下載报告",
+    "ko": "📥 Download Report",
+    "vi": "📥 Download Report"
+  },
+  "ui.prompt_rerun_dashboard": {
+    "en": "**🔄 Prompt Re-run Dashboard**",
+    "zh-CN": "**🔄 发布后效果追踪（Pre vs Post）**",
+    "zh-TW": "**🔄 發佈后效果追踪（Pre vs Post）**",
+    "ko": "**🔄 Prompt Re-run Dashboard**",
+    "vi": "**🔄 Prompt Re-run Dashboard**"
+  },
+  "ui.compare_brand_mention_before": {
+    "en": "Compare brand mention before and after content publication.",
+    "zh-CN": "对比内容发布前后的品牌/产品名称提及率变化，衡量 GEO 效果。",
+    "zh-TW": "对比內容發佈前后的品牌/产品名称提及率变化，衡量 GEO 效果。",
+    "ko": "Compare brand mention before and after content publication.",
+    "vi": "Compare brand mention before and after content publication."
+  },
+  "ui.improved": {
+    "en": "✅ Improved",
+    "zh-CN": "✅ 提升",
+    "zh-TW": "✅ 提升",
+    "ko": "✅ Improved",
+    "vi": "✅ Improved"
+  },
+  "ui.maintained": {
+    "en": "➡️ Maintained",
+    "zh-CN": "➡️ 维持",
+    "zh-TW": "➡️ 维持",
+    "ko": "➡️ Maintained",
+    "vi": "➡️ Maintained"
+  },
+  "ui.declined": {
+    "en": "❌ Declined",
+    "zh-CN": "❌ 下降",
+    "zh-TW": "❌ 下降",
+    "ko": "❌ Declined",
+    "vi": "❌ Declined"
+  },
+  "ui.need_at_least_2": {
+    "en": "Need at least 2 verification runs for the same queries to compare.",
+    "zh-CN": "需要对同一批短语运行至少 2 次验证才能对比效果。",
+    "zh-TW": "需要对同一批短語執行至少 2 次驗證才能对比效果。",
+    "ko": "Need at least 2 verification runs for the same queries to compare.",
+    "vi": "Need at least 2 verification runs for the same queries to compare."
+  },
+  "ui.no_tracking_history_yet": {
+    "en": "No tracking history yet. Run zhice verification first.",
+    "zh-CN": "暂无追踪数据。请先运行智测验证。",
+    "zh-TW": "暂无追踪数据。请先執行智測驗證。",
+    "ko": "No tracking history yet. Run zhice verification first.",
+    "vi": "No tracking history yet. Run zhice verification first."
+  },
+  "ui.no_published_content_yet": {
+    "en": "No published content yet. Complete the pipeline (智布) to track GEO effect.",
+    "zh-CN": "暂无已发布内容。完成智布发布后可追踪 GEO 效果。",
+    "zh-TW": "暂无已發佈內容。完成智佈發佈后可追踪 GEO 效果。",
+    "ko": "No published content yet. Complete the pipeline (智布) to track GEO effect.",
+    "vi": "No published content yet. Complete the pipeline (智布) to track GEO effect."
+  },
+  "ui.attribution_module_not_available": {
+    "en": "Attribution module not available.",
+    "zh-CN": "归因模块不可用。",
+    "zh-TW": "归因模块不可用。",
+    "ko": "Attribution module not available.",
+    "vi": "Attribution module not available."
+  },
+  "ui.total_articles": {
+    "en": "Total Articles",
+    "zh-CN": "产出文章总数",
+    "zh-TW": "產出文章总数",
+    "ko": "합계 Articles",
+    "vi": "Tổng Articles"
+  },
+  "ui.topics_covered": {
+    "en": "Topics Covered",
+    "zh-CN": "覆盖 Topic 数",
+    "zh-TW": "覆盖 Topic 数",
+    "ko": "Topics Covered",
+    "vi": "Topics Covered"
+  },
+  "ui.total_words": {
+    "en": "Total Words",
+    "zh-CN": "总字数",
+    "zh-TW": "总字数",
+    "ko": "합계 Words",
+    "vi": "Tổng Words"
+  },
+  "ui.filter_by_topic": {
+    "en": "Filter by Topic",
+    "zh-CN": "按 Topic 筛选",
+    "zh-TW": "按 Topic 篩選",
+    "ko": "Filter by Topic",
+    "vi": "Filter by Topic"
+  },
+  "ui.time_dimension": {
+    "en": "Time Dimension",
+    "zh-CN": "时间维度",
+    "zh-TW": "时间维度",
+    "ko": "Time Dimension",
+    "vi": "Time Dimension"
+  },
+  "ui.select_date": {
+    "en": "Select date",
+    "zh-CN": "选择日期",
+    "zh-TW": "選擇日期",
+    "ko": "Select date",
+    "vi": "Select date"
+  },
+  "ui.select_week": {
+    "en": "Select week",
+    "zh-CN": "选择周",
+    "zh-TW": "選擇周",
+    "ko": "Select week",
+    "vi": "Select week"
+  },
+  "ui.article_topic_distribution": {
+    "en": "**Article Topic Distribution**",
+    "zh-CN": "**文章 Topic 分布**",
+    "zh-TW": "**文章 Topic 分布**",
+    "ko": "**Article Topic Distribution**",
+    "vi": "**Article Topic Distribution**"
+  },
+  "ui.no_article_production_data": {
+    "en": "No article production data. Please run Content Creation first.",
+    "zh-CN": "暂无文章产出数据。请先执行智造生成内容。",
+    "zh-TW": "暂无文章產出数据。请先执行智造生成內容。",
+    "ko": "No article production data. Please run Content Creation first.",
+    "vi": "No article production data. Please run Content Creation first."
+  },
+  "ui.ai_引用追踪": {
+    "en": "🔗 AI 引用追踪",
+    "zh-CN": "🔗 AI 引用追踪",
+    "zh-TW": "🔗 AI 引用追踪",
+    "ko": "🔗 AI 引用追踪",
+    "vi": "🔗 AI 引用追踪"
+  },
+  "ui.official_link_coverage_rate": {
+    "en": "Official Link Coverage Rate",
+    "zh-CN": "官网链接覆盖率",
+    "zh-TW": "官网链接覆蓋率",
+    "ko": "Official Link Coverage Rate",
+    "vi": "Official Link Coverage Rate"
+  },
+  "ui.ytd_search_phrase_coverage": {
+    "en": "YTD search phrase coverage: how many have official Amazon links cited by AI",
+    "zh-CN": "YTD 检索短语覆盖情况：有多少被 AI 引用时带有官方链接",
+    "zh-TW": "YTD 檢索短語覆盖情况：有多少被 AI 引用时带有官方連結",
+    "ko": "YTD search phrase coverage: how many have official Amazon links cited by AI",
+    "vi": "YTD search phrase coverage: how many have official Amazon links cited by AI"
+  },
+  "ui.ytd_total_phrases": {
+    "en": "YTD Total Phrases",
+    "zh-CN": "YTD 总短语数",
+    "zh-TW": "YTD 总短語数",
+    "ko": "YTD Total Phrases",
+    "vi": "YTD Total Phrases"
+  },
+  "ui.with_official_link": {
+    "en": "With Official Link",
+    "zh-CN": "有官方链接",
+    "zh-TW": "有官方連結",
+    "ko": "With Official Link",
+    "vi": "With Official Link"
+  },
+  "ui.no_link_gap": {
+    "en": "No Link (Gap)",
+    "zh-CN": "无链接 (Gap)",
+    "zh-TW": "无链接 (Gap)",
+    "ko": "No Link (Gap)",
+    "vi": "No Link (Gap)"
+  },
+  "ui.platforms_monitored": {
+    "en": "Platforms Monitored",
+    "zh-CN": "监测平台数",
+    "zh-TW": "监测平台数",
+    "ko": "Platforms Monitored",
+    "vi": "Platforms Monitored"
+  },
+  "ui.category_breakdown": {
+    "en": "Category Breakdown",
+    "zh-CN": "📊 按类别统计",
+    "zh-TW": "📊 按类别统计",
+    "ko": "Category Breakdown",
+    "vi": "Category Breakdown"
+  },
+  "ui.phrases_2": {
+    "en": "Phrases",
+    "zh-CN": "短语数",
+    "zh-TW": "短語数",
+    "ko": "Phrases",
+    "vi": "Phrases"
+  },
+  "ui.with_link": {
+    "en": "With Link",
+    "zh-CN": "有链接",
+    "zh-TW": "有链接",
+    "ko": "With Link",
+    "vi": "With Link"
+  },
+  "ui.brand": {
+    "en": "Brand",
+    "zh-CN": "品牌/产品名称提及",
+    "zh-TW": "品牌/产品名称提及",
+    "ko": "Brand",
+    "vi": "Brand"
+  },
+  "ui.total_2": {
+    "en": "% Total",
+    "zh-CN": "占比",
+    "zh-TW": "占比",
+    "ko": "% Total",
+    "vi": "% Total"
+  },
+  "ui.no_category_column_in": {
+    "en": "No category column in data",
+    "zh-CN": "数据中无类别列",
+    "zh-TW": "数据中无类别列",
+    "ko": "No category column in data",
+    "vi": "No category column in data"
+  },
+  "ui.gap_verification_data_not": {
+    "en": "Gap verification data not available.",
+    "zh-CN": "Gap 验证数据不可用。",
+    "zh-TW": "Gap 驗證数据不可用。",
+    "ko": "Gap verification data not available.",
+    "vi": "Gap verification data not available."
+  },
+  "ui.category_ai_citation_ranking": {
+    "en": "Category AI Citation Ranking",
+    "zh-CN": "35 类别 AI 引用概率排名",
+    "zh-TW": "35 类别 AI 引用概率排名",
+    "ko": "Category AI Citation Ranking",
+    "vi": "Category AI Citation Ranking"
+  },
+  "ui.based_on_gap_verification": {
+    "en": "Based on gap verification data: which categories are most cited by AI",
+    "zh-CN": "基于 Gap 验证数据：哪些内容类别最容易被 AI 引用",
+    "zh-TW": "基于 Gap 驗證数据：哪些內容类别最容易被 AI 引用",
+    "ko": "Based on gap verification data: which categories are most cited by AI",
+    "vi": "Based on gap verification data: which categories are most cited by AI"
+  },
+  "ui.total_phrases_2": {
+    "en": "Total Phrases",
+    "zh-CN": "总检索短语数",
+    "zh-TW": "总檢索短語数",
+    "ko": "합계 Phrases",
+    "vi": "Tổng Phrases"
+  },
+  "ui.brand_keywords": {
+    "en": "Brand Keywords",
+    "zh-CN": "品牌词",
+    "zh-TW": "品牌词",
+    "ko": "Brand Keywords",
+    "vi": "Brand Keywords"
+  },
+  "ui.industry_keywords": {
+    "en": "Industry Keywords",
+    "zh-CN": "行业词",
+    "zh-TW": "行业词",
+    "ko": "Industry Keywords",
+    "vi": "Industry Keywords"
+  },
+  "ui.categories_mapped": {
+    "en": "Categories Mapped",
+    "zh-CN": "映射类别数",
+    "zh-TW": "映射类别数",
+    "ko": "Categories Mapped",
+    "vi": "Categories Mapped"
+  },
+  "ui.brand_keywords_category_citation": {
+    "en": "Brand Keywords – Category Citation Ranking",
+    "zh-CN": "品牌词 – 各类别 AI 引用率排名",
+    "zh-TW": "品牌词 – 各类别 AI 引用率排名",
+    "ko": "Brand Keywords – Category Citation Ranking",
+    "vi": "Brand Keywords – Category Citation Ranking"
+  },
+  "ui.brand_avg_link_rate": {
+    "en": "Brand: Avg Link Rate by Category",
+    "zh-CN": "品牌词：各类别平均官方链接率",
+    "zh-TW": "品牌词：各类别平均官方連結率",
+    "ko": "Brand: Avg Link Rate by Category",
+    "vi": "Brand: Avg Link Rate by Category"
+  },
+  "ui.industry_keywords_category_citation": {
+    "en": "Industry Keywords – Category Citation Ranking",
+    "zh-CN": "行业词 – 各类别 AI 引用率排名",
+    "zh-TW": "行业词 – 各类别 AI 引用率排名",
+    "ko": "Industry Keywords – Category Citation Ranking",
+    "vi": "Industry Keywords – Category Citation Ranking"
+  },
+  "ui.industry_avg_link_rate": {
+    "en": "Industry: Avg Link Rate by Category",
+    "zh-CN": "行业词：各类别平均官方链接率",
+    "zh-TW": "行业词：各类别平均官方連結率",
+    "ko": "Industry: Avg Link Rate by Category",
+    "vi": "Industry: Avg Link Rate by Category"
+  },
+  "ui.no_industry_keyword_data": {
+    "en": "No industry keyword data.",
+    "zh-CN": "暂无行业词数据。",
+    "zh-TW": "暂无行业词数据。",
+    "ko": "No industry keyword data.",
+    "vi": "No industry keyword data."
+  },
+  "ui.key_insights": {
+    "en": "Key Insights",
+    "zh-CN": "关键洞察",
+    "zh-TW": "关键洞察",
+    "ko": "Key Insights",
+    "vi": "Key Insights"
+  },
+  "ui.highest": {
+    "en": "Highest",
+    "zh-CN": "引用率最高",
+    "zh-TW": "引用率最高",
+    "ko": "Highest",
+    "vi": "Highest"
+  },
+  "ui.lowest": {
+    "en": "Lowest",
+    "zh-CN": "引用率最低",
+    "zh-TW": "引用率最低",
+    "ko": "Lowest",
+    "vi": "Lowest"
+  },
+  "ui.brand_vs_industry": {
+    "en": "Brand vs Industry",
+    "zh-CN": "品牌词 vs 行业词",
+    "zh-TW": "品牌词 vs 行业词",
+    "ko": "Brand vs Industry",
+    "vi": "Brand vs Industry"
+  },
+  "ui.brand_keywords_have_higher": {
+    "en": "Brand keywords have higher citation rates overall",
+    "zh-CN": "品牌词整体引用率更高，AI 对品牌类查询更倾向引用官方来源；行业词竞争更激烈需更强内容权威性",
+    "zh-TW": "品牌词整体引用率更高，AI 对品牌类查询更倾向引用官方來源；行业词竞争更激烈需更强內容权威性",
+    "ko": "Brand keywords have higher citation rates overall",
+    "vi": "Brand keywords have higher citation rates overall"
+  },
+  "ui.tip": {
+    "en": "Tip",
+    "zh-CN": "建议",
+    "zh-TW": "建议",
+    "ko": "Tip",
+    "vi": "Tip"
+  },
+  "ui.improve_content_structure_for": {
+    "en": "Improve content structure for low-citation categories",
+    "zh-CN": "对低引用率类别优化内容结构（FAQ/表格/分步骤）提升 AI 可读性",
+    "zh-TW": "对低引用率类别優化內容结构（FAQ/表格/分步骤）提升 AI 可读性",
+    "ko": "Improve content structure for low-citation categories",
+    "vi": "Improve content structure for low-citation categories"
+  },
+  "ui.gap_verification_data_not_1": {
+    "en": "Gap verification data not available.",
+    "zh-CN": "暂无 Gap 验证数据。请上传 gap_verification_cn.csv。",
+    "zh-TW": "暂无 Gap 驗證数据。请上傳 gap_verification_cn.csv。",
+    "ko": "Gap verification data not available.",
+    "vi": "Gap verification data not available."
+  },
+  "ui.detail_perphrase_link_status": {
+    "en": "📋 Detail: Per-Phrase Link Status",
+    "zh-CN": "📋 明细：逐条短语链接状态",
+    "zh-TW": "📋 明细：逐条短語链接狀態",
+    "ko": "📋 Detail: Per-Phrase Link Status",
+    "vi": "📋 Detail: Per-Phrase Link Status"
+  },
+  "ui.status_1": {
+    "en": "Status",
+    "zh-CN": "筛选",
+    "zh-TW": "篩選",
+    "ko": "상태",
+    "vi": "Trạng thái"
+  },
+  "ui.has_link": {
+    "en": "Has Link",
+    "zh-CN": "有链接",
+    "zh-TW": "有链接",
+    "ko": "Has Link",
+    "vi": "Has Link"
+  },
+  "ui.category_1": {
+    "en": "Category",
+    "zh-CN": "按类别",
+    "zh-TW": "按类别",
+    "ko": "Category",
+    "vi": "Category"
+  },
+  "ui.identify_optimization_opportunities_based": {
+    "en": "Identify optimization opportunities based on citation tracking and content coverage analysis",
+    "zh-CN": "基于引用追踪和内容覆盖分析，识别优化机会",
+    "zh-TW": "基于引用追踪和內容覆盖分析，识别優化机会",
+    "ko": "Identify optimization opportunities based on citation tracking and content coverage analysis",
+    "vi": "Identify optimization opportunities based on citation tracking and content coverage analysis"
+  },
+  "ui.ai_search_coverage": {
+    "en": "**🔍 AI Search Coverage**",
+    "zh-CN": "**🔍 AI 搜索覆盖洞察**",
+    "zh-TW": "**🔍 AI 搜尋覆盖洞察**",
+    "ko": "**🔍 AI Search Coverage**",
+    "vi": "**🔍 AI Search Coverage**"
+  },
+  "ui.ytd_phrases_tested": {
+    "en": "YTD Phrases Tested",
+    "zh-CN": "YTD 检索短语数",
+    "zh-TW": "YTD 檢索短語数",
+    "ko": "YTD Phrases Tested",
+    "vi": "YTD Phrases Tested"
+  },
+  "ui.link_coverage": {
+    "en": "Link Coverage",
+    "zh-CN": "官方链接覆盖率",
+    "zh-TW": "官方連結覆蓋率",
+    "ko": "Link Coverage",
+    "vi": "Link Coverage"
+  },
+  "ui.brandproduct_name_mention_智测": {
+    "en": "Brand/Product Name Mention (智测)",
+    "zh-CN": "品牌/产品名称提及率(智测)",
+    "zh-TW": "品牌/产品名称提及率(智測)",
+    "ko": "Brand/Product Name Mention (智测)",
+    "vi": "Brand/Product Name Mention (智测)"
+  },
+  "ui.no_link_gap_1": {
+    "en": "No Link (Gap)",
+    "zh-CN": "无链接 Gap",
+    "zh-TW": "无链接 Gap",
+    "ko": "No Link (Gap)",
+    "vi": "No Link (Gap)"
+  },
+  "ui.no_gap_verification_data": {
+    "en": "No gap verification data.",
+    "zh-CN": "暂无 Gap 验证数据。",
+    "zh-TW": "暂无 Gap 驗證数据。",
+    "ko": "No gap verification data.",
+    "vi": "No gap verification data."
+  },
+  "ui.content_type_performance": {
+    "en": "**📊 Content Type Performance**",
+    "zh-CN": "**📊 内容类型表现对比**",
+    "zh-TW": "**📊 內容類型表现对比**",
+    "ko": "**📊 Content Type Performance**",
+    "vi": "**📊 Content Type Performance**"
+  },
+  "ui.content_type": {
+    "en": "Content Type",
+    "zh-CN": "内容类型",
+    "zh-TW": "內容類型",
+    "ko": "Content Type",
+    "vi": "Content Type"
+  },
+  "ui.queries": {
+    "en": "Queries",
+    "zh-CN": "短语数",
+    "zh-TW": "短語数",
+    "ko": "Queries",
+    "vi": "Queries"
+  },
+  "ui.link_rate_2": {
+    "en": "Link Rate",
+    "zh-CN": "官方链接率",
+    "zh-TW": "官方連結率",
+    "ko": "Link Rate",
+    "vi": "Link Rate"
+  },
+  "ui.characteristics": {
+    "en": "Characteristics",
+    "zh-CN": "特征说明",
+    "zh-TW": "特征说明",
+    "ko": "Characteristics",
+    "vi": "Characteristics"
+  },
+  "ui.best_performing": {
+    "en": "Best performing",
+    "zh-CN": "表现最好",
+    "zh-TW": "表现最好",
+    "ko": "Best performing",
+    "vi": "Best performing"
+  },
+  "ui.link_rate_3": {
+    "en": "link rate",
+    "zh-CN": "链接率",
+    "zh-TW": "链接率",
+    "ko": "link rate",
+    "vi": "link rate"
+  },
+  "ui.needs_improvement": {
+    "en": "Needs improvement",
+    "zh-CN": "待改进",
+    "zh-TW": "待改进",
+    "ko": "Needs improvement",
+    "vi": "Needs improvement"
+  },
+  "ui.key_insight": {
+    "en": "Key insight",
+    "zh-CN": "关键洞察",
+    "zh-TW": "关键洞察",
+    "ko": "Key insight",
+    "vi": "Key insight"
+  },
+  "ui.entrynavigation_content_has_highest": {
+    "en": "Entry/navigation content has highest AI citation; industry comparison content gets brand mentions but few links",
+    "zh-CN": "入口导航类内容 AI 引用链接率最高；行业对比类内容品牌被提及率高(91.8%)但链接率极低(3.1%)",
+    "zh-TW": "入口导航类內容 AI 引用链接率最高；行业对比类內容品牌被提及率高(91.8%)但链接率极低(3.1%)",
+    "ko": "Entry/navigation content has highest AI citation; industry comparison content gets brand mentions but few links",
+    "vi": "Entry/navigation content has highest AI citation; industry comparison content gets brand mentions but few links"
+  },
+  "ui.no_content_type_analysis": {
+    "en": "No content type analysis data.",
+    "zh-CN": "暂无内容类型分析数据。",
+    "zh-TW": "暂无內容類型分析数据。",
+    "ko": "No content type analysis data.",
+    "vi": "No content type analysis data."
+  },
+  "ui.category_coverage_gap": {
+    "en": "**📊 Category Coverage Gap**",
+    "zh-CN": "**📊 35类别覆盖 Gap**",
+    "zh-TW": "**📊 35类别覆盖 Gap**",
+    "ko": "**📊 Category Coverage Gap**",
+    "vi": "**📊 Category Coverage Gap**"
+  },
+  "ui.covered_1": {
+    "en": "Covered",
+    "zh-CN": "已覆盖",
+    "zh-TW": "已覆盖",
+    "ko": "Covered",
+    "vi": "Covered"
+  },
+  "ui.uncovered": {
+    "en": "Uncovered",
+    "zh-CN": "未覆盖",
+    "zh-TW": "未覆盖",
+    "ko": "Uncovered",
+    "vi": "Uncovered"
+  },
+  "ui.coverage_rate": {
+    "en": "Coverage Rate",
+    "zh-CN": "覆盖率",
+    "zh-TW": "覆蓋率",
+    "ko": "Coverage Rate",
+    "vi": "Coverage Rate"
+  },
+  "ui.all_35_categories_have": {
+    "en": "✅ All 35 categories have search phrase coverage",
+    "zh-CN": "✅ 35 个类别均有检索短语覆盖",
+    "zh-TW": "✅ 35 个类别均有檢索短語覆盖",
+    "ko": "✅ All 35 categories have search phrase coverage",
+    "vi": "✅ All 35 categories have search phrase coverage"
+  },
+  "ui.no_data_for_category": {
+    "en": "No data for category gap analysis.",
+    "zh-CN": "暂无数据用于类别 Gap 分析。",
+    "zh-TW": "暂无数据用于类别 Gap 分析。",
+    "ko": "No data for category gap analysis.",
+    "vi": "No data for category gap analysis."
+  },
+  "ui.input_production_trends": {
+    "en": "**📈 Input Production Trends**",
+    "zh-CN": "**📈 Input 产出趋势**",
+    "zh-TW": "**📈 Input 產出趋势**",
+    "ko": "**📈 Input Production Trends**",
+    "vi": "**📈 Input Production Trends**"
+  },
+  "ui.no_input_summary_data": {
+    "en": "No input summary data.",
+    "zh-CN": "暂无 Input 汇总数据。",
+    "zh-TW": "暂无 Input 汇总数据。",
+    "ko": "No input summary data.",
+    "vi": "No input summary data."
+  },
+  "ui.optimization_recommendations": {
+    "en": "**🚀 Optimization Recommendations**",
+    "zh-CN": "**🚀 优化建议**",
+    "zh-TW": "**🚀 優化建议**",
+    "ko": "**🚀 Optimization Recommendations**",
+    "vi": "**🚀 Optimization Recommendations**"
+  },
+  "ui.attribution_analysis": {
+    "en": "**🎯 Attribution Analysis**",
+    "zh-CN": "**🎯 归因分析**",
+    "zh-TW": "**🎯 归因分析**",
+    "ko": "**🎯 Attribution Analysis**",
+    "vi": "**🎯 Attribution Analysis**"
+  },
+  "ui.query_demand_forecaster": {
+    "en": "🔮 Query Demand Forecaster",
+    "zh-CN": "🔮 智预 — 检索需求预测",
+    "zh-TW": "🔮 智预 — 檢索需求预测",
+    "ko": "🔮 Query Demand Forecaster",
+    "vi": "🔮 Query Demand Forecaster"
+  },
+  "ui.predict_future_search_demand": {
+    "en": "Predict future search demand 2-4 weeks ahead based on seller lifecycle and market signals",
+    "zh-CN": "基于卖家生命周期推演和市场变化信号，预测未来 2-4 周的检索需求",
+    "zh-TW": "基于卖家生命周期推演和市场变化信号，预测未来 2-4 周的檢索需求",
+    "ko": "Predict future search demand 2-4 weeks ahead based on seller lifecycle and market signals",
+    "vi": "Predict future search demand 2-4 weeks ahead based on seller lifecycle and market signals"
+  },
+  "ui.signaldriven": {
+    "en": "📡 Signal-Driven",
+    "zh-CN": "📡 信号驱动",
+    "zh-TW": "📡 信号驱动",
+    "ko": "📡 Signal-Driven",
+    "vi": "📡 Signal-Driven"
+  },
+  "ui.lifecycle_forecast": {
+    "en": "🔄 Lifecycle Forecast",
+    "zh-CN": "🔄 生命周期推演",
+    "zh-TW": "🔄 生命周期推演",
+    "ko": "🔄 Lifecycle Forecast",
+    "vi": "🔄 Lifecycle Forecast"
+  },
+  "ui.input_a_market_signal": {
+    "en": "Input a market signal to predict future queries",
+    "zh-CN": "输入市场信号，推演未来检索需求",
+    "zh-TW": "输入市场信号，推演未来檢索需求",
+    "ko": "Input a market signal to predict future queries",
+    "vi": "Input a market signal to predict future queries"
+  },
+  "ui.signal_type": {
+    "en": "Signal Type",
+    "zh-CN": "信号类型",
+    "zh-TW": "信号類型",
+    "ko": "Signal Type",
+    "vi": "Signal Type"
+  },
+  "ui.source_2": {
+    "en": "Source",
+    "zh-CN": "信号来源 (URL 或描述)",
+    "zh-TW": "信号來源 (URL 或描述)",
+    "ko": "소스",
+    "vi": "Nguồn"
+  },
+  "ui.signal_summary": {
+    "en": "Signal Summary",
+    "zh-CN": "信号摘要",
+    "zh-TW": "信号摘要",
+    "ko": "Signal Summary",
+    "vi": "Signal Summary"
+  },
+  "ui.target_market": {
+    "en": "Target Market",
+    "zh-CN": "目标市场",
+    "zh-TW": "目标市场",
+    "ko": "Target Market",
+    "vi": "Target Market"
+  },
+  "ui.predict_queries": {
+    "en": "🔮 Predict Queries",
+    "zh-CN": "🔮 推演衍生 Query",
+    "zh-TW": "🔮 推演衍生 Query",
+    "ko": "🔮 Predict Queries",
+    "vi": "🔮 Predict Queries"
+  },
+  "ui.forecasting": {
+    "en": "Forecasting...",
+    "zh-CN": "正在推演...",
+    "zh-TW": "正在推演...",
+    "ko": "Forecasting...",
+    "vi": "Forecasting..."
+  },
+  "ui.failed_to_parse_predictions": {
+    "en": "Failed to parse predictions",
+    "zh-CN": "解析预测结果失败",
+    "zh-TW": "解析预测結果失败",
+    "ko": "Failed to parse predictions",
+    "vi": "Failed to parse predictions"
+  },
+  "ui.please_enter_signal_summary": {
+    "en": "Please enter signal summary",
+    "zh-CN": "请输入信号摘要",
+    "zh-TW": "请输入信号摘要",
+    "ko": "Please enter signal summary",
+    "vi": "Please enter signal summary"
+  },
+  "ui.predicted_queries_editable": {
+    "en": "Predicted Queries (editable)",
+    "zh-CN": "预测结果（可编辑）",
+    "zh-TW": "预测結果（可編輯）",
+    "ko": "Predicted Queries (editable)",
+    "vi": "Predicted Queries (editable)"
+  },
+  "ui.send_to_智测_verify_1": {
+    "en": "🔍 Send to 智测 Verify",
+    "zh-CN": "🔍 发送到智测验证 Gap",
+    "zh-TW": "🔍 发送到智測驗證 Gap",
+    "ko": "🔍 Send to 智测 Verify",
+    "vi": "🔍 Send to 智测 Verify"
+  },
+  "ui.go_to_智测_tab": {
+    "en": "Go to 智测 tab to run verification",
+    "zh-CN": "请切换到智测 tab 执行验证",
+    "zh-TW": "请切换到智測 tab 执行驗證",
+    "ko": "Go to 智测 tab to run verification",
+    "vi": "Go to 智测 tab to run verification"
+  },
+  "ui.save_forecast": {
+    "en": "💾 Save Forecast",
+    "zh-CN": "💾 保存预测",
+    "zh-TW": "💾 儲存预测",
+    "ko": "💾 Save Forecast",
+    "vi": "💾 Save Forecast"
+  },
+  "ui.select_seller_lifecycle_stage": {
+    "en": "Select seller lifecycle stage to predict next queries",
+    "zh-CN": "选择卖家生命周期阶段，推演下一步检索需求",
+    "zh-TW": "選擇卖家生命周期阶段，推演下一步檢索需求",
+    "ko": "Select seller lifecycle stage to predict next queries",
+    "vi": "Select seller lifecycle stage to predict next queries"
+  },
+  "ui.ai_platform": {
+    "en": "AI Platform",
+    "zh-CN": "AI 平台",
+    "zh-TW": "AI 平台",
+    "ko": "AI Platform",
+    "vi": "AI Platform"
+  },
+  "ui.current_stage": {
+    "en": "Current Stage",
+    "zh-CN": "当前阶段",
+    "zh-TW": "當前阶段",
+    "ko": "Current Stage",
+    "vi": "Current Stage"
+  },
+  "ui.market": {
+    "en": "Market",
+    "zh-CN": "目标市场",
+    "zh-TW": "目标市场",
+    "ko": "Market",
+    "vi": "Market"
+  },
+  "ui.generate_predictions": {
+    "en": "🔮 Generate Predictions",
+    "zh-CN": "🔮 生成预测",
+    "zh-TW": "🔮 生成预测",
+    "ko": "🔮 Generate Predictions",
+    "vi": "🔮 Generate Predictions"
+  },
+  "ui.calling_bedrock": {
+    "en": "Calling Bedrock...",
+    "zh-CN": "正在调用 Bedrock...",
+    "zh-TW": "正在调用 Bedrock...",
+    "ko": "Calling Bedrock...",
+    "vi": "Calling Bedrock..."
+  },
+  "ui.ai_unavailable_showing_default": {
+    "en": "AI unavailable, showing default predictions",
+    "zh-CN": "AI 不可用，显示默认预测",
+    "zh-TW": "AI 不可用，显示默认预测",
+    "ko": "AI unavailable, showing default predictions",
+    "vi": "AI unavailable, showing default predictions"
+  },
+  "ui.export_to_智库": {
+    "en": "📤 Export to 智库",
+    "zh-CN": "📤 导出到智库",
+    "zh-TW": "📤 匯出到智庫",
+    "ko": "📤 Export to 智库",
+    "vi": "📤 Export to 智库"
+  },
+  "ui.unable_to_parse": {
+    "en": "Unable to parse",
+    "zh-CN": "无法解析",
+    "zh-TW": "无法解析",
+    "ko": "Unable to parse",
+    "vi": "Unable to parse"
+  },
+  "ui.failed_to_load": {
+    "en": "Failed to load",
+    "zh-CN": "加载失败",
+    "zh-TW": "加载失败",
+    "ko": "Failed to load",
+    "vi": "Failed to load"
+  },
+  "ui.no_forecast_results_yet": {
+    "en": "No forecast results yet",
+    "zh-CN": "暂无预测结果",
+    "zh-TW": "暂无预测結果",
+    "ko": "No forecast results yet",
+    "vi": "No forecast results yet"
+  },
+  "ui.decision_engine": {
+    "en": "Decision Engine",
+    "zh-CN": "智中枢 – Decision Engine",
+    "zh-TW": "智中枢 – Decision Engine",
+    "ko": "Decision Engine",
+    "vi": "Decision Engine"
+  },
+  "ui.analytics_data_7_decision": {
+    "en": "Analytics data + 7 decision rules → weekly action plan",
+    "zh-CN": "基于智析数据 + 7 条决策规则，生成周度行动计划",
+    "zh-TW": "基于智析数据 + 7 条决策規則，生成周度行动计划",
+    "ko": "분석 data + 7 decision rules → weekly action plan",
+    "vi": "Phân tích data + 7 decision rules → weekly action plan"
+  },
+  "ui.autoexecuted_actions": {
+    "en": "Auto-Executed Actions",
+    "zh-CN": "自动执行结果",
+    "zh-TW": "自动执行結果",
+    "ko": "Auto-Executed Actions",
+    "vi": "Auto-Executed Actions"
+  },
+  "ui.my_pipeline_progress": {
+    "en": "My Pipeline Progress",
+    "zh-CN": "我的流水线进度",
+    "zh-TW": "我的流水线进度",
+    "ko": "My Pipeline Progress",
+    "vi": "My Pipeline Progress"
+  },
+  "ui.steps_completed": {
+    "en": "steps completed",
+    "zh-CN": "步已完成",
+    "zh-TW": "步已完成",
+    "ko": "steps completed",
+    "vi": "steps completed"
+  },
+  "ui.automation_rules": {
+    "en": "Automation Rules",
+    "zh-CN": "自动化规则",
+    "zh-TW": "自动化規則",
+    "ko": "Automation Rules",
+    "vi": "Automation Rules"
+  },
+  "ui.set_rules_to_trigger": {
+    "en": "Set rules to trigger next steps automatically",
+    "zh-CN": "设置规则，满足条件时自动触发下一步",
+    "zh-TW": "设置規則，满足条件时自动触发下一步",
+    "ko": "Set rules to trigger next steps automatically",
+    "vi": "Set rules to trigger next steps automatically"
+  },
+  "ui.phrases_10_and_all": {
+    "en": "Phrases ≥ 10 and all selected",
+    "zh-CN": "短语数 ≥ 10 且全部已选中",
+    "zh-TW": "短語数 ≥ 10 且全部已選中",
+    "ko": "Phrases ≥ 10 and all selected",
+    "vi": "Phrases ≥ 10 and all selected"
+  },
+  "ui.autorun_智测": {
+    "en": "Auto-run 智测",
+    "zh-CN": "自动执行智测",
+    "zh-TW": "自动执行智測",
+    "ko": "Auto-run 智测",
+    "vi": "Auto-run 智测"
+  },
+  "ui.gap_rate_50": {
+    "en": "Gap rate > 50%",
+    "zh-CN": "Gap 率 > 50%",
+    "zh-TW": "Gap 率 > 50%",
+    "ko": "Gap rate > 50%",
+    "vi": "Gap rate > 50%"
+  },
+  "ui.autoproduce_content": {
+    "en": "Auto-produce content",
+    "zh-CN": "自动生产内容",
+    "zh-TW": "自动生产內容",
+    "ko": "Auto-produce content",
+    "vi": "Auto-produce content"
+  },
+  "ui.all_articles_generated": {
+    "en": "All articles generated",
+    "zh-CN": "文章全部生成完成",
+    "zh-TW": "文章全部生成完成",
+    "ko": "All articles generated",
+    "vi": "All articles generated"
+  },
+  "ui.autoscore_optimize": {
+    "en": "Auto-score & optimize",
+    "zh-CN": "自动评分优化",
+    "zh-TW": "自动評分優化",
+    "ko": "Auto-score & optimize",
+    "vi": "Auto-score & optimize"
+  },
+  "ui.all_scores_45": {
+    "en": "All scores ≥ 4.5",
+    "zh-CN": "全部评分 ≥ 4.5",
+    "zh-TW": "全部評分 ≥ 4.5",
+    "ko": "All scores ≥ 4.5",
+    "vi": "All scores ≥ 4.5"
+  },
+  "ui.autoformat_export": {
+    "en": "Auto-format & export",
+    "zh-CN": "自动格式化导出",
+    "zh-TW": "自动格式化匯出",
+    "ko": "Auto-format & export",
+    "vi": "Auto-format & export"
+  },
+  "ui.export_done": {
+    "en": "Export done",
+    "zh-CN": "导出完成",
+    "zh-TW": "匯出完成",
+    "ko": "Export done",
+    "vi": "Export done"
+  },
+  "ui.autosubmit_publish_request": {
+    "en": "Auto-submit publish request",
+    "zh-CN": "自动提交发布申请",
+    "zh-TW": "自动提交發佈申请",
+    "ko": "Auto-submit publish request",
+    "vi": "Auto-submit publish request"
+  },
+  "ui.rules_saved": {
+    "en": "✅ Rules saved!",
+    "zh-CN": "✅ 规则已保存！",
+    "zh-TW": "✅ 規則已儲存！",
+    "ko": "✅ Rules saved!",
+    "vi": "✅ Rules saved!"
+  },
+  "ui.run_rules_now": {
+    "en": "Run Rules Now",
+    "zh-CN": "立即执行规则检查",
+    "zh-TW": "立即执行規則检查",
+    "ko": "Run Rules Now",
+    "vi": "Run Rules Now"
+  },
+  "ui.last_executions": {
+    "en": "Last executions:",
+    "zh-CN": "最近执行记录:",
+    "zh-TW": "最近执行记录:",
+    "ko": "Last executions:",
+    "vi": "Last executions:"
+  },
+  "ui.no_execution_history_yet": {
+    "en": "No execution history yet.",
+    "zh-CN": "暂无执行记录",
+    "zh-TW": "暂无执行记录",
+    "ko": "No execution history yet.",
+    "vi": "No execution history yet."
+  },
+  "ui.add_custom_rule": {
+    "en": "Add Custom Rule",
+    "zh-CN": "添加自定义规则",
+    "zh-TW": "添加自定义規則",
+    "ko": "Add Custom Rule",
+    "vi": "Add Custom Rule"
+  },
+  "ui.rule_name": {
+    "en": "Rule Name",
+    "zh-CN": "规则名称",
+    "zh-TW": "規則名称",
+    "ko": "Rule Name",
+    "vi": "Rule Name"
+  },
+  "ui.trigger_condition": {
+    "en": "Trigger Condition",
+    "zh-CN": "触发条件",
+    "zh-TW": "触发条件",
+    "ko": "Trigger Condition",
+    "vi": "Trigger Condition"
+  },
+  "ui.action": {
+    "en": "Action",
+    "zh-CN": "执行动作",
+    "zh-TW": "执行动作",
+    "ko": "Action",
+    "vi": "Action"
+  },
+  "ui.add_rule": {
+    "en": "Add Rule",
+    "zh-CN": "添加规则",
+    "zh-TW": "添加規則",
+    "ko": "Add Rule",
+    "vi": "Add Rule"
+  },
+  "ui.please_fill_all_fields": {
+    "en": "Please fill all fields",
+    "zh-CN": "请填写所有字段",
+    "zh-TW": "请填写所有字段",
+    "ko": "Please fill all fields",
+    "vi": "Please fill all fields"
+  },
+  "ui.7_decision_rules": {
+    "en": "📜 7 Decision Rules",
+    "zh-CN": "📜 7 条决策规则",
+    "zh-TW": "📜 7 条决策規則",
+    "ko": "📜 7 Decision Rules",
+    "vi": "📜 7 Decision Rules"
+  },
+  "ui.channel_wow_30_for": {
+    "en": "Channel WoW > +30% for 2 consecutive weeks",
+    "zh-CN": "渠道 WoW > +30% 连续2周",
+    "zh-TW": "渠道 WoW > +30% 连续2周",
+    "ko": "Channel WoW > +30% for 2 consecutive weeks",
+    "vi": "Channel WoW > +30% for 2 consecutive weeks"
+  },
+  "ui.increase_content_output_for": {
+    "en": "Increase content output for that channel",
+    "zh-CN": "增加该渠道内容产出",
+    "zh-TW": "增加该渠道內容產出",
+    "ko": "Increase content output for that channel",
+    "vi": "Increase content output for that channel"
+  },
+  "ui.channel_wow_20": {
+    "en": "Channel WoW < -20%",
+    "zh-CN": "渠道 WoW < -20%",
+    "zh-TW": "渠道 WoW < -20%",
+    "ko": "Channel WoW < -20%",
+    "vi": "Channel WoW < -20%"
+  },
+  "ui.pause_new_content_investigate": {
+    "en": "Pause new content, investigate cause",
+    "zh-CN": "暂停新内容，排查原因",
+    "zh-TW": "暂停新內容，排查原因",
+    "ko": "Pause new content, investigate cause",
+    "vi": "Pause new content, investigate cause"
+  },
+  "ui.geo_weekly_50_and": {
+    "en": "GEO weekly < 50 and YoY > +50%",
+    "zh-CN": "GEO 周 < 50 且 YoY > +50%",
+    "zh-TW": "GEO 周 < 50 且 YoY > +50%",
+    "ko": "GEO weekly < 50 and YoY > +50%",
+    "vi": "GEO weekly < 50 and YoY > +50%"
+  },
+  "ui.expand_keyword_coverage": {
+    "en": "Expand keyword coverage",
+    "zh-CN": "扩大关键词覆盖",
+    "zh-TW": "扩大關鍵詞覆盖",
+    "ko": "확장 keyword coverage",
+    "vi": "Mở rộng keyword coverage"
+  },
+  "ui.site_yoy_100": {
+    "en": "Site YoY > +100%",
+    "zh-CN": "站点 YoY > +100%",
+    "zh-TW": "站点 YoY > +100%",
+    "ko": "Site YoY > +100%",
+    "vi": "Site YoY > +100%"
+  },
+  "ui.prioritize_content_expansion_for": {
+    "en": "Prioritize content expansion for that site",
+    "zh-CN": "优先扩展该站点内容",
+    "zh-TW": "优先扩展该站点內容",
+    "ko": "Prioritize content expansion for that site",
+    "vi": "Prioritize content expansion for that site"
+  },
+  "ui.market_has_traffic_but": {
+    "en": "Market has traffic but no new content for 2 weeks",
+    "zh-CN": "市场有流量但2周无新内容",
+    "zh-TW": "市场有流量但2周无新內容",
+    "ko": "Market has traffic but no new content for 2 weeks",
+    "vi": "Market has traffic but no new content for 2 weeks"
+  },
+  "ui.restart_full_pipeline": {
+    "en": "Restart full pipeline",
+    "zh-CN": "重启全流程",
+    "zh-TW": "重启全流程",
+    "ko": "Restart full pipeline",
+    "vi": "Restart full pipeline"
+  },
+  "ui.our_yoy_benchmark_yoy": {
+    "en": "Our YoY < benchmark YoY",
+    "zh-CN": "我方 YoY < 大盘 YoY",
+    "zh-TW": "我方 YoY < 大盘 YoY",
+    "ko": "Our YoY < benchmark YoY",
+    "vi": "Our YoY < benchmark YoY"
+  },
+  "ui.strategy_review": {
+    "en": "Strategy review",
+    "zh-CN": "策略复盘",
+    "zh-TW": "策略复盘",
+    "ko": "Strategy review",
+    "vi": "Strategy review"
+  },
+  "ui.content_published_23_weeks": {
+    "en": "Content published 2-3 weeks with no improvement",
+    "zh-CN": "内容发布2-3周无提升",
+    "zh-TW": "內容發佈2-3周无提升",
+    "ko": "Content published 2-3 weeks with no improvement",
+    "vi": "Content published 2-3 weeks with no improvement"
+  },
+  "ui.check_content_qualityrewrite": {
+    "en": "Check content quality/rewrite",
+    "zh-CN": "检查内容质量/重写",
+    "zh-TW": "检查內容质量/重写",
+    "ko": "Check content quality/rewrite",
+    "vi": "Check content quality/rewrite"
+  },
+  "ui.full_pipeline_quick_commands": {
+    "en": "🚀 Full Pipeline Quick Commands",
+    "zh-CN": "🚀 全流程快捷指令",
+    "zh-TW": "🚀 全流程快捷指令",
+    "ko": "🚀 Full Pipeline Quick Commands",
+    "vi": "🚀 Full Pipeline Quick Commands"
+  },
+  "ui.batch_comparison": {
+    "en": "📊 Batch Comparison",
+    "zh-CN": "📊 批次对比",
+    "zh-TW": "📊 批次对比",
+    "ko": "📊 Batch Comparison",
+    "vi": "📊 Batch Comparison"
+  },
+  "ui.compare_output_performance_across": {
+    "en": "Compare output performance across different batches",
+    "zh-CN": "对比不同批次的产出效果",
+    "zh-TW": "对比不同批次的產出效果",
+    "ko": "Compare output performance across different batches",
+    "vi": "Compare output performance across different batches"
+  },
+  "ui.query_phrases": {
+    "en": "Query Phrases",
+    "zh-CN": "智库短语数",
+    "zh-TW": "智庫短語数",
+    "ko": "Query Phrases",
+    "vi": "Query Phrases"
+  },
+  "ui.articles_1": {
+    "en": "Articles",
+    "zh-CN": "智造文章数",
+    "zh-TW": "智造文章数",
+    "ko": "Articles",
+    "vi": "Articles"
+  },
+  "ui.avg_score_1": {
+    "en": "Avg Score",
+    "zh-CN": "平均评分",
+    "zh-TW": "平均評分",
+    "ko": "Avg Score",
+    "vi": "Avg Score"
+  },
+  "ui.publish_tracking": {
+    "en": "📌 Publish Tracking",
+    "zh-CN": "📌 发布追踪",
+    "zh-TW": "📌 發佈追踪",
+    "ko": "📌 Publish Tracking",
+    "vi": "📌 Publish Tracking"
+  },
+  "ui.track_published_content_citations": {
+    "en": "Track published content citations and performance",
+    "zh-CN": "追踪已发布内容的引用和效果",
+    "zh-TW": "追踪已發佈內容的引用和效果",
+    "ko": "Track published content citations and performance",
+    "vi": "Track published content citations and performance"
+  },
+  "ui.tracking_data_is_empty": {
+    "en": "Tracking data is empty",
+    "zh-CN": "追踪数据为空",
+    "zh-TW": "追踪数据为空",
+    "ko": "Tracking data is empty",
+    "vi": "Tracking data is empty"
+  },
+  "ui.no_publish_tracking_data": {
+    "en": "No publish tracking data yet. System will auto-record after publishing.",
+    "zh-CN": "暂无发布追踪数据。发布后系统将自动记录。",
+    "zh-TW": "暂无發佈追踪数据。發佈后系统将自动记录。",
+    "ko": "No publish tracking data yet. System will auto-record after publishing.",
+    "vi": "No publish tracking data yet. System will auto-record after publishing."
+  },
+  "ui.manually_add_publish_record": {
+    "en": "Manually Add Publish Record",
+    "zh-CN": "手动添加发布记录",
+    "zh-TW": "手动添加發佈记录",
+    "ko": "Manually Add Publish Record",
+    "vi": "Manually Add Publish Record"
+  },
+  "ui.publish_url": {
+    "en": "Publish URL",
+    "zh-CN": "发布 URL",
+    "zh-TW": "發佈 URL",
+    "ko": "Publish URL",
+    "vi": "Publish URL"
+  },
+  "ui.publish_date": {
+    "en": "Publish Date",
+    "zh-CN": "发布日期",
+    "zh-TW": "發佈日期",
+    "ko": "Publish Date",
+    "vi": "Publish Date"
+  },
+  "ui.add_record": {
+    "en": "Add Record",
+    "zh-CN": "添加记录",
+    "zh-TW": "添加记录",
+    "ko": "Add Record",
+    "vi": "Add Record"
+  },
+  "ui.request_submission": {
+    "en": "Request Submission",
+    "zh-CN": "需求提交",
+    "zh-TW": "需求提交",
+    "ko": "Request Submission",
+    "vi": "Request Submission"
+  },
+  "ui.test_opportunity_content_publish": {
+    "en": "Test → Opportunity → Content → Publish → Effect",
+    "zh-CN": "智测发现 → 机会点 → 内容产出 → 效果对比 → 总结",
+    "zh-TW": "智測发现 → 机会点 → 內容產出 → 效果对比 → 总结",
+    "ko": "Test → Opportunity → Content → Publish → Effect",
+    "vi": "Test → Opportunity → Content → Publish → Effect"
+  },
+  "ui.please_enter_your_login": {
+    "en": "Please enter your login in the sidebar first.",
+    "zh-CN": "请先在左侧栏输入您的 Login。",
+    "zh-TW": "请先在左侧栏输入您的 Login。",
+    "ko": "Please enter your login in the sidebar first.",
+    "vi": "Please enter your login in the sidebar first."
+  },
+  "ui.all_users": {
+    "en": "All Users",
+    "zh-CN": "所有用户",
+    "zh-TW": "所有用户",
+    "ko": "All Users",
+    "vi": "All Users"
+  },
+  "ui.tests": {
+    "en": "Tests",
+    "zh-CN": "测试",
+    "zh-TW": "测试",
+    "ko": "Tests",
+    "vi": "Tests"
+  },
+  "ui.queries_1": {
+    "en": "Queries",
+    "zh-CN": "短语",
+    "zh-TW": "短語",
+    "ko": "Queries",
+    "vi": "Queries"
+  },
+  "ui.opportunities": {
+    "en": "Opportunities",
+    "zh-CN": "机会点",
+    "zh-TW": "机会点",
+    "ko": "Opportunities",
+    "vi": "Opportunities"
+  },
+  "ui.for_full_stepbystep_flow": {
+    "en": "For full step-by-step flow (test → analyze → produce → publish), use the dedicated console:",
+    "zh-CN": "完整的五步操作流程（测试→分析→产出→发布），请使用独立操作台：",
+    "zh-TW": "完整的五步操作流程（测试→分析→產出→發佈），请使用独立操作台：",
+    "ko": "For full step-by-step flow (test → analyze → produce → publish), use the dedicated console:",
+    "vi": "For full step-by-step flow (test → analyze → produce → publish), use the dedicated console:"
+  },
+  "ui.recent_tests": {
+    "en": "Recent Tests",
+    "zh-CN": "最近测试",
+    "zh-TW": "最近测试",
+    "ko": "Recent Tests",
+    "vi": "Recent Tests"
+  },
+  "ui.opportunities_1": {
+    "en": "Opportunities",
+    "zh-CN": "机会点状态",
+    "zh-TW": "机会点狀態",
+    "ko": "Opportunities",
+    "vi": "Opportunities"
+  },
+  "ui.action_history": {
+    "en": "Action History",
+    "zh-CN": "执行历史",
+    "zh-TW": "执行历史",
+    "ko": "Action History",
+    "vi": "Action History"
+  },
+  "ui.operations_dashboard": {
+    "en": "Operations Dashboard",
+    "zh-CN": "运营管理看板",
+    "zh-TW": "營運管理看板",
+    "ko": "Operations Dashboard",
+    "vi": "Operations Dashboard"
+  },
+  "ui.team_activity_log_pipeline": {
+    "en": "Team activity log, pipeline status, who did what",
+    "zh-CN": "团队操作日志、流水线状态、谁执行了什么",
+    "zh-TW": "团队操作日志、流水线狀態、谁执行了什么",
+    "ko": "Team activity log, pipeline status, who did what",
+    "vi": "Team activity log, pipeline status, who did what"
+  },
+  "ui.activity_log": {
+    "en": "📋 Activity Log",
+    "zh-CN": "📋 操作日志",
+    "zh-TW": "📋 操作日志",
+    "ko": "📋 Activity Log",
+    "vi": "📋 Activity Log"
+  },
+  "ui.approvals": {
+    "en": "✅ Approvals",
+    "zh-CN": "✅ 需求审批",
+    "zh-TW": "✅ 需求审批",
+    "ko": "✅ Approvals",
+    "vi": "✅ Approvals"
+  },
+  "ui.pipeline_status": {
+    "en": "📊 Pipeline Status",
+    "zh-CN": "📊 流水线状态",
+    "zh-TW": "📊 流水线狀態",
+    "ko": "📊 Pipeline Status",
+    "vi": "📊 Pipeline Status"
+  },
+  "ui.users": {
+    "en": "👥 Users",
+    "zh-CN": "👥 用户管理",
+    "zh-TW": "👥 用户管理",
+    "ko": "👥 Users",
+    "vi": "👥 Users"
+  },
+  "ui.links": {
+    "en": "🔗 Links",
+    "zh-CN": "🔗 入口链接",
+    "zh-TW": "🔗 入口链接",
+    "ko": "🔗 Links",
+    "vi": "🔗 Links"
+  },
+  "ui.recent_operations": {
+    "en": "Recent Operations",
+    "zh-CN": "最近操作",
+    "zh-TW": "最近操作",
+    "ko": "Recent Operations",
+    "vi": "Recent Operations"
+  },
+  "ui.who_did_what_audit": {
+    "en": "Who did what — audit trail from all interfaces",
+    "zh-CN": "谁执行了什么 — 所有界面的操作记录",
+    "zh-TW": "谁执行了什么 — 所有界面的操作记录",
+    "ko": "Who did what — audit trail from all interfaces",
+    "vi": "Who did what — audit trail from all interfaces"
+  },
+  "ui.no_activity_logged_yet": {
+    "en": "No activity logged yet.",
+    "zh-CN": "暂无操作记录。",
+    "zh-TW": "暂无操作记录。",
+    "ko": "No activity logged yet.",
+    "vi": "No activity logged yet."
+  },
+  "ui.no_audit_log_found": {
+    "en": "No audit log found.",
+    "zh-CN": "未找到审计日志。",
+    "zh-TW": "未找到审计日志。",
+    "ko": "No audit log found.",
+    "vi": "No audit log found."
+  },
+  "ui.request_approvals": {
+    "en": "Request Approvals",
+    "zh-CN": "需求审批",
+    "zh-TW": "需求审批",
+    "ko": "Request Approvals",
+    "vi": "Request Approvals"
+  },
+  "ui.review_and_approve_content": {
+    "en": "Review and approve content requests from team members (8503)",
+    "zh-CN": "审核并批复团队成员 (8503) 提交的内容发布请求",
+    "zh-TW": "审核并批复团队成员 (8503) 提交的內容發佈请求",
+    "ko": "Review and approve content requests from team members (8503)",
+    "vi": "Review and approve content requests from team members (8503)"
+  },
+  "ui.no_pending_requests": {
+    "en": "No pending requests.",
+    "zh-CN": "暂无待审批请求。",
+    "zh-TW": "暂无待審批请求。",
+    "ko": "No pending requests.",
+    "vi": "No pending requests."
+  },
+  "ui.pending_1": {
+    "en": "Pending",
+    "zh-CN": "待审批",
+    "zh-TW": "待審批",
+    "ko": "대기 중",
+    "vi": "Đang chờ"
+  },
+  "ui.approved_2": {
+    "en": "Approved",
+    "zh-CN": "已批复",
+    "zh-TW": "已批复",
+    "ko": "승인d",
+    "vi": "Phê duyệtd"
+  },
+  "ui.pending_requests": {
+    "en": "Pending Requests:",
+    "zh-CN": "待审批请求：",
+    "zh-TW": "待審批请求：",
+    "ko": "대기 중 Requests:",
+    "vi": "Đang chờ Requests:"
+  },
+  "ui.queries_2": {
+    "en": "Queries:",
+    "zh-CN": "对应短语：",
+    "zh-TW": "对应短語：",
+    "ko": "Queries:",
+    "vi": "Queries:"
+  },
+  "ui.approve_publish": {
+    "en": "Approve & Publish",
+    "zh-CN": "批复并发布",
+    "zh-TW": "批复并發佈",
+    "ko": "승인 & Publish",
+    "vi": "Phê duyệt & Publish"
+  },
+  "ui.running_publish_pipeline": {
+    "en": "Running publish pipeline...",
+    "zh-CN": "执行智布+智传中...",
+    "zh-TW": "执行智佈+智傳中...",
+    "ko": "Running publish pipeline...",
+    "vi": "Running publish pipeline..."
+  },
+  "ui.approved_awaiting_publish": {
+    "en": "Approved. Awaiting publish.",
+    "zh-CN": "已批复，等待发布。",
+    "zh-TW": "已批复，等待發佈。",
+    "ko": "승인d. Awaiting publish.",
+    "vi": "Phê duyệtd. Awaiting publish."
+  },
+  "ui.reject_1": {
+    "en": "Reject",
+    "zh-CN": "驳回",
+    "zh-TW": "驳回",
+    "ko": "거부",
+    "vi": "Từ chối"
+  },
+  "ui.rejected": {
+    "en": "Rejected.",
+    "zh-CN": "已驳回。",
+    "zh-TW": "已驳回。",
+    "ko": "거부ed.",
+    "vi": "Từ chốied."
+  },
+  "ui.published_1": {
+    "en": "Published:",
+    "zh-CN": "已发布：",
+    "zh-TW": "已發佈：",
+    "ko": "Published:",
+    "vi": "Published:"
+  },
+  "ui.articles_2": {
+    "en": "Articles",
+    "zh-CN": "篇数",
+    "zh-TW": "篇数",
+    "ko": "Articles",
+    "vi": "Articles"
+  },
+  "ui.published_2": {
+    "en": "Published",
+    "zh-CN": "发布时间",
+    "zh-TW": "發佈时间",
+    "ko": "Published",
+    "vi": "Published"
+  },
+  "ui.pipeline_status_per_batch": {
+    "en": "Pipeline Status per Batch",
+    "zh-CN": "各批次流水线状态",
+    "zh-TW": "各批次流水线狀態",
+    "ko": "Pipeline Status per Batch",
+    "vi": "Pipeline Status per Batch"
+  },
+  "ui.user_management": {
+    "en": "User Management",
+    "zh-CN": "用户管理",
+    "zh-TW": "用户管理",
+    "ko": "User Management",
+    "vi": "User Management"
+  },
+  "ui.only_admin_can_manage": {
+    "en": "Only admin can manage users.",
+    "zh-CN": "仅管理员可管理用户。",
+    "zh-TW": "仅管理員可管理用户。",
+    "ko": "Only admin can manage users.",
+    "vi": "Only admin can manage users."
+  },
+  "ui.pending_applications": {
+    "en": "Pending Applications",
+    "zh-CN": "待审批申请",
+    "zh-TW": "待審批申请",
+    "ko": "대기 중 Applications",
+    "vi": "Đang chờ Applications"
+  },
+  "ui.current_users": {
+    "en": "Current Users",
+    "zh-CN": "当前用户",
+    "zh-TW": "當前用户",
+    "ko": "Current Users",
+    "vi": "Current Users"
+  },
+  "ui.add_user": {
+    "en": "Add User",
+    "zh-CN": "手动添加",
+    "zh-TW": "手动添加",
+    "ko": "Add User",
+    "vi": "Add User"
+  },
+  "ui.add_1": {
+    "en": "Add",
+    "zh-CN": "添加",
+    "zh-TW": "添加",
+    "ko": "Add",
+    "vi": "Add"
+  },
+  "ui.service_links": {
+    "en": "Service Links",
+    "zh-CN": "服务入口",
+    "zh-TW": "服务入口",
+    "ko": "Service Links",
+    "vi": "Service Links"
+  },
+  "ui.management_dashboard_this_page": {
+    "en": "Management dashboard (this page)",
+    "zh-CN": "管理看板（当前页面）",
+    "zh-TW": "管理看板（當前页面）",
+    "ko": "Management dashboard (this page)",
+    "vi": "Management dashboard (this page)"
+  },
+  "ui.poc_content_review_approval": {
+    "en": "POC content review & approval",
+    "zh-CN": "POC 内容审核审批",
+    "zh-TW": "POC 內容审核审批",
+    "ko": "POC content review & approval",
+    "vi": "POC content review & approval"
+  },
+  "ui.team_operations_testopportunitycontenteffect": {
+    "en": "Team operations: test→opportunity→content→effect",
+    "zh-CN": "团队操作台：测试→机会→内容→效果 闭环",
+    "zh-TW": "团队操作台：测试→机会→內容→效果 闭环",
+    "ko": "Team operations: test→opportunity→content→effect",
+    "vi": "Team operations: test→opportunity→content→effect"
+  },
+  "ui.citation_analysis": {
+    "en": "Citation Analysis",
+    "zh-CN": "引用分析",
+    "zh-TW": "引用分析",
+    "ko": "Citation Analysis",
+    "vi": "Citation Analysis"
+  },
+  "ui.analyze_ai_search_engine": {
+    "en": "Analyze AI search engine citation of our content",
+    "zh-CN": "分析 AI 搜索引擎对内容的引用情况",
+    "zh-TW": "分析 AI 搜尋引擎对內容的引用情况",
+    "ko": "Analyze AI search engine citation of our content",
+    "vi": "Analyze AI search engine citation of our content"
+  },
+  "ui.ai_engine_citation_monitoring": {
+    "en": "AI Engine Citation Monitoring",
+    "zh-CN": "AI 引擎引用监控",
+    "zh-TW": "AI 引擎引用监控",
+    "ko": "AI Engine Citation Monitoring",
+    "vi": "AI Engine Citation Monitoring"
+  },
+  "ui.total_citations": {
+    "en": "Total Citations",
+    "zh-CN": "总引用次数",
+    "zh-TW": "总引用次数",
+    "ko": "합계 Citations",
+    "vi": "Tổng Citations"
+  },
+  "ui.citation_platforms": {
+    "en": "Citation Platforms",
+    "zh-CN": "引用平台数",
+    "zh-TW": "引用平台数",
+    "ko": "Citation Platforms",
+    "vi": "Citation Platforms"
+  },
+  "ui.cited_content_count": {
+    "en": "Cited Content Count",
+    "zh-CN": "被引用内容数",
+    "zh-TW": "被引用內容数",
+    "ko": "Cited Content Count",
+    "vi": "Cited Content Count"
+  },
+  "ui.no_citation_data": {
+    "en": "No citation data",
+    "zh-CN": "暂无引用数据",
+    "zh-TW": "暂无引用数据",
+    "ko": "No citation data",
+    "vi": "No citation data"
+  },
+  "ui.no_citation_tracking_data": {
+    "en": "No citation tracking data yet. Run journey research to auto-generate citation analysis.",
+    "zh-CN": "暂无引用追踪数据。运行智测后将自动生成引用分析。",
+    "zh-TW": "暂无引用追踪数据。執行智測后将自动生成引用分析。",
+    "ko": "No citation tracking data yet. Run journey research to auto-generate citation analysis.",
+    "vi": "No citation tracking data yet. Run journey research to auto-generate citation analysis."
+  },
+  "ui.system_configuration": {
+    "en": "System Configuration",
+    "zh-CN": "系统配置",
+    "zh-TW": "系统配置",
+    "ko": "System Configuration",
+    "vi": "System Configuration"
+  },
+  "ui.api_configuration": {
+    "en": "🔑 API Configuration",
+    "zh-CN": "🔑 API 配置",
+    "zh-TW": "🔑 API 配置",
+    "ko": "🔑 API Configuration",
+    "vi": "🔑 API Configuration"
+  },
+  "ui.path_configuration": {
+    "en": "📂 Path Configuration",
+    "zh-CN": "📂 路径配置",
+    "zh-TW": "📂 路径配置",
+    "ko": "📂 Path Configuration",
+    "vi": "📂 Path Configuration"
+  },
+  "ui.batch_management": {
+    "en": "📊 Batch Management",
+    "zh-CN": "📊 批次管理",
+    "zh-TW": "📊 批次管理",
+    "ko": "📊 Batch Management",
+    "vi": "📊 Batch Management"
+  },
+  "ui.create_new_batch": {
+    "en": "Create New Batch",
+    "zh-CN": "创建新批次",
+    "zh-TW": "创建新批次",
+    "ko": "Create New Batch",
+    "vi": "Create New Batch"
+  },
+  "ui.create_batch": {
+    "en": "Create Batch",
+    "zh-CN": "创建批次",
+    "zh-TW": "创建批次",
+    "ko": "Create Batch",
+    "vi": "Create Batch"
+  },
+  "ui.steering_rules_editor": {
+    "en": "📜 Steering Rules Editor",
+    "zh-CN": "📜 Steering 规则编辑器",
+    "zh-TW": "📜 Steering 規則編輯器",
+    "ko": "📜 Steering Rules Editor",
+    "vi": "📜 Steering Rules Editor"
+  },
+  "ui.edit_ai_behavior_rules": {
+    "en": "Edit AI behavior rules. Changes affect both Kiro and Streamlit content generation.",
+    "zh-CN": "编辑 AI 行为规则。修改后 Kiro 和 Streamlit 生成内容都会遵守新规则。",
+    "zh-TW": "編輯 AI 行为規則。修改后 Kiro 和 Streamlit 生成內容都会遵守新規則。",
+    "ko": "편집 AI behavior rules. Changes affect both Kiro and Streamlit content generation.",
+    "vi": "Chỉnh sửa AI behavior rules. Changes affect both Kiro and Streamlit content generation."
+  },
+  "ui.select_file": {
+    "en": "Select file",
+    "zh-CN": "选择文件",
+    "zh-TW": "選擇文件",
+    "ko": "Select file",
+    "vi": "Select file"
+  },
+  "ui.save_1": {
+    "en": "💾 Save",
+    "zh-CN": "💾 保存",
+    "zh-TW": "💾 儲存",
+    "ko": "💾 Save",
+    "vi": "💾 Save"
+  },
+  "ui.saved_1": {
+    "en": "✅ Saved!",
+    "zh-CN": "✅ 已保存！",
+    "zh-TW": "✅ 已儲存！",
+    "ko": "✅ Saved!",
+    "vi": "✅ Saved!"
+  },
+  "ui.steering_directory_not_found": {
+    "en": "Steering directory not found",
+    "zh-CN": "未找到 steering 目录",
+    "zh-TW": "未找到 steering 目录",
+    "ko": "Steering directory not found",
+    "vi": "Steering directory not found"
+  },
+  "ui.category_system_35_categories": {
+    "en": "🏷️ Category System (35 Categories)",
+    "zh-CN": "🏷️ 类别体系 (35类)",
+    "zh-TW": "🏷️ 类别体系 (35类)",
+    "ko": "🏷️ Category System (35 Categories)",
+    "vi": "🏷️ Category System (35 Categories)"
+  },
+  "ui.user_management_1": {
+    "en": "👥 User Management",
+    "zh-CN": "👥 用户管理",
+    "zh-TW": "👥 用户管理",
+    "ko": "👥 User Management",
+    "vi": "👥 User Management"
+  },
+  "ui.set_user_language_preferences": {
+    "en": "Set user language preferences. Users marked as 'English' will auto-see English UI on login.",
+    "zh-CN": "设置用户默认语言。标记为英文的用户登录后自动显示英文界面。",
+    "zh-TW": "设置用户默认語言。标记为英文的用户登录后自动显示英文界面。",
+    "ko": "Set user language preferences. Users marked as 'English' will auto-see English UI on login.",
+    "vi": "Set user language preferences. Users marked as 'English' will auto-see English UI on login."
+  },
+  "ui.save_user_settings": {
+    "en": "💾 Save User Settings",
+    "zh-CN": "💾 保存用户设置",
+    "zh-TW": "💾 儲存用户设置",
+    "ko": "💾 Save User Settings",
+    "vi": "💾 Save User Settings"
+  },
+  "ui.user_language_settings_saved": {
+    "en": "User language settings saved!",
+    "zh-CN": "用户语言设置已保存！",
+    "zh-TW": "用户語言设置已儲存！",
+    "ko": "User language settings saved!",
+    "vi": "User language settings saved!"
+  }
+}
