@@ -1574,6 +1574,32 @@ Requirements:
         st.markdown("### " + ("Current Phrase Library" if is_en else "当前短语库"))
 
         df_zhiku_user = load_zhiku_live(selected_batch)
+
+        # Merge Ahrefs queries into the display (with source="ahrefs", dedup)
+        if AHREFS_AVAILABLE:
+            try:
+                from ahrefs_client import is_user_authorized, get_api_key, get_ahrefs_queries_df
+                if is_user_authorized(current_user) and get_api_key():
+                    df_ahrefs = get_ahrefs_queries_df()
+                    if not df_ahrefs.empty:
+                        # Only merge queries not already in zhiku
+                        existing_queries = set()
+                        if not df_zhiku_user.empty and "ai_query" in df_zhiku_user.columns:
+                            existing_queries = set(df_zhiku_user["ai_query"].astype(str).str.lower().str.strip())
+                        new_ahrefs = df_ahrefs[~df_ahrefs["ai_query"].str.lower().str.strip().isin(existing_queries)].copy()
+                        if not new_ahrefs.empty:
+                            # Build compatible rows
+                            new_ahrefs["is_selected"] = "FALSE"
+                            new_ahrefs["priority_score"] = 4
+                            # Keep only columns that align with zhiku
+                            merge_cols = ["ai_query", "source", "is_selected", "priority_score"]
+                            for col in merge_cols:
+                                if col not in new_ahrefs.columns:
+                                    new_ahrefs[col] = ""
+                            df_zhiku_user = pd.concat([df_zhiku_user, new_ahrefs[merge_cols]], ignore_index=True)
+            except Exception:
+                pass
+
         total_phrases_u = len(df_zhiku_user) if not df_zhiku_user.empty else 0
         selected_count_u = 0
         if not df_zhiku_user.empty and "is_selected" in df_zhiku_user.columns:

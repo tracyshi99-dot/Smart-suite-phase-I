@@ -47,66 +47,29 @@ def _check_access(current_user: str) -> bool:
 # ============================================================
 
 def render_ahrefs_zhiku(current_user: str, is_en: bool = False):
-    """Render Ahrefs section for 智库 page — monitored queries from Brand Radar."""
+    """Render Ahrefs summary for 智库 page — compact info since data is merged into main table."""
     if not _check_access(current_user):
         return
 
-    st.divider()
-    expander_title = "🔗 Ahrefs Monitored Queries" if is_en else "🔗 Ahrefs 监控短语"
-    with st.expander(expander_title, expanded=False):
-        st.caption(
-            "Queries monitored by Ahrefs Brand Radar across AI platforms. Import high-value queries to 智库."
-            if is_en else
-            "Ahrefs Brand Radar 在各 AI 平台监控的检索短语。可将高价值短语导入智库。"
-        )
+    try:
+        df_queries = get_ahrefs_queries_df()
+    except Exception:
+        return
 
-        # Fetch query-level data
-        try:
-            df_queries = get_ahrefs_queries_df()
-        except Exception as e:
-            st.error(f"Failed to fetch Ahrefs query data: {str(e)[:200]}")
-            return
+    if df_queries.empty:
+        return
 
-        if df_queries.empty:
-            st.info(
-                "No query data available from Ahrefs ai-responses endpoint."
-                if is_en else
-                "暂无 Ahrefs ai-responses 端点的查询数据。"
-            )
-            return
-
-        # Summary metrics
-        total_queries = len(df_queries)
-        platforms = df_queries["data_source"].nunique()
-        st.markdown(
-            f"**Ahrefs monitoring {total_queries} queries across {platforms} platforms**"
-            if is_en else
-            f"**Ahrefs 正在监控 {total_queries} 条短语，覆盖 {platforms} 个平台**"
-        )
-
-        # Display table
-        display_df = df_queries[["ai_query", "data_source", "has_official_link", "has_brand_mention"]].copy()
-        display_df.columns = (
-            ["Query", "Platform", "Official Link", "Brand Mention"]
-            if is_en else
-            ["检索短语", "平台", "官方链接", "品牌提及"]
-        )
-        # Format booleans
-        link_col = "Official Link" if is_en else "官方链接"
-        mention_col = "Brand Mention" if is_en else "品牌提及"
-        display_df[link_col] = display_df[link_col].map({True: "✅", False: "❌"})
-        display_df[mention_col] = display_df[mention_col].map({True: "✅", False: "❌"})
-
-        st.dataframe(display_df, use_container_width=True, hide_index=True, height=300)
-
-        # Import button
-        st.markdown("---")
-        if st.button(
-            "📥 Import to 智库" if is_en else "📥 导入到智库",
-            key="ahrefs_import_zhiku",
-            help="Merge Ahrefs queries into zhiku CSV (deduplicates)" if is_en else "将 Ahrefs 短语合并到智库 CSV（自动去重）"
-        ):
-            _import_to_zhiku(df_queries, is_en)
+    # Show compact summary (data is already merged into main table)
+    total_queries = len(df_queries)
+    platforms = df_queries["data_source"].nunique()
+    with_link = int(df_queries["has_official_link"].sum())
+    st.caption(
+        f"🔗 Ahrefs: {total_queries} queries from {platforms} AI platforms merged (source=ahrefs) | "
+        f"{with_link}/{total_queries} have official links"
+        if is_en else
+        f"🔗 Ahrefs: 已合并 {total_queries} 条短语（来自 {platforms} 个 AI 平台，来源=ahrefs）| "
+        f"{with_link}/{total_queries} 条含官方链接"
+    )
 
 
 def _import_to_zhiku(df_ahrefs: pd.DataFrame, is_en: bool = False):
