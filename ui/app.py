@@ -1575,28 +1575,29 @@ Requirements:
 
         df_zhiku_user = load_zhiku_live(selected_batch)
 
-        # Merge Ahrefs queries into the display (with source="ahrefs", dedup)
+        # Merge Ahrefs queries into the CSV (persist, with source="ahrefs", dedup)
         if AHREFS_AVAILABLE:
             try:
-                from ahrefs_client import is_user_authorized, get_api_key, get_ahrefs_queries_df
-                if is_user_authorized(current_user) and get_api_key():
-                    df_ahrefs = get_ahrefs_queries_df()
-                    if not df_ahrefs.empty:
-                        # Only merge queries not already in zhiku
+                from ahrefs_client import is_user_authorized as _iau2, get_api_key as _gak2, get_ahrefs_queries_df as _gaqdf2
+                if _iau2(current_user) and _gak2():
+                    _df_ahrefs2 = _gaqdf2()
+                    if not _df_ahrefs2.empty:
                         existing_queries = set()
                         if not df_zhiku_user.empty and "ai_query" in df_zhiku_user.columns:
                             existing_queries = set(df_zhiku_user["ai_query"].astype(str).str.lower().str.strip())
-                        new_ahrefs = df_ahrefs[~df_ahrefs["ai_query"].str.lower().str.strip().isin(existing_queries)].copy()
+                        new_ahrefs = _df_ahrefs2[~_df_ahrefs2["ai_query"].str.lower().str.strip().isin(existing_queries)].copy()
                         if not new_ahrefs.empty:
-                            # Build compatible rows
                             new_ahrefs["is_selected"] = "FALSE"
                             new_ahrefs["priority_score"] = 4
-                            # Keep only columns that align with zhiku
                             merge_cols = ["ai_query", "source", "is_selected", "priority_score"]
                             for col in merge_cols:
                                 if col not in new_ahrefs.columns:
                                     new_ahrefs[col] = ""
                             df_zhiku_user = pd.concat([df_zhiku_user, new_ahrefs[merge_cols]], ignore_index=True)
+                            # Persist to CSV so select/deselect operations work
+                            zhiku_file_path = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
+                            zhiku_file_path.parent.mkdir(parents=True, exist_ok=True)
+                            df_zhiku_user.to_csv(zhiku_file_path, index=False, encoding="utf-8-sig")
             except Exception:
                 pass
 
