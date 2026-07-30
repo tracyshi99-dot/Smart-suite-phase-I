@@ -75,12 +75,14 @@ Region Adapter 是 Smart Suite 的区域配置适配层，实现基于用户 `us
 
 1. WHEN a Zhice simulation is initiated, THE Zhice_Module SHALL read the ai_platforms list from the active Region_Config and execute queries against every platform in that list
 2. THE Region_Config for CN SHALL include both domestic and international platforms: deepseek, doubao, kimi, yuanbao, qianwen, chatgpt, gemini, perplexity, grok
-3. THE Region_Config for ROA SHALL include the platforms: chatgpt, gemini, perplexity, grok
-4. THE Region_Config for NA SHALL include the platforms: chatgpt, gemini, perplexity, grok
-5. THE Region_Config for EU SHALL include the platforms: chatgpt, gemini, perplexity, grok
-6. WHEN a user overrides the platform selection in the UI, THE Zhice_Module SHALL present all platforms from the full supported set (deepseek, doubao, kimi, yuanbao, qianwen, chatgpt, gemini, perplexity, grok) with the user's region platforms pre-selected, and use the user's final selection instead of the Region_Config default
-7. IF a user override results in fewer than 1 platform selected, THEN THE Zhice_Module SHALL prevent simulation execution and display an error message indicating that at least one platform must be selected
-8. IF the ai_platforms list in the active Region_Config is empty or contains a platform identifier not in the supported set, THEN THE Zhice_Module SHALL raise a validation error indicating the invalid platform entry and region code, and SHALL not proceed with the simulation
+3. THE Region_Config for ROA SHALL include ai_platforms with default_selected: ["chatgpt", "gemini"] and available: ["perplexity", "grok"]
+4. THE Region_Config for NA SHALL include ai_platforms with default_selected: ["chatgpt", "gemini"] and available: ["perplexity", "grok"]
+5. THE Region_Config for EU SHALL include ai_platforms with default_selected: ["chatgpt", "gemini"] and available: ["perplexity", "grok"]
+6. FOR ROA, NA, and EU users, THE Zhice_Module SHALL pre-select chatgpt and gemini as the default active platforms when the simulation UI loads; perplexity and grok SHALL appear as available but unchecked options that the user can additionally select
+7. FOR CN users, THE Zhice_Module SHALL pre-select all platforms (domestic + international) as default active when the simulation UI loads
+8. WHEN a user overrides the platform selection in the UI, THE Zhice_Module SHALL present all platforms from the full supported set (deepseek, doubao, kimi, yuanbao, qianwen, chatgpt, gemini, perplexity, grok) with the user's region default platforms pre-checked, and use the user's final selection instead of the Region_Config default
+9. IF a user override results in fewer than 1 platform selected, THEN THE Zhice_Module SHALL prevent simulation execution and display an error message indicating that at least one platform must be selected
+10. IF the ai_platforms list in the active Region_Config is empty or contains a platform identifier not in the supported set, THEN THE Zhice_Module SHALL raise a validation error indicating the invalid platform entry and region code, and SHALL not proceed with the simulation
 
 ### Requirement 4: Region-Specific Official Link Standards
 
