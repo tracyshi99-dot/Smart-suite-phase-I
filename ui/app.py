@@ -1096,14 +1096,22 @@ with st.sidebar:
 
     # Auto-set language based on user profile (on first login)
     _current_user_for_lang = st.session_state.get("app_user", "")
-    _default_lang_idx = 0  # 中文
-    if _current_user_for_lang and _user_lang_map.get(_current_user_for_lang) == "en":
-        _default_lang_idx = 1  # English
+    _default_lang_idx = 1  # English by default (before login and for non-CN users)
+    if _current_user_for_lang and _user_lang_map.get(_current_user_for_lang) != "en":
+        # CN users (no "en" in user_lang) get Chinese
+        _default_lang_idx = 0  # 中文
     # If user just logged in and hasn't manually changed lang, auto-set
     if "ui_lang_auto_set" not in st.session_state and _current_user_for_lang:
         if _user_lang_map.get(_current_user_for_lang) == "en":
             st.session_state["ui_lang"] = "English"
             st.session_state["ui_lang_auto_set"] = True
+        else:
+            # CN users auto-switch to Chinese
+            st.session_state["ui_lang"] = "中文"
+            st.session_state["ui_lang_auto_set"] = True
+    # Default to English if no user logged in yet
+    if not _current_user_for_lang and "ui_lang" not in st.session_state:
+        st.session_state["ui_lang"] = "English"
 
     ui_lang = st.selectbox("🌐", ["中文", "English"], key="ui_lang", label_visibility="collapsed")
     is_en = (ui_lang == "English")
@@ -1134,7 +1142,8 @@ with st.sidebar:
             if _prev_user != user_login.lower():
                 if _user_lang_map.get(user_login.lower()) == "en":
                     st.session_state["ui_lang"] = "English"
-                elif _user_lang_map.get(user_login.lower(), "zh") == "zh":
+                else:
+                    # CN users (not in user_lang or user_lang != "en") get Chinese
                     st.session_state["ui_lang"] = "中文"
                 st.session_state["ui_lang_auto_set"] = True
         else:
