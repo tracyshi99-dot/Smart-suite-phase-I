@@ -2,19 +2,28 @@
 
 ## Introduction
 
-Region Adapter 是 Smart Suite 的区域配置适配层，实现基于用户 `user_region`（TW / KR / VN / CN / NA / EU）自动加载差异化配置的能力。每个 region 拥有独立的配置文件，定义该区域的 AI 检索平台、官方链接标准、知识库文件、Ahrefs report_id、默认种子短语（seeds）和验证平台。用户登录后系统自动匹配其 admin 分配的 region 配置（支持手动切换），Admin 审批界面增加 region 筛选维度。
+Region Adapter 是 Smart Suite 的区域配置适配层，实现基于用户 `user_region`（ROA / CN / NA / EU）自动加载差异化配置的能力。每个 region 拥有独立的配置文件，定义该区域的 AI 检索平台、官方链接标准、知识库文件、Ahrefs report_id、默认种子短语（seeds）和验证平台。用户登录后系统自动匹配其 admin 分配的 region 配置（支持手动切换），Admin 审批界面增加 region 筛选维度。
+
+**Region 体系说明：**
+- **CN**：中国大陆用户，使用国内+国际 AI 平台，中文界面
+- **ROA** (Rest of Asia)：原 TW / KR / VN 用户统一归入，英文界面，WW AI 平台。ROA 内部保留 sub_region 字段（TW/KR/VN）供后续细分，用户可自行选择 sub_region
+- **NA**：北美用户（如 quadaisy），英文界面，WW AI 平台
+- **EU**：欧洲用户（如 mbudhira），英文界面，WW AI 平台
+
+所有非 CN 用户（ROA/NA/EU）看到的界面逻辑一致：英文、ChatGPT/Gemini/Perplexity/Grok 平台、对应 region 的官方链接和种子短语。
 
 ## Glossary
 
 - **Region_Adapter**: 区域配置适配模块，负责加载、解析和提供区域差异化配置
 - **Region_Config**: 单个区域的 JSON 配置文件，包含该区域所有差异化参数
-- **User_Region**: 用户所属区域标识，存储在 users.json 的 user_region 字段中，取值为 TW / KR / VN / CN / NA / EU
+- **User_Region**: 用户所属区域标识，存储在 users.json 的 user_region 字段中，取值为 ROA / CN / NA / EU
+- **Sub_Region**: ROA 用户的细分区域标识（TW / KR / VN），存储在 users.json 的 user_sub_region 字段中，用于 official_links 和 seeds 的进一步差异化
 - **Active_Region**: 用户当前生效的区域，默认为 admin 分配的 User_Region，但用户可手动切换到其他 region
 - **Smart_Suite**: 整体系统，包含 FastAPI 后端、Streamlit UI 和内容生产流水线
 - **Admin_Panel**: Streamlit UI 中的管理员审批界面
 - **Zhice_Module**: 智测模块，AI 搜索旅程模拟引擎
 - **Zhiku_Module**: 智库模块，检索短语生成引擎
-- **AI_Platform_List**: 某区域对应的 AI 检索平台集合（CN 同时使用国内平台 DeepSeek/Doubao/Kimi/Yuanbao/Qianwen 和国际平台 ChatGPT/Gemini/Perplexity/Grok；TW/KR/VN/NA/EU 统一使用 ChatGPT/Gemini/Perplexity/Grok）
+- **AI_Platform_List**: 某区域对应的 AI 检索平台集合（CN 同时使用国内平台 DeepSeek/Doubao/Kimi/Yuanbao/Qianwen 和国际平台 ChatGPT/Gemini/Perplexity/Grok；ROA/NA/EU 统一使用 ChatGPT/Gemini/Perplexity/Grok）
 - **Official_Links**: 各区域的亚马逊官方卖家门户链接列表（如 TW 为 sell.amazon.tw），用于内容检测中验证是否正确引用了对应国家官网链接
 - **Default_Seeds**: 各区域的默认种子检索短语列表
 - **Verification_Platforms**: 各区域用于智测验证的 AI 平台集合
@@ -31,10 +40,11 @@ Region Adapter 是 Smart Suite 的区域配置适配层，实现基于用户 `us
 2. WHEN a Region_Config file is loaded, THE Region_Adapter SHALL validate that it contains all required fields with correct types: ai_platforms (non-empty array of strings), official_links (non-empty array of strings), knowledge_base_paths (array of strings), ahrefs_report_id (string or null), default_seeds (array of at least 5 strings), and verification_platforms (non-empty array of strings)
 3. IF a Region_Config file is missing a required field or a field has an incorrect type, THEN THE Region_Adapter SHALL raise a validation error indicating the field name, the expected type, and the region code
 4. IF a Region_Config file does not exist for a given region code, THEN THE Region_Adapter SHALL fall back to a default configuration file at `config/regions/_default.json`
-5. THE Region_Adapter SHALL support the six defined region codes: TW, KR, VN, CN, NA, EU
-6. IF a Region_Config file contains malformed JSON that cannot be parsed, THEN THE Region_Adapter SHALL raise a parse error indicating the region code and refuse to load the configuration
-7. IF both the requested Region_Config file and the `_default.json` fallback file are unavailable, THEN THE Region_Adapter SHALL raise a fatal configuration error and prevent the system from operating with that region code
-8. IF a region code is requested that is not one of the six supported values (TW, KR, VN, CN, NA, EU), THEN THE Region_Adapter SHALL raise a validation error indicating the unsupported region code
+5. THE Region_Adapter SHALL support the four defined region codes: ROA, CN, NA, EU
+6. THE Region_Adapter SHALL support sub_region values within ROA: TW, KR, VN — stored in users.json as user_sub_region, used to load sub-region-specific overrides (official_links, default_seeds) from `config/regions/ROA_{sub_region}.json` if available
+7. IF a Region_Config file contains malformed JSON that cannot be parsed, THEN THE Region_Adapter SHALL raise a parse error indicating the region code and refuse to load the configuration
+8. IF both the requested Region_Config file and the `_default.json` fallback file are unavailable, THEN THE Region_Adapter SHALL raise a fatal configuration error and prevent the system from operating with that region code
+9. IF a region code is requested that is not one of the four supported values (ROA, CN, NA, EU), THEN THE Region_Adapter SHALL raise a validation error indicating the unsupported region code
 
 ### Requirement 2: Auto-Load Region Configuration on Login with Manual Override
 
@@ -47,11 +57,12 @@ Region Adapter 是 Smart Suite 的区域配置适配层，实现基于用户 `us
 3. IF a user has no user_region mapping in users.json, THEN THE Region_Adapter SHALL assign the default configuration from `_default.json` and log a warning including the username
 4. THE Region_Adapter SHALL complete configuration loading within 500ms of login
 5. WHILE a user session is active, THE Region_Adapter SHALL retain the loaded Region_Config in session state without re-reading from disk on each page navigation
-6. THE Smart_Suite SHALL display a region selector in the UI sidebar allowing the user to switch Active_Region to any of the six supported regions, with the currently active region visually indicated
+6. THE Smart_Suite SHALL display a region selector in the UI sidebar allowing the user to switch Active_Region to any of the four supported regions (ROA, CN, NA, EU), with the currently active region visually indicated
 7. WHEN a user selects a different region via the selector, THE Region_Adapter SHALL reload the corresponding Region_Config and update the session state within 500ms
 8. WHEN a user switches regions manually, THE Smart_Suite SHALL preserve the switch for the duration of the session but revert to the admin-assigned default on next login
 9. IF the Region_Adapter fails to load the requested Region_Config during a manual switch (due to missing or malformed file), THEN THE Smart_Suite SHALL display an error message and retain the previously active Region_Config
 10. THE Smart_Suite SHALL display the active region code as a label in the sidebar region selector so the user always knows which region is currently loaded
+11. FOR ROA users, THE Smart_Suite SHALL additionally display a sub_region selector (TW / KR / VN) allowing them to choose or change their sub_region, which persists in users.json
 
 ### Requirement 3: Region-Specific AI Platforms for Zhice
 
@@ -61,14 +72,12 @@ Region Adapter 是 Smart Suite 的区域配置适配层，实现基于用户 `us
 
 1. WHEN a Zhice simulation is initiated, THE Zhice_Module SHALL read the ai_platforms list from the active Region_Config and execute queries against every platform in that list
 2. THE Region_Config for CN SHALL include both domestic and international platforms: deepseek, doubao, kimi, yuanbao, qianwen, chatgpt, gemini, perplexity, grok
-3. THE Region_Config for TW SHALL include the platforms: chatgpt, gemini, perplexity, grok
-4. THE Region_Config for KR SHALL include the platforms: chatgpt, gemini, perplexity, grok
-5. THE Region_Config for VN SHALL include the platforms: chatgpt, gemini, perplexity, grok
-6. THE Region_Config for NA SHALL include the platforms: chatgpt, gemini, perplexity, grok
-7. THE Region_Config for EU SHALL include the platforms: chatgpt, gemini, perplexity, grok
-8. WHEN a user overrides the platform selection in the UI, THE Zhice_Module SHALL present all platforms from the full supported set (deepseek, doubao, kimi, yuanbao, qianwen, chatgpt, gemini, perplexity, grok) with the user's region platforms pre-selected, and use the user's final selection instead of the Region_Config default
-9. IF a user override results in fewer than 1 platform selected, THEN THE Zhice_Module SHALL prevent simulation execution and display an error message indicating that at least one platform must be selected
-10. IF the ai_platforms list in the active Region_Config is empty or contains a platform identifier not in the supported set, THEN THE Zhice_Module SHALL raise a validation error indicating the invalid platform entry and region code, and SHALL not proceed with the simulation
+3. THE Region_Config for ROA SHALL include the platforms: chatgpt, gemini, perplexity, grok
+4. THE Region_Config for NA SHALL include the platforms: chatgpt, gemini, perplexity, grok
+5. THE Region_Config for EU SHALL include the platforms: chatgpt, gemini, perplexity, grok
+6. WHEN a user overrides the platform selection in the UI, THE Zhice_Module SHALL present all platforms from the full supported set (deepseek, doubao, kimi, yuanbao, qianwen, chatgpt, gemini, perplexity, grok) with the user's region platforms pre-selected, and use the user's final selection instead of the Region_Config default
+7. IF a user override results in fewer than 1 platform selected, THEN THE Zhice_Module SHALL prevent simulation execution and display an error message indicating that at least one platform must be selected
+8. IF the ai_platforms list in the active Region_Config is empty or contains a platform identifier not in the supported set, THEN THE Zhice_Module SHALL raise a validation error indicating the invalid platform entry and region code, and SHALL not proceed with the simulation
 
 ### Requirement 4: Region-Specific Official Link Standards
 
@@ -77,12 +86,10 @@ Region Adapter 是 Smart Suite 的区域配置适配层，实现基于用户 `us
 #### Acceptance Criteria
 
 1. THE Region_Config SHALL include an official_links field containing a list of one or more authorized Amazon seller portal URLs for that region
-2. THE Region_Config for TW SHALL include official_links: ["sell.amazon.tw"]
-3. THE Region_Config for KR SHALL include official_links: ["sell.amazon.co.kr"]
-4. THE Region_Config for VN SHALL include official_links: ["sell.amazon.vn"]
-5. THE Region_Config for CN SHALL include official_links: ["sell.amazon.com.cn"]
-6. THE Region_Config for NA SHALL include official_links: ["sell.amazon.com"]
-7. THE Region_Config for EU SHALL include official_links: ["sell.amazon.co.uk", "sell.amazon.de", "sell.amazon.fr", "sell.amazon.it", "sell.amazon.es", "sell.amazon.nl", "sell.amazon.pl", "sell.amazon.se", "sell.amazon.com.be"]
+2. THE Region_Config for ROA SHALL include official_links covering all sub_regions: ["sell.amazon.tw", "sell.amazon.co.kr", "sell.amazon.vn"]; when a sub_region is set, THE Region_Adapter SHALL filter to only the sub_region's official link(s)
+3. THE Region_Config for CN SHALL include official_links: ["sell.amazon.com.cn"]
+4. THE Region_Config for NA SHALL include official_links: ["sell.amazon.com"]
+5. THE Region_Config for EU SHALL include official_links: ["sell.amazon.co.uk", "sell.amazon.de", "sell.amazon.fr", "sell.amazon.it", "sell.amazon.es", "sell.amazon.nl", "sell.amazon.pl", "sell.amazon.se", "sell.amazon.com.be"]
 8. WHEN content detection rules evaluate official link presence, THE Smart_Suite SHALL perform a domain-level match by checking whether the content contains at least one URL whose domain matches an entry in the official_links list of the active Region_Config, regardless of protocol prefix (http/https), "www" subdomain, or trailing path segments
 9. WHEN generated content contains an official link whose domain matches an entry in a different region's official_links list but not the active region, THE Smart_Suite SHALL flag it as a region mismatch warning displayed as an inline annotation in the Zhiyou compliance check results
 10. THE Smart_Suite SHALL use the official_links list to perform link extraction and verification during the Zhiyou compliance check step, reporting a pass when at least one active-region official link is found and a fail when no official link from any region is detected in the content
@@ -135,7 +142,7 @@ Region Adapter 是 Smart Suite 的区域配置适配层，实现基于用户 `us
 1. THE Region_Config SHALL include a verification_platforms list defining which platforms to use for automated verification runs
 2. WHEN a batch verification is triggered, THE Zhice_Module SHALL execute queries against all platforms in the verification_platforms list from the active Region_Config
 3. THE verification_platforms for CN SHALL include at least: deepseek, doubao, kimi, chatgpt, perplexity, grok
-4. THE verification_platforms for TW, KR, VN, NA, EU SHALL include at least: chatgpt, perplexity, grok
+4. THE verification_platforms for ROA, NA, EU SHALL include at least: chatgpt, perplexity, grok
 5. IF a platform in verification_platforms fails to respond within 30 seconds during a batch verification run, THEN THE Zhice_Module SHALL mark that platform's result as "timeout" in the report, continue with remaining platforms, and include the timeout count in the batch summary
 6. WHEN a user overrides verification platforms in the UI, THE Zhice_Module SHALL use the user's selection instead of the Region_Config default, following the same validation rules as Requirement 3 criterion 9
 
@@ -145,13 +152,14 @@ Region Adapter 是 Smart Suite 的区域配置适配层，实现基于用户 `us
 
 #### Acceptance Criteria
 
-1. WHEN an admin opens the approval panel, THE Admin_Panel SHALL display a region filter dropdown with options: All, TW, KR, VN, CN, NA, EU, with "All" selected by default
+1. WHEN an admin opens the approval panel, THE Admin_Panel SHALL display a region filter dropdown with options: All, ROA, CN, NA, EU, with "All" selected by default
 2. WHEN a region filter is selected, THE Admin_Panel SHALL display only pending approvals and user list entries whose user_region matches the selected value
 3. WHEN "All" is selected in the region filter, THE Admin_Panel SHALL display all users regardless of region
-4. THE Admin_Panel SHALL display the user's region as a visible column in the user list table
-5. WHEN a new user is pending approval, THE Admin_Panel SHALL allow the admin to assign a user_region value from a fixed set of six options: TW, KR, VN, CN, NA, EU
+4. THE Admin_Panel SHALL display the user's region (and sub_region for ROA users) as visible columns in the user list table
+5. WHEN a new user is pending approval, THE Admin_Panel SHALL allow the admin to assign a user_region value from a fixed set of four options: ROA, CN, NA, EU
 6. IF an admin attempts to approve a new user without selecting a region, THEN THE Admin_Panel SHALL keep the approve action disabled and display an inline indication that region assignment is required before approval can proceed
 7. IF a user has no user_region assigned, THEN THE Admin_Panel SHALL display the region column as "Unassigned" and include that user only when the "All" filter is selected
+8. FOR ROA users, THE Admin_Panel SHALL optionally allow the admin to assign a sub_region (TW / KR / VN) at approval time or leave it unset for the user to self-select later
 
 ### Requirement 10: Region Configuration API Endpoint
 
@@ -160,9 +168,9 @@ Region Adapter 是 Smart Suite 的区域配置适配层，实现基于用户 `us
 #### Acceptance Criteria
 
 1. THE Smart_Suite SHALL expose a GET endpoint at `/api/region/config` that returns the active Region_Config for the authenticated user as a JSON object containing all fields defined in Requirement 1 (ai_platforms, official_links, knowledge_base_paths, ahrefs_report_id, default_seeds, verification_platforms)
-2. THE Smart_Suite SHALL expose a GET endpoint at `/api/region/list` that returns a JSON array of all six supported region codes (TW, KR, VN, CN, NA, EU) with their display names
+2. THE Smart_Suite SHALL expose a GET endpoint at `/api/region/list` that returns a JSON array of all four supported region codes (ROA, CN, NA, EU) with their display names
 3. WHEN an unauthenticated request is received at any `/api/region/*` endpoint, THE Smart_Suite SHALL return HTTP 401 with a JSON body containing an error field indicating authentication is required
 4. WHEN an authenticated admin request to `/api/region/config` includes a query parameter `region_code`, THE Smart_Suite SHALL return the Region_Config for the specified region code
 5. IF a non-admin user sends a request with the `region_code` query parameter, THEN THE Smart_Suite SHALL return HTTP 403 with a JSON body containing an error field indicating insufficient permissions
-6. IF a request specifies a `region_code` value that does not match one of the six supported region codes (TW, KR, VN, CN, NA, EU), THEN THE Smart_Suite SHALL return HTTP 404 with a JSON body containing an error field indicating the region code is not found
+6. IF a request specifies a `region_code` value that does not match one of the four supported region codes (ROA, CN, NA, EU), THEN THE Smart_Suite SHALL return HTTP 404 with a JSON body containing an error field indicating the region code is not found
 7. THE Smart_Suite SHALL return API responses from `/api/region/*` endpoints within 1000ms under normal operating conditions
