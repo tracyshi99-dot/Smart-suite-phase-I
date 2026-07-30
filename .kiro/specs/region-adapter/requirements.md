@@ -26,6 +26,7 @@ Region Adapter 是 Smart Suite 的区域配置适配层，实现基于用户 `us
 - **AI_Platform_List**: 某区域对应的 AI 检索平台集合（CN 同时使用国内平台 DeepSeek/Doubao/Kimi/Yuanbao/Qianwen 和国际平台 ChatGPT/Gemini/Perplexity/Grok；ROA/NA/EU 统一使用 ChatGPT/Gemini/Perplexity/Grok）
 - **Official_Links**: 各区域的亚马逊官方卖家门户链接列表（如 TW 为 sell.amazon.tw），用于内容检测中验证是否正确引用了对应国家官网链接
 - **Default_Seeds**: 各区域的默认种子检索短语列表
+- **Content_Languages**: 各区域支持的内容输出语言列表（如 ROA 支持繁體中文/韩语/越南语/英语），决定检索短语和文章的生成语言
 - **Verification_Platforms**: 各区域用于智测验证的 AI 平台集合
 
 ## Requirements
@@ -37,7 +38,7 @@ Region Adapter 是 Smart Suite 的区域配置适配层，实现基于用户 `us
 #### Acceptance Criteria
 
 1. THE Region_Adapter SHALL store each region configuration as a separate JSON file at the path `config/regions/{region_code}.json`
-2. WHEN a Region_Config file is loaded, THE Region_Adapter SHALL validate that it contains all required fields with correct types: ai_platforms (non-empty array of strings), official_links (non-empty array of strings), knowledge_base_paths (array of strings), ahrefs_report_id (string or null), default_seeds (array of at least 5 strings), and verification_platforms (non-empty array of strings)
+2. WHEN a Region_Config file is loaded, THE Region_Adapter SHALL validate that it contains all required fields with correct types: ai_platforms (non-empty array of strings), official_links (non-empty array of strings), knowledge_base_paths (array of strings), ahrefs_report_id (string or null), default_seeds (array of at least 5 strings), verification_platforms (non-empty array of strings), and content_languages (non-empty array of objects each containing "code" and "name" string fields)
 3. IF a Region_Config file is missing a required field or a field has an incorrect type, THEN THE Region_Adapter SHALL raise a validation error indicating the field name, the expected type, and the region code
 4. IF a Region_Config file does not exist for a given region code, THEN THE Region_Adapter SHALL fall back to a default configuration file at `config/regions/_default.json`
 5. THE Region_Adapter SHALL support the four defined region codes: ROA, CN, NA, EU
@@ -167,10 +168,29 @@ Region Adapter 是 Smart Suite 的区域配置适配层，实现基于用户 `us
 
 #### Acceptance Criteria
 
-1. THE Smart_Suite SHALL expose a GET endpoint at `/api/region/config` that returns the active Region_Config for the authenticated user as a JSON object containing all fields defined in Requirement 1 (ai_platforms, official_links, knowledge_base_paths, ahrefs_report_id, default_seeds, verification_platforms)
+1. THE Smart_Suite SHALL expose a GET endpoint at `/api/region/config` that returns the active Region_Config for the authenticated user as a JSON object containing all fields defined in Requirement 1 (ai_platforms, official_links, knowledge_base_paths, ahrefs_report_id, default_seeds, verification_platforms, content_languages)
 2. THE Smart_Suite SHALL expose a GET endpoint at `/api/region/list` that returns a JSON array of all four supported region codes (ROA, CN, NA, EU) with their display names
 3. WHEN an unauthenticated request is received at any `/api/region/*` endpoint, THE Smart_Suite SHALL return HTTP 401 with a JSON body containing an error field indicating authentication is required
 4. WHEN an authenticated admin request to `/api/region/config` includes a query parameter `region_code`, THE Smart_Suite SHALL return the Region_Config for the specified region code
 5. IF a non-admin user sends a request with the `region_code` query parameter, THEN THE Smart_Suite SHALL return HTTP 403 with a JSON body containing an error field indicating insufficient permissions
 6. IF a request specifies a `region_code` value that does not match one of the four supported region codes (ROA, CN, NA, EU), THEN THE Smart_Suite SHALL return HTTP 404 with a JSON body containing an error field indicating the region code is not found
 7. THE Smart_Suite SHALL return API responses from `/api/region/*` endpoints within 1000ms under normal operating conditions
+
+### Requirement 11: Content Language Selection for Query and Article Generation
+
+**User Story:** As an ROA content operator, I want to select a content language (Vietnamese, Traditional Chinese, Korean, or English) for my queries and articles, so that the generated search phrases and content are produced in the language of my target audience.
+
+#### Acceptance Criteria
+
+1. THE Region_Config SHALL include a content_languages field containing a list of supported content output languages for that region, each with a language code and display name
+2. THE Region_Config for ROA SHALL include content_languages: [{"code": "zh-TW", "name": "繁體中文"}, {"code": "ko", "name": "한국어"}, {"code": "vi", "name": "Tiếng Việt"}, {"code": "en", "name": "English"}]
+3. THE Region_Config for CN SHALL include content_languages: [{"code": "zh-CN", "name": "简体中文"}, {"code": "en", "name": "English"}]
+4. THE Region_Config for NA SHALL include content_languages: [{"code": "en", "name": "English"}]
+5. THE Region_Config for EU SHALL include content_languages: [{"code": "en", "name": "English"}]
+6. WHEN the Zhiku UI loads, THE Zhiku_Module SHALL display a content language selector populated with the content_languages from the active Region_Config, with the first entry as the default selection
+7. FOR ROA users with a sub_region set, THE Zhiku_Module SHALL pre-select the language matching their sub_region: TW → zh-TW, KR → ko, VN → vi
+8. WHEN a user selects a content language and generates search phrases (seeds → AI queries), THE Zhiku_Module SHALL instruct the LLM to produce all generated queries in the selected language
+9. WHEN the Zhizao module generates article content from queries, THE Smart_Suite SHALL produce the full article (title, body, meta description) in the same content language that was selected for the source query
+10. THE Smart_Suite SHALL store the content_language code as a column in zhiku_ai_queries.csv and zhizao_draft_content.csv to track which language each item was produced in
+11. WHEN a user switches content language mid-session, THE Smart_Suite SHALL apply the new language only to subsequently generated items without modifying previously generated content
+12. THE Smart_Suite SHALL validate that LLM output matches the requested language by checking the script of the generated text (e.g., CJK characters for zh-TW, Hangul for ko, Vietnamese diacritics for vi) and flag mismatches as warnings
