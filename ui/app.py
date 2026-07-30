@@ -15,6 +15,20 @@ from datetime import datetime
 import tempfile
 import os
 
+# Ahrefs Brand Radar integration (lazy import for authorized users only)
+try:
+    from ahrefs_ui import render_ahrefs_zhiku, render_ahrefs_zhice, render_ahrefs_zhixi
+    AHREFS_AVAILABLE = True
+except ImportError:
+    AHREFS_AVAILABLE = False
+
+# Detection Rules UI (configurable brand mention / official link / seeds)
+try:
+    from rules_ui import render_zhiku_rules, render_zhiku_download, render_zhice_rules
+    RULES_UI_AVAILABLE = True
+except ImportError:
+    RULES_UI_AVAILABLE = False
+
 # --- Config ---
 BASE_PATH = Path(__file__).parent.parent
 OUTPUT_PATH = BASE_PATH / "output"
@@ -2354,6 +2368,18 @@ Requirements:
             else:
                 st.caption("No history records yet" if is_en else "暂无历史")
 
+    # --- Ahrefs Brand Radar Section (rickylan only) ---
+    if AHREFS_AVAILABLE:
+        render_ahrefs_zhiku(current_user, is_en)
+
+    # --- Detection Rules & Download Section ---
+    if RULES_UI_AVAILABLE:
+        # Download full query list
+        _dl_zhiku_df = load_zhiku(selected_batch)
+        render_zhiku_download(current_user, is_en, _dl_zhiku_df)
+        # Rules editor
+        render_zhiku_rules(current_user, is_en)
+
 
     # ============================================================
     # PAGE: 智测 (Gap Verification)
@@ -2885,6 +2911,14 @@ elif _page_idx == 2:
                 st.caption("No history records yet" if is_en else "暂无历史")
         else:
             st.caption("No history records yet" if is_en else "暂无历史")
+
+    # --- Ahrefs Brand Radar Section (rickylan only) ---
+    if AHREFS_AVAILABLE:
+        render_ahrefs_zhice(current_user, is_en)
+
+    # --- Detection Rules Section ---
+    if RULES_UI_AVAILABLE:
+        render_zhice_rules(current_user, is_en)
 
 
 # ============================================================
@@ -6797,6 +6831,10 @@ elif _page_idx == 7:
                     st.caption("No forecast results yet" if is_en else "暂无预测结果")
             else:
                 st.caption("No forecast results yet" if is_en else "暂无预测结果")
+
+    # --- Ahrefs Brand Radar Section (rickylan only) ---
+    if AHREFS_AVAILABLE:
+        render_ahrefs_zhixi(current_user, is_en)
 
     # PAGE: 智中枢
     # ============================================================
