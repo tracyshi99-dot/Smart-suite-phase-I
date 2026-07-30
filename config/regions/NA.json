@@ -1,0 +1,36 @@
+{
+  "region_code": "NA",
+  "display_name": "North America",
+  "ui_language": "en",
+  "ai_platforms": {
+    "default_selected": ["chatgpt", "gemini"],
+    "available": ["perplexity", "grok"]
+  },
+  "official_links": ["sell.amazon.com"],
+  "knowledge_base_paths": [
+    "cat_01_cross_border_ecommerce_basics.md",
+    "cat_02_cross_border_industry_intro.md",
+    "cat_03_cross_border_ecommerce_outlook.md",
+    "cat_04_cross_border_process_fees.md",
+    "cat_05_preparation_work.md",
+    "cat_06_channel_destination_selection.md",
+    "cat_07_mature_marketplace_advantages.md",
+    "cat_09_amazon_marketplace_basics.md",
+    "cat_10_amazon_marketplace_review.md",
+    "cat_11_product_selection_methods.md",
+    "cat_12_hot_categories_analysis.md",
+    "cat_13_new_seller_practical_guide.md"
+  ],
+  "ahrefs_report_id": null,
+  "default_seeds": [
+    "how to sell on Amazon US",
+    "Amazon FBA for beginners",
+    "Amazon product listing optimization",
+    "Amazon PPC advertising guide",
+    "Amazon seller registration requirements"
+  ],
+  "verification_platforms": ["chatgpt", "perplexity", "grok"],
+  "content_languages": [
+    {"code": "en", "name": "English"}
+  ]
+}

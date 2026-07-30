@@ -1,0 +1,45 @@
+{
+  "region_code": "ROA",
+  "display_name": "Rest of Asia (TW / KR / VN)",
+  "ui_language": "en",
+  "sub_regions": {
+    "TW": {"display_name": "Taiwan (台灣)", "official_links": ["sell.amazon.tw"], "default_content_language": "zh-TW"},
+    "KR": {"display_name": "Korea (한국)", "official_links": ["sell.amazon.co.kr"], "default_content_language": "ko"},
+    "VN": {"display_name": "Vietnam (Việt Nam)", "official_links": ["sell.amazon.vn"], "default_content_language": "vi"}
+  },
+  "ai_platforms": {
+    "default_selected": ["chatgpt", "gemini"],
+    "available": ["perplexity", "grok"]
+  },
+  "official_links": ["sell.amazon.tw", "sell.amazon.co.kr", "sell.amazon.vn"],
+  "knowledge_base_paths": [
+    "cat_01_cross_border_ecommerce_basics.md",
+    "cat_02_cross_border_industry_intro.md",
+    "cat_03_cross_border_ecommerce_outlook.md",
+    "cat_04_cross_border_process_fees.md",
+    "cat_05_preparation_work.md",
+    "cat_06_channel_destination_selection.md",
+    "cat_07_mature_marketplace_advantages.md",
+    "cat_08_emerging_marketplace_advantages.md",
+    "cat_09_amazon_marketplace_basics.md",
+    "cat_10_amazon_marketplace_review.md",
+    "cat_11_product_selection_methods.md",
+    "cat_12_hot_categories_analysis.md",
+    "cat_13_new_seller_practical_guide.md"
+  ],
+  "ahrefs_report_id": "tw_brand_radar_001",
+  "default_seeds": [
+    "how to sell on Amazon",
+    "Amazon seller registration",
+    "FBA shipping guide",
+    "Amazon product research",
+    "cross-border ecommerce beginner"
+  ],
+  "verification_platforms": ["chatgpt", "perplexity", "grok"],
+  "content_languages": [
+    {"code": "zh-TW", "name": "繁體中文"},
+    {"code": "ko", "name": "한국어"},
+    {"code": "vi", "name": "Tiếng Việt"},
+    {"code": "en", "name": "English"}
+  ]
+}

@@ -1158,6 +1158,73 @@ with st.sidebar:
 
     if DEMO_MODE:
         st.caption("🎬 Demo" if is_en else "🎬 演示模式")
+
+    # --- Region / Sub-region / Content Language selectors ---
+    if current_user:
+        try:
+            from region_adapter import (
+                get_user_region, get_user_sub_region, save_user_sub_region,
+                load_region_config, get_content_languages, get_default_content_language,
+                SUPPORTED_SUB_REGIONS
+            )
+            _user_region = get_user_region(current_user)
+            _region_config = load_region_config(_user_region)
+
+            # Show region badge
+            _region_display = _region_config.get("display_name", _user_region)
+            st.caption(f"📍 Region: **{_region_display}**")
+
+            # Sub-region selector (ROA only)
+            if _user_region == "ROA":
+                _current_sub = get_user_sub_region(current_user)
+                _sub_options = ["— Select —"] + SUPPORTED_SUB_REGIONS
+                _sub_idx = _sub_options.index(_current_sub) if _current_sub in _sub_options else 0
+                _sub_choice = st.selectbox(
+                    "🗺️ Sub-region" if is_en else "🗺️ 子区域",
+                    _sub_options, index=_sub_idx, key="sub_region_select"
+                )
+                if _sub_choice != "— Select —" and _sub_choice != _current_sub:
+                    save_user_sub_region(current_user, _sub_choice)
+                    st.session_state["_active_sub_region"] = _sub_choice
+                    st.rerun()
+                elif _current_sub:
+                    st.session_state["_active_sub_region"] = _current_sub
+            else:
+                st.session_state["_active_sub_region"] = None
+
+            # Content language selector
+            _content_langs = get_content_languages(_region_config)
+            if len(_content_langs) > 1:
+                _sub_r = st.session_state.get("_active_sub_region")
+                _default_cl = get_default_content_language(_region_config, _sub_r)
+                _cl_codes = [cl["code"] for cl in _content_langs]
+                _cl_names = [cl["name"] for cl in _content_langs]
+                _cl_default_idx = _cl_codes.index(_default_cl) if _default_cl in _cl_codes else 0
+                # Use session state to remember selection
+                if "content_language" not in st.session_state:
+                    st.session_state["content_language"] = _cl_codes[_cl_default_idx]
+                _cl_current_idx = _cl_codes.index(st.session_state["content_language"]) if st.session_state["content_language"] in _cl_codes else _cl_default_idx
+                _cl_selection = st.selectbox(
+                    "📝 Content Language" if is_en else "📝 内容语言",
+                    _cl_names, index=_cl_current_idx, key="content_lang_select"
+                )
+                _cl_selected_idx = _cl_names.index(_cl_selection)
+                st.session_state["content_language"] = _cl_codes[_cl_selected_idx]
+            else:
+                st.session_state["content_language"] = _content_langs[0]["code"] if _content_langs else "en"
+
+            # Store region config in session state for other modules to use
+            st.session_state["_region_config"] = _region_config
+            st.session_state["_user_region"] = _user_region
+
+        except Exception as _region_err:
+            # Region adapter not critical — gracefully degrade
+            st.session_state["_region_config"] = None
+            st.session_state["_user_region"] = "CN"
+            # Only show error to admins
+            if is_admin:
+                st.caption(f"⚠️ Region: {_region_err}")
+
     st.divider()
 
     # Select nav pages based on language

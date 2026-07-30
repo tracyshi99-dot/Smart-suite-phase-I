@@ -1,0 +1,27 @@
+{
+  "region_code": "_default",
+  "display_name": "Default",
+  "ui_language": "en",
+  "ai_platforms": {
+    "default_selected": ["chatgpt", "gemini"],
+    "available": ["perplexity", "grok"]
+  },
+  "official_links": ["sell.amazon.com"],
+  "knowledge_base_paths": [
+    "cat_01_cross_border_ecommerce_basics.md",
+    "cat_09_amazon_marketplace_basics.md",
+    "cat_13_new_seller_practical_guide.md"
+  ],
+  "ahrefs_report_id": null,
+  "default_seeds": [
+    "how to sell on Amazon",
+    "Amazon seller registration",
+    "FBA shipping guide",
+    "Amazon product research",
+    "cross-border ecommerce beginner"
+  ],
+  "verification_platforms": ["chatgpt", "perplexity", "grok"],
+  "content_languages": [
+    {"code": "en", "name": "English"}
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "region_code": "CN",
+  "display_name": "China (中国大陆)",
+  "ui_language": "zh-CN",
+  "ai_platforms": {
+    "default_selected": ["deepseek", "doubao", "kimi", "yuanbao", "qianwen", "chatgpt", "gemini", "perplexity", "grok"],
+    "available": []
+  },
+  "official_links": ["sell.amazon.com.cn"],
+  "knowledge_base_paths": [
+    "cat_01_跨境电商知识早知道.md",
+    "cat_02_跨境电商行业入门了解.md",
+    "cat_03_跨境电商怎么样.md",
+    "cat_04_怎么做跨境电商及流程费用了解.md",
+    "cat_05_做跨境电商的准备工作.md",
+    "cat_06_如何选择渠道及目的地.md",
+    "cat_07_跨境电商成熟站点优势介绍.md",
+    "cat_08_跨境电商新兴站点优势介绍.md",
+    "cat_09_亚马逊商城基础情况了解.md",
+    "cat_10_亚马逊商城怎么样.md",
+    "cat_11_跨境电商选品方法及趋势.md",
+    "cat_12_跨境电商热门品类解析.md",
+    "cat_13_新卖家入门实操宝典.md",
+    "cat_14_站点综合信息及选品建议.md",
+    "cat_15_北美站点情况及选品思路.md",
+    "cat_16_欧洲站点情况及选品思路.md",
+    "cat_17_日本站点情况及选品思路.md",
+    "cat_18_新兴站点情况及选品思路.md"
+  ],
+  "ahrefs_report_id": null,
+  "default_seeds": [
+    "跨境电商怎么做",
+    "亚马逊开店流程",
+    "FBA发货教程",
+    "亚马逊选品方法",
+    "跨境电商注册条件",
+    "亚马逊广告怎么投",
+    "跨境电商新手入门"
+  ],
+  "verification_platforms": ["deepseek", "doubao", "kimi", "chatgpt", "perplexity", "grok"],
+  "content_languages": [
+    {"code": "zh-CN", "name": "简体中文"},
+    {"code": "en", "name": "English"}
+  ]
+}

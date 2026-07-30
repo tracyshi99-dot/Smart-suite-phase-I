@@ -1,0 +1,47 @@
+{
+  "region_code": "EU",
+  "display_name": "Europe",
+  "ui_language": "en",
+  "ai_platforms": {
+    "default_selected": ["chatgpt", "gemini"],
+    "available": ["perplexity", "grok"]
+  },
+  "official_links": [
+    "sell.amazon.co.uk",
+    "sell.amazon.de",
+    "sell.amazon.fr",
+    "sell.amazon.it",
+    "sell.amazon.es",
+    "sell.amazon.nl",
+    "sell.amazon.pl",
+    "sell.amazon.se",
+    "sell.amazon.com.be"
+  ],
+  "knowledge_base_paths": [
+    "cat_01_cross_border_ecommerce_basics.md",
+    "cat_02_cross_border_industry_intro.md",
+    "cat_03_cross_border_ecommerce_outlook.md",
+    "cat_04_cross_border_process_fees.md",
+    "cat_05_preparation_work.md",
+    "cat_06_channel_destination_selection.md",
+    "cat_07_mature_marketplace_advantages.md",
+    "cat_08_emerging_marketplace_advantages.md",
+    "cat_09_amazon_marketplace_basics.md",
+    "cat_10_amazon_marketplace_review.md",
+    "cat_11_product_selection_methods.md",
+    "cat_12_hot_categories_analysis.md",
+    "cat_13_new_seller_practical_guide.md"
+  ],
+  "ahrefs_report_id": null,
+  "default_seeds": [
+    "how to sell on Amazon Europe",
+    "Amazon EU VAT requirements",
+    "Amazon FBA Europe guide",
+    "Amazon UK seller registration",
+    "European marketplace product research"
+  ],
+  "verification_platforms": ["chatgpt", "perplexity", "grok"],
+  "content_languages": [
+    {"code": "en", "name": "English"}
+  ]
+}
