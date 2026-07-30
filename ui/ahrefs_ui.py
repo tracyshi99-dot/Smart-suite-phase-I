@@ -3,14 +3,22 @@ Ahrefs Brand Radar UI Components for SmartSuite.
 Renders Ahrefs data sections in 智库, 智测, and 智析 pages.
 Only visible to authorized users (rickylan).
 
+Deep integration with query-level data from ai-responses endpoint:
+- 智库: Show monitored queries, import to zhiku CSV
+- 智测: Show coverage data, mark queries as "已验证(Ahrefs)"
+- 智析: Full dashboard + query-level analysis (gaps, coverage rates)
+
 Data sources: ChatGPT, Google AI Overviews, Google AI Mode, Gemini, Perplexity, Copilot
 """
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
+from pathlib import Path
+from datetime import datetime
 from ahrefs_client import (
     is_user_authorized,
     fetch_all_data,
+    get_ahrefs_queries_df,
     overview_to_metrics,
     overview_to_competitor_df,
     history_to_dataframe,
@@ -18,6 +26,11 @@ from ahrefs_client import (
     DEFAULT_REPORT_ID,
     COMPETITORS_CONFIG,
 )
+
+
+# --- Paths for zhiku CSV import ---
+BASE_PATH = Path(__file__).parent.parent
+ZHIKU_CSV_DIR = BASE_PATH / "output" / "batch_001" / "01_zhiku"
 
 
 def _check_access(current_user: str) -> bool:
@@ -29,129 +42,238 @@ def _check_access(current_user: str) -> bool:
     return True
 
 
+# ============================================================
+# 智库 PAGE — Ahrefs Monitored Queries
+# ============================================================
+
 def render_ahrefs_zhiku(current_user: str, is_en: bool = False):
-    """Render Ahrefs section for 智库 page — AI visibility overview for query insights."""
+    """Render Ahrefs section for 智库 page — monitored queries from Brand Radar."""
     if not _check_access(current_user):
         return
 
     st.divider()
-    with st.expander("🔗 Ahrefs Brand Radar — " + ("AI Visibility Overview" if is_en else "AI 可见度总览"), expanded=False):
-        st.caption("Brand mentions across AI platforms (ChatGPT, Gemini, Perplexity, Copilot, Google AI) — insights for query strategy"
-                   if is_en else "品牌在 AI 平台的提及情况（ChatGPT、Gemini、Perplexity、Copilot、Google AI）— 检索短语策略参考")
+    expander_title = "🔗 Ahrefs Monitored Queries" if is_en else "🔗 Ahrefs 监控短语"
+    with st.expander(expander_title, expanded=False):
+        st.caption(
+            "Queries monitored by Ahrefs Brand Radar across AI platforms. Import high-value queries to 智库."
+            if is_en else
+            "Ahrefs Brand Radar 在各 AI 平台监控的检索短语。可将高价值短语导入智库。"
+        )
 
+        # Fetch query-level data
         try:
-            data = fetch_all_data()
+            df_queries = get_ahrefs_queries_df()
         except Exception as e:
-            st.error(f"Failed to fetch Ahrefs data: {str(e)[:200]}")
+            st.error(f"Failed to fetch Ahrefs query data: {str(e)[:200]}")
             return
 
-        overview = data.get("overview", {})
-        if "error" in overview:
-            st.warning(f"⚠️ API Error: {overview.get('error', '')}")
-            st.caption(f"Detail: {overview.get('detail', '')[:300]}")
+        if df_queries.empty:
+            st.info(
+                "No query data available from Ahrefs ai-responses endpoint."
+                if is_en else
+                "暂无 Ahrefs ai-responses 端点的查询数据。"
+            )
             return
 
-        # Metrics
-        metrics = overview_to_metrics(overview)
-        if "error" in metrics:
-            st.warning(f"⚠️ {metrics['error']}")
+        # Summary metrics
+        total_queries = len(df_queries)
+        platforms = df_queries["data_source"].nunique()
+        st.markdown(
+            f"**Ahrefs monitoring {total_queries} queries across {platforms} platforms**"
+            if is_en else
+            f"**Ahrefs 正在监控 {total_queries} 条短语，覆盖 {platforms} 个平台**"
+        )
+
+        # Display table
+        display_df = df_queries[["ai_query", "data_source", "has_official_link", "has_brand_mention"]].copy()
+        display_df.columns = (
+            ["Query", "Platform", "Official Link", "Brand Mention"]
+            if is_en else
+            ["检索短语", "平台", "官方链接", "品牌提及"]
+        )
+        # Format booleans
+        link_col = "Official Link" if is_en else "官方链接"
+        mention_col = "Brand Mention" if is_en else "品牌提及"
+        display_df[link_col] = display_df[link_col].map({True: "✅", False: "❌"})
+        display_df[mention_col] = display_df[mention_col].map({True: "✅", False: "❌"})
+
+        st.dataframe(display_df, use_container_width=True, hide_index=True, height=300)
+
+        # Import button
+        st.markdown("---")
+        if st.button(
+            "📥 Import to 智库" if is_en else "📥 导入到智库",
+            key="ahrefs_import_zhiku",
+            help="Merge Ahrefs queries into zhiku CSV (deduplicates)" if is_en else "将 Ahrefs 短语合并到智库 CSV（自动去重）"
+        ):
+            _import_to_zhiku(df_queries, is_en)
+
+
+def _import_to_zhiku(df_ahrefs: pd.DataFrame, is_en: bool = False):
+    """Import Ahrefs queries into zhiku CSV, deduplicating against existing ai_query values."""
+    csv_path = ZHIKU_CSV_DIR / "zhiku_ai_queries.csv"
+
+    try:
+        if csv_path.exists():
+            df_existing = pd.read_csv(csv_path, encoding="utf-8")
+        else:
+            ZHIKU_CSV_DIR.mkdir(parents=True, exist_ok=True)
+            df_existing = pd.DataFrame(columns=[
+                "keyword_id", "keyword", "query_id", "ai_query", "intent_type",
+                "query_type", "priority_score", "language", "market", "is_selected", "created_at",
+            ])
+
+        existing_queries = set(df_existing["ai_query"].str.lower().tolist()) if "ai_query" in df_existing.columns else set()
+
+        # Filter new queries not already in zhiku
+        new_queries = df_ahrefs[~df_ahrefs["ai_query"].str.lower().isin(existing_queries)].copy()
+
+        if new_queries.empty:
+            st.info("✅ " + ("All queries already exist in 智库. No new imports." if is_en else "所有短语已存在于智库中，无需导入。"))
             return
 
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            st.metric("Our Brand Only" if is_en else "仅我方品牌提及",
-                      metrics.get("only_target_brand", "—"))
-        with col2:
-            st.metric("Competitors Only" if is_en else "仅竞品提及",
-                      metrics.get("only_competitors_brands", "—"))
-        with col3:
-            st.metric("Both Mentioned" if is_en else "共同提及",
-                      metrics.get("target_and_competitors_brands", "—"))
-        with col4:
-            st.metric("Total Queries" if is_en else "总查询数",
-                      metrics.get("total", "—"))
+        # Build rows for CSV
+        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        max_id_num = 0
+        if not df_existing.empty and "query_id" in df_existing.columns:
+            try:
+                nums = df_existing["query_id"].str.extract(r"(\d+)").astype(float).max().values[0]
+                max_id_num = int(nums) if pd.notna(nums) else 0
+            except Exception:
+                max_id_num = len(df_existing)
 
-        # Insight
-        st.markdown("**💡 " + ("Insight" if is_en else "洞察") + "：**")
-        st.caption("Queries where competitors appear but we don't = high-priority 智库 phrases to add. "
-                   "Focus on queries with 'only_competitors_brands' to find content gaps."
-                   if is_en else
-                   "竞品出现但我方缺席的查询 = 高优先级智库短语。关注「仅竞品提及」的查询，挖掘内容 Gap。")
+        new_rows = []
+        for i, row in new_queries.iterrows():
+            max_id_num += 1
+            new_rows.append({
+                "keyword_id": "WK_AHREFS",
+                "keyword": "ahrefs_import",
+                "query_id": f"Q_AHR_{max_id_num:04d}",
+                "ai_query": row["ai_query"],
+                "intent_type": "informational",
+                "query_type": "branded" if row.get("has_brand_mention", False) else "generic",
+                "priority_score": 4 if row.get("has_brand_mention", False) else 3,
+                "language": "zh-TW",
+                "market": "TW",
+                "is_selected": "TRUE",
+                "created_at": now_str,
+            })
 
+        df_new = pd.DataFrame(new_rows)
+        df_combined = pd.concat([df_existing, df_new], ignore_index=True)
+        df_combined.to_csv(csv_path, index=False, encoding="utf-8")
+
+        st.success(
+            f"✅ Imported {len(new_rows)} new queries to 智库 (skipped {len(df_ahrefs) - len(new_rows)} duplicates)"
+            if is_en else
+            f"✅ 已导入 {len(new_rows)} 条新短语到智库（跳过 {len(df_ahrefs) - len(new_rows)} 条重复）"
+        )
+    except Exception as e:
+        st.error(f"Import failed: {str(e)[:300]}")
+
+
+# ============================================================
+# 智测 PAGE — Ahrefs Coverage Data
+# ============================================================
 
 def render_ahrefs_zhice(current_user: str, is_en: bool = False):
-    """Render Ahrefs section for 智测 page — official link coverage across AI platforms."""
+    """Render Ahrefs section for 智测 page — queries already verified by Ahrefs (no re-test needed)."""
     if not _check_access(current_user):
         return
 
     st.divider()
-    with st.expander("🔗 Ahrefs Brand Radar — " + ("AI Link Coverage" if is_en else "AI 平台链接覆盖"), expanded=False):
-        st.caption("Official link (gs.amazon.com.tw) mentions in AI responses — complement to manual gap testing"
-                   if is_en else "官方链接 (gs.amazon.com.tw) 在 AI 回答中的被引用情况 — 补充手动 Gap 验证")
+    expander_title = "🔗 Ahrefs Coverage Data" if is_en else "🔗 Ahrefs 已有覆盖数据"
+    with st.expander(expander_title, expanded=False):
+        st.caption(
+            "Queries where Ahrefs already has AI response data — no need to re-test manually."
+            if is_en else
+            "Ahrefs 已有 AI 回答数据的短语 — 无需手动重新验证。"
+        )
 
+        # Fetch query-level data
         try:
-            data = fetch_all_data()
+            df_queries = get_ahrefs_queries_df()
         except Exception as e:
-            st.error(f"Failed to fetch Ahrefs data: {str(e)[:200]}")
+            st.error(f"Failed to fetch Ahrefs query data: {str(e)[:200]}")
             return
 
-        overview = data.get("overview", {})
-        if "error" in overview:
-            st.warning(f"⚠️ API Error: {overview.get('error', '')}")
+        if df_queries.empty:
+            st.info(
+                "No coverage data available from Ahrefs."
+                if is_en else
+                "暂无 Ahrefs 覆盖数据。"
+            )
             return
 
-        metrics = overview_to_metrics(overview)
+        # Metrics: how many queries have data
+        total = len(df_queries)
+        with_link = df_queries["has_official_link"].sum()
+        with_mention = df_queries["has_brand_mention"].sum()
 
-        # Key metrics for 智测 context
+        st.markdown(
+            f"**{total} queries already have Ahrefs data (no need to re-test)**"
+            if is_en else
+            f"**{total} 条短语已有 Ahrefs 数据（无需重新验证）**"
+        )
+
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.metric("Our Brand Mentioned" if is_en else "我方被提及",
-                      metrics.get("only_target_brand", metrics.get("brand", "—")))
-        with col2:
-            st.metric("No Brand Mentioned" if is_en else "无品牌提及（机会）",
-                      metrics.get("no_tracked_brands", "—"))
-        with col3:
-            st.metric("Total AI Queries" if is_en else "AI 查询总数",
-                      metrics.get("total", "—"))
-
-        # Competitor comparison
-        st.markdown("**" + ("Competitive Landscape in AI Results" if is_en else "AI 结果中的竞争格局") + "**")
-        df_comp = overview_to_competitor_df(overview)
-        if not df_comp.empty and "Error" not in df_comp.columns:
-            st.dataframe(df_comp, use_container_width=True, hide_index=True)
-
-        # Trend (mini)
-        st.markdown("**" + ("Mention Trend" if is_en else "提及趋势") + "**")
-        df_trend = history_to_dataframe(data.get("history", {}))
-        if not df_trend.empty:
-            # Show last 30 days
-            recent = df_trend.tail(30)
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(
-                x=recent["Date"], y=recent["Mentions"],
-                mode="lines+markers", name="Mentions",
-                line=dict(color="#00d4aa", width=2),
-                marker=dict(size=4),
-            ))
-            fig.update_layout(
-                template="plotly_dark", height=200,
-                margin=dict(l=30, r=10, t=10, b=30),
-                xaxis_title="", yaxis_title="",
+            st.metric(
+                "With Official Link" if is_en else "含官方链接",
+                f"{int(with_link)}/{total}"
             )
-            st.plotly_chart(fig, use_container_width=True)
-        else:
-            st.caption("No trend data available" if is_en else "暂无趋势数据")
+        with col2:
+            st.metric(
+                "With Brand Mention" if is_en else "含品牌提及",
+                f"{int(with_mention)}/{total}"
+            )
+        with col3:
+            st.metric(
+                "Source" if is_en else "数据来源",
+                "Ahrefs"
+            )
 
+        # Display coverage table
+        display_df = df_queries[["ai_query", "data_source", "has_official_link", "has_brand_mention"]].copy()
+        display_df["status"] = "已验证(Ahrefs)"
+        display_df.columns = (
+            ["Query", "Platform", "Official Link", "Brand Mention", "Status"]
+            if is_en else
+            ["检索短语", "平台", "官方链接", "品牌提及", "状态"]
+        )
+        link_col = "Official Link" if is_en else "官方链接"
+        mention_col = "Brand Mention" if is_en else "品牌提及"
+        display_df[link_col] = display_df[link_col].map({True: "✅", False: "❌"})
+        display_df[mention_col] = display_df[mention_col].map({True: "✅", False: "❌"})
+
+        st.dataframe(display_df, use_container_width=True, hide_index=True, height=300)
+
+        # Platform breakdown
+        st.markdown("---")
+        st.markdown("**" + ("Platform Breakdown" if is_en else "平台分布") + "**")
+        platform_counts = df_queries["data_source"].value_counts().reset_index()
+        platform_counts.columns = (
+            ["Platform", "Queries"] if is_en else ["平台", "短语数"]
+        )
+        st.dataframe(platform_counts, use_container_width=True, hide_index=True)
+
+
+# ============================================================
+# 智析 PAGE — Full Dashboard + Query-Level Analysis
+# ============================================================
 
 def render_ahrefs_zhixi(current_user: str, is_en: bool = False):
-    """Render Ahrefs section for 智析 page — full dashboard with trends and competitor comparison."""
+    """Render Ahrefs section for 智析 page — full dashboard with trends, competitor comparison, and query-level analysis."""
     if not _check_access(current_user):
         return
 
     st.divider()
     with st.expander("🔗 Ahrefs Brand Radar — " + ("Full AI Visibility Dashboard" if is_en else "AI 可见度完整看板"), expanded=True):
-        st.caption("Complete Brand Radar view — AI visibility metrics, mention trends, competitor share of voice"
-                   if is_en else "Brand Radar 全景 — AI 可见度指标、提及趋势、竞品声量占比")
+        st.caption(
+            "Complete Brand Radar view — AI visibility metrics, mention trends, competitor share of voice, query-level gap analysis"
+            if is_en else
+            "Brand Radar 全景 — AI 可见度指标、提及趋势、竞品声量占比、查询级 Gap 分析"
+        )
 
         try:
             data = fetch_all_data()
@@ -221,7 +343,7 @@ def render_ahrefs_zhixi(current_user: str, is_en: bool = False):
             )
             st.plotly_chart(fig, use_container_width=True)
 
-            # Weekly/monthly summary
+            # Weekly summary
             if len(df_trend) >= 7:
                 last_7 = df_trend.tail(7)["Mentions"].sum()
                 prev_7 = df_trend.iloc[-14:-7]["Mentions"].sum() if len(df_trend) >= 14 else 0
@@ -241,7 +363,6 @@ def render_ahrefs_zhixi(current_user: str, is_en: bool = False):
                 st.dataframe(df_comp, use_container_width=True, hide_index=True)
             with col_chart:
                 if "Brand" in df_comp.columns and "Total" in df_comp.columns:
-                    # Try to make a bar chart
                     try:
                         df_chart = df_comp.copy()
                         df_chart["Total"] = pd.to_numeric(df_chart["Total"], errors="coerce")
@@ -267,7 +388,76 @@ def render_ahrefs_zhixi(current_user: str, is_en: bool = False):
 
         st.markdown("---")
 
-        # --- Row 5: Data sources breakdown ---
+        # --- Row 5: Query-Level Analysis (NEW) ---
+        st.markdown("#### " + ("Query-Level Analysis" if is_en else "查询级分析"))
+
+        ai_responses = data.get("ai_responses", [])
+        if ai_responses:
+            total_queries = len(ai_responses)
+            official_link_count = sum(1 for r in ai_responses if r.get("has_official_link", False))
+            brand_mention_count = sum(1 for r in ai_responses if r.get("has_brand_mention", False))
+            link_rate = round(official_link_count / total_queries * 100, 1) if total_queries > 0 else 0
+            mention_rate = round(brand_mention_count / total_queries * 100, 1) if total_queries > 0 else 0
+
+            # Metrics row
+            qcol1, qcol2, qcol3 = st.columns(3)
+            with qcol1:
+                st.metric(
+                    "Total Queries Monitored" if is_en else "监控短语总数",
+                    total_queries
+                )
+            with qcol2:
+                st.metric(
+                    "Official Link Coverage" if is_en else "官方链接覆盖率",
+                    f"{link_rate}%",
+                    help=f"{official_link_count}/{total_queries} queries have .amazon links"
+                )
+            with qcol3:
+                st.metric(
+                    "Brand Mention Rate" if is_en else "品牌提及率",
+                    f"{mention_rate}%",
+                    help=f"{brand_mention_count}/{total_queries} queries mention Amazon/亚马逊"
+                )
+
+            # Gap table: queries WITHOUT official links
+            gaps = [r for r in ai_responses if not r.get("has_official_link", False)]
+            if gaps:
+                st.markdown(
+                    f"**🚨 Queries without official links ({len(gaps)} gaps to fix):**"
+                    if is_en else
+                    f"**🚨 缺少官方链接的短语（{len(gaps)} 个 Gap 待修复）：**"
+                )
+                gap_rows = []
+                for g in gaps:
+                    gap_rows.append({
+                        "ai_query": g.get("question", ""),
+                        "data_source": g.get("data_source", ""),
+                        "has_brand_mention": "✅" if g.get("has_brand_mention", False) else "❌",
+                        "links_count": g.get("links_count", 0),
+                    })
+                df_gaps = pd.DataFrame(gap_rows)
+                df_gaps.columns = (
+                    ["Query", "Platform", "Brand Mentioned", "Links Count"]
+                    if is_en else
+                    ["检索短语", "平台", "品牌提及", "链接数"]
+                )
+                st.dataframe(df_gaps, use_container_width=True, hide_index=True, height=250)
+            else:
+                st.success(
+                    "🎉 All monitored queries have official links!"
+                    if is_en else
+                    "🎉 所有监控短语均已有官方链接！"
+                )
+        else:
+            st.caption(
+                "No query-level data available (ai-responses endpoint returned empty)"
+                if is_en else
+                "暂无查询级数据（ai-responses 端点返回为空）"
+            )
+
+        st.markdown("---")
+
+        # --- Row 6: Data sources & refresh ---
         st.markdown("#### " + ("Data Sources" if is_en else "数据来源平台"))
         sources_str = "ChatGPT · Google AI Overviews · Google AI Mode · Gemini · Perplexity · Copilot"
         st.caption(f"📡 {sources_str}")
@@ -277,6 +467,10 @@ def render_ahrefs_zhixi(current_user: str, is_en: bool = False):
         # Refresh button
         if st.button("🔄 " + ("Refresh Data" if is_en else "刷新数据"), key="ahrefs_refresh_zhixi"):
             cache_key = f"ahrefs_cache_{DEFAULT_REPORT_ID}"
-            if cache_key in st.session_state:
-                del st.session_state[cache_key]
+            cache_time_key = f"ahrefs_cache_time_{DEFAULT_REPORT_ID}"
+            queries_cache_key = f"ahrefs_queries_cache_{DEFAULT_REPORT_ID}"
+            queries_cache_time_key = f"ahrefs_queries_cache_time_{DEFAULT_REPORT_ID}"
+            for k in [cache_key, cache_time_key, queries_cache_key, queries_cache_time_key]:
+                if k in st.session_state:
+                    del st.session_state[k]
             st.rerun()

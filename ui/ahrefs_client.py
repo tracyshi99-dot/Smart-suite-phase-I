@@ -1,19 +1,22 @@
 """
 Ahrefs Brand Radar API Client (v3)
-Encapsulates Brand Radar mentions-overview and mentions-history endpoints.
+Encapsulates Brand Radar mentions-overview, mentions-history, and ai-responses endpoints.
 Only accessible to rickylan user.
 
 Endpoints:
   POST /v3/brand-radar/mentions-overview  — AI visibility overview (brand vs competitors)
   POST /v3/brand-radar/mentions-history   — Brand mention trend over time
+  POST /v3/brand-radar/ai-responses       — Query-level data (questions, links, data_source)
 
 Report ID: 019e4f11-83ad-7648-a3d4-5a0d3760861e
 """
 import requests
 import json
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, List
 import pandas as pd
+
+from detection_rules import check_brand_mention, check_official_link, get_brand_keywords, get_official_link_patterns
 
 
 # --- Config ---
@@ -80,6 +83,42 @@ def _headers() -> dict:
 
 
 # ============================================================
+# DETECTION HELPERS (using detection_rules module)
+# ============================================================
+
+def _check_has_official_link(links: List[dict], question: str = "") -> bool:
+    """Check if any link URL contains an official link pattern (e.g. .amazon).
+    Uses detection_rules patterns for consistency.
+    """
+    patterns = get_official_link_patterns()
+    for link in links:
+        url = (link.get("url", "") or "").lower()
+        for pattern in patterns:
+            if pattern.lower() in url:
+                return True
+    return False
+
+
+def _check_has_brand_mention(question: str, links: List[dict]) -> bool:
+    """Check if question or any link title contains a brand keyword.
+    Uses detection_rules keywords for consistency.
+    """
+    keywords = get_brand_keywords()
+    # Check question
+    q_lower = question.lower()
+    for kw in keywords:
+        if kw.lower() in q_lower:
+            return True
+    # Check link titles
+    for link in links:
+        title = (link.get("title", "") or "").lower()
+        for kw in keywords:
+            if kw.lower() in title:
+                return True
+    return False
+
+
+# ============================================================
 # API CALLS
 # ============================================================
 
@@ -138,12 +177,111 @@ def get_mentions_history(report_id: str = DEFAULT_REPORT_ID,
         return {"error": str(e)}
 
 
+def get_ai_responses(report_id: str = DEFAULT_REPORT_ID, limit: int = 1000) -> List[dict]:
+    """POST /v3/brand-radar/ai-responses
+    Returns query-level data: question, links, data_source, last_updated.
+    Each item is enriched with has_official_link and has_brand_mention.
+    """
+    url = f"{AHREFS_API_BASE}/brand-radar/ai-responses"
+    payload = {
+        "report_id": report_id,
+        "data_source": DATA_SOURCES,
+        "country": COUNTRY,
+        "select": ["question", "links", "data_source", "last_updated"],
+        "limit": limit,
+    }
+    try:
+        resp = requests.post(url, headers=_headers(), json=payload, timeout=90)
+        if resp.status_code != 200:
+            return []
+        raw = resp.json()
+    except Exception:
+        return []
+
+    # API returns {"responses": [...]} or {"metrics": [...]} — handle both
+    items = raw.get("responses", raw.get("metrics", raw.get("items", [])))
+    if not isinstance(items, list):
+        return []
+
+    results = []
+    for item in items:
+        question = item.get("question", "") or ""
+        links = item.get("links", []) or []
+        if not isinstance(links, list):
+            links = []
+        data_source = item.get("data_source", "") or ""
+        last_updated = item.get("last_updated", "") or ""
+
+        results.append({
+            "question": question,
+            "links": links,
+            "data_source": data_source,
+            "last_updated": last_updated,
+            "has_official_link": _check_has_official_link(links, question),
+            "has_brand_mention": _check_has_brand_mention(question, links),
+            "links_count": len(links),
+        })
+
+    return results
+
+
+def get_ahrefs_queries_df(report_id: str = DEFAULT_REPORT_ID, limit: int = 1000) -> pd.DataFrame:
+    """Return a pandas DataFrame of Ahrefs ai-responses data.
+    Columns: ai_query, source, data_source, has_official_link, has_brand_mention, links_count, last_updated
+    Caches in session_state for 10 minutes (same pattern as fetch_all_data).
+    """
+    try:
+        import streamlit as st
+        cache_key = f"ahrefs_queries_cache_{report_id}"
+        cache_time_key = f"ahrefs_queries_cache_time_{report_id}"
+        if cache_key in st.session_state:
+            cached_time = st.session_state.get(cache_time_key, datetime.min)
+            if datetime.now() - cached_time < timedelta(minutes=10):
+                return st.session_state[cache_key]
+    except Exception:
+        pass
+
+    responses = get_ai_responses(report_id, limit)
+    if not responses:
+        return pd.DataFrame(columns=[
+            "ai_query", "source", "data_source", "has_official_link",
+            "has_brand_mention", "links_count", "last_updated",
+        ])
+
+    rows = []
+    for item in responses:
+        rows.append({
+            "ai_query": item["question"],
+            "source": "ahrefs",
+            "data_source": item["data_source"],
+            "has_official_link": item["has_official_link"],
+            "has_brand_mention": item["has_brand_mention"],
+            "links_count": item["links_count"],
+            "last_updated": item["last_updated"],
+        })
+
+    df = pd.DataFrame(rows)
+
+    # Cache
+    try:
+        import streamlit as st
+        st.session_state[cache_key] = df
+        st.session_state[cache_time_key] = datetime.now()
+    except Exception:
+        pass
+
+    return df
+
+
 # ============================================================
 # HIGH-LEVEL DATA METHODS (for UI consumption)
 # ============================================================
 
 def fetch_all_data(report_id: str = DEFAULT_REPORT_ID) -> dict:
-    """Fetch all Brand Radar data. Caches in session_state for 10 minutes."""
+    """Fetch all Brand Radar data. Caches in session_state for 10 minutes.
+    Includes overview, history, and ai_responses (query-level).
+    If ai_responses fails, overview/history still work (backward compatible).
+    """
     try:
         import streamlit as st
         cache_key = f"ahrefs_cache_{report_id}"
@@ -160,6 +298,12 @@ def fetch_all_data(report_id: str = DEFAULT_REPORT_ID) -> dict:
         "history": get_mentions_history(report_id),
         "fetched_at": datetime.now().isoformat(),
     }
+
+    # Add ai_responses — graceful fallback if it fails
+    try:
+        data["ai_responses"] = get_ai_responses(report_id)
+    except Exception:
+        data["ai_responses"] = []
 
     # Cache
     try:
