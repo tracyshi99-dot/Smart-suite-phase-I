@@ -174,95 +174,70 @@ def fetch_all_data(report_id: str = DEFAULT_REPORT_ID) -> dict:
 
 def overview_to_metrics(overview_data: dict) -> dict:
     """Extract key metrics from mentions-overview response.
-    Returns dict with brand mentions breakdown.
+    API returns: {"metrics": [{"brand": "Amazon", "only_target_brand": 1245, ...}, ...]}
+    First item is our brand (Amazon), rest are competitors.
     """
     if "error" in overview_data:
         return {"error": overview_data["error"]}
 
-    # The API returns data in various structures — handle flexibly
-    # Expected fields: brand, only_target_brand, only_competitors_brands,
-    # target_and_competitors_brands, no_tracked_brands, total
-    metrics = {}
+    metrics_list = overview_data.get("metrics", [])
+    if not metrics_list:
+        return {"raw": overview_data}
 
-    # Try direct top-level keys
-    for key in ["brand", "only_target_brand", "only_competitors_brands",
-                "target_and_competitors_brands", "no_tracked_brands", "total"]:
-        if key in overview_data:
-            metrics[key] = overview_data[key]
+    # First item is our brand
+    our_brand = metrics_list[0] if metrics_list else {}
 
-    # Try nested under "data" or "result"
-    if not metrics:
-        inner = overview_data.get("data", overview_data.get("result", overview_data.get("items", [])))
-        if isinstance(inner, dict):
-            for key in ["brand", "only_target_brand", "only_competitors_brands",
-                        "target_and_competitors_brands", "no_tracked_brands", "total"]:
-                if key in inner:
-                    metrics[key] = inner[key]
-        elif isinstance(inner, list) and inner:
-            # First item might contain the metrics
-            first = inner[0] if inner else {}
-            for key in ["brand", "only_target_brand", "only_competitors_brands",
-                        "target_and_competitors_brands", "no_tracked_brands", "total"]:
-                if key in first:
-                    metrics[key] = first[key]
-
-    return metrics if metrics else {"raw": overview_data}
+    return {
+        "brand": our_brand.get("brand", "Amazon"),
+        "only_target_brand": our_brand.get("only_target_brand", 0),
+        "only_competitors_brands": our_brand.get("only_competitors_brands", 0),
+        "target_and_competitors_brands": our_brand.get("target_and_competitors_brands", 0),
+        "no_tracked_brands": our_brand.get("no_tracked_brands", 0),
+        "total": our_brand.get("total", 0),
+    }
 
 
 def overview_to_competitor_df(overview_data: dict) -> pd.DataFrame:
-    """Extract competitor comparison from overview data into a DataFrame."""
+    """Extract competitor comparison from overview data into a DataFrame.
+    API returns metrics for each brand (our brand + all competitors).
+    """
     if "error" in overview_data:
         return pd.DataFrame({"Error": [overview_data["error"]]})
 
-    # Try to extract competitor-level breakdown
-    # The overview might have per-brand breakdown in nested structures
-    competitors_data = overview_data.get("competitors", overview_data.get("brands_data", []))
+    metrics_list = overview_data.get("metrics", [])
+    if not metrics_list:
+        return pd.DataFrame()
 
-    if not competitors_data:
-        # Build from config names + available metrics
-        metrics = overview_to_metrics(overview_data)
-        if "raw" in metrics:
-            return pd.DataFrame()
-
-        rows = [{"Brand": "Amazon Global Selling (我方)", "Mentions": metrics.get("only_target_brand", "—")}]
-        rows.append({"Brand": "竞品合计", "Mentions": metrics.get("only_competitors_brands", "—")})
-        rows.append({"Brand": "共同提及", "Mentions": metrics.get("target_and_competitors_brands", "—")})
-        rows.append({"Brand": "无品牌提及", "Mentions": metrics.get("no_tracked_brands", "—")})
-        rows.append({"Brand": "Total", "Mentions": metrics.get("total", "—")})
-        return pd.DataFrame(rows)
-
-    # If we have per-competitor data
     rows = []
-    for comp in competitors_data:
+    for item in metrics_list:
         rows.append({
-            "Brand": comp.get("name", comp.get("names", [""])[0] if isinstance(comp.get("names"), list) else ""),
-            "Mentions": comp.get("mentions", comp.get("total", comp.get("count", "—"))),
+            "Brand": item.get("brand", ""),
+            "Our Brand Only": item.get("only_target_brand", 0),
+            "Competitor Only": item.get("only_competitors_brands", 0),
+            "Both Mentioned": item.get("target_and_competitors_brands", 0),
+            "Total": item.get("total", 0),
         })
+
     return pd.DataFrame(rows)
 
 
 def history_to_dataframe(history_data: dict) -> pd.DataFrame:
-    """Convert mentions-history response to DataFrame for chart rendering."""
+    """Convert mentions-history response to DataFrame for chart rendering.
+    API returns: {"metrics": [{"date": "2026-04-22T00:00:00Z", "mentions": 928}, ...]}
+    """
     if "error" in history_data:
         return pd.DataFrame()
 
-    # The response should have date + mentions data points
-    points = history_data.get("data", history_data.get("items",
-             history_data.get("history", history_data.get("mentions", []))))
-
+    points = history_data.get("metrics", [])
     if not points:
-        # Try top-level list
-        if isinstance(history_data, list):
-            points = history_data
-        else:
-            return pd.DataFrame()
+        return pd.DataFrame()
 
     rows = []
     for point in points:
         if isinstance(point, dict):
             rows.append({
                 "Date": point.get("date", ""),
-                "Mentions": point.get("mentions", point.get("count", point.get("total", 0))),
+                "Mentions": point.get("mentions", 0),
             })
 
     df = pd.DataFrame(rows)

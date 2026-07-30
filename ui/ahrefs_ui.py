@@ -71,12 +71,6 @@ def render_ahrefs_zhiku(current_user: str, is_en: bool = False):
             st.metric("Total Queries" if is_en else "总查询数",
                       metrics.get("total", "—"))
 
-        # Competitor comparison table
-        st.markdown("**" + ("Brand vs Competitors" if is_en else "品牌 vs 竞品对比") + "**")
-        df_comp = overview_to_competitor_df(overview)
-        if not df_comp.empty and "Error" not in df_comp.columns:
-            st.dataframe(df_comp, use_container_width=True, hide_index=True)
-
         # Insight
         st.markdown("**💡 " + ("Insight" if is_en else "洞察") + "：**")
         st.caption("Queries where competitors appear but we don't = high-priority 智库 phrases to add. "
@@ -246,23 +240,23 @@ def render_ahrefs_zhixi(current_user: str, is_en: bool = False):
             with col_table:
                 st.dataframe(df_comp, use_container_width=True, hide_index=True)
             with col_chart:
-                if "Brand" in df_comp.columns and "Mentions" in df_comp.columns:
+                if "Brand" in df_comp.columns and "Total" in df_comp.columns:
                     # Try to make a bar chart
                     try:
                         df_chart = df_comp.copy()
-                        df_chart["Mentions"] = pd.to_numeric(df_chart["Mentions"], errors="coerce")
-                        df_chart = df_chart.dropna(subset=["Mentions"])
+                        df_chart["Total"] = pd.to_numeric(df_chart["Total"], errors="coerce")
+                        df_chart = df_chart.dropna(subset=["Total"])
                         if not df_chart.empty:
                             colors = ["#ffa726" if "Amazon" in str(b) or "我方" in str(b) else "#4a5568"
                                       for b in df_chart["Brand"]]
                             fig_bar = go.Figure(go.Bar(
-                                x=df_chart["Brand"], y=df_chart["Mentions"],
+                                x=df_chart["Brand"], y=df_chart["Total"],
                                 marker_color=colors,
                             ))
                             fig_bar.update_layout(
                                 template="plotly_dark", height=280,
                                 margin=dict(l=20, r=20, t=30, b=60),
-                                title="Mentions" if is_en else "提及数",
+                                title="Total Mentions" if is_en else "总提及数",
                                 xaxis_tickangle=-30,
                             )
                             st.plotly_chart(fig_bar, use_container_width=True)
