@@ -198,8 +198,8 @@ def get_ai_responses(report_id: str = DEFAULT_REPORT_ID, limit: int = 1000) -> L
     except Exception:
         return []
 
-    # API returns {"responses": [...]} or {"metrics": [...]} — handle both
-    items = raw.get("responses", raw.get("metrics", raw.get("items", [])))
+    # API returns {"ai_responses": [...]}
+    items = raw.get("ai_responses", raw.get("responses", raw.get("metrics", raw.get("items", []))))
     if not isinstance(items, list):
         return []
 
