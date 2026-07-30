@@ -2572,13 +2572,14 @@ elif _page_idx == 2:
                 for query in queue_phrases:
                     for platform in selected_platforms:
                         # Check if Ahrefs already has data for this query+platform
+                        # Only match if Ahrefs actually covers this platform
                         _q_lower = query.strip().lower()
                         import re as _re_lookup
                         _q_clean = _re_lookup.sub(r'[？?！!。，、\s\u3000]+', '', _q_lower).strip()
+                        # Only use platform-specific match (no _any fallback)
+                        # This ensures DeepSeek/Kimi etc. won't falsely claim Ahrefs source
                         _ahrefs_hit = (_ahrefs_coverage.get((_q_lower, platform))
-                                       or _ahrefs_coverage.get((_q_clean, platform))
-                                       or _ahrefs_coverage.get((_q_lower, "_any"))
-                                       or _ahrefs_coverage.get((_q_clean, "_any")))
+                                       or _ahrefs_coverage.get((_q_clean, platform)))
                         if _ahrefs_hit:
                             # Use Ahrefs data — no need to call API
                             results.append({
