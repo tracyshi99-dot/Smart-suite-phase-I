@@ -1096,10 +1096,6 @@ with st.sidebar:
 
     # Auto-set language based on user profile (on first login)
     _current_user_for_lang = st.session_state.get("app_user", "")
-    _default_lang_idx = 1  # English by default (before login and for non-CN users)
-    if _current_user_for_lang and _user_lang_map.get(_current_user_for_lang) != "en":
-        # CN users (no "en" in user_lang) get Chinese
-        _default_lang_idx = 0  # 中文
     # If user just logged in and hasn't manually changed lang, auto-set
     if "ui_lang_auto_set" not in st.session_state and _current_user_for_lang:
         if _user_lang_map.get(_current_user_for_lang) == "en":
@@ -1113,10 +1109,12 @@ with st.sidebar:
     if not _current_user_for_lang and "ui_lang" not in st.session_state:
         st.session_state["ui_lang"] = "English"
 
-    ui_lang = st.selectbox("🌐", ["中文", "English"], key="ui_lang", label_visibility="collapsed")
+    st.title("🧠 Smart Suite")
+
+    # Language selector - clearly visible in sidebar
+    ui_lang = st.selectbox("🌐 Language / 语言", ["English", "中文"], key="ui_lang")
     is_en = (ui_lang == "English")
 
-    st.title("🧠 Smart Suite")
     st.caption("GEO Content Pipeline · Phase I" if is_en else "智系列 · GEO Content Pipeline · Phase I")
 
     # --- Login ---
