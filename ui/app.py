@@ -26,27 +26,46 @@ METRICS_PATH = OUTPUT_PATH / "metrics"
 DEMO_MODE = not OUTPUT_PATH.exists()
 
 if DEMO_MODE:
-    # Use temp dir for writable output, always sync from demo_output
+    # Use temp dir for writable output, sync from S3 if available, else demo_output
     import shutil
     _WRITABLE_OUTPUT = Path(tempfile.gettempdir()) / "smartsuite_output"
     _DEMO_SOURCE = Path(__file__).parent / "demo_output"
-    _DATA_VERSION = "v20260728f"
+    _DATA_VERSION = "v20260730s3"  # Bumped for S3 integration
     _VERSION_FILE = _WRITABLE_OUTPUT / "_data_version.txt"
     _current_ver = _VERSION_FILE.read_text().strip() if _VERSION_FILE.exists() else ""
     if _current_ver != _DATA_VERSION:
         # Force full re-sync
         if _WRITABLE_OUTPUT.exists():
             shutil.rmtree(_WRITABLE_OUTPUT, ignore_errors=True)
-        if _DEMO_SOURCE.exists():
+        _WRITABLE_OUTPUT.mkdir(parents=True, exist_ok=True)
+        # Try S3 pull first (production data)
+        _s3_pulled = False
+        try:
+            from s3_sync import pull_from_s3, S3_BUCKET, _BASE
+            # Temporarily set _BASE to writable output parent for pull
+            import s3_sync
+            s3_sync._BASE = _WRITABLE_OUTPUT.parent
+            s3_sync.OUTPUT_PATH = _WRITABLE_OUTPUT
+            _s3_count = pull_from_s3(prefix_filter="output/", force=True)
+            if _s3_count and _s3_count > 0:
+                _s3_pulled = True
+        except Exception:
+            pass
+        # Fallback to bundled demo data if S3 didn't work
+        if not _s3_pulled and _DEMO_SOURCE.exists():
             shutil.copytree(_DEMO_SOURCE, _WRITABLE_OUTPUT, dirs_exist_ok=True)
-        else:
-            _WRITABLE_OUTPUT.mkdir(parents=True, exist_ok=True)
         (_WRITABLE_OUTPUT / "_data_version.txt").write_text(_DATA_VERSION)
     OUTPUT_PATH = _WRITABLE_OUTPUT
     METRICS_PATH = OUTPUT_PATH / "metrics"
     if not INPUT_PATH.exists():
         INPUT_PATH = Path(tempfile.gettempdir()) / "smartsuite_input"
         INPUT_PATH.mkdir(parents=True, exist_ok=True)
+        # Also try pulling input from S3
+        try:
+            from s3_sync import pull_from_s3
+            pull_from_s3(prefix_filter="input/", force=True)
+        except Exception:
+            pass
 
 st.set_page_config(
     page_title="Smart Suite Console",
@@ -540,14 +559,33 @@ def load_compliance(batch_id: str):
 
 def load_zhibu(batch_id: str):
     zhibu_dir = OUTPUT_PATH / batch_id / "04_zhibu"
-    if zhibu_dir.exists():
-        jsons = list(zhibu_dir.glob("*.json"))
-        if jsons:
-            try:
-                with open(jsons[0], encoding="utf-8") as f:
-                    return json.load(f)
-            except Exception:
-                pass
+    if not zhibu_dir.exists():
+        return None
+    # Prefer the combined output file explicitly
+    combined = zhibu_dir / "zhibu_output.json"
+    if combined.exists():
+        try:
+            with open(combined, encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    # Fallback: try part files (batch_002 format)
+    parts = sorted(zhibu_dir.glob("zhibu_output_part*.json"))
+    if parts:
+        try:
+            with open(parts[0], encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    # Last resort: any json (but skip individual article files by checking for 'items' key)
+    for jf in sorted(zhibu_dir.glob("*.json")):
+        try:
+            with open(jf, encoding="utf-8") as f:
+                data = json.load(f)
+            if isinstance(data, dict) and "items" in data:
+                return data
+        except Exception:
+            continue
     return None
 
 
@@ -718,8 +756,14 @@ def auto_sync_batch(batch_id: str):
 
 
 def mark_data_changed():
-    """Mark that data was changed this session, triggering S3 sync on next page load."""
+    """Mark that data was changed this session, triggering S3 sync."""
     st.session_state["_data_changed"] = True
+    # Push changes to S3 in background
+    try:
+        from s3_sync import sync_directory_to_s3
+        sync_directory_to_s3(str(OUTPUT_PATH))
+    except Exception:
+        pass  # S3 sync is best-effort, never block UI
 
 
 # --- User-level Content Rules ---
@@ -4093,19 +4137,26 @@ elif _page_idx == 5:
                     remaining_items = [item for item in items if item.get("content_id", "") not in sel_ids]
                     # Rewrite JSON
                     zhibu_dir = OUTPUT_PATH / selected_batch / "04_zhibu"
-                    json_files = list(zhibu_dir.glob("*.json")) if zhibu_dir.exists() else []
-                    if json_files:
+                    if zhibu_dir.exists():
                         # Archive removed items
                         archive_dir = zhibu_dir / "archive"
                         archive_dir.mkdir(exist_ok=True)
                         removed = [item for item in items if item.get("content_id", "") in sel_ids]
                         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
                         (archive_dir / f"removed_{ts}.json").write_text(json.dumps(removed, ensure_ascii=False, indent=2), encoding="utf-8")
-                        # Update main JSON
+                        # Update main combined JSON (write to zhibu_output.json explicitly)
                         new_data = data.copy()
                         new_data["items"] = remaining_items
                         new_data["total_items"] = len(remaining_items)
-                        json_files[0].write_text(json.dumps(new_data, ensure_ascii=False, indent=2), encoding="utf-8")
+                        combined_file = zhibu_dir / "zhibu_output.json"
+                        combined_file.write_text(json.dumps(new_data, ensure_ascii=False, indent=2), encoding="utf-8")
+                        # Also remove individual article files for cleared items
+                        for sel_item in removed:
+                            fname = (sel_item.get("name", "") or sel_item.get("title", ""))[:60]
+                            fname = fname.replace("/", "").replace("\\", "").replace(":", "").replace("?", "？").replace("*", "").replace('"', "").replace("<", "").replace(">", "").replace("|", "").strip()
+                            individual_file = zhibu_dir / f"{fname}.json"
+                            if individual_file.exists():
+                                individual_file.rename(archive_dir / f"{individual_file.stem}_{ts}{individual_file.suffix}")
                     st.success(f"✅ {len(sel_ids)} {'cleared' if is_en else '条已清空'}")
                     st.rerun()
                 else:

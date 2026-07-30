@@ -178,6 +178,16 @@ def run_all_users():
     """Run automation check for all users.
     Each user's own rules (set in 智中枢) are checked and executed independently.
     Admin only needs to run this script — users don't need to do anything."""
+    
+    # Pull latest data from S3 before checking rules
+    try:
+        sys.path.insert(0, str(BASE_PATH / "ui"))
+        from s3_sync import pull_from_s3, push_to_s3
+        log.info("Pulling latest data from S3...")
+        pull_from_s3(force=True)
+    except Exception as e:
+        log.warning(f"S3 pull failed (continuing with local data): {e}")
+    
     users = load_users()
     today = datetime.now().strftime("%Y-%m-%d")
     total_executed = 0
@@ -229,6 +239,15 @@ def run_all_users():
 
         if log_changed:
             save_exec_log(user, exec_log)
+
+    # Push results back to S3 after execution
+    if total_executed > 0:
+        try:
+            from s3_sync import push_to_s3
+            log.info("Pushing results to S3...")
+            push_to_s3()
+        except Exception as e:
+            log.warning(f"S3 push failed: {e}")
 
     log.info(f"=== Automation check complete. {total_executed} rules executed. ===")
     return total_executed

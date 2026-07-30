@@ -1,245 +1,226 @@
 """
-S3 Sync Layer for Smart Suite
-Provides read/write to S3 for cross-environment data sharing (local ↔ Cloud).
-Falls back to local filesystem if S3 is unavailable.
+S3 Sync Module for Smart Suite
+================================
+Provides transparent S3 sync layer so that:
+- Streamlit Cloud can read/write data to S3 (using AWS creds from secrets)
+- EC2 cron can read/write data to S3 (using Instance Profile)
+- Both environments share the same data
+
+Usage:
+    from s3_sync import s3_sync, pull_from_s3, push_to_s3, sync_file_to_s3
+
+Architecture:
+    Local output/ ←→ S3 bucket (smartsuite-data-830279064391)
+    - On app startup: pull latest from S3
+    - After each write operation: push changed files to S3
+    - EC2 cron: reads from S3, writes results back to S3
 """
-import json
 import os
+import json
+import logging
+import threading
 from pathlib import Path
 from datetime import datetime
 
-# Config
-S3_BUCKET = os.environ.get("SMARTSUITE_S3_BUCKET", "smartsuite-sync-data")
-S3_PREFIX = "requests/"
-AWS_REGION = os.environ.get("AWS_DEFAULT_REGION", "us-east-1")
+log = logging.getLogger("s3_sync")
 
-_s3_client = None
+# Configuration
+S3_BUCKET = "smartsuite-sync-data"  # Use existing bucket from Streamlit Cloud secrets
+S3_PREFIX = "smartsuite/"  # prefix inside bucket
+REGION = "us-east-1"
 
+# Determine base paths
+_BASE = Path(__file__).parent.parent
+OUTPUT_PATH = _BASE / "output"
+INPUT_PATH = _BASE / "input"
 
-def _get_s3():
-    """Lazy-init S3 client."""
-    global _s3_client
-    if _s3_client is None:
-        try:
-            import boto3
-
-            # Try Streamlit secrets first (for Cloud deployment)
-            try:
-                import streamlit as st
-                if hasattr(st, "secrets") and "aws" in st.secrets:
-                    aws_secrets = st.secrets["aws"]
-                    os.environ.setdefault("AWS_ACCESS_KEY_ID", aws_secrets.get("AWS_ACCESS_KEY_ID", ""))
-                    os.environ.setdefault("AWS_SECRET_ACCESS_KEY", aws_secrets.get("AWS_SECRET_ACCESS_KEY", ""))
-                    os.environ.setdefault("AWS_DEFAULT_REGION", aws_secrets.get("AWS_DEFAULT_REGION", AWS_REGION))
-                    if "SMARTSUITE_S3_BUCKET" in aws_secrets:
-                        global S3_BUCKET
-                        S3_BUCKET = aws_secrets["SMARTSUITE_S3_BUCKET"]
-            except Exception:
-                pass
-
-            _s3_client = boto3.client("s3", region_name=os.environ.get("AWS_DEFAULT_REGION", AWS_REGION))
-            # Quick check: list bucket (will fail if no access)
-            _s3_client.head_bucket(Bucket=S3_BUCKET)
-        except Exception:
-            _s3_client = False  # Mark as unavailable
-    return _s3_client if _s3_client else None
+# Track sync state
+_sync_lock = threading.Lock()
+_last_sync_time = None
 
 
-def s3_available() -> bool:
-    """Check if S3 is accessible."""
-    return _get_s3() is not None
-
-
-def save_user_data(user: str, filename: str, data: dict | list):
-    """Save user data to S3 (and local fallback)."""
-    content = json.dumps(data, ensure_ascii=False, indent=2)
-    s3_key = f"{S3_PREFIX}{user}/{filename}"
-
-    # Always try S3 first
-    s3 = _get_s3()
-    if s3:
-        try:
-            s3.put_object(Bucket=S3_BUCKET, Key=s3_key,
-                          Body=content.encode("utf-8"),
-                          ContentType="application/json")
-            return True
-        except Exception:
-            pass
-    return False
-
-
-def load_user_data(user: str, filename: str, default=None):
-    """Load user data from S3 (fallback to default)."""
-    s3_key = f"{S3_PREFIX}{user}/{filename}"
-
-    s3 = _get_s3()
-    if s3:
-        try:
-            resp = s3.get_object(Bucket=S3_BUCKET, Key=s3_key)
-            content = resp["Body"].read().decode("utf-8")
-            return json.loads(content)
-        except s3.exceptions.NoSuchKey:
-            return default if default is not None else []
-        except Exception:
-            pass
-    return default if default is not None else []
-
-
-def save_shared_data(filename: str, data: dict | list):
-    """Save shared data (not user-specific) to S3."""
-    content = json.dumps(data, ensure_ascii=False, indent=2)
-    s3_key = f"shared/{filename}"
-
-    s3 = _get_s3()
-    if s3:
-        try:
-            s3.put_object(Bucket=S3_BUCKET, Key=s3_key,
-                          Body=content.encode("utf-8"),
-                          ContentType="application/json")
-            return True
-        except Exception:
-            pass
-    return False
-
-
-def load_shared_data(filename: str, default=None):
-    """Load shared data from S3."""
-    s3_key = f"shared/{filename}"
-
-    s3 = _get_s3()
-    if s3:
-        try:
-            resp = s3.get_object(Bucket=S3_BUCKET, Key=s3_key)
-            content = resp["Body"].read().decode("utf-8")
-            return json.loads(content)
-        except Exception:
-            pass
-    return default if default is not None else []
-
-
-def save_batch_file(batch_id: str, sub_path: str, content: str):
-    """Save a batch file to S3. sub_path like '01_zhiku/zhiku_ai_queries.csv'"""
-    s3_key = f"batches/{batch_id}/{sub_path}"
-    s3 = _get_s3()
-    if s3:
-        try:
-            s3.put_object(Bucket=S3_BUCKET, Key=s3_key,
-                          Body=content.encode("utf-8"),
-                          ContentType="text/csv" if sub_path.endswith(".csv") else "application/json")
-            return True
-        except Exception:
-            pass
-    return False
-
-
-def load_batch_file(batch_id: str, sub_path: str) -> str:
-    """Load a batch file from S3. Returns content string or empty string."""
-    s3_key = f"batches/{batch_id}/{sub_path}"
-    s3 = _get_s3()
-    if s3:
-        try:
-            resp = s3.get_object(Bucket=S3_BUCKET, Key=s3_key)
-            return resp["Body"].read().decode("utf-8")
-        except Exception:
-            pass
-    return ""
-
-
-def sync_batch_to_s3(batch_id: str, local_path):
-    """Sync an entire local batch directory to S3 (organized by user login)."""
-    import os
-    from pathlib import Path
-    local = Path(local_path) if not isinstance(local_path, Path) else local_path
-    batch_dir = local / batch_id
-    if not batch_dir.exists():
-        return False
-    s3 = _get_s3()
-    if not s3:
-        return False
+def _get_s3_client():
+    """Get S3 client. Works on both Streamlit Cloud (secrets) and EC2 (Instance Profile)."""
+    import boto3
+    
+    # Try Streamlit secrets first (for Streamlit Cloud)
     try:
-        for root, dirs, files in os.walk(batch_dir):
-            for f in files:
-                fpath = Path(root) / f
-                rel = fpath.relative_to(batch_dir)
-                s3_key = f"batches/{batch_id}/{rel.as_posix()}"
-                s3.put_object(Bucket=S3_BUCKET, Key=s3_key,
-                              Body=fpath.read_bytes(),
-                              ContentType="text/csv" if f.endswith(".csv") else "application/json")
-
-        # Also save a copy under user_data/{username}/ for easy per-user access
-        # batch_id format is "batch_{username}"
-        if batch_id.startswith("batch_"):
-            username = batch_id[6:]  # strip "batch_"
-            for root, dirs, files in os.walk(batch_dir):
-                for f in files:
-                    fpath = Path(root) / f
-                    rel = fpath.relative_to(batch_dir)
-                    s3_key = f"user_data/{username}/{rel.as_posix()}"
-                    s3.put_object(Bucket=S3_BUCKET, Key=s3_key,
-                                  Body=fpath.read_bytes(),
-                                  ContentType="text/csv" if f.endswith(".csv") else "application/json")
-
-            # Also sync to local user_data folder for git backup
-            user_data_dir = local / "user_data" / username
-            user_data_dir.mkdir(parents=True, exist_ok=True)
-            for root, dirs, files in os.walk(batch_dir):
-                for f in files:
-                    fpath = Path(root) / f
-                    rel = fpath.relative_to(batch_dir)
-                    dst = user_data_dir / rel
-                    dst.parent.mkdir(parents=True, exist_ok=True)
-                    try:
-                        import shutil
-                        shutil.copy2(str(fpath), str(dst))
-                    except Exception:
-                        pass
-        return True
+        import streamlit as st
+        if hasattr(st, "secrets") and "aws" in st.secrets:
+            aws_secrets = st.secrets["aws"]
+            # Support both naming conventions
+            access_key = aws_secrets.get("access_key_id") or aws_secrets.get("AWS_ACCESS_KEY_ID", "")
+            secret_key = aws_secrets.get("secret_access_key") or aws_secrets.get("AWS_SECRET_ACCESS_KEY", "")
+            region = aws_secrets.get("region") or aws_secrets.get("AWS_DEFAULT_REGION", REGION)
+            # Also check for bucket override
+            global S3_BUCKET
+            bucket_override = aws_secrets.get("SMARTSUITE_S3_BUCKET", "")
+            if bucket_override:
+                S3_BUCKET = bucket_override
+            if access_key and secret_key:
+                return boto3.client(
+                    "s3",
+                    region_name=region,
+                    aws_access_key_id=access_key,
+                    aws_secret_access_key=secret_key,
+                )
     except Exception:
-        return False
+        pass
+    
+    # Fallback to default credentials (EC2 Instance Profile or local ~/.aws)
+    import boto3
+    return boto3.client("s3", region_name=REGION)
 
 
-def load_batch_from_s3(batch_id: str, local_path):
-    """Load batch files from S3 into local directory (if not already present locally).
-    Tries both batches/{batch_id}/ and user_data/{username}/ paths."""
-    from pathlib import Path
-    local = Path(local_path) if not isinstance(local_path, Path) else local_path
-    batch_dir = local / batch_id
-    s3 = _get_s3()
-    if not s3:
-        return False
+def pull_from_s3(prefix_filter: str = None, force: bool = False):
+    """Pull latest data from S3 to local output/ directory.
+    
+    Args:
+        prefix_filter: Only pull files matching this prefix (e.g., "output/requests/")
+        force: Pull even if recently synced
+    """
+    global _last_sync_time
+    
+    # Skip if recently synced (within 30 seconds) unless forced
+    if not force and _last_sync_time:
+        elapsed = (datetime.now() - _last_sync_time).total_seconds()
+        if elapsed < 30:
+            return
+    
     try:
-        # Try primary path: batches/{batch_id}/
-        prefix = f"batches/{batch_id}/"
-        resp = s3.list_objects_v2(Bucket=S3_BUCKET, Prefix=prefix)
-        found = False
-        for obj in resp.get("Contents", []):
-            key = obj["Key"]
-            rel_path = key[len(prefix):]
-            if not rel_path:
-                continue
-            local_file = batch_dir / rel_path
-            if not local_file.exists():
-                local_file.parent.mkdir(parents=True, exist_ok=True)
-                data = s3.get_object(Bucket=S3_BUCKET, Key=key)["Body"].read()
-                local_file.write_bytes(data)
-                found = True
+        s3 = _get_s3_client()
+        s3_prefix = S3_PREFIX
+        if prefix_filter:
+            s3_prefix += prefix_filter
+        
+        paginator = s3.get_paginator("list_objects_v2")
+        pages = paginator.paginate(Bucket=S3_BUCKET, Prefix=s3_prefix)
+        
+        count = 0
+        for page in pages:
+            for obj in page.get("Contents", []):
+                s3_key = obj["Key"]
+                # Convert S3 key to local path
+                relative_path = s3_key[len(S3_PREFIX):]  # Remove "smartsuite/" prefix
+                local_path = _BASE / relative_path
+                
+                # Only download if S3 is newer
+                if local_path.exists():
+                    local_mtime = datetime.fromtimestamp(local_path.stat().st_mtime)
+                    s3_mtime = obj["LastModified"].replace(tzinfo=None)
+                    if local_mtime >= s3_mtime:
+                        continue
+                
+                # Download
+                local_path.parent.mkdir(parents=True, exist_ok=True)
+                s3.download_file(S3_BUCKET, s3_key, str(local_path))
+                count += 1
+        
+        _last_sync_time = datetime.now()
+        if count > 0:
+            log.info(f"Pulled {count} files from S3")
+        return count
+        
+    except Exception as e:
+        log.warning(f"S3 pull failed: {e}")
+        return 0
 
-        # Also try user_data/{username}/ path
-        if batch_id.startswith("batch_"):
-            username = batch_id[6:]
-            prefix2 = f"user_data/{username}/"
-            resp2 = s3.list_objects_v2(Bucket=S3_BUCKET, Prefix=prefix2)
-            for obj in resp2.get("Contents", []):
-                key = obj["Key"]
-                rel_path = key[len(prefix2):]
-                if not rel_path:
-                    continue
-                local_file = batch_dir / rel_path
-                if not local_file.exists():
-                    local_file.parent.mkdir(parents=True, exist_ok=True)
-                    data = s3.get_object(Bucket=S3_BUCKET, Key=key)["Body"].read()
-                    local_file.write_bytes(data)
-                    found = True
-        return True
-    except Exception:
-        return False
+
+def push_to_s3(local_path: str = None, prefix_filter: str = None):
+    """Push local files to S3.
+    
+    Args:
+        local_path: Specific file to push (absolute path)
+        prefix_filter: Push all files under this relative path (e.g., "output/batch_003/")
+    """
+    try:
+        s3 = _get_s3_client()
+        count = 0
+        
+        if local_path:
+            # Push single file
+            p = Path(local_path)
+            if p.exists() and p.is_file():
+                relative = p.relative_to(_BASE)
+                s3_key = S3_PREFIX + str(relative).replace("\\", "/")
+                s3.upload_file(str(p), S3_BUCKET, s3_key)
+                count = 1
+        elif prefix_filter:
+            # Push all files under prefix
+            local_dir = _BASE / prefix_filter
+            if local_dir.exists():
+                for f in local_dir.rglob("*"):
+                    if f.is_file() and not f.name.startswith("."):
+                        relative = f.relative_to(_BASE)
+                        s3_key = S3_PREFIX + str(relative).replace("\\", "/")
+                        s3.upload_file(str(f), S3_BUCKET, s3_key)
+                        count += 1
+        else:
+            # Push entire output directory
+            for f in OUTPUT_PATH.rglob("*"):
+                if f.is_file() and not f.name.startswith("."):
+                    relative = f.relative_to(_BASE)
+                    s3_key = S3_PREFIX + str(relative).replace("\\", "/")
+                    s3.upload_file(str(f), S3_BUCKET, s3_key)
+                    count += 1
+        
+        if count > 0:
+            log.info(f"Pushed {count} files to S3")
+        return count
+        
+    except Exception as e:
+        log.warning(f"S3 push failed: {e}")
+        return 0
+
+
+def sync_file_to_s3(file_path):
+    """Push a single file to S3 (call after any write operation).
+    Runs in background thread to not block UI.
+    """
+    def _do_push():
+        try:
+            push_to_s3(local_path=str(file_path))
+        except Exception:
+            pass
+    
+    t = threading.Thread(target=_do_push, daemon=True)
+    t.start()
+
+
+def sync_directory_to_s3(dir_path: str):
+    """Push entire directory to S3 in background."""
+    def _do_push():
+        try:
+            relative = Path(dir_path).relative_to(_BASE)
+            push_to_s3(prefix_filter=str(relative).replace("\\", "/"))
+        except Exception:
+            pass
+    
+    t = threading.Thread(target=_do_push, daemon=True)
+    t.start()
+
+
+def full_sync():
+    """Full bidirectional sync: pull from S3, then push local changes."""
+    pull_from_s3(force=True)
+    push_to_s3()
+
+
+def initial_pull():
+    """Called on app startup to get latest data from S3."""
+    log.info("Initial S3 pull starting...")
+    count = pull_from_s3(force=True)
+    log.info(f"Initial S3 pull complete: {count} files updated")
+    return count
+
+
+# --- Integration helper for existing code ---
+
+def patch_mark_data_changed(original_func):
+    """Decorator to add S3 sync after mark_data_changed() calls."""
+    def wrapper(*args, **kwargs):
+        result = original_func(*args, **kwargs)
+        # After data changes, push output to S3
+        sync_directory_to_s3(str(OUTPUT_PATH))
+        return result
+    return wrapper
