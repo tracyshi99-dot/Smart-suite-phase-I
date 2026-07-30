@@ -27,6 +27,7 @@ Region Adapter 是 Smart Suite 的区域配置适配层，实现基于用户 `us
 - **Official_Links**: 各区域的亚马逊官方卖家门户链接列表（如 TW 为 sell.amazon.tw），用于内容检测中验证是否正确引用了对应国家官网链接
 - **Default_Seeds**: 各区域的默认种子检索短语列表
 - **Content_Languages**: 各区域支持的内容输出语言列表（如 ROA 支持繁體中文/韩语/越南语/英语），决定检索短语和文章的生成语言
+- **UI_Language**: 界面显示语言（按钮、标签、导航等），与 Content_Language 独立。登录前默认英文，登录后根据 region/sub_region 自动切换，用户可手动覆盖
 - **Verification_Platforms**: 各区域用于智测验证的 AI 平台集合
 
 ## Requirements
@@ -197,3 +198,22 @@ Region Adapter 是 Smart Suite 的区域配置适配层，实现基于用户 `us
 12. WHEN a user switches content language mid-session, THE Smart_Suite SHALL apply the new language only to subsequently generated items without modifying previously generated content
 13. THE Smart_Suite SHALL validate that article and optimized content output matches the requested language by checking the script of the generated text (e.g., CJK characters for zh-TW, Hangul for ko, Vietnamese diacritics for vi) and flag mismatches as warnings
 14. IF the Zhiyou compliance check detects that an article contains more than 10% of characters from a script inconsistent with the declared content_language (excluding universally recognized brand names and acronyms), THEN THE Smart_Suite SHALL flag it as a "language consistency violation" and recommend rewrite
+
+### Requirement 12: UI Interface Language (i18n)
+
+**User Story:** As a user, I want the application interface (labels, buttons, navigation, tooltips) to display in my preferred language automatically after login, while defaulting to English before login, so that the tool feels native to my team regardless of region.
+
+#### Acceptance Criteria
+
+1. THE Smart_Suite SHALL render the entire UI interface in English by default before any user has logged in (login page, public-facing elements)
+2. WHEN a CN user logs in, THE Smart_Suite SHALL automatically switch the UI interface language to Simplified Chinese (zh-CN)
+3. WHEN an ROA user with sub_region TW logs in, THE Smart_Suite SHALL automatically switch the UI interface language to Traditional Chinese (zh-TW)
+4. WHEN an ROA user with sub_region KR logs in, THE Smart_Suite SHALL automatically switch the UI interface language to Korean (ko)
+5. WHEN an ROA user with sub_region VN logs in, THE Smart_Suite SHALL automatically switch the UI interface language to Vietnamese (vi)
+6. WHEN an ROA user without a sub_region set logs in, THE Smart_Suite SHALL keep the UI interface language as English until the user selects a sub_region
+7. WHEN an NA or EU user logs in, THE Smart_Suite SHALL keep the UI interface language as English
+8. THE Region_Config SHALL include a ui_language field specifying the default UI interface language for that region (CN → "zh-CN", ROA → determined by sub_region, NA → "en", EU → "en")
+9. THE Smart_Suite SHALL display a UI language selector in the sidebar (accessible to all users) allowing manual override of the interface language to any supported UI language: English, 简体中文, 繁體中文, 한국어, Tiếng Việt
+10. WHEN a user manually changes the UI language via the selector, THE Smart_Suite SHALL persist the preference in the user's session and in users.json (user_lang field) so it remembers on next login
+11. THE UI language (interface labels/buttons) SHALL be independent from the content language (Requirement 11) — a user can have English UI but generate content in Korean, or vice versa
+12. THE Smart_Suite SHALL maintain a translation dictionary (i18n strings file) for all UI elements across the five supported UI languages: en, zh-CN, zh-TW, ko, vi
