@@ -1398,13 +1398,8 @@ elif _page_idx == 1:
     st.markdown("""<div class="ss-page-header" style="color:#ffa726;"><h1>📚 """ + ("Query Library" if is_en else "智库 – 检索短语产出与验证") + """</h1><p>""" + ("Produce → Calibrate → Dedupe → Select → Verify Gap → Confirm" if is_en else "产出 → 校准 → 去重 → 选取 → 验证Gap → 确认进智造") + """</p></div>""", unsafe_allow_html=True)
     render_pipeline_flow("zhiku", selected_batch)
 
-    # --- Rules & Download (top of page, consistent with 智造/智优) ---
-    # Only show for CN users (ROA/NA/EU don't need CN-specific seed rules)
-    _show_rules = st.session_state.get("_user_region", "CN") == "CN"
-    if RULES_UI_AVAILABLE and _show_rules:
-        render_zhiku_rules(current_user, is_en)
-        _dl_zhiku_df = load_zhiku(selected_batch)
-        render_zhiku_download(current_user, is_en, _dl_zhiku_df)
+    # --- Rules section removed (no longer needed for any region) ---
+    # Ahrefs download still available for non-CN users via render_ahrefs_zhiku below
 
     # ============================================================
     # USER VIEW: Simplified 3-tab interface

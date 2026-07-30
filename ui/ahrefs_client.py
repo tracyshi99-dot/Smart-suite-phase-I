@@ -22,7 +22,7 @@ from detection_rules import check_brand_mention, check_official_link, get_brand_
 # --- Config ---
 AHREFS_API_BASE = "https://api.ahrefs.com/v3"
 DEFAULT_REPORT_ID = "019e4f11-83ad-7648-a3d4-5a0d3760861e"
-ALLOWED_USERS = ["rickylan", "yujiashi"]  # Only these users can see Ahrefs data
+ALLOWED_USERS = []  # Empty = use region-based auth (all non-CN users get access)
 
 # Brand definition
 BRAND_CONFIG = {
@@ -67,8 +67,21 @@ def get_api_key() -> str:
 
 
 def is_user_authorized(user: str) -> bool:
-    """Check if user is authorized to view Ahrefs data."""
-    return user.lower().strip() in [u.lower() for u in ALLOWED_USERS]
+    """Check if user is authorized to view Ahrefs data.
+    Region-based: all non-CN users can see Ahrefs data. Admins always have access.
+    """
+    if ALLOWED_USERS:
+        return user.lower().strip() in [u.lower() for u in ALLOWED_USERS]
+    # Region-based: all non-CN users + admins get access
+    try:
+        from region_adapter import get_user_region
+        user_region = get_user_region(user.lower().strip())
+        # Non-CN users see Ahrefs; CN admins also see it
+        if user_region != "CN":
+            return True
+        return user.lower().strip() in ["yujiashi", "admin"]
+    except Exception:
+        return user.lower().strip() in ["yujiashi", "admin"]
 
 
 def _headers() -> dict:
