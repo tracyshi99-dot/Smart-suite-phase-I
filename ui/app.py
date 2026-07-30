@@ -1305,6 +1305,12 @@ elif _page_idx == 1:
     st.markdown("""<div class="ss-page-header" style="color:#ffa726;"><h1>📚 """ + ("Query Library" if is_en else "智库 – 检索短语产出与验证") + """</h1><p>""" + ("Produce → Calibrate → Dedupe → Select → Verify Gap → Confirm" if is_en else "产出 → 校准 → 去重 → 选取 → 验证Gap → 确认进智造") + """</p></div>""", unsafe_allow_html=True)
     render_pipeline_flow("zhiku", selected_batch)
 
+    # --- Rules & Download (top of page, consistent with 智造/智优) ---
+    if RULES_UI_AVAILABLE:
+        render_zhiku_rules(current_user, is_en)
+        _dl_zhiku_df = load_zhiku(selected_batch)
+        render_zhiku_download(current_user, is_en, _dl_zhiku_df)
+
     # ============================================================
     # USER VIEW: Simplified 3-tab interface
     # ============================================================
@@ -2372,14 +2378,6 @@ Requirements:
     if AHREFS_AVAILABLE:
         render_ahrefs_zhiku(current_user, is_en)
 
-    # --- Detection Rules & Download Section ---
-    if RULES_UI_AVAILABLE:
-        # Download full query list
-        _dl_zhiku_df = load_zhiku(selected_batch)
-        render_zhiku_download(current_user, is_en, _dl_zhiku_df)
-        # Rules editor
-        render_zhiku_rules(current_user, is_en)
-
 
     # ============================================================
     # PAGE: 智测 (Gap Verification)
@@ -2387,6 +2385,10 @@ Requirements:
 elif _page_idx == 2:
     st.markdown("""<div class="ss-page-header" style="color:#00d4aa;"><h1>🔍 """ + ("Gap Verification" if is_en else "智测 – AI 检索覆盖验证") + """</h1><p>""" + ("Verify search phrases against 7 AI platforms to discover content gaps" if is_en else "在 7 个 AI 平台验证检索短语的覆盖状态，发现内容 Gap") + """</p></div>""", unsafe_allow_html=True)
     render_pipeline_flow("zhice", selected_batch)
+
+    # --- Detection Rules (top of page, consistent with 智造/智优) ---
+    if RULES_UI_AVAILABLE:
+        render_zhice_rules(current_user, is_en)
 
     # --- Input: phrases to verify ---
     st.markdown("""<div class="ss-section">
@@ -2915,10 +2917,6 @@ elif _page_idx == 2:
     # --- Ahrefs Brand Radar Section (rickylan only) ---
     if AHREFS_AVAILABLE:
         render_ahrefs_zhice(current_user, is_en)
-
-    # --- Detection Rules Section ---
-    if RULES_UI_AVAILABLE:
-        render_zhice_rules(current_user, is_en)
 
 
 # ============================================================
