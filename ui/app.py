@@ -1186,6 +1186,15 @@ with st.sidebar:
                 if _sub_choice != "— Select —" and _sub_choice != _current_sub:
                     save_user_sub_region(current_user, _sub_choice)
                     st.session_state["_active_sub_region"] = _sub_choice
+                    # Auto-set content language based on sub-region
+                    _sub_lang_map = {"TW": "zh-TW", "KR": "ko", "VN": "vi"}
+                    _auto_cl = _sub_lang_map.get(_sub_choice, "en")
+                    st.session_state["content_language"] = _auto_cl
+                    # Sync UI language
+                    if _auto_cl.startswith("zh"):
+                        st.session_state["ui_lang"] = "中文"
+                    else:
+                        st.session_state["ui_lang"] = "English"
                     st.rerun()
                 elif _current_sub:
                     st.session_state["_active_sub_region"] = _current_sub
@@ -1209,7 +1218,17 @@ with st.sidebar:
                     _cl_names, index=_cl_current_idx, key="content_lang_select"
                 )
                 _cl_selected_idx = _cl_names.index(_cl_selection)
-                st.session_state["content_language"] = _cl_codes[_cl_selected_idx]
+                _new_cl = _cl_codes[_cl_selected_idx]
+                # Auto-sync UI language when content language changes
+                if _new_cl != st.session_state.get("content_language"):
+                    st.session_state["content_language"] = _new_cl
+                    # Sync UI: zh-TW/zh-CN → 中文, others → English
+                    if _new_cl.startswith("zh"):
+                        st.session_state["ui_lang"] = "中文"
+                    else:
+                        st.session_state["ui_lang"] = "English"
+                    st.rerun()
+                st.session_state["content_language"] = _new_cl
             else:
                 st.session_state["content_language"] = _content_langs[0]["code"] if _content_langs else "en"
 
