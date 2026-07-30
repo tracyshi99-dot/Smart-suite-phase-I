@@ -1399,7 +1399,9 @@ elif _page_idx == 1:
     render_pipeline_flow("zhiku", selected_batch)
 
     # --- Rules & Download (top of page, consistent with 智造/智优) ---
-    if RULES_UI_AVAILABLE:
+    # Only show for CN users (ROA/NA/EU don't need CN-specific seed rules)
+    _show_rules = st.session_state.get("_user_region", "CN") == "CN"
+    if RULES_UI_AVAILABLE and _show_rules:
         render_zhiku_rules(current_user, is_en)
         _dl_zhiku_df = load_zhiku(selected_batch)
         render_zhiku_download(current_user, is_en, _dl_zhiku_df)
