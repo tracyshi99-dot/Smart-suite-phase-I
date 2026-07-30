@@ -2483,6 +2483,9 @@ elif _page_idx == 2:
                     }
                     for _, row in _df_ahrefs_zhice.iterrows():
                         q = str(row.get("ai_query", "")).strip().lower()
+                        # Also strip punctuation for looser matching
+                        import re as _re_match
+                        q_clean = _re_match.sub(r'[？?！!。，、\s]+', '', q).strip()
                         ds = str(row.get("data_source", ""))
                         mapped_platform = _ahrefs_platform_map.get(ds, ds)
                         _ahrefs_coverage[(q, mapped_platform)] = {
@@ -2493,15 +2496,22 @@ elif _page_idx == 2:
                         }
                         # Also map to the raw data_source name for direct matching
                         _ahrefs_coverage[(q, ds)] = _ahrefs_coverage[(q, mapped_platform)]
+                        # Store cleaned version too (without punctuation)
+                        if q_clean != q:
+                            _ahrefs_coverage[(q_clean, mapped_platform)] = _ahrefs_coverage[(q, mapped_platform)]
+                            _ahrefs_coverage[(q_clean, ds)] = _ahrefs_coverage[(q, mapped_platform)]
                     # Also index by query only (for any-platform lookup)
                     for _, row in _df_ahrefs_zhice.iterrows():
                         q = str(row.get("ai_query", "")).strip().lower()
+                        q_clean = _re_match.sub(r'[？?！!。，、\s]+', '', q).strip()
                         if (q, "_any") not in _ahrefs_coverage:
                             _ahrefs_coverage[(q, "_any")] = {
                                 "has_brand_mention": bool(row.get("has_brand_mention", False)),
                                 "has_official_link": bool(row.get("has_official_link", False)),
                                 "source": "Ahrefs",
                             }
+                        if q_clean != q and (q_clean, "_any") not in _ahrefs_coverage:
+                            _ahrefs_coverage[(q_clean, "_any")] = _ahrefs_coverage[(q, "_any")]
         except Exception as _e:
             _ahrefs_debug_msg = f"Ahrefs error: {str(_e)[:100]}"
 
@@ -2563,7 +2573,12 @@ elif _page_idx == 2:
                     for platform in selected_platforms:
                         # Check if Ahrefs already has data for this query+platform
                         _q_lower = query.strip().lower()
-                        _ahrefs_hit = _ahrefs_coverage.get((_q_lower, platform))
+                        import re as _re_lookup
+                        _q_clean = _re_lookup.sub(r'[？?！!。，、\s]+', '', _q_lower).strip()
+                        _ahrefs_hit = (_ahrefs_coverage.get((_q_lower, platform))
+                                       or _ahrefs_coverage.get((_q_clean, platform))
+                                       or _ahrefs_coverage.get((_q_lower, "_any"))
+                                       or _ahrefs_coverage.get((_q_clean, "_any")))
                         if _ahrefs_hit:
                             # Use Ahrefs data — no need to call API
                             results.append({
