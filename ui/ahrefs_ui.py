@@ -140,85 +140,30 @@ def _import_to_zhiku(df_ahrefs: pd.DataFrame, is_en: bool = False):
 # ============================================================
 
 def render_ahrefs_zhice(current_user: str, is_en: bool = False):
-    """Render Ahrefs section for 智测 page — queries already verified by Ahrefs (no re-test needed)."""
+    """Render Ahrefs summary for 智测 page — compact info since data is merged into verification results."""
     if not _check_access(current_user):
         return
 
-    st.divider()
-    expander_title = "🔗 Ahrefs Coverage Data" if is_en else "🔗 Ahrefs 已有覆盖数据"
-    with st.expander(expander_title, expanded=False):
-        st.caption(
-            "Queries where Ahrefs already has AI response data — no need to re-test manually."
-            if is_en else
-            "Ahrefs 已有 AI 回答数据的短语 — 无需手动重新验证。"
-        )
+    try:
+        df_queries = get_ahrefs_queries_df()
+    except Exception:
+        return
 
-        # Fetch query-level data
-        try:
-            df_queries = get_ahrefs_queries_df()
-        except Exception as e:
-            st.error(f"Failed to fetch Ahrefs query data: {str(e)[:200]}")
-            return
+    if df_queries.empty:
+        return
 
-        if df_queries.empty:
-            st.info(
-                "No coverage data available from Ahrefs."
-                if is_en else
-                "暂无 Ahrefs 覆盖数据。"
-            )
-            return
-
-        # Metrics: how many queries have data
-        total = len(df_queries)
-        with_link = df_queries["has_official_link"].sum()
-        with_mention = df_queries["has_brand_mention"].sum()
-
-        st.markdown(
-            f"**{total} queries already have Ahrefs data (no need to re-test)**"
-            if is_en else
-            f"**{total} 条短语已有 Ahrefs 数据（无需重新验证）**"
-        )
-
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric(
-                "With Official Link" if is_en else "含官方链接",
-                f"{int(with_link)}/{total}"
-            )
-        with col2:
-            st.metric(
-                "With Brand Mention" if is_en else "含品牌提及",
-                f"{int(with_mention)}/{total}"
-            )
-        with col3:
-            st.metric(
-                "Source" if is_en else "数据来源",
-                "Ahrefs"
-            )
-
-        # Display coverage table
-        display_df = df_queries[["ai_query", "data_source", "has_official_link", "has_brand_mention"]].copy()
-        display_df["status"] = "已验证(Ahrefs)"
-        display_df.columns = (
-            ["Query", "Platform", "Official Link", "Brand Mention", "Status"]
-            if is_en else
-            ["检索短语", "平台", "官方链接", "品牌提及", "状态"]
-        )
-        link_col = "Official Link" if is_en else "官方链接"
-        mention_col = "Brand Mention" if is_en else "品牌提及"
-        display_df[link_col] = display_df[link_col].map({True: "✅", False: "❌"})
-        display_df[mention_col] = display_df[mention_col].map({True: "✅", False: "❌"})
-
-        st.dataframe(display_df, use_container_width=True, hide_index=True, height=300)
-
-        # Platform breakdown
-        st.markdown("---")
-        st.markdown("**" + ("Platform Breakdown" if is_en else "平台分布") + "**")
-        platform_counts = df_queries["data_source"].value_counts().reset_index()
-        platform_counts.columns = (
-            ["Platform", "Queries"] if is_en else ["平台", "短语数"]
-        )
-        st.dataframe(platform_counts, use_container_width=True, hide_index=True)
+    # Compact summary (data is merged into main verification flow)
+    total = len(df_queries)
+    with_link = int(df_queries["has_official_link"].sum())
+    with_mention = int(df_queries["has_brand_mention"].sum())
+    platforms = df_queries["data_source"].nunique()
+    st.caption(
+        f"🔗 Ahrefs: {total} queries pre-verified across {platforms} platforms | "
+        f"Official links: {with_link}/{total} | Brand mentions: {with_mention}/{total}"
+        if is_en else
+        f"🔗 Ahrefs: {total} 条短语已有验证数据（{platforms} 个平台）| "
+        f"官方链接: {with_link}/{total} | 品牌提及: {with_mention}/{total}"
+    )
 
 
 # ============================================================

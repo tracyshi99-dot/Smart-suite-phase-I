@@ -2463,6 +2463,53 @@ elif _page_idx == 2:
 
     st.divider()
 
+    # --- Pre-fill Ahrefs coverage data (skip re-testing for covered queries+platforms) ---
+    _ahrefs_coverage = {}  # {(query_lower, platform): {has_brand, has_link, source}}
+    if AHREFS_AVAILABLE:
+        try:
+            from ahrefs_client import is_user_authorized as _iau, get_api_key as _gak, get_ahrefs_queries_df as _gaqdf
+            if _iau(current_user) and _gak():
+                _df_ahrefs_zhice = _gaqdf()
+                if not _df_ahrefs_zhice.empty:
+                    # Map Ahrefs data_source names to our platform codes
+                    _ahrefs_platform_map = {
+                        "chatgpt": "chatgpt", "perplexity": "perplexity", "gemini": "gemini",
+                        "google_ai_overviews": "gemini", "google_ai_overviews_keywords": "gemini",
+                        "google_ai_mode": "gemini", "google_ai_mode_keywords": "gemini",
+                        "copilot": "chatgpt",
+                    }
+                    for _, row in _df_ahrefs_zhice.iterrows():
+                        q = str(row.get("ai_query", "")).strip().lower()
+                        ds = str(row.get("data_source", ""))
+                        mapped_platform = _ahrefs_platform_map.get(ds, ds)
+                        _ahrefs_coverage[(q, mapped_platform)] = {
+                            "has_brand_mention": bool(row.get("has_brand_mention", False)),
+                            "has_official_link": bool(row.get("has_official_link", False)),
+                            "source": "Ahrefs",
+                            "data_source_raw": ds,
+                        }
+                    # Also index by query only (for any-platform lookup)
+                    for _, row in _df_ahrefs_zhice.iterrows():
+                        q = str(row.get("ai_query", "")).strip().lower()
+                        if (q, "_any") not in _ahrefs_coverage:
+                            _ahrefs_coverage[(q, "_any")] = {
+                                "has_brand_mention": bool(row.get("has_brand_mention", False)),
+                                "has_official_link": bool(row.get("has_official_link", False)),
+                                "source": "Ahrefs",
+                            }
+        except Exception:
+            pass
+
+    # Show Ahrefs pre-coverage info
+    if _ahrefs_coverage and queue_phrases:
+        covered_count = sum(1 for q in queue_phrases if (q.strip().lower(), "_any") in _ahrefs_coverage)
+        if covered_count > 0:
+            st.caption(
+                f"🔗 Ahrefs: {covered_count}/{len(queue_phrases)} phrases already have coverage data (will skip matching platforms)"
+                if is_en else
+                f"🔗 Ahrefs: {covered_count}/{len(queue_phrases)} 条短语已有覆盖数据（匹配平台将跳过验证）"
+            )
+
     # --- Execute verification ---
     st.markdown("""<div class="ss-section">
         <h3 style="color:#00d4aa;">② """ + ("Run AI Platform Verification" if is_en else "执行验证") + """</h3>
@@ -2505,6 +2552,23 @@ elif _page_idx == 2:
 
                 for query in queue_phrases:
                     for platform in selected_platforms:
+                        # Check if Ahrefs already has data for this query+platform
+                        _q_lower = query.strip().lower()
+                        _ahrefs_hit = _ahrefs_coverage.get((_q_lower, platform))
+                        if _ahrefs_hit:
+                            # Use Ahrefs data — no need to call API
+                            results.append({
+                                "ai_query": query, "platform": platform,
+                                "has_brand_mention": _ahrefs_hit["has_brand_mention"],
+                                "has_official_link": _ahrefs_hit["has_official_link"],
+                                "competitors_mentioned": "",
+                                "sentiment": "neutral",
+                                "source": "Ahrefs",
+                            })
+                            done += 1
+                            progress.progress(done / total)
+                            continue
+
                         api_func = REAL_API_MAP.get(platform)
                         answer = ""
                         try:
@@ -2552,6 +2616,7 @@ elif _page_idx == 2:
                             "has_brand_mention": has_brand, "has_official_link": has_link,
                             "competitors_mentioned": ", ".join(competitors_found) if competitors_found else "",
                             "sentiment": sentiment,
+                            "source": "API",
                         })
                         done += 1
                         progress.progress(done / total)
@@ -2594,6 +2659,7 @@ elif _page_idx == 2:
                             "competitors": ", ".join(competitors_list) if competitors_list else "—",
                             "competitor_gap": competitor_gap,
                             "sentiment": sentiment_display,
+                            "source": row.get("source", "API"),
                         })
 
                 df_gap = pd.DataFrame(gap_summary)
