@@ -1069,6 +1069,65 @@ NAV_PAGES_EN = [
     "📝 Ops Dashboard",
 ]
 
+NAV_PAGES_TW = [
+    "🏠 總覽",
+    "📚 智庫",
+    "🔍 智測",
+    "✍️ 智造",
+    "🔧 智優",
+    "📦 智佈",
+    "📡 智傳",
+    "📈 智析",
+    "🎯 智中樞",
+    "───────────",
+    "🔄 需求提交",
+    "🔍 引用分析",
+    "⚙️ Settings",
+    "📝 營運看板",
+]
+
+NAV_PAGES_KO = [
+    "🏠 개요",
+    "📚 리서치",
+    "🔍 테스팅",
+    "✍️ 콘텐츠 생성",
+    "🔧 최적화",
+    "📦 퍼블리싱",
+    "📡 배포",
+    "📈 분석",
+    "🎯 허브",
+    "───────────",
+    "🔄 요청",
+    "🔍 인용 분석",
+    "⚙️ Settings",
+    "📝 운영 대시보드",
+]
+
+NAV_PAGES_VI = [
+    "🏠 Tổng quan",
+    "📚 Nghiên cứu",
+    "🔍 Kiểm thử",
+    "✍️ Sáng tạo",
+    "🔧 Tối ưu hóa",
+    "📦 Xuất bản",
+    "📡 Phân phối",
+    "📈 Phân tích",
+    "🎯 Trung tâm",
+    "───────────",
+    "🔄 Yêu cầu",
+    "🔍 Phân tích trích dẫn",
+    "⚙️ Settings",
+    "📝 Bảng điều hành",
+]
+
+_NAV_BY_LANG = {
+    "en": NAV_PAGES_EN,
+    "zh-CN": NAV_PAGES_ZH,
+    "zh-TW": NAV_PAGES_TW,
+    "ko": NAV_PAGES_KO,
+    "vi": NAV_PAGES_VI,
+}
+
 
 # ============================================================
 # SIDEBAR
@@ -1103,7 +1162,7 @@ with st.sidebar:
             st.session_state["ui_lang_auto_set"] = True
         else:
             # CN users auto-switch to Chinese
-            st.session_state["ui_lang"] = "中文"
+            st.session_state["ui_lang"] = "简体中文"
             st.session_state["ui_lang_auto_set"] = True
     # Default to English if no user logged in yet
     if not _current_user_for_lang and "ui_lang" not in st.session_state:
@@ -1111,11 +1170,23 @@ with st.sidebar:
 
     st.title("🧠 Smart Suite")
 
-    # Language selector - clearly visible in sidebar
-    ui_lang = st.selectbox("🌐 Language / 语言", ["English", "中文"], key="ui_lang")
-    is_en = (ui_lang == "English")
+    # Language selector - 5 languages supported
+    _UI_LANG_OPTIONS = ["English", "简体中文", "繁體中文", "한국어", "Tiếng Việt"]
+    _UI_LANG_TO_CODE = {"English": "en", "简体中文": "zh-CN", "繁體中文": "zh-TW", "한국어": "ko", "Tiếng Việt": "vi"}
+    _UI_CODE_TO_LANG = {v: k for k, v in _UI_LANG_TO_CODE.items()}
+    ui_lang = st.selectbox("🌐 Language", _UI_LANG_OPTIONS, key="ui_lang")
+    _ui_lang_code = _UI_LANG_TO_CODE.get(ui_lang, "en")
+    is_en = (_ui_lang_code == "en")
 
-    st.caption("GEO Content Pipeline · Phase I" if is_en else "智系列 · GEO Content Pipeline · Phase I")
+    # Activate i18n
+    try:
+        from i18n import set_language, t
+        set_language(_ui_lang_code)
+    except ImportError:
+        def t(key, lang=None):
+            return key
+
+    st.caption("GEO Content Pipeline · Phase I" if is_en else t("zhiku.title").split("–")[0].strip() + " · Phase I")
 
     # --- Login ---
 
@@ -1142,7 +1213,7 @@ with st.sidebar:
                     st.session_state["ui_lang"] = "English"
                 else:
                     # CN users (not in user_lang or user_lang != "en") get Chinese
-                    st.session_state["ui_lang"] = "中文"
+                    st.session_state["ui_lang"] = "简体中文"
                 st.session_state["ui_lang_auto_set"] = True
         else:
             st.session_state["app_user"] = ""
@@ -1190,11 +1261,9 @@ with st.sidebar:
                     _sub_lang_map = {"TW": "zh-TW", "KR": "ko", "VN": "vi"}
                     _auto_cl = _sub_lang_map.get(_sub_choice, "en")
                     st.session_state["content_language"] = _auto_cl
-                    # Sync UI language
-                    if _auto_cl.startswith("zh"):
-                        st.session_state["ui_lang"] = "中文"
-                    else:
-                        st.session_state["ui_lang"] = "English"
+                    # Sync UI language to match content language
+                    _cl_to_ui = {"zh-TW": "繁體中文", "zh-CN": "简体中文", "ko": "한국어", "vi": "Tiếng Việt", "en": "English"}
+                    st.session_state["ui_lang"] = _cl_to_ui.get(_auto_cl, "English")
                     st.rerun()
                 elif _current_sub:
                     st.session_state["_active_sub_region"] = _current_sub
@@ -1222,11 +1291,9 @@ with st.sidebar:
                 # Auto-sync UI language when content language changes
                 if _new_cl != st.session_state.get("content_language"):
                     st.session_state["content_language"] = _new_cl
-                    # Sync UI: zh-TW/zh-CN → 中文, others → English
-                    if _new_cl.startswith("zh"):
-                        st.session_state["ui_lang"] = "中文"
-                    else:
-                        st.session_state["ui_lang"] = "English"
+                    # Sync UI language to match content language
+                    _cl_to_ui = {"zh-TW": "繁體中文", "zh-CN": "简体中文", "ko": "한국어", "vi": "Tiếng Việt", "en": "English"}
+                    st.session_state["ui_lang"] = _cl_to_ui.get(_new_cl, "English")
                     st.rerun()
                 st.session_state["content_language"] = _new_cl
             else:
@@ -1247,7 +1314,7 @@ with st.sidebar:
     st.divider()
 
     # Select nav pages based on language
-    _full_nav = NAV_PAGES_EN if is_en else NAV_PAGES_ZH
+    _full_nav = _NAV_BY_LANG.get(_ui_lang_code, NAV_PAGES_EN)
     # User: hide admin-only pages (below separator)
     if current_user and not is_admin:
         separator_idx = _full_nav.index("───────────") if "───────────" in _full_nav else len(_full_nav)
@@ -1263,7 +1330,7 @@ with st.sidebar:
             st.session_state["nav_radio"] = target
         else:
             # Try to find matching page by index
-            for pages in [NAV_PAGES_ZH, NAV_PAGES_EN]:
+            for pages in [NAV_PAGES_ZH, NAV_PAGES_EN, NAV_PAGES_TW, NAV_PAGES_KO, NAV_PAGES_VI]:
                 if target in pages:
                     idx = pages.index(target)
                     st.session_state["nav_radio"] = NAV_PAGES[idx]
