@@ -2466,11 +2466,13 @@ elif _page_idx == 2:
 
     # --- Pre-fill Ahrefs coverage data (skip re-testing for covered queries+platforms) ---
     _ahrefs_coverage = {}  # {(query_lower, platform): {has_brand, has_link, source}}
+    _ahrefs_debug_msg = ""
     if AHREFS_AVAILABLE:
         try:
             from ahrefs_client import is_user_authorized as _iau, get_api_key as _gak, get_ahrefs_queries_df as _gaqdf
             if _iau(current_user) and _gak():
                 _df_ahrefs_zhice = _gaqdf()
+                _ahrefs_debug_msg = f"Ahrefs loaded: {len(_df_ahrefs_zhice)} rows"
                 if not _df_ahrefs_zhice.empty:
                     # Map Ahrefs data_source names to our platform codes
                     _ahrefs_platform_map = {
@@ -2489,6 +2491,8 @@ elif _page_idx == 2:
                             "source": "Ahrefs",
                             "data_source_raw": ds,
                         }
+                        # Also map to the raw data_source name for direct matching
+                        _ahrefs_coverage[(q, ds)] = _ahrefs_coverage[(q, mapped_platform)]
                     # Also index by query only (for any-platform lookup)
                     for _, row in _df_ahrefs_zhice.iterrows():
                         q = str(row.get("ai_query", "")).strip().lower()
@@ -2498,8 +2502,8 @@ elif _page_idx == 2:
                                 "has_official_link": bool(row.get("has_official_link", False)),
                                 "source": "Ahrefs",
                             }
-        except Exception:
-            pass
+        except Exception as _e:
+            _ahrefs_debug_msg = f"Ahrefs error: {str(_e)[:100]}"
 
     # Show Ahrefs pre-coverage info
     if _ahrefs_coverage and queue_phrases:
@@ -2510,6 +2514,10 @@ elif _page_idx == 2:
                 if is_en else
                 f"🔗 Ahrefs: {covered_count}/{len(queue_phrases)} 条短语已有覆盖数据（匹配平台将跳过验证）"
             )
+        else:
+            st.caption(f"🔗 {_ahrefs_debug_msg} | coverage keys: {len(_ahrefs_coverage)}")
+    elif _ahrefs_debug_msg:
+        st.caption(f"🔗 {_ahrefs_debug_msg}")
 
     # --- Execute verification ---
     st.markdown("""<div class="ss-section">
