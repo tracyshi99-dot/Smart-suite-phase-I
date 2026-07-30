@@ -1,0 +1,37 @@
+{
+  "mcpServers": {
+    "smartsuite": {
+      "command": "uvx",
+      "args": ["--from", "mcp[cli]", "mcp", "run", "mcp-server/server.py"],
+      "env": {},
+      "disabled": false,
+      "autoApprove": [
+        "zhiku",
+        "zhizao",
+        "zhiyou_score",
+        "zhiyou_execute",
+        "zhiyou_compliance",
+        "zhibu",
+        "zhixi",
+        "zhongshu",
+        "batch_report",
+        "full_pipeline",
+        "get_steering",
+        "zhice",
+        "zhice_platforms"
+      ]
+    },
+    "amazon-quick-mcp": {
+      "command": "wsl",
+      "args": ["-d", "Ubuntu", "-e", "bash", "-lc", "amazon-quick-mcp"],
+      "disabled": false,
+      "serverStartTimeoutMs": 15000,
+      "env": {
+        "QUICKSIGHT_ACCOUNT": "amazonbi",
+        "QUICKSIGHT_REGION": "us-east-1",
+        "QUICKSIGHT_AGENT_ID": "248bf5d2-54aa-4d96-8ead-7c5a11991af9",
+        "QUICKSIGHT_SPACE_ID": "5f4e0090-6189-48a0-a38c-49d1c8d9bc1d"
+      }
+    }
+  }
+}
