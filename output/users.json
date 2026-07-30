@@ -1,5 +1,24 @@
 {
-  "allowed": ["yujiashi", "admin", "fanting", "czhaamzn", "yuchy", "porzh", "linzhshi", "fenixau", "tianranh", "qiudanie", "quadaisy", "budhiraja", "mbudhira", "xinyill", "xdhuang", "gracezjy", "htp", "jinghuaf", "mxyzhang", "emilwliu", "qdhwzj", "panjf", "rickylan", "yountlim", "phunghd", "oanhhtk"],
+  "allowed": [
+    "yujiashi", "admin",
+    "htp", "shencm", "chienlin", "emilwliu", "gurusuh", "hangntt", "nijuno", "zhjiayue", "gracezjy", "jessyhan",
+    "fengceci", "effiezhu", "jltian", "qdhwzj", "siyundai", "tzuchunf", "yudiwan",
+    "ykimche", "liangles", "rickylan", "sylviayj",
+    "cshumin", "xinyill", "kexuache", "yirua", "huiml", "xdhuang", "aizhen",
+    "eunsong", "joouns", "yountlim",
+    "hanhdo", "ntkgiang", "ttthong", "ducnghia", "oanhhtk", "phunghd",
+    "akiyww", "elynj", "zhengyea", "ruoxhuan", "zuezhang",
+    "hengshaz", "qiuwenhl", "lingkzho", "bcoliang", "tyagao", "ngwxuyen",
+    "linzhshi", "luntian", "kouxo", "mxyzhang", "mingcaz", "shiyingp", "shuanyu", "gutingt", "robinyxy", "porzh", "miazhe",
+    "oyingcl", "yanganny", "sdjessie", "jochuang", "keweidu", "lubyshaw", "xiaoldin", "czhaamzn", "fanting", "viviying", "wenliwu", "gwenying", "xuhengl", "yuchy", "zzjn",
+    "llnamzn", "panjf", "ketng", "zhangzq", "vyuqwang",
+    "jinghuaf", "jundingl", "yangqiay", "xisjiang", "shihanya", "xlvhui", "uhlingfe",
+    "yurachel", "bozhuang", "zhanpinn", "xiyang", "fangweii", "sangxiao", "evacui", "patekliu", "atangamz", "yduamzn",
+    "shenhon", "wangnli", "gaoqinfe", "zennying", "liuyixua",
+    "daisiwei", "lynnzl", "miazihui", "nicosun",
+    "renahh", "mengyazm", "syanzhou", "eliangsh", "zhuzinin",
+    "fenixau", "yanyx", "jiayizh", "jiayuch", "jiayunjy", "juliezl", "llzha", "meilig", "tianranh", "yihuaz", "caxiaoto"
+  ],
   "admins": ["yujiashi", "admin"],
   "pending": [],
   "user_lang": {
@@ -9,6 +28,35 @@
     "yountlim": "en",
     "phunghd": "en",
     "oanhhtk": "en",
-    "fenixau": "en"
+    "fenixau": "en",
+    "eunsong": "en",
+    "joouns": "en",
+    "hanhdo": "en",
+    "ntkgiang": "en",
+    "ttthong": "en",
+    "ducnghia": "en",
+    "ngwxuyen": "en",
+    "gurusuh": "en",
+    "hangntt": "en"
+  },
+  "user_region": {
+    "htp": "TW",
+    "shencm": "TW", "chienlin": "TW", "emilwliu": "TW", "nijuno": "TW", "zhjiayue": "TW", "gracezjy": "TW", "jessyhan": "TW",
+    "fengceci": "TW", "effiezhu": "TW", "jltian": "TW", "qdhwzj": "TW", "siyundai": "TW", "tzuchunf": "TW", "yudiwan": "TW",
+    "ykimche": "TW", "liangles": "TW", "rickylan": "TW", "sylviayj": "TW",
+    "cshumin": "TW", "xinyill": "TW", "kexuache": "TW", "yirua": "TW", "huiml": "TW", "xdhuang": "TW", "aizhen": "TW",
+    "akiyww": "TW", "elynj": "TW", "zhengyea": "TW", "ruoxhuan": "TW", "zuezhang": "TW",
+    "hengshaz": "TW", "qiuwenhl": "TW", "lingkzho": "TW", "bcoliang": "TW", "tyagao": "TW",
+    "gurusuh": "KR", "eunsong": "KR", "joouns": "KR", "yountlim": "KR",
+    "hangntt": "VN", "hanhdo": "VN", "ntkgiang": "VN", "ttthong": "VN", "ducnghia": "VN", "oanhhtk": "VN", "phunghd": "VN", "ngwxuyen": "VN",
+    "linzhshi": "CN", "luntian": "CN", "kouxo": "CN", "mxyzhang": "CN", "mingcaz": "CN", "shiyingp": "CN", "shuanyu": "CN", "gutingt": "CN", "robinyxy": "CN", "porzh": "CN", "miazhe": "CN",
+    "oyingcl": "CN", "yanganny": "CN", "sdjessie": "CN", "jochuang": "CN", "keweidu": "CN", "lubyshaw": "CN", "xiaoldin": "CN", "czhaamzn": "CN", "fanting": "CN", "viviying": "CN", "wenliwu": "CN", "gwenying": "CN", "xuhengl": "CN", "yuchy": "CN", "zzjn": "CN", "yujiashi": "CN",
+    "llnamzn": "CN", "panjf": "CN", "ketng": "CN", "zhangzq": "CN", "vyuqwang": "CN",
+    "jinghuaf": "CN", "jundingl": "CN", "yangqiay": "CN", "xisjiang": "CN", "shihanya": "CN", "xlvhui": "CN", "uhlingfe": "CN",
+    "yurachel": "CN", "bozhuang": "CN", "zhanpinn": "CN", "xiyang": "CN", "fangweii": "CN", "sangxiao": "CN", "evacui": "CN", "patekliu": "CN", "atangamz": "CN", "yduamzn": "CN",
+    "shenhon": "CN", "wangnli": "CN", "gaoqinfe": "CN", "zennying": "CN", "liuyixua": "CN",
+    "daisiwei": "CN", "lynnzl": "CN", "miazihui": "CN", "nicosun": "CN",
+    "renahh": "CN", "mengyazm": "CN", "syanzhou": "CN", "eliangsh": "CN", "zhuzinin": "CN",
+    "fenixau": "CN", "yanyx": "CN", "jiayizh": "CN", "jiayuch": "CN", "jiayunjy": "CN", "juliezl": "CN", "llzha": "CN", "meilig": "CN", "tianranh": "CN", "yihuaz": "CN", "caxiaoto": "CN"
   }
 }
