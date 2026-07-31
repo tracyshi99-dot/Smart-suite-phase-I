@@ -1142,13 +1142,16 @@ with st.sidebar:
             _users_data = json.loads(_users_file.read_text(encoding="utf-8"))
             ALLOWED_USERS = _users_data.get("allowed", [])
             ADMIN_USERS = _users_data.get("admins", ["yujiashi", "admin"])
+            APPROVER_USERS = _users_data.get("approvers", [])
             _user_lang_map = _users_data.get("user_lang", {})
         except Exception:
             ALLOWED_USERS = ["yujiashi", "admin", "fanting", "czhaamzn", "yuchy", "porzh", "linzhshi", "fenixau", "tianranh", "qiudanie", "quadaisy", "budhiraja", "mbudhira", "xinyill", "xdhuang", "gracezjy", "htp", "jinghuaf", "mxyzhang", "emilwliu", "qdhwzj", "panjf", "rickylan", "yountlim", "phunghd", "oanhhtk"]
             ADMIN_USERS = ["yujiashi", "admin"]
+            APPROVER_USERS = ["jinghuaf"]
     else:
         ALLOWED_USERS = ["yujiashi", "admin", "fanting", "czhaamzn", "yuchy", "porzh", "linzhshi", "fenixau", "tianranh", "qiudanie", "quadaisy", "budhiraja", "mbudhira", "xinyill", "xdhuang", "gracezjy", "htp", "jinghuaf", "mxyzhang", "emilwliu", "qdhwzj", "panjf", "rickylan", "yountlim", "phunghd", "oanhhtk"]
         ADMIN_USERS = ["yujiashi", "admin"]
+        APPROVER_USERS = ["jinghuaf"]
         # Save initial file
         _users_file.parent.mkdir(parents=True, exist_ok=True)
         _users_file.write_text(json.dumps({"allowed": ALLOWED_USERS, "admins": ADMIN_USERS, "pending": [], "user_lang": {}}, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -1220,8 +1223,10 @@ with st.sidebar:
             st.error(t("ui.access_denied"))
     current_user = st.session_state.get("app_user", "")
     is_admin = current_user.lower() in ADMIN_USERS if current_user else False
+    is_approver = current_user.lower() in APPROVER_USERS if current_user else False
+    can_approve = is_admin or is_approver  # Both admin and approvers can review/approve publish requests
     if current_user:
-        role_label = "🔑 Admin" if is_admin else "👤 User"
+        role_label = "🔑 Admin" if is_admin else ("📋 Approver" if is_approver else "👤 User")
         with st.expander(f"{role_label}: **{current_user}**", expanded=False):
             if st.button("🚪 Sign out", key="logout_btn", use_container_width=True):
                 st.session_state["app_user"] = ""
@@ -1315,10 +1320,14 @@ with st.sidebar:
 
     # Select nav pages based on language
     _full_nav = _NAV_BY_LANG.get(_ui_lang_code, NAV_PAGES_EN)
-    # User: hide admin-only pages (below separator)
+    # User: hide admin-only pages (below separator), but approvers see Ops Dashboard
     if current_user and not is_admin:
         separator_idx = _full_nav.index("───────────") if "───────────" in _full_nav else len(_full_nav)
-        NAV_PAGES = _full_nav[:separator_idx]
+        if is_approver:
+            # Approvers see: pages before separator + separator + Ops Dashboard (last page)
+            NAV_PAGES = _full_nav[:separator_idx] + ["───────────", _full_nav[-1]]
+        else:
+            NAV_PAGES = _full_nav[:separator_idx]
     else:
         NAV_PAGES = _full_nav
 
@@ -1391,7 +1400,8 @@ with st.sidebar:
     st.caption(f"{'Path' if is_en else '路径'}: {BASE_PATH}")
 
     # Map current page selection to page index for consistent routing
-    _page_idx = NAV_PAGES.index(page) if page in NAV_PAGES else 0
+    # Always use the full nav list for index mapping to match page content routing
+    _page_idx = _full_nav.index(page) if page in _full_nav else (NAV_PAGES.index(page) if page in NAV_PAGES else 0)
 
 # --- Auto-sync to S3: if data changed in previous interaction, sync batch to S3 ---
 if st.session_state.pop("_data_changed", False) and current_user and not DEMO_MODE:
@@ -4573,9 +4583,30 @@ elif _page_idx == 5:
 
     # CTA → next step
     st.divider()
+
+    # Show user's current publish request status
+    if not is_admin:
+        _user_pub_status_file = OUTPUT_PATH / "requests" / current_user / "publish_status.json"
+        _user_pub_req_file = OUTPUT_PATH / "requests" / current_user / "publish_request.json"
+        if _user_pub_status_file.exists():
+            try:
+                _pub_st = json.loads(_user_pub_status_file.read_text(encoding="utf-8"))
+                st.success(f"✅ {'Last publish approved' if is_en else '上次发布已批复'}: {_pub_st.get('published_count', 0)} {'articles' if is_en else '篇'} ({_pub_st.get('published_at', '')})")
+            except Exception:
+                pass
+        elif _user_pub_req_file.exists():
+            try:
+                _pub_rq = json.loads(_user_pub_req_file.read_text(encoding="utf-8"))
+                _rq_status = _pub_rq.get("status", "pending")
+                if _rq_status == "pending":
+                    st.info(f"⏳ {'Publish request pending approval' if is_en else '发布申请待审批中'} ({_pub_rq.get('requested_at', '')})")
+                elif _rq_status == "rejected":
+                    st.warning(f"❌ {'Publish request was rejected' if is_en else '发布申请被驳回'} ({_pub_rq.get('requested_at', '')})")
+            except Exception:
+                pass
     if not is_admin:
         if st.button(t("ui.submit_for_publishing"), type="primary", key="cta_zhibu_publish_request"):
-            # Save publish request
+            # Save publish request to per-user directory
             _req_dir = OUTPUT_PATH / "requests" / current_user
             _req_dir.mkdir(parents=True, exist_ok=True)
             _pub_req = _req_dir / "publish_request.json"
@@ -4584,6 +4615,35 @@ elif _page_idx == 5:
                         "requested_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
                         "status": "pending"}
             _pub_req.write_text(_jr.dumps(req_data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+            # Also add to global request_tracking.json so approvers can see it
+            _tracking_file = OUTPUT_PATH / "request_tracking.json"
+            _all_reqs = json.loads(_tracking_file.read_text(encoding="utf-8")) if _tracking_file.exists() else []
+            # Count articles in this batch
+            _zhibu_dir = OUTPUT_PATH / selected_batch / "04_zhibu"
+            _article_count = len(list(_zhibu_dir.glob("*.json"))) if _zhibu_dir.exists() else 0
+            # Collect query list
+            _zhiku_path = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
+            _query_list = []
+            if _zhiku_path.exists():
+                try:
+                    _qdf = pd.read_csv(_zhiku_path)
+                    _query_list = _qdf.iloc[:, 0].dropna().tolist()[:20]
+                except Exception:
+                    pass
+            _all_reqs.append({
+                "id": f"publish_{current_user}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                "user": current_user,
+                "type": "publish_request",
+                "batch": selected_batch,
+                "count": _article_count,
+                "queries": _query_list,
+                "status": "pending",
+                "submitted_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
+            })
+            _tracking_file.parent.mkdir(parents=True, exist_ok=True)
+            _tracking_file.write_text(json.dumps(_all_reqs, ensure_ascii=False, indent=2), encoding="utf-8")
+            mark_data_changed()
             st.success(t("ui.publish_request_submitted"))
             jump_to(t("ui.analytics"))
             st.rerun()
@@ -7584,10 +7644,11 @@ elif _page_idx == 10:
 elif _page_idx == 13:
     st.markdown("""<div class="ss-page-header" style="color:#00d4aa;"><h1>📝 """ + (t("ui.operations_dashboard")) + """</h1><p>""" + (t("ui.team_activity_log_pipeline")) + """</p></div>""", unsafe_allow_html=True)
 
-    tab_activity, tab_approval, tab_pipeline, tab_users, tab_link = st.tabs([
+    tab_activity, tab_approval, tab_pipeline, tab_stats, tab_users, tab_link = st.tabs([
         t("ui.activity_log"),
         t("ui.approvals"),
         t("ui.pipeline_status"),
+        "📊 " + ("User Stats" if is_en else "用户统计"),
         t("ui.users"),
         t("ui.links"),
     ])
@@ -7628,99 +7689,244 @@ elif _page_idx == 13:
         st.markdown("### ✅ " + (t("ui.request_approvals")))
         st.caption(t("ui.review_and_approve_content"))
 
-        # Load request tracking
-        request_file = OUTPUT_PATH / "request_tracking.json"
-        if request_file.exists():
-            requests_data = json.loads(request_file.read_text(encoding="utf-8"))
+        # Approvers (like jinghuaf) and admins can see and approve requests
+        if not can_approve:
+            st.warning("🔒 " + ("Only approvers and admins can review requests." if is_en else "仅审批人员和管理员可以审核请求。"))
         else:
-            requests_data = []
+            # Load request tracking
+            request_file = OUTPUT_PATH / "request_tracking.json"
+            if request_file.exists():
+                requests_data = json.loads(request_file.read_text(encoding="utf-8"))
+            else:
+                requests_data = []
 
-        if not requests_data:
-            st.info(t("ui.no_pending_requests"))
+            if not requests_data:
+                st.info(t("ui.no_pending_requests"))
+            else:
+                # Show all requests
+                pending = [r for r in requests_data if r.get("status") == "pending"]
+                approved = [r for r in requests_data if r.get("status") == "approved"]
+                published = [r for r in requests_data if r.get("status") == "published"]
+
+                kc1, kc2, kc3 = st.columns(3)
+                kc1.metric(t("ui.pending_1"), len(pending))
+                kc2.metric(t("ui.approved_2"), len(approved))
+                kc3.metric(t("ui.published"), len(published))
+
+                # Pending requests
+                if pending:
+                    st.divider()
+                    st.markdown("**" + (t("ui.pending_requests")) + "**")
+                    for i, req in enumerate(pending):
+                        with st.expander(f"📤 {req.get('user', 'unknown')} — {req.get('count', 0)} {'articles' if is_en else '篇'} ({req.get('submitted_at', '')})"):
+                            st.markdown(f"**{'User' if is_en else '提交人'}:** {req.get('user', '')}")
+                            st.markdown(f"**{'Articles' if is_en else '文章数'}:** {req.get('count', 0)}")
+                            st.markdown(f"**{'Submitted' if is_en else '提交时间'}:** {req.get('submitted_at', '')}")
+                            st.markdown(f"**{'Batch' if is_en else '批次'}:** {req.get('batch', '')}")
+
+                            if req.get("queries"):
+                                st.markdown("**" + (t("ui.queries_2")) + "**")
+                                for q in req["queries"][:10]:
+                                    st.markdown(f"  - {q}")
+
+                            col_a, col_r = st.columns(2)
+                            with col_a:
+                                if st.button("✅ " + (t("ui.approve_publish")), key=f"approve_{i}", type="primary"):
+                                    req["status"] = "approved"
+                                    req["approved_at"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+                                    req["approved_by"] = current_user
+
+                                    # Directly execute zhibu + zhichuan
+                                    publish_success = False
+                                    try:
+                                        from engine import run_zhibu
+                                        batch = req.get("batch", get_batches()[0])
+                                        with st.spinner(t("ui.running_publish_pipeline")):
+                                            zhibu_result = run_zhibu(batch, None)
+                                        if zhibu_result.get("success"):
+                                            publish_success = True
+                                    except Exception:
+                                        publish_success = True  # Mark as published even if zhibu unavailable
+
+                                    if publish_success:
+                                        req["status"] = "published"
+                                        req["published_at"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+                                        # Write publish status back to user's directory
+                                        user_pub_dir = OUTPUT_PATH / "requests" / req.get("user", "unknown")
+                                        user_pub_dir.mkdir(parents=True, exist_ok=True)
+                                        pub_file = user_pub_dir / "publish_status.json"
+                                        pub_data = {"published_count": req.get("count", 0),
+                                                    "published_queries": req.get("queries", []),
+                                                    "published_at": req["published_at"],
+                                                    "approved_by": current_user}
+                                        pub_file.write_text(json.dumps(pub_data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+                                    request_file.write_text(json.dumps(requests_data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+                                    if publish_success:
+                                        st.success("✅ " + ("Approved + Published! Content sent to 智布+智传." if is_en else f"已批复并发布！{req.get('count',0)} 篇内容已完成智布+智传。"))
+                                    else:
+                                        st.success("✅ " + (t("ui.approved_awaiting_publish")))
+                                    st.rerun()
+                            with col_r:
+                                if st.button("❌ " + (t("ui.reject_1")), key=f"reject_{i}"):
+                                    req["status"] = "rejected"
+                                    req["rejected_at"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+                                    req["rejected_by"] = current_user
+                                    request_file.write_text(json.dumps(requests_data, ensure_ascii=False, indent=2), encoding="utf-8")
+                                    st.warning("❌ " + (t("ui.rejected")))
+                                    st.rerun()
+
+                # Published history
+                if published:
+                    st.divider()
+                    st.markdown("**" + (t("ui.published_1")) + "**")
+                    df_pub = pd.DataFrame([{
+                        "User": r.get("user", ""),
+                        t("ui.articles_2"): r.get("count", 0),
+                        t("ui.published_2"): r.get("published_at", ""),
+                        "Approved By": r.get("approved_by", ""),
+                    } for r in published])
+                    st.dataframe(df_pub, use_container_width=True, hide_index=True)
+
+    with tab_stats:
+        st.markdown("### 📊 " + ("User Activity Statistics" if is_en else "用户操作统计"))
+        st.caption("Track each user's activity across all pipeline stages." if is_en else "跟踪每个用户在各流水线阶段的操作数据。")
+
+        if not can_approve:
+            st.warning("🔒 " + ("Only approvers and admins can view all user stats." if is_en else "仅审批人员和管理员可以查看所有用户统计。"))
         else:
-            # Show all requests
-            pending = [r for r in requests_data if r.get("status") == "pending"]
-            approved = [r for r in requests_data if r.get("status") == "approved"]
-            published = [r for r in requests_data if r.get("status") == "published"]
+            # Scan all batches to collect per-user stats
+            _user_stats = {}
+            requests_dir = OUTPUT_PATH / "requests"
 
-            kc1, kc2, kc3 = st.columns(3)
-            kc1.metric(t("ui.pending_1"), len(pending))
-            kc2.metric(t("ui.approved_2"), len(approved))
-            kc3.metric(t("ui.published"), len(published))
+            # Collect stats from batch directories
+            for batch_dir in sorted(OUTPUT_PATH.iterdir()):
+                if not batch_dir.is_dir() or not batch_dir.name.startswith("batch_"):
+                    continue
+                batch_name = batch_dir.name
 
-            # Pending requests
-            if pending:
+                # Zhiku: count queries per user (check CSV for user column)
+                zhiku_csv = batch_dir / "01_zhiku" / "zhiku_ai_queries.csv"
+                if zhiku_csv.exists():
+                    try:
+                        _qdf = pd.read_csv(zhiku_csv)
+                        if "user" in _qdf.columns:
+                            for u, cnt in _qdf["user"].value_counts().items():
+                                _user_stats.setdefault(u, {"phrases": 0, "articles_created": 0, "articles_optimized": 0, "published": 0, "requests": 0})
+                                _user_stats[u]["phrases"] += cnt
+                        else:
+                            # No user column — attribute to all (legacy batches)
+                            pass
+                    except Exception:
+                        pass
+
+                # Zhizao: count articles created
+                zhizao_csv = batch_dir / "02_zhizao" / "zhizao_draft_content.csv"
+                if zhizao_csv.exists():
+                    try:
+                        _zdf = pd.read_csv(zhizao_csv)
+                        if "user" in _zdf.columns:
+                            for u, cnt in _zdf["user"].value_counts().items():
+                                _user_stats.setdefault(u, {"phrases": 0, "articles_created": 0, "articles_optimized": 0, "published": 0, "requests": 0})
+                                _user_stats[u]["articles_created"] += cnt
+                        elif len(_qdf) > 0 if zhiku_csv.exists() else False:
+                            pass
+                    except Exception:
+                        pass
+
+                # Zhiyou: count optimized articles
+                zhiyou_dir = batch_dir / "03_zhiyou"
+                if zhiyou_dir.exists():
+                    opt_files = list(zhiyou_dir.glob("optimized_*.csv"))
+                    for opt_f in opt_files:
+                        try:
+                            _odf = pd.read_csv(opt_f)
+                            if "user" in _odf.columns:
+                                for u, cnt in _odf["user"].value_counts().items():
+                                    _user_stats.setdefault(u, {"phrases": 0, "articles_created": 0, "articles_optimized": 0, "published": 0, "requests": 0})
+                                    _user_stats[u]["articles_optimized"] += cnt
+                        except Exception:
+                            pass
+
+                # Zhibu: count published pages
+                zhibu_dir = batch_dir / "04_zhibu"
+                if zhibu_dir.exists():
+                    pub_jsons = list(zhibu_dir.glob("*.json"))
+                    # Count per user from file names or request tracking
+                    pass
+
+            # Collect from request_tracking.json
+            _tracking_file = OUTPUT_PATH / "request_tracking.json"
+            if _tracking_file.exists():
+                try:
+                    _all_reqs = json.loads(_tracking_file.read_text(encoding="utf-8"))
+                    for req in _all_reqs:
+                        u = req.get("user", "")
+                        if not u:
+                            continue
+                        _user_stats.setdefault(u, {"phrases": 0, "articles_created": 0, "articles_optimized": 0, "published": 0, "requests": 0})
+                        _user_stats[u]["requests"] += 1
+                        if req.get("status") == "published":
+                            _user_stats[u]["published"] += req.get("count", 0)
+                except Exception:
+                    pass
+
+            # Also scan per-user request directories for publish status
+            if requests_dir.exists():
+                for user_dir in requests_dir.iterdir():
+                    if not user_dir.is_dir():
+                        continue
+                    u = user_dir.name
+                    _user_stats.setdefault(u, {"phrases": 0, "articles_created": 0, "articles_optimized": 0, "published": 0, "requests": 0})
+                    pub_status = user_dir / "publish_status.json"
+                    if pub_status.exists():
+                        try:
+                            ps = json.loads(pub_status.read_text(encoding="utf-8"))
+                            if ps.get("published_count", 0) > _user_stats[u]["published"]:
+                                _user_stats[u]["published"] = ps["published_count"]
+                        except Exception:
+                            pass
+
+            if _user_stats:
+                # Build summary table
+                stats_rows = []
+                for u, s in sorted(_user_stats.items()):
+                    # Get user region
+                    u_region = ""
+                    try:
+                        _ud_check = json.loads((BASE_PATH / "output" / "users.json").read_text(encoding="utf-8"))
+                        u_region = _ud_check.get("user_region", {}).get(u, "—")
+                    except Exception:
+                        pass
+                    stats_rows.append({
+                        "User": u,
+                        "Region": u_region,
+                        "Phrases Generated" if is_en else "生成短语数": s["phrases"],
+                        "Articles Created" if is_en else "智造页面数": s["articles_created"],
+                        "Articles Optimized" if is_en else "优化页面数": s["articles_optimized"],
+                        "Published" if is_en else "已发布": s["published"],
+                        "Requests" if is_en else "提交请求数": s["requests"],
+                    })
+
+                df_stats = pd.DataFrame(stats_rows)
+                # Summary metrics
+                total_phrases = df_stats["Phrases Generated" if is_en else "生成短语数"].sum()
+                total_created = df_stats["Articles Created" if is_en else "智造页面数"].sum()
+                total_optimized = df_stats["Articles Optimized" if is_en else "优化页面数"].sum()
+                total_published = df_stats["Published" if is_en else "已发布"].sum()
+
+                mc1, mc2, mc3, mc4 = st.columns(4)
+                mc1.metric("Total Phrases" if is_en else "总短语数", int(total_phrases))
+                mc2.metric("Total Created" if is_en else "总智造数", int(total_created))
+                mc3.metric("Total Optimized" if is_en else "总优化数", int(total_optimized))
+                mc4.metric("Total Published" if is_en else "总发布数", int(total_published))
+
                 st.divider()
-                st.markdown("**" + (t("ui.pending_requests")) + "**")
-                for i, req in enumerate(pending):
-                    with st.expander(f"📤 {req.get('user', 'unknown')} — {req.get('count', 0)} {'articles' if is_en else '篇'} ({req.get('submitted_at', '')})"):
-                        st.markdown(f"**{'User' if is_en else '提交人'}:** {req.get('user', '')}")
-                        st.markdown(f"**{'Articles' if is_en else '文章数'}:** {req.get('count', 0)}")
-                        st.markdown(f"**{'Submitted' if is_en else '提交时间'}:** {req.get('submitted_at', '')}")
-                        st.markdown(f"**{'Batch' if is_en else '批次'}:** {req.get('batch', '')}")
-
-                        if req.get("queries"):
-                            st.markdown("**" + (t("ui.queries_2")) + "**")
-                            for q in req["queries"][:10]:
-                                st.markdown(f"  - {q}")
-
-                        col_a, col_r = st.columns(2)
-                        with col_a:
-                            if st.button("✅ " + (t("ui.approve_publish")), key=f"approve_{i}", type="primary"):
-                                req["status"] = "approved"
-                                req["approved_at"] = datetime.now().strftime("%Y-%m-%d %H:%M")
-
-                                # Directly execute zhibu + zhichuan
-                                publish_success = False
-                                try:
-                                    from engine import run_zhibu
-                                    batch = req.get("batch", get_batches()[0])
-                                    with st.spinner(t("ui.running_publish_pipeline")):
-                                        zhibu_result = run_zhibu(batch, None)
-                                    if zhibu_result.get("success"):
-                                        publish_success = True
-                                except Exception:
-                                    publish_success = True  # Mark as published even if zhibu unavailable
-
-                                if publish_success:
-                                    req["status"] = "published"
-                                    req["published_at"] = datetime.now().strftime("%Y-%m-%d %H:%M")
-
-                                    # Write publish status back to user's directory
-                                    user_pub_dir = OUTPUT_PATH / "requests" / req.get("user", "unknown")
-                                    user_pub_dir.mkdir(parents=True, exist_ok=True)
-                                    pub_file = user_pub_dir / "publish_status.json"
-                                    pub_data = {"published_count": req.get("count", 0),
-                                                "published_queries": req.get("queries", []),
-                                                "published_at": req["published_at"],
-                                                "approved_by": "admin"}
-                                    pub_file.write_text(json.dumps(pub_data, ensure_ascii=False, indent=2), encoding="utf-8")
-
-                                request_file.write_text(json.dumps(requests_data, ensure_ascii=False, indent=2), encoding="utf-8")
-
-                                if publish_success:
-                                    st.success("✅ " + ("Approved + Published! Content sent to 智布+智传." if is_en else f"已批复并发布！{req.get('count',0)} 篇内容已完成智布+智传。"))
-                                else:
-                                    st.success("✅ " + (t("ui.approved_awaiting_publish")))
-                                st.rerun()
-                        with col_r:
-                            if st.button("❌ " + (t("ui.reject_1")), key=f"reject_{i}"):
-                                req["status"] = "rejected"
-                                req["rejected_at"] = datetime.now().strftime("%Y-%m-%d %H:%M")
-                                request_file.write_text(json.dumps(requests_data, ensure_ascii=False, indent=2), encoding="utf-8")
-                                st.warning("❌ " + (t("ui.rejected")))
-                                st.rerun()
-
-            # Published history
-            if published:
-                st.divider()
-                st.markdown("**" + (t("ui.published_1")) + "**")
-                df_pub = pd.DataFrame([{
-                    "User": r.get("user", ""),
-                    t("ui.articles_2"): r.get("count", 0),
-                    t("ui.published_2"): r.get("published_at", ""),
-                } for r in published])
-                st.dataframe(df_pub, use_container_width=True, hide_index=True)
+                st.dataframe(df_stats, use_container_width=True, hide_index=True)
+            else:
+                st.info("No user activity data found yet." if is_en else "暂无用户操作数据。")
 
     with tab_pipeline:
         st.markdown("### " + (t("ui.pipeline_status_per_batch")))
