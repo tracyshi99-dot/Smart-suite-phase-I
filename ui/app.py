@@ -3082,7 +3082,12 @@ elif _page_idx == 2:
         with col_to_zhizao:
             if st.button(f"✍️ {produce_queries} → 智造 (new content)" if is_en else f"✍️ {produce_queries} 条 → 智造（生产新内容）", type="primary", key="zhice_to_zhizao"):
                 if "to_produce" in edited_gap.columns:
-                    to_produce_queries = df_gap_display.loc[edited_gap["to_produce"] == True, "ai_query"].tolist() if "ai_query" in df_gap_display.columns else []
+                    try:
+                        _mask = edited_gap["to_produce"] == True
+                        to_produce_queries = df_gap_display.loc[_mask.values, "ai_query"].tolist() if "ai_query" in df_gap_display.columns else []
+                    except (AssertionError, IndexError, ValueError):
+                        # Fallback: use edited_gap directly if available
+                        to_produce_queries = edited_gap.loc[edited_gap["to_produce"] == True, "ai_query"].tolist() if "ai_query" in edited_gap.columns else []
                     if to_produce_queries:
                         zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
                         if zhiku_file.exists():
