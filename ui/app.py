@@ -2634,17 +2634,16 @@ elif _page_idx == 2:
         st.caption(f"{'From 智库 (selected)' if is_en else '来自智库（已选中）'}: {len(queue_phrases)} phrases")
         st.dataframe(pd.DataFrame({"ai_query": queue_phrases}), use_container_width=True, hide_index=True, height=200)
     else:
-        st.info(t("ui.no_selected_phrases_go"))
+        st.warning(t("ui.no_selected_phrases_go") + " — " + ("Please go to Research tab and select phrases first, or upload below." if is_en else "请先到智库选中短语，或在下方上传。"))
 
-    # Upload option (admin only)
-    if is_admin:
-        with st.expander("📤 " + (t("ui.upload_additional_phrases")), expanded=False):
-            up_verify = st.file_uploader(t("ui.csv_with_ai_query_column"), type=["csv", "xlsx"], key="zhice_upload_phrases")
-            if up_verify:
-                df_up = pd.read_csv(up_verify, encoding="utf-8-sig", on_bad_lines="skip") if up_verify.name.endswith(".csv") else pd.read_excel(up_verify, engine="openpyxl")
-                if "ai_query" in df_up.columns:
-                    queue_phrases = queue_phrases + df_up["ai_query"].tolist()
-                    st.success(f"✅ +{len(df_up)} phrases added")
+    # Upload option (all users can upload phrases for verification)
+    with st.expander("📤 " + (t("ui.upload_additional_phrases")), expanded=not queue_phrases):
+        up_verify = st.file_uploader(t("ui.csv_with_ai_query_column"), type=["csv", "xlsx"], key="zhice_upload_phrases")
+        if up_verify:
+            df_up = pd.read_csv(up_verify, encoding="utf-8-sig", on_bad_lines="skip") if up_verify.name.endswith(".csv") else pd.read_excel(up_verify, engine="openpyxl")
+            if "ai_query" in df_up.columns:
+                queue_phrases = queue_phrases + df_up["ai_query"].tolist()
+                st.success(f"✅ +{len(df_up)} phrases added")
 
     st.divider()
 
@@ -2718,8 +2717,14 @@ elif _page_idx == 2:
         <h3 style="color:#00d4aa;">② """ + (t("ui.run_ai_platform_verification")) + """</h3>
     </div>""", unsafe_allow_html=True)
 
-    ZHICE_PLATFORMS = {"qianwen": "通义千问", "deepseek": "DeepSeek", "kimi": "Kimi", "doubao": "豆包", "chatgpt": "ChatGPT", "perplexity": "Perplexity", "gemini": "Gemini"}
-    selected_platforms = st.multiselect(t("ui.verification_platforms"), list(ZHICE_PLATFORMS.keys()), default=["qianwen", "deepseek"], format_func=lambda x: ZHICE_PLATFORMS[x], key="zhice_platforms")
+    ZHICE_PLATFORMS = {"chatgpt": "ChatGPT", "gemini": "Gemini", "perplexity": "Perplexity", "grok": "Grok", "deepseek": "DeepSeek", "kimi": "Kimi", "doubao": "豆包", "yuanbao": "元宝", "qianwen": "通义千问"}
+    # Set default platforms based on region
+    _user_region_zhice = st.session_state.get("_user_region", "CN")
+    if _user_region_zhice == "CN":
+        _zhice_default_platforms = ["chatgpt", "gemini", "deepseek", "kimi", "doubao", "qianwen"]
+    else:
+        _zhice_default_platforms = ["chatgpt", "gemini"]
+    selected_platforms = st.multiselect(t("ui.verification_platforms"), list(ZHICE_PLATFORMS.keys()), default=_zhice_default_platforms, format_func=lambda x: ZHICE_PLATFORMS[x], key="zhice_platforms")
 
     col_auto, col_manual = st.columns(2)
     with col_auto:
