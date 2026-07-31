@@ -212,16 +212,25 @@ def _table_cell_container(text: str, width: int, is_header: bool = False):
         widgets=[cell_widget],
         widthDesktop=width,
         widthTablet=12,
+        widthMobileportrait=12,
         backgroundColor=bg,
         borderColor="squid-ink",
         borderWidthTopDesktop="1px" if is_header else "zero",
+        borderWidthTopTablet="desktop",
         borderWidthLeftDesktop="1px",
+        borderWidthLeftTablet="desktop",
         borderWidthRightDesktop="1px",
+        borderWidthRightTablet="desktop",
         borderWidthBottomDesktop="1px",
+        borderWidthBottomTablet="desktop",
         paddingTopDesktop="mini",
+        paddingTopTablet="desktop",
         paddingLeftDesktop="xmini",
+        paddingLeftTablet="desktop",
         paddingRightDesktop="mini",
+        paddingRightTablet="desktop",
         paddingBottomDesktop="mini",
+        paddingBottomTablet="desktop",
     )
 
 
@@ -234,9 +243,14 @@ def _table_row_container(cells: list, col_widths: list, is_header: bool = False)
 
     return _base_container(
         widgets=cell_containers,
+        widthDesktop=12,
         deviceColumnsTablet=True,
         deviceColumnsMobileportrait=True,
-        horizontalAlignmentDesktop="flex-start",
+        horizontalAlignmentDesktop="default",
+        paddingTopDesktop="zero",
+        paddingBottomDesktop="zero",
+        paddingLeftDesktop="zero",
+        paddingRightDesktop="zero",
     )
 
 
@@ -275,14 +289,15 @@ def _markdown_table_to_containers(table_lines: list) -> list:
     # Wrap in a card container with shadow
     return [_base_container(
         widgets=rows,
+        widthDesktop=12,
         borderRadiusDesktop="9px",
         hasBoxShadow=True,
         boxShadowType="light",
         backgroundColor="white",
         paddingTopDesktop="mini",
-        paddingLeftDesktop="xsmall",
-        paddingRightDesktop="xsmall",
         paddingBottomDesktop="mini",
+        paddingLeftDesktop="zero",
+        paddingRightDesktop="zero",
     )]
 
 
