@@ -192,7 +192,7 @@ def _clean_markdown(text: str) -> str:
 
 
 def _table_cell_container(text: str, width: int, is_header: bool = False):
-    """Create a table cell as a Container with border."""
+    """Create a table cell as a Container with border (matches reference template)."""
     bg = "siren" if is_header else "white"
     txt_color = "white" if is_header else "squid-ink"
     txt_weight = "bold" if is_header else "normal"
@@ -216,41 +216,48 @@ def _table_cell_container(text: str, width: int, is_header: bool = False):
     return _base_container(
         widgets=[cell_widget],
         widthDesktop=width,
-        widthTablet=width,
+        widthTablet=12,
         widthMobileportrait=12,
         widthMobilelandscape=12,
         backgroundColor=bg,
-        borderColor="mercury",
-        borderWidthTopDesktop="thin",
+        borderColor="squid-ink",
+        borderWidthTopDesktop="1px",
         borderWidthTopTablet="desktop",
         borderWidthTopMobileportrait="tablet",
         borderWidthTopMobilelandscape="tablet",
-        borderWidthLeftDesktop="thin",
+        borderWidthLeftDesktop="1px",
         borderWidthLeftTablet="desktop",
         borderWidthLeftMobileportrait="tablet",
         borderWidthLeftMobilelandscape="tablet",
-        borderWidthRightDesktop="thin",
+        borderWidthRightDesktop="1px",
         borderWidthRightTablet="desktop",
         borderWidthRightMobileportrait="tablet",
         borderWidthRightMobilelandscape="tablet",
-        borderWidthBottomDesktop="thin",
+        borderWidthBottomDesktop="1px",
         borderWidthBottomTablet="desktop",
         borderWidthBottomMobileportrait="tablet",
         borderWidthBottomMobilelandscape="tablet",
-        paddingTopDesktop="xmini",
+        paddingTopDesktop="mini",
         paddingTopTablet="desktop",
-        paddingLeftDesktop="mini",
+        paddingTopMobileportrait="tablet",
+        paddingTopMobilelandscape="tablet",
+        paddingLeftDesktop="xmini",
         paddingLeftTablet="desktop",
+        paddingLeftMobileportrait="tablet",
+        paddingLeftMobilelandscape="tablet",
         paddingRightDesktop="mini",
         paddingRightTablet="desktop",
-        paddingBottomDesktop="xmini",
+        paddingRightMobileportrait="tablet",
+        paddingRightMobilelandscape="tablet",
+        paddingBottomDesktop="mini",
         paddingBottomTablet="desktop",
-        noWrap=True,
+        paddingBottomMobileportrait="tablet",
+        paddingBottomMobilelandscape="tablet",
     )
 
 
 def _table_row_container(cells: list, col_widths: list, is_header: bool = False):
-    """Create a table row as a Container with columns (inline flex row)."""
+    """Create a table row as a Container with columns (matches reference template)."""
     cell_containers = []
     for i, cell_text in enumerate(cells):
         w = col_widths[i] if i < len(col_widths) else 12 // len(cells)
@@ -262,14 +269,19 @@ def _table_row_container(cells: list, col_widths: list, is_header: bool = False)
         widthTablet=12,
         widthMobileportrait=12,
         widthMobilelandscape=12,
-        noWrap=True,
-        isMobileRow=True,
+        deviceColumnsTablet=True,
+        deviceColumnsMobileportrait=True,
         horizontalAlignmentDesktop="default",
         verticalItemsAlignmentDesktop="stretch",
+        backgroundColor="transparent",
         paddingTopDesktop="zero",
+        paddingTopTablet="desktop",
         paddingBottomDesktop="zero",
+        paddingBottomTablet="desktop",
         paddingLeftDesktop="zero",
+        paddingLeftTablet="desktop",
         paddingRightDesktop="zero",
+        paddingRightTablet="desktop",
     )
 
 
@@ -332,19 +344,24 @@ def _markdown_table_to_containers(table_lines: list) -> list:
                 cells.append("")
             rows.append(_table_row_container(cells[:num_cols], col_widths, is_header=False))
 
-    # Wrap all rows in a table container (no extra padding to avoid overflow)
+    # Wrap all rows in a table container (matches reference template)
     return [_base_container(
         widgets=rows,
         widthDesktop=12,
         widthTablet=12,
         widthMobileportrait=12,
         borderRadiusDesktop="9px",
-        hasBoxShadow=False,
-        backgroundColor="transparent",
+        hasBoxShadow=True,
+        boxShadowType="light",
+        backgroundColor="white",
         paddingTopDesktop="mini",
+        paddingTopTablet="desktop",
+        paddingLeftDesktop="xsmall",
+        paddingLeftTablet="desktop",
+        paddingRightDesktop="xsmall",
+        paddingRightTablet="desktop",
         paddingBottomDesktop="mini",
-        paddingLeftDesktop="zero",
-        paddingRightDesktop="zero",
+        paddingBottomTablet="desktop",
     )]
 
 
