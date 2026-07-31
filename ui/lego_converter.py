@@ -153,9 +153,11 @@ def _text_widget(text: str, font_size="small", color="storm", font_weight="norma
     }
 
 
-def _heading_widget(text: str, level="1", font_size="medium"):
-    """Create a Heading widget."""
+def _heading_widget(text: str, level="1", font_size=None):
+    """Create a Heading widget. H1=large, H2=medium, H3=small by default."""
     text = _clean_markdown(text)
+    if font_size is None:
+        font_size = {"1": "large", "2": "medium", "3": "small"}.get(str(level), "medium")
     return {
         "content": _draft_block(text),
         "headingLevel": level,
@@ -211,31 +213,41 @@ def _table_cell_container(text: str, width: int, is_header: bool = False):
     return _base_container(
         widgets=[cell_widget],
         widthDesktop=width,
-        widthTablet=12,
+        widthTablet=width,
         widthMobileportrait=12,
+        widthMobilelandscape=12,
         backgroundColor=bg,
-        borderColor="squid-ink",
-        borderWidthTopDesktop="1px" if is_header else "zero",
+        borderColor="mercury",
+        borderWidthTopDesktop="thin",
         borderWidthTopTablet="desktop",
-        borderWidthLeftDesktop="1px",
+        borderWidthTopMobileportrait="tablet",
+        borderWidthTopMobilelandscape="tablet",
+        borderWidthLeftDesktop="thin",
         borderWidthLeftTablet="desktop",
-        borderWidthRightDesktop="1px",
+        borderWidthLeftMobileportrait="tablet",
+        borderWidthLeftMobilelandscape="tablet",
+        borderWidthRightDesktop="thin",
         borderWidthRightTablet="desktop",
-        borderWidthBottomDesktop="1px",
+        borderWidthRightMobileportrait="tablet",
+        borderWidthRightMobilelandscape="tablet",
+        borderWidthBottomDesktop="thin",
         borderWidthBottomTablet="desktop",
-        paddingTopDesktop="mini",
+        borderWidthBottomMobileportrait="tablet",
+        borderWidthBottomMobilelandscape="tablet",
+        paddingTopDesktop="xmini",
         paddingTopTablet="desktop",
-        paddingLeftDesktop="xmini",
+        paddingLeftDesktop="mini",
         paddingLeftTablet="desktop",
         paddingRightDesktop="mini",
         paddingRightTablet="desktop",
-        paddingBottomDesktop="mini",
+        paddingBottomDesktop="xmini",
         paddingBottomTablet="desktop",
+        noWrap=True,
     )
 
 
 def _table_row_container(cells: list, col_widths: list, is_header: bool = False):
-    """Create a table row as a Container with columns."""
+    """Create a table row as a Container with columns (inline flex row)."""
     cell_containers = []
     for i, cell_text in enumerate(cells):
         w = col_widths[i] if i < len(col_widths) else 12 // len(cells)
@@ -244,9 +256,13 @@ def _table_row_container(cells: list, col_widths: list, is_header: bool = False)
     return _base_container(
         widgets=cell_containers,
         widthDesktop=12,
-        deviceColumnsTablet=True,
-        deviceColumnsMobileportrait=True,
+        widthTablet=12,
+        widthMobileportrait=12,
+        widthMobilelandscape=12,
+        noWrap=True,
+        isMobileRow=True,
         horizontalAlignmentDesktop="default",
+        verticalItemsAlignmentDesktop="stretch",
         paddingTopDesktop="zero",
         paddingBottomDesktop="zero",
         paddingLeftDesktop="zero",
@@ -265,11 +281,39 @@ def _markdown_table_to_containers(table_lines: list) -> list:
     if num_cols == 0:
         return []
 
-    # Calculate column widths (distribute 12 units)
-    col_widths = [12 // num_cols] * num_cols
-    remainder = 12 - sum(col_widths)
-    for i in range(remainder):
-        col_widths[i] += 1
+    # Calculate column widths based on content length
+    # Collect all cells to measure max width per column
+    all_rows_cells = [header_cells]
+    for line in table_lines[1:]:
+        if re.match(r'^\s*\|[\s\-:]+\|', line):
+            continue
+        cells = [c.strip() for c in line.split("|") if c.strip()]
+        if cells:
+            while len(cells) < num_cols:
+                cells.append("")
+            all_rows_cells.append(cells[:num_cols])
+
+    # Measure max content length per column
+    col_max_len = [0] * num_cols
+    for row in all_rows_cells:
+        for i, cell in enumerate(row):
+            col_max_len[i] = max(col_max_len[i], len(cell))
+
+    # Distribute 12 grid units proportionally to content width
+    total_len = sum(col_max_len) or 1
+    col_widths = [max(2, round(12 * (l / total_len))) for l in col_max_len]
+    # Adjust to sum to 12
+    diff = sum(col_widths) - 12
+    if diff > 0:
+        # Reduce widest columns
+        for _ in range(abs(diff)):
+            widest = col_widths.index(max(col_widths))
+            col_widths[widest] -= 1
+    elif diff < 0:
+        # Increase narrowest
+        for _ in range(abs(diff)):
+            narrowest = col_widths.index(min(col_widths))
+            col_widths[narrowest] += 1
 
     rows = []
     # Header row
@@ -281,19 +325,19 @@ def _markdown_table_to_containers(table_lines: list) -> list:
             continue  # Skip separator
         cells = [c.strip() for c in line.split("|") if c.strip()]
         if cells:
-            # Pad or trim to match header columns
             while len(cells) < num_cols:
                 cells.append("")
             rows.append(_table_row_container(cells[:num_cols], col_widths, is_header=False))
 
-    # Wrap in a card container with shadow
+    # Wrap all rows in a table container (no extra padding to avoid overflow)
     return [_base_container(
         widgets=rows,
         widthDesktop=12,
+        widthTablet=12,
+        widthMobileportrait=12,
         borderRadiusDesktop="9px",
-        hasBoxShadow=True,
-        boxShadowType="light",
-        backgroundColor="white",
+        hasBoxShadow=False,
+        backgroundColor="transparent",
         paddingTopDesktop="mini",
         paddingBottomDesktop="mini",
         paddingLeftDesktop="zero",
@@ -387,9 +431,9 @@ def markdown_to_lego(title: str, content: str, source_query: str = "",
     )
     containers.append(label_container)
 
-    # 2. Title section (H1)
+    # 2. Title section (H1 — large font)
     title_container = _base_container(
-        widgets=[_heading_widget(title, level="1", font_size="medium")],
+        widgets=[_heading_widget(title, level="1")],
         paddingTopDesktop="zero", paddingBottomDesktop="mini"
     )
     containers.append(title_container)
@@ -408,10 +452,10 @@ def markdown_to_lego(title: str, content: str, source_query: str = "",
     for sec in sections["body_sections"]:
         sec_type = sec.get("type", "text")
 
-        # Sub-title (for text sections)
+        # Sub-title (for text sections) — H2 heading widget with medium font
         if sec.get("heading") and sec_type == "text":
             st_container = _base_container(
-                widgets=[_text_widget(sec["heading"], font_size="large", color="squid-ink", font_weight="bold")],
+                widgets=[_heading_widget(sec["heading"], level="2")],
                 paddingTopDesktop="base"
             )
             containers.append(st_container)
@@ -421,16 +465,39 @@ def markdown_to_lego(title: str, content: str, source_query: str = "",
             table_containers = _markdown_table_to_containers(sec["content"])
             containers.extend(table_containers)
         elif sec.get("content"):
-            # Regular text content
-            content_container = _base_container(
-                widgets=[_text_widget(sec["content"], font_size="small", color="storm")]
-            )
-            containers.append(content_container)
+            # Regular text content — split by H3 headings for proper hierarchy
+            content_lines = sec["content"].split("\n")
+            current_block = []
+            for line in content_lines:
+                if line.startswith("### "):
+                    # Flush previous block
+                    if current_block:
+                        block_text = "\n".join(current_block).strip()
+                        if block_text:
+                            containers.append(_base_container(
+                                widgets=[_text_widget(block_text, font_size="small", color="storm")]
+                            ))
+                        current_block = []
+                    # H3 heading
+                    h3_text = line.lstrip("# ").strip()
+                    containers.append(_base_container(
+                        widgets=[_heading_widget(h3_text, level="3")],
+                        paddingTopDesktop="mini"
+                    ))
+                else:
+                    current_block.append(line)
+            # Flush remaining
+            if current_block:
+                block_text = "\n".join(current_block).strip()
+                if block_text:
+                    containers.append(_base_container(
+                        widgets=[_text_widget(block_text, font_size="small", color="storm")]
+                    ))
 
     # 5. FAQ section (if exists)
     if sections["faq"]:
         faq_heading = _base_container(
-            widgets=[_text_widget("常见问题 / FAQ", font_size="large", color="squid-ink", font_weight="bold")],
+            widgets=[_heading_widget("常见问题 / FAQ", level="2")],
             paddingTopDesktop="base"
         )
         containers.append(faq_heading)
@@ -466,6 +533,17 @@ def convert_article_to_lego_page(title: str, content: str, source_query: str = "
     """
     containers = markdown_to_lego(title, content, source_query, label, batch_id)
 
+    # Generate meta description from overview (first 150 chars of content, stripped of markdown)
+    clean_content = _clean_markdown(content)
+    # Take first paragraph or first 160 chars for meta description
+    first_para = clean_content.split("\n\n")[0] if "\n\n" in clean_content else clean_content[:200]
+    meta_desc = first_para[:160].strip()
+    if len(first_para) > 160:
+        meta_desc = meta_desc[:157] + "..."
+
+    # Meta title: article title + brand suffix
+    meta_title = f"{_clean_markdown(title)}_Amazon亚马逊"
+
     # Wrap all section containers into a single top-level Container
     page = _base_container(
         widgets=containers,
@@ -483,4 +561,7 @@ def convert_article_to_lego_page(title: str, content: str, source_query: str = "
     page["design"] = "Sell"
     page["uuid"] = _gen_uuid()
     page["legoVersion"] = "2"
+    # Add meta fields
+    page["metaTitle"] = meta_title
+    page["metaDescription"] = meta_desc
     return page
