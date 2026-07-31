@@ -137,6 +137,7 @@ def _base_container(widget_id=None, widgets=None, **overrides):
 
 def _text_widget(text: str, font_size="small", color="storm", font_weight="normal"):
     """Create a Text widget."""
+    text = _clean_markdown(text)
     return {
         "content": _draft_block(text),
         "alignmentDesktop": "start", "alignmentTablet": "desktop",
@@ -154,6 +155,7 @@ def _text_widget(text: str, font_size="small", color="storm", font_weight="norma
 
 def _heading_widget(text: str, level="1", font_size="medium"):
     """Create a Heading widget."""
+    text = _clean_markdown(text)
     return {
         "content": _draft_block(text),
         "headingLevel": level,
@@ -170,48 +172,186 @@ def _heading_widget(text: str, level="1", font_size="medium"):
     }
 
 
+def _clean_markdown(text: str) -> str:
+    """Remove markdown formatting artifacts (bold, italic, headers markers)."""
+    # Remove bold **text** or __text__
+    text = re.sub(r'\*\*(.+?)\*\*', r'\1', text)
+    text = re.sub(r'__(.+?)__', r'\1', text)
+    # Remove italic *text* or _text_ (but not underscores in words)
+    text = re.sub(r'(?<!\w)\*(.+?)\*(?!\w)', r'\1', text)
+    # Remove heading markers at start of line
+    text = re.sub(r'^#{1,6}\s+', '', text, flags=re.MULTILINE)
+    # Remove bullet markers at start (- or *)
+    text = re.sub(r'^[\-\*]\s+', '', text, flags=re.MULTILINE)
+    return text.strip()
+
+
+def _table_cell_container(text: str, width: int, is_header: bool = False):
+    """Create a table cell as a Container with border."""
+    bg = "siren" if is_header else "white"
+    txt_color = "white" if is_header else "squid-ink"
+    txt_weight = "bold" if is_header else "normal"
+    alignment = "center" if is_header else "start"
+    text = _clean_markdown(text.strip())
+
+    cell_widget = {
+        "content": _draft_block(text),
+        "alignmentDesktop": alignment, "alignmentTablet": "desktop",
+        "alignmentMobileportrait": "tablet", "alignmentMobilelandscape": "tablet",
+        "disableTranslatable": False,
+        "fontSizeDesktop": "small", "fontSizeTablet": "desktop",
+        "fontSizeMobileportrait": "tablet", "fontSizeMobilelandscape": "tablet",
+        "fontFamily": "ember", "color": txt_color, "fontWeight": txt_weight,
+        "useTooltip": False, "tooltipStyle": "light", "tooltipContent": "",
+        "widgetClassName": "Text",
+        "reusable": None, "reusablePlaceholder": None,
+        "id": _gen_id()
+    }
+
+    return _base_container(
+        widgets=[cell_widget],
+        widthDesktop=width,
+        widthTablet=12,
+        backgroundColor=bg,
+        borderColor="squid-ink",
+        borderWidthTopDesktop="1px" if is_header else "zero",
+        borderWidthLeftDesktop="1px",
+        borderWidthRightDesktop="1px",
+        borderWidthBottomDesktop="1px",
+        paddingTopDesktop="mini",
+        paddingLeftDesktop="xmini",
+        paddingRightDesktop="mini",
+        paddingBottomDesktop="mini",
+    )
+
+
+def _table_row_container(cells: list, col_widths: list, is_header: bool = False):
+    """Create a table row as a Container with columns."""
+    cell_containers = []
+    for i, cell_text in enumerate(cells):
+        w = col_widths[i] if i < len(col_widths) else 12 // len(cells)
+        cell_containers.append(_table_cell_container(cell_text, w, is_header))
+
+    return _base_container(
+        widgets=cell_containers,
+        deviceColumnsTablet=True,
+        deviceColumnsMobileportrait=True,
+        horizontalAlignmentDesktop="flex-start",
+    )
+
+
+def _markdown_table_to_containers(table_lines: list) -> list:
+    """Convert markdown table lines into LEGO Container rows."""
+    if len(table_lines) < 2:
+        return []
+
+    # Parse header
+    header_cells = [c.strip() for c in table_lines[0].split("|") if c.strip()]
+    num_cols = len(header_cells)
+    if num_cols == 0:
+        return []
+
+    # Calculate column widths (distribute 12 units)
+    col_widths = [12 // num_cols] * num_cols
+    remainder = 12 - sum(col_widths)
+    for i in range(remainder):
+        col_widths[i] += 1
+
+    rows = []
+    # Header row
+    rows.append(_table_row_container(header_cells, col_widths, is_header=True))
+
+    # Data rows (skip separator line like |---|---|)
+    for line in table_lines[1:]:
+        if re.match(r'^\s*\|[\s\-:]+\|', line):
+            continue  # Skip separator
+        cells = [c.strip() for c in line.split("|") if c.strip()]
+        if cells:
+            # Pad or trim to match header columns
+            while len(cells) < num_cols:
+                cells.append("")
+            rows.append(_table_row_container(cells[:num_cols], col_widths, is_header=False))
+
+    # Wrap in a card container with shadow
+    return [_base_container(
+        widgets=rows,
+        borderRadiusDesktop="9px",
+        hasBoxShadow=True,
+        boxShadowType="light",
+        backgroundColor="white",
+        paddingTopDesktop="mini",
+        paddingLeftDesktop="xsmall",
+        paddingRightDesktop="xsmall",
+        paddingBottomDesktop="mini",
+    )]
+
+
 def _parse_markdown_sections(content: str) -> dict:
-    """Parse markdown content into sections."""
-    sections = {"overview": "", "body_sections": [], "tables": [], "faq": ""}
+    """Parse markdown content into sections, extracting tables separately."""
+    sections = {"overview": "", "body_sections": [], "faq": ""}
     lines = content.split("\n")
     current_section = "overview"
     current_text = []
     current_heading = ""
+    in_table = False
+    table_lines = []
 
     for line in lines:
-        # H2 heading starts a new section
-        if line.startswith("## "):
-            # Save previous section
-            if current_text:
-                text = "\n".join(current_text).strip()
-                if current_section == "overview":
-                    sections["overview"] = text
-                else:
-                    sections["body_sections"].append({"heading": current_heading, "content": text})
-            current_heading = line.lstrip("# ").strip()
-            current_text = []
-            current_section = "body"
-            # Check if it's FAQ
-            if any(kw in current_heading.lower() for kw in ["faq", "常见问题", "common question"]):
-                current_section = "faq"
-        elif "|---" in line or ("|" in line and line.count("|") >= 3):
-            # Table line - collect for table sections
-            if line not in [l for t in sections["tables"] for l in t]:
-                # Find the full table
-                pass
-            current_text.append(line)
-        else:
-            current_text.append(line)
+        # Detect table lines
+        is_table_line = "|" in line and line.strip().startswith("|") and line.strip().endswith("|") and line.count("|") >= 3
 
-    # Save last section
-    if current_text:
+        if is_table_line:
+            # Starting or continuing a table
+            if not in_table:
+                # Save any text before table
+                if current_text:
+                    text = "\n".join(current_text).strip()
+                    if current_section == "overview":
+                        sections["overview"] = text
+                    elif current_section == "faq":
+                        sections["faq"] += "\n" + text if sections["faq"] else text
+                    else:
+                        sections["body_sections"].append({"heading": current_heading, "content": text, "type": "text"})
+                    current_text = []
+                    current_heading = ""
+                in_table = True
+            table_lines.append(line)
+        else:
+            if in_table:
+                # Table ended, save it
+                sections["body_sections"].append({"heading": "", "content": table_lines[:], "type": "table"})
+                table_lines = []
+                in_table = False
+
+            # H2 heading starts a new section
+            if line.startswith("## "):
+                if current_text:
+                    text = "\n".join(current_text).strip()
+                    if current_section == "overview":
+                        sections["overview"] = text
+                    elif current_section == "faq":
+                        sections["faq"] += "\n" + text if sections["faq"] else text
+                    else:
+                        sections["body_sections"].append({"heading": current_heading, "content": text, "type": "text"})
+                current_heading = line.lstrip("# ").strip()
+                current_text = []
+                current_section = "body"
+                if any(kw in current_heading.lower() for kw in ["faq", "常见问题", "common question"]):
+                    current_section = "faq"
+            else:
+                current_text.append(line)
+
+    # Save remaining
+    if in_table and table_lines:
+        sections["body_sections"].append({"heading": "", "content": table_lines[:], "type": "table"})
+    elif current_text:
         text = "\n".join(current_text).strip()
         if current_section == "overview":
             sections["overview"] = text
         elif current_section == "faq":
-            sections["faq"] = text
+            sections["faq"] += "\n" + text if sections["faq"] else text
         else:
-            sections["body_sections"].append({"heading": current_heading, "content": text})
+            sections["body_sections"].append({"heading": current_heading, "content": text, "type": "text"})
 
     return sections
 
@@ -249,18 +389,24 @@ def markdown_to_lego(title: str, content: str, source_query: str = "",
         )
         containers.append(overview_container)
 
-    # 4. Body sections (each H2 section becomes a container)
+    # 4. Body sections (each H2 section becomes a container, tables get special rendering)
     for sec in sections["body_sections"]:
-        # Sub-title
-        if sec["heading"]:
+        sec_type = sec.get("type", "text")
+
+        # Sub-title (for text sections)
+        if sec.get("heading") and sec_type == "text":
             st_container = _base_container(
                 widgets=[_text_widget(sec["heading"], font_size="large", color="squid-ink", font_weight="bold")],
                 paddingTopDesktop="base"
             )
             containers.append(st_container)
 
-        # Content
-        if sec["content"]:
+        if sec_type == "table":
+            # Render markdown table as LEGO grid
+            table_containers = _markdown_table_to_containers(sec["content"])
+            containers.extend(table_containers)
+        elif sec.get("content"):
+            # Regular text content
             content_container = _base_container(
                 widgets=[_text_widget(sec["content"], font_size="small", color="storm")]
             )
