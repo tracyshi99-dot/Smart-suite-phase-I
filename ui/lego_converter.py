@@ -156,11 +156,11 @@ def _text_widget(text: str, font_size="small", color="storm", font_weight="norma
 def _heading_widget(text: str, level="1", font_size=None):
     """Create a Heading widget with clear size hierarchy.
     LEGO tokens: xlarge > large > medium > small > xsmall
-    H1 = xlarge (page title), H2 = large (section), H3 = medium (sub-section)
+    H1 = large (page title), H2 = medium (section), H3 = small (sub-section)
     """
     text = _clean_markdown(text)
     if font_size is None:
-        font_size = {"1": "xlarge", "2": "large", "3": "medium"}.get(str(level), "medium")
+        font_size = {"1": "large", "2": "medium", "3": "small"}.get(str(level), "small")
     return {
         "content": _draft_block(text),
         "headingLevel": level,
