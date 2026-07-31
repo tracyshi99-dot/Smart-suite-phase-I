@@ -4447,12 +4447,18 @@ elif _page_idx == 5:
         if items:
             rows = []
             for item in items:
+                # Support both flat format (from engine.py) and nested format
+                _title = item.get("title", item.get("meta", {}).get("title", ""))
+                _wc = item.get("word_count", item.get("quality_metrics", {}).get("word_count", 0))
+                _score = item.get("overall_score", item.get("ai_friendly", {}).get("overall_score", 0))
+                _compliance = item.get("compliance_status", item.get("compliance", {}).get("status", "") if isinstance(item.get("compliance"), dict) else "")
+                _cid = item.get("content_id", item.get("created_from", ""))
                 rows.append({
-                    "content_id": item.get("content_id", ""),
-                    "title": item.get("meta", {}).get("title", ""),
-                    "word_count": item.get("quality_metrics", {}).get("word_count", 0),
-                    "overall_score": item.get("ai_friendly", {}).get("overall_score", 0),
-                    "compliance": item.get("compliance", {}).get("status", ""),
+                    "content_id": _cid,
+                    "title": _title,
+                    "word_count": _wc,
+                    "overall_score": _score,
+                    "compliance": _compliance,
                     "selected": True,
                 })
             df_items = pd.DataFrame(rows)
@@ -4510,15 +4516,17 @@ elif _page_idx == 5:
         st.subheader(t("ui.json_preview"))
         if items:
             for i, item in enumerate(items):
-                title = item.get("meta", {}).get("title", f"Item {i+1}")
+                title = item.get("title", item.get("meta", {}).get("title", f"Item {i+1}"))
                 col_prev, col_dl = st.columns([5, 1])
                 with col_prev:
                     with st.expander(f"📄 {title}", expanded=(i == 0)):
                         st.json(item)
                 with col_dl:
                     _single_json = json.dumps(item, ensure_ascii=False, indent=4)
+                    _cid = item.get("content_id", item.get("created_from", f"item_{i+1}"))
+                    _fname = str(_cid).replace("/", "_").replace("\\", "_")
                     st.download_button("⬇️", _single_json.encode("utf-8"),
-                                       file_name=f"{item.get('content_id', f'item_{i+1}')}.json",
+                                       file_name=f"{_fname}.json",
                                        mime="application/json", key=f"dl_single_{i}")
 
         # --- Download buttons (after preview) ---
