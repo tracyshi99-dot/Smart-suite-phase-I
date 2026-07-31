@@ -4515,21 +4515,60 @@ elif _page_idx == 5:
         st.divider()
         st.subheader(t("ui.json_preview"))
         if items:
+            # Check if LEGO format files exist
+            _lego_dir = OUTPUT_PATH / selected_batch / "04_zhibu" / "lego_sell_design"
+            _has_lego = _lego_dir.exists() and any(_lego_dir.glob("*.json"))
+
+            # Format toggle
+            _format_options = ["LEGO Sell Design", "Article Data"]
+            if _has_lego:
+                _dl_format = st.radio("📦 Download Format", _format_options, index=0, horizontal=True, key="zhibu_dl_format")
+            else:
+                _dl_format = "Article Data"
+                st.caption("💡 LEGO Sell Design format will be available after regenerating 智布")
+
             for i, item in enumerate(items):
                 title = item.get("meta", {}).get("title", "") if isinstance(item.get("meta"), dict) else item.get("title", f"Item {i+1}")
                 if not title:
                     title = item.get("ai_query", f"Item {i+1}")
                 col_prev, col_dl = st.columns([5, 1])
                 with col_prev:
-                    with st.expander(f"📄 {title}", expanded=(i == 0)):
-                        st.json(item)
+                    if _dl_format == "LEGO Sell Design" and _has_lego:
+                        # Show LEGO format preview
+                        _lego_fname = (item.get("ai_query") or title)[:60]
+                        _lego_fname = _lego_fname.replace("/", "").replace("\\", "").replace(":", "").replace("?", "？").replace("*", "").replace('"', "").replace("<", "").replace(">", "").replace("|", "").strip()
+                        _lego_file = _lego_dir / f"{_lego_fname}.json"
+                        if _lego_file.exists():
+                            with st.expander(f"📄 {title}", expanded=(i == 0)):
+                                _lego_data = json.loads(_lego_file.read_text(encoding="utf-8"))
+                                st.json(_lego_data)
+                        else:
+                            with st.expander(f"📄 {title}", expanded=(i == 0)):
+                                st.json(item)
+                    else:
+                        with st.expander(f"📄 {title}", expanded=(i == 0)):
+                            st.json(item)
                 with col_dl:
-                    _single_json = json.dumps(item, ensure_ascii=False, indent=4)
-                    _cid = item.get("content_id", f"item_{i+1}")
-                    _fname = str(_cid).replace("/", "_").replace("\\", "_")
-                    st.download_button("⬇️", _single_json.encode("utf-8"),
-                                       file_name=f"{_fname}.json",
-                                       mime="application/json", key=f"dl_single_{i}")
+                    if _dl_format == "LEGO Sell Design" and _has_lego:
+                        _lego_fname = (item.get("ai_query") or title)[:60]
+                        _lego_fname = _lego_fname.replace("/", "").replace("\\", "").replace(":", "").replace("?", "？").replace("*", "").replace('"', "").replace("<", "").replace(">", "").replace("|", "").strip()
+                        _lego_file = _lego_dir / f"{_lego_fname}.json"
+                        if _lego_file.exists():
+                            st.download_button("⬇️", _lego_file.read_bytes(),
+                                               file_name=f"{_lego_fname}.json",
+                                               mime="application/json", key=f"dl_lego_{i}")
+                        else:
+                            _single_json = json.dumps(item, ensure_ascii=False, indent=4)
+                            st.download_button("⬇️", _single_json.encode("utf-8"),
+                                               file_name=f"{item.get('content_id', f'item_{i+1}')}.json",
+                                               mime="application/json", key=f"dl_single_{i}")
+                    else:
+                        _single_json = json.dumps(item, ensure_ascii=False, indent=4)
+                        _cid = item.get("content_id", f"item_{i+1}")
+                        _fname = str(_cid).replace("/", "_").replace("\\", "_")
+                        st.download_button("⬇️", _single_json.encode("utf-8"),
+                                           file_name=f"{_fname}.json",
+                                           mime="application/json", key=f"dl_single_{i}")
 
         # --- Download buttons (after preview) ---
         st.divider()
