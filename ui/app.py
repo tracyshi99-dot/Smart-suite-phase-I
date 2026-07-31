@@ -4447,11 +4447,11 @@ elif _page_idx == 5:
         if items:
             rows = []
             for item in items:
-                # Support both flat format (from engine.py) and nested format
-                _title = item.get("title", item.get("meta", {}).get("title", ""))
-                _wc = item.get("word_count", item.get("quality_metrics", {}).get("word_count", 0))
-                _score = item.get("overall_score", item.get("ai_friendly", {}).get("overall_score", 0))
-                _compliance = item.get("compliance_status", item.get("compliance", {}).get("status", "") if isinstance(item.get("compliance"), dict) else "")
+                # Support nested format (meta.title, quality_metrics.word_count, etc.)
+                _title = item.get("meta", {}).get("title", "") if isinstance(item.get("meta"), dict) else item.get("title", "")
+                _wc = item.get("quality_metrics", {}).get("word_count", 0) if isinstance(item.get("quality_metrics"), dict) else item.get("word_count", 0)
+                _score = item.get("ai_friendly", {}).get("overall_score", 0) if isinstance(item.get("ai_friendly"), dict) else item.get("overall_score", 0)
+                _compliance = item.get("compliance", {}).get("status", "") if isinstance(item.get("compliance"), dict) else item.get("compliance_status", "")
                 _cid = item.get("content_id", item.get("created_from", ""))
                 rows.append({
                     "content_id": _cid,
@@ -4516,14 +4516,16 @@ elif _page_idx == 5:
         st.subheader(t("ui.json_preview"))
         if items:
             for i, item in enumerate(items):
-                title = item.get("title", item.get("meta", {}).get("title", f"Item {i+1}"))
+                title = item.get("meta", {}).get("title", "") if isinstance(item.get("meta"), dict) else item.get("title", f"Item {i+1}")
+                if not title:
+                    title = item.get("ai_query", f"Item {i+1}")
                 col_prev, col_dl = st.columns([5, 1])
                 with col_prev:
                     with st.expander(f"📄 {title}", expanded=(i == 0)):
                         st.json(item)
                 with col_dl:
                     _single_json = json.dumps(item, ensure_ascii=False, indent=4)
-                    _cid = item.get("content_id", item.get("created_from", f"item_{i+1}"))
+                    _cid = item.get("content_id", f"item_{i+1}")
                     _fname = str(_cid).replace("/", "_").replace("\\", "_")
                     st.download_button("⬇️", _single_json.encode("utf-8"),
                                        file_name=f"{_fname}.json",

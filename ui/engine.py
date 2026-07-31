@@ -1535,38 +1535,78 @@ def run_zhibu(batch_id: str, progress_callback=None) -> dict:
         ai_query = _safe_str(row.get("ai_query", ""))
         category = _safe_str(row.get("category", ""))
 
-        # Build item in baseJSON format (matches LEGO CMS template)
+        # Extract scores from scorecard if available
+        _score_row = {}
+        if not df_score.empty and "content_id" in df_score.columns:
+            _match = df_score[df_score["content_id"] == cid]
+            if not _match.empty:
+                _score_row = _match.iloc[0].to_dict()
+
+        # Extract structure from content
+        structure = _extract_structure(content, title)
+        faqs = _extract_faq(content)
+        keywords = _extract_keywords(ai_query, content)
+
+        # Build item in full nested format (matches batch_003 structure)
         item = {
-            "name": ai_query or title,
-            "source_query": ai_query,
-            "title": title,
-            "content": content,
+            "content_id": cid,
+            "query_id": _safe_str(row.get("query_id", "")),
+            "keyword_id": _safe_str(row.get("keyword_id", "")),
+            "keyword": ai_query,
+            "ai_query": ai_query,
+            "meta": {
+                "title": title,
+                "description": _safe_str(row.get("meta_description", "")),
+            },
+            "body": content,
             "category": category,
-            "word_count": len(content),
+            "faq": faqs if faqs else "",
+            "cta": _safe_str(row.get("cta", "")),
+            "geo_summary": _safe_str(row.get("geo_summary", "")),
+            "ai_friendly": {
+                "intent_match_score": _safe_str(_score_row.get("intent_match_score", _safe_str(row.get("intent_match_score", "")))),
+                "ai_readability_score": _safe_str(_score_row.get("ai_readability_score", _safe_str(row.get("ai_readability_score", "")))),
+                "authority_score": _safe_str(_score_row.get("authority_score", _safe_str(row.get("authority_score", "")))),
+                "actionability_score": _safe_str(_score_row.get("actionability_score", _safe_str(row.get("actionability_score", "")))),
+                "differentiation_score": _safe_str(_score_row.get("differentiation_score", _safe_str(row.get("differentiation_score", "")))),
+                "overall_score": _safe_score(_score_row.get("overall_score", row.get("overall_score", 0))),
+            },
+            "compliance": {
+                "status": _safe_str(row.get("compliance_status", _safe_str(row.get("compliance_result", "")))),
+                "copyright": f"Copyright © {datetime.now().year} Amazon. All rights Reserved.",
+            },
+            "quality_metrics": {
+                "word_count": len(content),
+                "table_count": content.count("|---|"),
+                "list_count": len(re.findall(r'^\s*[-*•]\s', content, re.MULTILINE)),
+                "link_count": len(re.findall(r'https?://', content)),
+            },
+            "structure": structure,
+            "keywords": keywords,
             "created_from": f"{batch_id}/{cid}",
             "created_at": timestamp(),
         }
         items.append(item)
 
-    # Save each item as individual JSON file (matching baseJSON template)
+    # Save each item as individual JSON file
     output_dir = OUTPUT_PATH / batch_id / "04_zhibu"
     ensure_dir(output_dir)
 
-    # Also save a combined output for backward compatibility
     for item in items:
         # Filename = query or title (sanitized)
-        fname = item["name"][:60].replace("/", "").replace("\\", "").replace(":", "").replace("?", "？").replace("*", "").replace('"', "").replace("<", "").replace(">", "").replace("|", "").strip()
+        fname = (item.get("ai_query") or item.get("meta", {}).get("title", ""))[:60]
+        fname = fname.replace("/", "").replace("\\", "").replace(":", "").replace("?", "？").replace("*", "").replace('"', "").replace("<", "").replace(">", "").replace("|", "").strip()
         if not fname:
-            fname = f"article_{abs(hash(item['title'])) % 100000}"
+            fname = f"article_{abs(hash(item.get('content_id', ''))) % 100000}"
         item_file = output_dir / f"{fname}.json"
         item_file.write_text(json.dumps(item, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
 
-    # Also save combined file for the UI display
+    # Save combined file for the UI display
     output_json = {
         "batch_id": batch_id,
         "created_at": timestamp(),
         "total_items": len(items),
-        "source_keywords": list(set(i["source_query"] for i in items if i["source_query"])),
+        "source_keywords": list(set(i["ai_query"] for i in items if i.get("ai_query"))),
         "items": items,
     }
     combined_file = output_dir / "zhibu_output.json"
@@ -1579,14 +1619,15 @@ def run_zhibu(batch_id: str, progress_callback=None) -> dict:
         lego_dir.mkdir(parents=True, exist_ok=True)
         for item in items:
             lego_page = convert_article_to_lego_page(
-                title=item["title"],
-                content=item["content"],
-                source_query=item["source_query"],
+                title=item.get("meta", {}).get("title", ""),
+                content=item.get("body", ""),
+                source_query=item.get("ai_query", ""),
                 batch_id=batch_id
             )
-            fname = item["name"][:60].replace("/", "").replace("\\", "").replace(":", "").replace("*", "").replace('"', "").replace("<", "").replace(">", "").replace("|", "").strip()
+            fname = (item.get("ai_query") or item.get("meta", {}).get("title", ""))[:60]
+            fname = fname.replace("/", "").replace("\\", "").replace(":", "").replace("*", "").replace('"', "").replace("<", "").replace(">", "").replace("|", "").strip()
             if not fname:
-                fname = f"article_{abs(hash(item['title'])) % 100000}"
+                fname = f"article_{abs(hash(item.get('content_id', ''))) % 100000}"
             lego_file = lego_dir / f"{fname}.json"
             lego_file.write_text(json.dumps(lego_page, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
     except Exception:
