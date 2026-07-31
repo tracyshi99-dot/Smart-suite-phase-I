@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "name": "Auto Deploy to GitHub + S3",
+  "description": "After agent completes work, auto-commits to GitHub (deploys to Streamlit Cloud) and syncs changed files to S3 backup bucket",
+  "version": "1",
+  "when": {
+    "type": "agentStop"
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "cd C:\\Users\\yujiashi\\Desktop\\SmartSuite_Phase1 && git add -A && git commit -m \"auto: sync changes to Streamlit Cloud\" && git push && ada credentials update --account 830279064391 --provider conduit --role IibsAdminAccess-DO-NOT-DELETE --once --profile default 2>nul && aws s3 sync . s3://smartsuite-sync-data/smartsuite/ --profile default --exclude \".git/*\" --exclude \"ui/.venv/*\" --exclude \".venv/*\" --exclude \"*/__pycache__/*\" --exclude \"*.pyc\" --exclude \"node_modules/*\" --exclude \"*.pptx\"",
+    "timeout": 300
+  }
+}
