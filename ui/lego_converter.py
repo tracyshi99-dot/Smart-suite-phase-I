@@ -300,19 +300,26 @@ def convert_article_to_lego_page(title: str, content: str, source_query: str = "
                                   label: str = "跨境知识荟", batch_id: str = "") -> dict:
     """Convert a single article into a complete LEGO page JSON.
 
-    Returns a dict that can be saved as a .json file for LEGO CMS import.
+    Returns a single top-level Container widget (Sell Design format)
+    that can be directly imported into LEGO CMS.
     """
     containers = markdown_to_lego(title, content, source_query, label, batch_id)
 
-    page = {
-        "name": source_query or title,
-        "source_query": source_query,
-        "title": title,
-        "label": label,
-        "created_from": batch_id,
-        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "lego_version": "2",
-        "design": "Sell",
-        "sections": containers
-    }
+    # Wrap all section containers into a single top-level Container
+    page = _base_container(
+        widgets=containers,
+        hasMaxWidth=True,
+        paddingTopDesktop="minibase",
+        paddingTopTablet="base",
+        paddingLeftDesktop="xxlarge",
+        paddingLeftTablet="xsmall",
+        paddingRightDesktop="xxlarge",
+        paddingRightTablet="xsmall",
+        paddingBottomDesktop="minibase",
+        gradientAngle="90deg",
+    )
+    # Add required top-level fields
+    page["design"] = "Sell"
+    page["uuid"] = _gen_uuid()
+    page["legoVersion"] = "2"
     return page
