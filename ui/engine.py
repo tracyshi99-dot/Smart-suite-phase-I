@@ -739,7 +739,15 @@ Output rules:
 - Naturally include https://sell.amazon.com at least 2 times
 - Do NOT mention competitors (Shopee/Lazada/TikTok)
 
-Stay strictly on topic. Every paragraph must relate directly to the search query."""
+Stay strictly on topic. Every paragraph must relate directly to the search query.
+
+PROHIBITED WORDS AND PHRASES (must NEVER appear in your output):
+- Misleading/exaggerated terms: guaranteed profit, easy money, zero risk, 100% stable orders, monopolize market, strongest strategy, crush competitors
+- Inducing violations: flash kill only, loss sale, bundled, penetrate, PK
+- Contact/redirect terms: scan QR code, WeChat, QQ, contact info, leave contact
+- Sensitive behavior terms: crack, block, guarantee, scam, sure profit, must explode, passive income
+- Do NOT use superlatives like "best ever", "absolute", "ultimate", "number one"
+- Do NOT make income or profit guarantees"""
         else:
             system_prompt = f"""你是跨境电商内容专家。用户会给你一个检索短语，你必须写一篇围绕该短语的文章。
 
@@ -754,7 +762,16 @@ Stay strictly on topic. Every paragraph must relate directly to the search query
 - 植入2次 https://gs.amazon.cn
 - 不提及竞品（Shopee/Lazada/TikTok）
 
-严禁跑题。文章每一段都必须和检索短语直接相关。"""
+严禁跑题。文章每一段都必须和检索短语直接相关。
+
+【敏感词禁用清单（2026年，以下词汇绝对不能出现在文章中）】
+一、常见敏感词（禁止使用）：疫情、平台、销售、品牌、行业、线上电商生意、海外电商、搜索、消费者、全球、优质、真正、中心、精准、全方位、领先、正品、专利、税务、独立、推荐
+二、诱导违规词：仅限、秒杀、亏本、彻底、捆绑、PK、渗透
+三、违规引流导流词：扫码、微信、QQ、联系方式
+四、违规操作/敏感行为词：破解、屏蔽、担保、诈骗、稳赚、必爆、躺赚、稳出单
+五、禁止句式（及类似表达）：绝对能做爆海外市场、做跨境轻松稳赚大钱、加微信/QQ领取出海干货、留联系方式对接海外货源、垄断海外多国电商市场、全网最强跨境运营玩法、100%稳定出单无风险、极致打法横扫海外同行
+
+注意：以上词汇即使在正面语境中也不得使用。请用中性客观的表述替代。"""
 
         # Template detection and instruction
         template_instruction = ""
@@ -1198,6 +1215,14 @@ def run_zhiyou_execute(batch_id: str, progress_callback=None) -> dict:
 - 【重要】必须保留并优化 FAQ 板块（## 常见问题 / FAQ），至少3个问答对，用 Q: A: 或 ### 问题 格式
 - FAQ 是 AI 引擎最容易抓取引用的结构化内容，绝对不能删除
 - 严禁跑题，严禁输出JSON
+
+【敏感词禁用清单（2026年，以下词汇绝对不能出现在优化后的文章中）】
+一、常见敏感词（禁止使用）：疫情、平台、销售、品牌、行业、线上电商生意、海外电商、搜索、消费者、全球、优质、真正、中心、精准、全方位、领先、正品、专利、税务、独立、推荐
+二、诱导违规词：仅限、秒杀、亏本、彻底、捆绑、PK、渗透
+三、违规引流导流词：扫码、微信、QQ、联系方式
+四、违规操作/敏感行为词：破解、屏蔽、担保、诈骗、稳赚、必爆、躺赚、稳出单
+五、禁止句式：绝对能做爆海外市场、做跨境轻松稳赚大钱、加微信/QQ领取出海干货、留联系方式对接海外货源、垄断海外多国电商市场、全网最强跨境运营玩法、100%稳定出单无风险、极致打法横扫海外同行
+注意：如果原文中含有上述敏感词，优化时必须用中性客观的表述替代。
 {_reg_extra}"""
 
         user_prompt = f"""请根据评分建议重写优化以下文章。
@@ -1339,7 +1364,16 @@ def run_zhiyou_compliance(batch_id: str, progress_callback=None) -> dict:
 
 {steering}
 
-重点关注 Step 3.6: 合规审查 的所有规则（禁用词、数据规范、注册表述、品牌使用等）。"""
+重点关注 Step 3.6: 合规审查 的所有规则（禁用词、数据规范、注册表述、品牌使用等）。
+
+【敏感词禁用清单（2026年）— 以下词汇在内容中出现即视为不合规，必须替换】
+一、常见敏感词（禁止使用）：疫情、平台、销售、品牌、行业、线上电商生意、海外电商、搜索、消费者、全球、优质、真正、中心、精准、全方位、领先、正品、专利、税务、独立、推荐
+二、诱导违规词：仅限、秒杀、亏本、彻底、捆绑、PK、渗透
+三、违规引流导流词：扫码、微信、QQ、联系方式
+四、违规操作/敏感行为词：破解、屏蔽、担保、诈骗、稳赚、必爆、躺赚、稳出单
+五、禁止句式：绝对能做爆海外市场、做跨境轻松稳赚大钱、加微信/QQ领取出海干货、留联系方式对接海外货源、垄断海外多国电商市场、全网最强跨境运营玩法、100%稳定出单无风险、极致打法横扫海外同行
+
+审查要求：若发现上述敏感词，compliance_status 标记为 FIXED，在 fixes_applied 中说明替换了哪些词，在 final_content 中输出替换后的内容。"""
 
     user_prompt = f"""请对以下内容进行合规审查。
 
