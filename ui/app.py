@@ -6132,8 +6132,38 @@ elif _page_idx == 7:
                             st.metric("旧内容优化", _get_geo_val("旧内容优化#"))
 
                     st.divider()
-                    st.markdown("**📋 明细数据**")
-                    st.dataframe(df_geo_summary, use_container_width=True, hide_index=True)
+                    st.markdown("**📋 月度明细**")
+
+                    # Build structured monthly tables
+                    month_cols_display = month_cols_geo
+
+                    # 总览月度表
+                    st.markdown("##### 📋 总览（月度）")
+                    total_rows = ["提示词#", "官网链接提及总量", "官网链接提及率"]
+                    df_total = df_geo_summary[df_geo_summary["指标"].isin(total_rows)].copy()
+                    if not df_total.empty:
+                        st.dataframe(df_total, use_container_width=True, hide_index=True)
+
+                    # 品牌词月度表
+                    st.markdown("##### 🏷️ 品牌检索短语（月度）")
+                    brand_rows_list = ["品牌提示词", "品牌词品牌提及率", "品牌词链接提及率", "品牌词链接提及"]
+                    df_brand_detail = df_geo_summary[df_geo_summary["指标"].isin(brand_rows_list)].copy()
+                    if not df_brand_detail.empty:
+                        st.dataframe(df_brand_detail, use_container_width=True, hide_index=True)
+
+                    # 行业词月度表
+                    st.markdown("##### 🏭 行业检索短语（月度）")
+                    industry_rows_list = ["行业提示词", "行业词品牌提及率", "行业词链接提及率", "行业词提及#"]
+                    df_industry_detail = df_geo_summary[df_geo_summary["指标"].isin(industry_rows_list)].copy()
+                    if not df_industry_detail.empty:
+                        st.dataframe(df_industry_detail, use_container_width=True, hide_index=True)
+
+                    # 内容产出月度表
+                    st.markdown("##### ✍️ 内容产出（月度）")
+                    content_rows_list = ["新建内容#", "旧内容优化#"]
+                    df_content_detail = df_geo_summary[df_geo_summary["指标"].isin(content_rows_list)].copy()
+                    if not df_content_detail.empty:
+                        st.dataframe(df_content_detail, use_container_width=True, hide_index=True)
 
                     # Trend chart - key metrics
                     st.markdown("**📈 月度趋势**")
