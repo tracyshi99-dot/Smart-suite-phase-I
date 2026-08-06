@@ -6093,7 +6093,7 @@ elif _page_idx == 7:
                         with tc1:
                             st.metric("总检索短语", _get_geo_val("提示词#"))
                         with tc2:
-                            st.metric("总品牌提及率", "86.5%")
+                            st.metric("总品牌提及率", _get_geo_val("总品牌提及率"))
                         with tc3:
                             st.metric("总官网链接提及率", _get_geo_val("官网链接提及率"))
                         with tc4:
@@ -6139,7 +6139,7 @@ elif _page_idx == 7:
 
                     # 总览月度表
                     st.markdown("##### 📋 总览（月度）")
-                    total_rows = ["提示词#", "官网链接提及总量", "官网链接提及率"]
+                    total_rows = ["提示词#", "总品牌提及率", "官网链接提及总量", "官网链接提及率"]
                     df_total = df_geo_summary[df_geo_summary["指标"].isin(total_rows)].copy()
                     if not df_total.empty:
                         st.dataframe(df_total, use_container_width=True, hide_index=True)
