@@ -1394,7 +1394,7 @@ with st.sidebar:
         selected_batch = batches[0] if batches else "batch_003"
     market = "ALL"
     kw_limit = 10
-    week = "WK21"
+    week = "WK31"
 
     st.divider()
     st.caption(f"{'Path' if is_en else '路径'}: {BASE_PATH}")
@@ -7480,37 +7480,44 @@ elif _page_idx == 8:
         st.subheader(f"📋 Smart Suite Weekly Plan - {week}")
         st.markdown("""
     **🟢 ACCELERATE:**
-    - CN GEO: 4 consecutive weeks of growth → Expand CN keyword coverage
-    - JP Direct: +67% WoW, +103% YoY → Prioritize JP content expansion
-    - Direct (CN+WW): +32% WoW → Maintain current pace
+    - CN GEO: +128% YoY (Jul MTD), sustained growth → Continue CN keyword expansion
+    - WW GEO: +174% YoY (Jul MTD), strong momentum → Scale WW content production
+    - Direct (CN+WW): +48% YoY (Jul MTD), all regions growing → Maintain pace across all markets
+    - Total (GEO+Direct): Q2 = 42,844 (+29% YoY), Jul MTD = 7,796 (+49%) → Full acceleration
 
     **🟡 MONITOR:**
-        - EU GEO: Low absolute value (5/month) → Expand EU search phrases
+    - Industry keywords: 159 phrases added, link rate at 37.2% (lower than brand 56.9%) → Optimize GEO structure
+    - Brand link rate dipped in May (46.6%), recovered in Jun (56.9%) → Monitor Jul trend
 
     **🔴 INVESTIGATE:**
-    - AE Direct: YoY -61% → Investigate decline cause
+    - EM markets (AU/SA/AE): Q2 mixed, SA/AE declining → Root cause analysis needed
         """ if is_en else """
-    **🟢 ACCELERATE:**
-    - CN GEO: 连续4周增长 → 增加 CN 关键词覆盖
-    - JP Direct: +67% WoW, +103% YoY → 优先扩展 JP 内容
-    - Direct (CN+WW): +32% WoW → 保持当前节奏
+    **🟢 加速 (ACCELERATE):**
+    - CN GEO: 7月 MTD +128% YoY，保持增长态势 → 继续扩大 CN 关键词覆盖
+    - WW GEO: 7月 MTD +174% YoY，增速强劲 → 加大 WW 内容生产
+    - Direct (CN+WW): 7月 MTD +48% YoY，各区域均增长 → 保持当前节奏
+    - Total (GEO+Direct): Q2 = 42,844 (+29% YoY)，7月 MTD = 7,796 (+49%) → 全面加速
 
-    **🟡 MONITOR:**
-        - EU GEO: 绝对值低(5/月) → 扩大 EU 检索短语
+    **🟡 监控 (MONITOR):**
+    - 行业词: 已扩至 159 条，链接提及率 37.2%（低于品牌词 56.9%）→ 优化行业词 GEO 结构
+    - 品牌链接率 5月低谷(46.6%)，6月回升(56.9%) → 持续观察7月趋势
 
-    **🔴 INVESTIGATE:**
-    - AE Direct: YoY -61% → 排查下降原因
+    **🔴 排查 (INVESTIGATE):**
+    - EM 市场 (AU/SA/AE): Q2 表现不均，SA/AE 持续下降 → 需 root cause 分析
         """)
 
         st.divider()
         st.markdown(f"""
     **📝 THIS WEEK'S EXECUTION PLAN:**
-    - 智库: 15 new keywords (JP×5, CN×5, EU×5)
-    - 智造: 6 articles (JP×2, CN×2, EU×2)
-    - 智优: Review all 6 articles
-    - 智布: Publish 6 articles
+    - 智库: 20 new keywords (CN×8, NA×4, EU×4, JP×2, AU×2)
+    - 智造: 10 articles (行业词×6, 品牌词×4) — focus on low link rate categories
+    - 智优: Review all 10 articles (三段式: Claude 改写 → Claude 合规 → Qwen 润色)
+    - 智布: Publish 10 articles to LEGO CMS
+    - 智测: Run coverage test on new Jun industry phrases
+    - 智析: Update Jul MTD data, track brand/link rate recovery
 
-    **⏰ ESTIMATED TIME:** 4-6 hours
+    **⏰ ESTIMATED TIME:** 6-8 hours
+    **📊 KEY TARGETS:** Brand link rate > 58%, Industry link rate > 40%, Total phrases → 680+
         """)
 
         st.divider()
