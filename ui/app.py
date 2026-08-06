@@ -5360,10 +5360,14 @@ elif _page_idx == 7:
                 monthly_data = get_monthly_metrics()
                 month_cols = [c for c in monthly_data.columns if c not in ["Channel", "Type"]]
 
+                # Separate monthly vs quarterly columns for KPI comparison
+                _monthly_only = [c for c in month_cols if c.startswith("M")]
+                _quarter_cols = [c for c in month_cols if c.startswith("Q")]
+
                 # --- KPI: Last 2 months comparison (Actual rows only) ---
-                if len(month_cols) >= 2:
-                    last_m = month_cols[-1]
-                    prev_m = month_cols[-2]
+                if len(_monthly_only) >= 2:
+                    last_m = _monthly_only[-1]
+                    prev_m = _monthly_only[-2]
                     monthly_actual = monthly_data[monthly_data["Type"] == "Actual"] if "Type" in monthly_data.columns else monthly_data
                     kpi1, kpi2, kpi3, kpi4, kpi5 = st.columns(5)
                     # Build lookup: try multiple channel name variants
@@ -5423,7 +5427,7 @@ elif _page_idx == 7:
                 st.divider()
 
                 # --- Charts: GEO and Direct separate ---
-                months_labels = [c.split(" ")[0] if " " in c else c for c in month_cols]
+                months_labels = [c.split(" ")[0] if " " in c else c for c in _monthly_only]
                 monthly_actual = monthly_data[monthly_data["Type"] == "Actual"] if "Type" in monthly_data.columns else monthly_data
 
                 col_chart1, col_chart2 = st.columns(2)
@@ -5433,7 +5437,7 @@ elif _page_idx == 7:
                     for channel, color in [("CN (GEO)", "#fbbf24"), ("WW (GEO)", "#a78bfa"), ("Total GEO", "#22c55e")]:
                         row = monthly_actual[monthly_actual["Channel"] == channel]
                         if not row.empty:
-                            vals = [pd.to_numeric(row.iloc[0].get(c, 0), errors="coerce") for c in month_cols]
+                            vals = [pd.to_numeric(row.iloc[0].get(c, 0), errors="coerce") for c in _monthly_only]
                             dash = "dot" if channel == "Total GEO" else None
                             fig_m_geo.add_trace(go.Scatter(name=channel, x=months_labels, y=vals, mode="lines+markers", line=dict(color=color, width=2, dash=dash)))
                     fig_m_geo.update_layout(height=280, margin=dict(l=0, r=0, t=10, b=0), legend=dict(orientation="h", y=-0.2), yaxis_title="Reg Starts")
@@ -5446,7 +5450,7 @@ elif _page_idx == 7:
                         if row.empty and "Direct" in channel:
                             row = monthly_actual[monthly_actual["Channel"].str.contains("Direct.*CN", na=False, regex=True)]
                         if not row.empty:
-                            vals = [pd.to_numeric(row.iloc[0].get(c, 0), errors="coerce") for c in month_cols]
+                            vals = [pd.to_numeric(row.iloc[0].get(c, 0), errors="coerce") for c in _monthly_only]
                             name = "Total (GEO+Direct)" if channel == "Total (GEO+Direct)" else "Direct (CN+WW)"
                             fig_m_dir.add_trace(go.Scatter(name=name, x=months_labels, y=vals, mode="lines+markers", line=dict(color=color, width=2, dash=dash)))
                     fig_m_dir.update_layout(height=280, margin=dict(l=0, r=0, t=10, b=0), legend=dict(orientation="h", y=-0.2), yaxis_title="Reg Starts")
@@ -5460,7 +5464,7 @@ elif _page_idx == 7:
                 _m_ssr_yoy = monthly_data[(monthly_data["Channel"] == "SSR Total (大盘)") & (monthly_data["Type"] == "YoY")]
                 if not _m_our_yoy.empty and not _m_ssr_yoy.empty:
                     bps_row = {"Channel": "跑赢大盘", "Type": "BPS"}
-                    for c in month_cols:
+                    for c in _monthly_only:
                         our_v = str(_m_our_yoy.iloc[0].get(c, "")).replace("%", "").replace("+", "")
                         ssr_v = str(_m_ssr_yoy.iloc[0].get(c, "")).replace("%", "").replace("+", "")
                         try:
