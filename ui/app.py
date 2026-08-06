@@ -1158,18 +1158,20 @@ with st.sidebar:
 
     # Auto-set language based on user profile (on first login)
     _current_user_for_lang = st.session_state.get("app_user", "")
-    # If user just logged in and hasn't manually changed lang, auto-set
-    if "ui_lang_auto_set" not in st.session_state and _current_user_for_lang:
+    # Determine default language index for the selectbox
+    _default_lang_idx = 0  # English
+    if "ui_lang" in st.session_state:
+        # Use existing selection
+        _UI_LANG_OPTIONS_PRE = ["English", "简体中文", "繁體中文", "한국어", "Tiếng Việt"]
+        _cur_lang = st.session_state.get("ui_lang", "English")
+        if _cur_lang in _UI_LANG_OPTIONS_PRE:
+            _default_lang_idx = _UI_LANG_OPTIONS_PRE.index(_cur_lang)
+    elif _current_user_for_lang:
+        # First login — auto-detect from user profile
         if _user_lang_map.get(_current_user_for_lang) == "en":
-            st.session_state["ui_lang"] = "English"
-            st.session_state["ui_lang_auto_set"] = True
+            _default_lang_idx = 0  # English
         else:
-            # CN users auto-switch to Chinese
-            st.session_state["ui_lang"] = "简体中文"
-            st.session_state["ui_lang_auto_set"] = True
-    # Default to English if no user logged in yet
-    if not _current_user_for_lang and "ui_lang" not in st.session_state:
-        st.session_state["ui_lang"] = "English"
+            _default_lang_idx = 1  # 简体中文
 
     st.title("🧠 Smart Suite")
 
@@ -1177,7 +1179,7 @@ with st.sidebar:
     _UI_LANG_OPTIONS = ["English", "简体中文", "繁體中文", "한국어", "Tiếng Việt"]
     _UI_LANG_TO_CODE = {"English": "en", "简体中文": "zh-CN", "繁體中文": "zh-TW", "한국어": "ko", "Tiếng Việt": "vi"}
     _UI_CODE_TO_LANG = {v: k for k, v in _UI_LANG_TO_CODE.items()}
-    ui_lang = st.selectbox("🌐 Language", _UI_LANG_OPTIONS, key="ui_lang")
+    ui_lang = st.selectbox("🌐 Language", _UI_LANG_OPTIONS, index=_default_lang_idx, key="ui_lang")
     _ui_lang_code = _UI_LANG_TO_CODE.get(ui_lang, "en")
     is_en = (_ui_lang_code == "en")  # True only for English; t() handles all translations
 
@@ -1199,10 +1201,6 @@ with st.sidebar:
         _url_user = _qp_login["user"].lower()
         if _url_user in ALLOWED_USERS:
             st.session_state["app_user"] = _url_user
-            # Auto-set language for this user
-            if _user_lang_map.get(_url_user) == "en":
-                st.session_state["ui_lang"] = "English"
-                st.session_state["ui_lang_auto_set"] = True
 
     user_login = st.text_input("👤 Login", value=st.session_state.get("app_user", ""),
                                placeholder="Your login name", key="sidebar_login", label_visibility="collapsed")
@@ -1210,14 +1208,9 @@ with st.sidebar:
         if user_login.lower() in ALLOWED_USERS:
             _prev_user = st.session_state.get("app_user", "")
             st.session_state["app_user"] = user_login.lower()
-            # Auto-set language when user changes
+            # Language will auto-adjust on next rerun via _default_lang_idx logic
             if _prev_user != user_login.lower():
-                if _user_lang_map.get(user_login.lower()) == "en":
-                    st.session_state["ui_lang"] = "English"
-                else:
-                    # CN users (not in user_lang or user_lang != "en") get Chinese
-                    st.session_state["ui_lang"] = "简体中文"
-                st.session_state["ui_lang_auto_set"] = True
+                st.rerun()
         else:
             st.session_state["app_user"] = ""
             st.error(t("ui.access_denied"))
