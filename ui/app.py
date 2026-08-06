@@ -3239,8 +3239,8 @@ elif _page_idx == 2:
         else:
             st.caption(t("ui.no_history_records_yet"))
 
-    # --- Ahrefs Brand Radar Section (rickylan only) ---
-    if AHREFS_AVAILABLE:
+    # --- Ahrefs Brand Radar Section (not shown for yujiashi) ---
+    if AHREFS_AVAILABLE and current_user.lower() != "yujiashi":
         render_ahrefs_zhice(current_user, is_en)
 
 
@@ -7307,8 +7307,8 @@ elif _page_idx == 7:
             else:
                 st.caption(t("ui.no_forecast_results_yet"))
 
-    # --- Ahrefs Brand Radar Section (rickylan only) ---
-    if AHREFS_AVAILABLE:
+    # --- Ahrefs Brand Radar Section (not shown for yujiashi) ---
+    if AHREFS_AVAILABLE and current_user.lower() != "yujiashi":
         render_ahrefs_zhixi(current_user, is_en)
 
     # PAGE: 智中枢
