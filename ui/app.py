@@ -1174,11 +1174,11 @@ with st.sidebar:
             _u_sub_region = ""
 
         if _u_sub_region == "TW":
-            _detected_lang_idx = 2  # 繁體中文
+            _detected_lang_idx = 0  # English (UI default for all ROA)
         elif _u_sub_region == "KR":
-            _detected_lang_idx = 3  # 한국어
+            _detected_lang_idx = 0  # English (UI default for all ROA)
         elif _u_sub_region == "VN":
-            _detected_lang_idx = 4  # Tiếng Việt
+            _detected_lang_idx = 0  # English (UI default for all ROA)
         elif _u_region == "CN":
             _detected_lang_idx = 1  # 简体中文
         else:
