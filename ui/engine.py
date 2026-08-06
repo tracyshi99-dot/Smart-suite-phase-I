@@ -533,11 +533,12 @@ def generate_content_brief(query: str, current_ai_answer: str = "", knowledge: s
 # ============================================================
 def run_zhizao(batch_id: str, content_limit: int = 5,
                progress_callback=None, template_id: str = "auto",
-               reuse_template: dict = None) -> dict:
+               reuse_template: dict = None, content_language: str = "zh-CN") -> dict:
     """Execute Step 2: Generate draft content for selected queries.
     template_id: 'auto' (detect from query), 'none' (from scratch),
                  'registration', 'fees', 'logistics', 'advertising', 'listing'
     reuse_template: dict with 'content' key — previously saved article to adapt
+    content_language: 'zh-CN' (simplified), 'zh-TW' (traditional), 'en', 'ko', 'vi'
     """
     steering = load_steering()
 
@@ -769,6 +770,20 @@ def run_zhizao(batch_id: str, content_limit: int = 5,
         _is_pure_english = not _has_chinese and bool(_re.search(r'[a-zA-Z]', query))
         article_language = "English" if _is_pure_english else "Chinese"
 
+        # Determine output language variant based on content_language param
+        _lang_instruction = ""
+        if content_language == "zh-TW":
+            _lang_instruction = "\n\n【語言要求】整篇文章必須使用繁體中文（正體中文）撰寫，包括標題、正文、FAQ。不得使用簡體中文。使用台灣地區的慣用表達和用詞習慣。\n"
+            article_language = "Chinese"  # Force Chinese mode even if query has some English
+        elif content_language == "ko":
+            _lang_instruction = "\n\n【언어 요구사항】전체 기사를 한국어로 작성해야 합니다. 제목, 본문, FAQ 모두 한국어로 작성하세요.\n"
+            article_language = "Chinese"  # Use Chinese-style template structure
+        elif content_language == "vi":
+            _lang_instruction = "\n\n【Yêu cầu ngôn ngữ】Toàn bộ bài viết phải được viết bằng tiếng Việt, bao gồm tiêu đề, nội dung và FAQ.\n"
+            article_language = "Chinese"  # Use Chinese-style template structure
+        elif content_language == "en":
+            article_language = "English"
+
         if article_language == "English":
             system_prompt = f"""You are a cross-border e-commerce content expert. Write a comprehensive article about the given search query.
 
@@ -815,7 +830,7 @@ PROHIBITED WORDS AND PHRASES (must NEVER appear in your output):
 四、违规操作/敏感行为词：破解、屏蔽、担保、诈骗、稳赚、必爆、躺赚、稳出单
 五、禁止句式（及类似表达）：绝对能做爆海外市场、做跨境轻松稳赚大钱、加微信/QQ领取出海干货、留联系方式对接海外货源、垄断海外多国电商市场、全网最强跨境运营玩法、100%稳定出单无风险、极致打法横扫海外同行
 
-注意：以上词汇即使在正面语境中也不得使用。请用中性客观的表述替代。"""
+注意：以上词汇即使在正面语境中也不得使用。请用中性客观的表述替代。{_lang_instruction}"""
 
         # Template detection and instruction
         template_instruction = ""

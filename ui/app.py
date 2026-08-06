@@ -961,7 +961,7 @@ def _execute_rule_action(rule_name: str, batch_id: str) -> tuple:
         from engine import run_zhizao, run_zhiyou_score, run_zhiyou_execute, run_zhibu
 
         if "智库 → 智造" in rule_name or "智测 → 智造" in rule_name or "Research → Creation" in rule_name:
-            result = run_zhizao(batch_id, content_limit=5)
+            result = run_zhizao(batch_id, content_limit=5, content_language=st.session_state.get("content_language", "zh-CN"))
             if result.get("success"):
                 return True, f"Auto-generated {result.get('articles_count', 0)} articles"
             return False, result.get("error", "Unknown error")
@@ -3439,7 +3439,8 @@ elif _page_idx == 3:
 
             with st.spinner(t("ui.calling_bedrock_claude_to")):
                 reuse_tpl = st.session_state.get("reuse_template", None)
-                result = run_zhizao(selected_batch, content_limit, update_progress_z, selected_template, reuse_tpl)
+                _cl = st.session_state.get("content_language", "zh-CN")
+                result = run_zhizao(selected_batch, content_limit, update_progress_z, selected_template, reuse_tpl, content_language=_cl)
 
             if result["success"]:
                 if result['articles_generated'] > 0:
