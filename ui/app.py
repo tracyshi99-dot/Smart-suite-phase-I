@@ -6325,11 +6325,11 @@ elif _page_idx == 7:
             st.subheader(t("ui.ai_引用追踪"))
 
             AI_PLATFORMS = ["元宝", "DeepSeek", "豆包", "ChatGPT", "Kimi", "千问", "Gemini"]
-            _cite_months = ["Jan", "Feb", "Mar", "Apr", "May"]
+            _cite_months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
 
             # --- Section 1: 品牌词 ---
             st.markdown("### 🏷️ 品牌词引用追踪")
-            st.caption("品牌词 = 旧提示词(397) + 新提示词(69品牌) | 包含：品牌/产品名称提及 + 品牌/产品名称提及率 + 官网链接提及 + 官网链接提及率")
+            st.caption("品牌词 = 旧提示词(397) + 新提示词(90品牌) | 包含：品牌/产品名称提及 + 品牌/产品名称提及率 + 官网链接提及 + 官网链接提及率")
 
             # 品牌词数量（按月）
             st.markdown("**📊 品牌词数量（按月）**")
@@ -6340,6 +6340,7 @@ elif _page_idx == 7:
                 "Mar": [297, 1188],
                 "Apr": [397, 1588],
                 "May": [466, 1860],
+                "Jun": [487, 1948],
             })
             st.dataframe(df_brand_count, use_container_width=True, hide_index=True)
 
@@ -6355,13 +6356,14 @@ elif _page_idx == 7:
                 "Mar": [118, 118, 106, "89.8%"],
                 "Apr": [123, 123, 111, "90.2%"],
                 "May": [135, 81, 69, "85.2%"],
+                "Jun": [131, 131, 112, "85.5%"],
             })
             st.dataframe(df_brand_mention, use_container_width=True, hide_index=True)
 
             # 品牌/产品名称提及趋势图
             fig_mention = go.Figure()
-            fig_mention.add_trace(go.Bar(name="新建内容#", x=_cite_months, y=[98, 43, 118, 123, 135], marker_color="#94a3b8"))
-            fig_mention.add_trace(go.Bar(name="品牌内容提及", x=_cite_months, y=[98, 43, 106, 111, 69], marker_color="#4a9eff"))
+            fig_mention.add_trace(go.Bar(name="新建内容#", x=_cite_months, y=[98, 43, 118, 123, 135, 131], marker_color="#94a3b8"))
+            fig_mention.add_trace(go.Bar(name="品牌内容提及", x=_cite_months, y=[98, 43, 106, 111, 69, 112], marker_color="#4a9eff"))
             fig_mention.update_layout(barmode="group", height=260, margin=dict(l=0, r=0, t=10, b=0), yaxis_title="篇数", legend=dict(orientation="h", y=-0.2))
             st.plotly_chart(fig_mention, use_container_width=True)
 
@@ -6377,18 +6379,19 @@ elif _page_idx == 7:
                 "Mar": [1188, 879, "73.99%"],
                 "Apr": [1588, 964, "60.71%"],
                 "May": [1860, 866, "46.56%"],
+                "Jun": [1948, 1108, "56.88%"],
             })
             st.dataframe(df_link_monthly, use_container_width=True, hide_index=True)
 
             # 官网链接提及率月度趋势
             fig_link_rate = go.Figure()
             fig_link_rate.add_trace(go.Scatter(
-                x=_cite_months, y=[60.61, 66.25, 73.99, 60.71, 46.56],
+                x=_cite_months, y=[60.61, 66.25, 73.99, 60.71, 46.56, 56.88],
                 mode="lines+markers", name="官网链接提及率",
                 line=dict(color="#4a9eff", width=3)
             ))
             fig_link_rate.add_trace(go.Bar(
-                x=_cite_months, y=[720, 787, 879, 964, 866],
+                x=_cite_months, y=[720, 787, 879, 964, 866, 1108],
                 name="官网链接提及数", marker_color="rgba(74,158,255,0.3)", yaxis="y2"
             ))
             fig_link_rate.update_layout(
@@ -6408,6 +6411,7 @@ elif _page_idx == 7:
                     "Mar": ["80.13%", "79.80%", "86.53%", "49.49%", "-", "-", "-"],
                     "Apr": ["71.03%", "53.90%", "73.30%", "44.58%", "-", "-", "-"],
                     "May": ["59.57%", "51.40%", "44.95%", "30.32%", "44.73%", "56.77%", "33.76%"],
+                    "Jun": ["64.22%", "57.31%", "52.87%", "34.18%", "52.16%", "62.43%", "38.59%"],
                 })
                 st.dataframe(df_plt_rate, use_container_width=True, hide_index=True)
                 st.caption("Kimi/千问/Gemini 5月新增监控")
@@ -6421,6 +6425,7 @@ elif _page_idx == 7:
                     "Mar": [238, 237, 257, 147, "-", "-", "-"],
                     "Apr": [282, 214, 291, 177, "-", "-", "-"],
                     "May": [277, 239, 209, 141, 208, 264, 157],
+                    "Jun": [312, 278, 257, 166, 253, 303, 188],
                 })
                 st.dataframe(df_plt_count, use_container_width=True, hide_index=True)
 
@@ -6428,14 +6433,14 @@ elif _page_idx == 7:
 
             # --- Section 2: 行业词 ---
             st.markdown("### 🏭 行业词引用追踪")
-            st.caption("行业词(98个) | 仅追踪：品牌/产品名称提及 + 品牌/产品名称提及率 | 不涉及官网链接提及（行业词涉及多平台对比，官网链接概率极低）")
+            st.caption("行业词(159个) | 追踪：品牌/产品名称提及 + 品牌/产品名称提及率 + 官网链接提及率 | 6月行业词链接提及率 37.20%")
 
             # 行业词 KPI
             ind_kpi1, ind_kpi2, ind_kpi3 = st.columns(3)
             with ind_kpi1:
-                st.metric("行业词总数", "98")
+                st.metric("行业词总数", "159")
             with ind_kpi2:
-                st.metric("品牌/产品名称提及 (7平台合计)", "664")
+                st.metric("品牌/产品名称提及 (7平台合计)", "1,022")
             with ind_kpi3:
                 st.metric("平均品牌/产品名称提及率", "91.84%")
 
@@ -6443,28 +6448,28 @@ elif _page_idx == 7:
             st.markdown("**📊 行业词 - 品牌/产品名称提及（各平台）**")
             df_industry = pd.DataFrame({
                 "平台": AI_PLATFORMS,
-                "品牌/产品名称提及数": [97, 97, 97, 92, 97, 97, 87],
-                "品牌/产品名称提及率": ["98.98%", "98.98%", "98.98%", "93.88%", "98.98%", "98.98%", "88.78%"],
+                "品牌/产品名称提及数": [156, 155, 155, 148, 156, 155, 139],
+                "品牌/产品名称提及率": ["98.11%", "97.48%", "97.48%", "93.08%", "98.11%", "97.48%", "87.42%"],
                 "备注": ["", "", "", "略低", "", "", "Gemini略低"],
             })
             st.dataframe(df_industry, use_container_width=True, hide_index=True)
 
             fig_ind = go.Figure()
             fig_ind.add_trace(go.Bar(x=df_industry["平台"], y=df_industry["品牌/产品名称提及数"], marker_color="#a78bfa"))
-            fig_ind.add_hline(y=98, line_dash="dash", line_color="gray", annotation_text="总行业词=98")
+            fig_ind.add_hline(y=159, line_dash="dash", line_color="gray", annotation_text="总行业词=159")
             fig_ind.update_layout(height=260, margin=dict(l=0, r=0, t=10, b=0), yaxis_title="品牌/产品名称提及数")
             st.plotly_chart(fig_ind, use_container_width=True)
 
             with st.expander("📋 行业词按子类分布", expanded=False):
                 df_ind_cat = pd.DataFrame({
-                    "子类": ["新手(30个)", "场景(48个)", "通用(20个)"],
-                    "元宝": [30, 48, 19],
-                    "DeepSeek": [30, 48, 19],
-                    "豆包": [30, 48, 19],
-                    "ChatGPT": [27, 47, 18],
-                    "Kimi": [30, 48, 19],
-                    "千问": [30, 48, 19],
-                    "Gemini": [29, 41, 17],
+                    "子类": ["新手(50个)", "场景(78个)", "通用(31个)"],
+                    "元宝": [49, 77, 30],
+                    "DeepSeek": [49, 76, 30],
+                    "豆包": [49, 76, 30],
+                    "ChatGPT": [46, 74, 28],
+                    "Kimi": [49, 77, 30],
+                    "千问": [49, 76, 30],
+                    "Gemini": [44, 68, 27],
                 })
                 st.dataframe(df_ind_cat, use_container_width=True, hide_index=True)
 
@@ -6479,35 +6484,36 @@ elif _page_idx == 7:
                 "Mar": [118, 118, 0],
                 "Apr": [123, 123, 0],
                 "May": [135, 81, 54],
-                "YTD": [517, 463, 54],
+                "Jun": [131, 70, 61],
+                "YTD": [648, 533, 115],
             })
             st.dataframe(df_content_output, use_container_width=True, hide_index=True)
 
             # Chart
             fig_content = go.Figure()
-            fig_content.add_trace(go.Bar(name="品牌相关内容", x=_cite_months, y=[98, 43, 118, 123, 81], marker_color="#4a9eff"))
-            fig_content.add_trace(go.Bar(name="行业相关内容", x=_cite_months, y=[0, 0, 0, 0, 54], marker_color="#a78bfa"))
+            fig_content.add_trace(go.Bar(name="品牌相关内容", x=_cite_months, y=[98, 43, 118, 123, 81, 70], marker_color="#4a9eff"))
+            fig_content.add_trace(go.Bar(name="行业相关内容", x=_cite_months, y=[0, 0, 0, 0, 54, 61], marker_color="#a78bfa"))
             fig_content.update_layout(barmode="stack", height=260, margin=dict(l=0, r=0, t=10, b=0), yaxis_title="篇数", legend=dict(orientation="h", y=-0.2))
             st.plotly_chart(fig_content, use_container_width=True)
 
             # YTD KPI
             ct_kpi1, ct_kpi2, ct_kpi3 = st.columns(3)
             with ct_kpi1:
-                st.metric("YTD 产出总数", "517")
+                st.metric("YTD 产出总数", "648")
             with ct_kpi2:
-                st.metric("品牌相关内容", "463")
+                st.metric("品牌相关内容", "533")
             with ct_kpi3:
-                st.metric("行业相关内容", "54")
+                st.metric("行业相关内容", "115")
 
             st.divider()
             st.markdown("### 💡 关键洞察")
             st.markdown("""
-    - **品牌词官网链接提及率**：1-3月持续上升(60%→74%)，4-5月因新增提示词和平台扩展导致分母增大，提及率下降(60%→46%)
-    - **元宝/千问** 官网链接提及频次最高，适合重点投放
-    - **ChatGPT** 直接展示链接概率低(30%)，但角标引用远超其他平台，用户点击率更高
-    - **豆包** 1-3月表现优异(80%+)，5月骤降至44.95%，需排查
-    - **行业词** 品牌/产品名称提及率极高(91.84%)，但官网链接提及几乎为0 → 适合第三方媒体发布
-    - **ChatGPT 新提示词** 官网链接0提及，需针对性优化
+    - **品牌词官网链接提及率**：1-3月持续上升(60%→74%)，4-5月因新增提示词和平台扩展导致分母增大提及率下降，6月回升至56.88%(+10 ppts MoM)
+    - **元宝/千问** 官网链接提及频次最高(6月: 64%/62%)，适合重点投放
+    - **ChatGPT** 直接展示链接概率低(34%)，但角标引用远超其他平台，用户点击率更高
+    - **豆包** 1-3月表现优异(80%+)，5-6月稳定在45-53%，趋势回暖
+    - **行业词** 品牌/产品名称提及率极高(91.84%)，6月新增61个行业短语覆盖更多场景
+    - **6月整体趋势** 品牌链接提及率MoM回升+10 ppts，内容产出稳定(131篇)，行业词扩充明显
     """)
 
         # ============================================================
