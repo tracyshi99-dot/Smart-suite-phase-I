@@ -1774,7 +1774,8 @@ Requirements:
         df_zhiku_user = load_zhiku_live(selected_batch)
 
         # Merge Ahrefs queries into the CSV (persist, with source="ahrefs", dedup)
-        if AHREFS_AVAILABLE:
+        # Not shown for yujiashi account
+        if AHREFS_AVAILABLE and current_user.lower() != "yujiashi":
             try:
                 from ahrefs_client import is_user_authorized as _iau2, get_api_key as _gak2, get_ahrefs_queries_df as _gaqdf2
                 if _iau2(current_user) and _gak2():
@@ -2664,7 +2665,7 @@ elif _page_idx == 2:
     # --- Pre-fill Ahrefs coverage data (skip re-testing for covered queries+platforms) ---
     _ahrefs_coverage = {}  # {(query_lower, platform): {has_brand, has_link, source}}
     _ahrefs_debug_msg = ""
-    if AHREFS_AVAILABLE:
+    if AHREFS_AVAILABLE and current_user.lower() != "yujiashi":
         try:
             from ahrefs_client import is_user_authorized as _iau, get_api_key as _gak, get_ahrefs_queries_df as _gaqdf
             if _iau(current_user) and _gak():
