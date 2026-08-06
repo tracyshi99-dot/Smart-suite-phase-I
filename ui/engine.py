@@ -122,7 +122,25 @@ def _call_qianwen_max(system_prompt: str, user_prompt: str, max_tokens: int = MA
 
 
 def call_zhiyou_model(system_prompt: str, user_prompt: str, max_tokens: int = MAX_TOKENS) -> str:
-    """Dedicated model call for 智优 (optimization/rewrite). Uses different model from 智造 for diversity.
+    """Dedicated model call for 智优 scoring and compliance.
+    Three-stage architecture:
+    - 智造: Claude (production) — structured content generation
+    - 智优 score/compliance: Claude (strict rule execution) — THIS FUNCTION
+    - 智优 rewrite final polish: call_zhiyou_polish() — Qwen for natural Chinese
+    Priority: Claude (Bedrock) → Qianwen-Max (fallback)."""
+    try:
+        return call_claude(system_prompt, user_prompt, max_tokens)
+    except Exception:
+        # Fallback to Qwen-Max if Bedrock unavailable
+        try:
+            return _call_qianwen_max(system_prompt, user_prompt, max_tokens)
+        except Exception:
+            return _call_deepseek_llm(system_prompt, user_prompt, max_tokens)
+
+
+def call_zhiyou_polish(system_prompt: str, user_prompt: str, max_tokens: int = MAX_TOKENS) -> str:
+    """Final Chinese naturalness polish for 智优 rewrite output.
+    Uses Qwen-Max for native Chinese fluency after Claude handles structure/compliance.
     Priority: Qianwen-Max → Qianwen-Plus (fallback)."""
     try:
         return _call_qianwen_max(system_prompt, user_prompt, max_tokens)
@@ -1249,6 +1267,28 @@ def run_zhiyou_execute(batch_id: str, progress_callback=None) -> dict:
 ⚠️ 文章末尾必须保留 FAQ 板块（至少3个问答），这是 AI 引擎抓取的关键结构。"""
 
         response = call_zhiyou_model(system_prompt, user_prompt)
+
+        # --- Stage 3: Chinese naturalness polish via Qwen ---
+        try:
+            polish_prompt = f"""你是一位资深中文编辑。请对以下文章做最终润色，只优化中文表达的自然度和流畅性。
+
+规则：
+1. 不改变文章结构（H1/H2/H3/FAQ/表格/列表全部保留）
+2. 不改变事实内容和数据
+3. 不删除任何链接（https://gs.amazon.cn 等）
+4. 不添加新信息
+5. 只修改不自然、生硬、翻译腔的表达，让文章读起来更像母语人士写的
+6. 保持专业、客观中立的语气
+7. 输出完整文章，格式不变
+
+文章：
+{response}"""
+            response = call_zhiyou_polish(
+                "你是中文内容润色专家。只优化表达自然度，不改变结构、事实和链接。",
+                polish_prompt, max_tokens=MAX_TOKENS
+            )
+        except Exception:
+            pass  # If polish fails, use Claude's output directly
 
         # Parse: first line = title, rest = content
         import re
