@@ -6105,9 +6105,9 @@ elif _page_idx == 7:
                         with bc1:
                             st.metric("品牌短语数", _get_geo_val("品牌提示词"))
                         with bc2:
-                            st.metric("品牌链接提及率", _get_geo_val("品牌词链接提及率"))
+                            st.metric("品牌提及率", _get_geo_val("品牌词品牌提及率"))
                         with bc3:
-                            st.metric("品牌链接提及量", _get_geo_val("品牌词链接提及"))
+                            st.metric("官网链接提及率", _get_geo_val("品牌词链接提及率"))
 
                         # === 行业词 ===
                         st.markdown("#### 🏭 行业检索短语")
@@ -6115,9 +6115,9 @@ elif _page_idx == 7:
                         with ic1:
                             st.metric("行业短语数", _get_geo_val("行业提示词"))
                         with ic2:
-                            st.metric("行业提及率", _get_geo_val("行业词提及率"))
+                            st.metric("品牌提及率", _get_geo_val("行业词品牌提及率"))
                         with ic3:
-                            st.metric("行业提及量", _get_geo_val("行业词提及#"))
+                            st.metric("官网链接提及率", _get_geo_val("行业词链接提及率"))
 
                         st.divider()
 
