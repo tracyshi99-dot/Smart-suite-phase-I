@@ -6651,14 +6651,14 @@ elif _page_idx == 7:
                     if _cat_analysis_data["品牌"]:
                         brand_rows = []
                         for cat35, stats in _cat_analysis_data["品牌"].items():
-                            t = stats["total"]
+                            _total = stats["total"]
                             hl = stats["has_link_count"]
-                            alr = stats["link_rate_sum"] / t if t > 0 else 0
+                            alr = stats["link_rate_sum"] / _total if _total > 0 else 0
                             bm = _brand_mention_by_cat.get(cat35, {"total": 0, "brand_count": 0})
                             bmr = bm["brand_count"] / bm["total"] * 100 if bm["total"] > 0 else 0
                             # Brand mention rate must be > link coverage rate (brand mentioned ≠ link given)
                             # Use known overall brand mention rate (85.2% for brand keywords) as baseline
-                            link_coverage = hl * 100 / t if t > 0 else 0
+                            link_coverage = hl * 100 / _total if _total > 0 else 0
                             # Brand mention = at least link coverage + extra mentions without link
                             # Estimate: overall brand rate is ~85%, scale by link performance
                             _overall_brand_rate = 85.2
@@ -6669,7 +6669,7 @@ elif _page_idx == 7:
                                 bmr = min(100.0, link_coverage + (100 - link_coverage) * (_overall_brand_rate / 100))
                             else:
                                 bmr = _overall_brand_rate
-                            brand_rows.append({"类别": cat35, "短语数": t, "品牌/产品名称提及率": f"{bmr:.1f}%", "官方链接覆盖率": f"{link_coverage:.1f}%", "平均链接率(7平台)": f"{alr:.1f}%", "_lk": alr})
+                            brand_rows.append({"类别": cat35, "短语数": _total, "品牌/产品名称提及率": f"{bmr:.1f}%", "官方链接覆盖率": f"{link_coverage:.1f}%", "平均链接率(7平台)": f"{alr:.1f}%", "_lk": alr})
                         df_b = pd.DataFrame(brand_rows).sort_values("_lk", ascending=False).reset_index(drop=True)
                         df_b.index = df_b.index + 1
                         st.dataframe(df_b[[c for c in df_b.columns if c != "_lk"]], use_container_width=True)
@@ -6685,13 +6685,13 @@ elif _page_idx == 7:
                     if _cat_analysis_data["行业"]:
                         ind_rows = []
                         for cat35, stats in _cat_analysis_data["行业"].items():
-                            t = stats["total"]
+                            _total = stats["total"]
                             hl = stats["has_link_count"]
-                            alr = stats["link_rate_sum"] / t if t > 0 else 0
+                            alr = stats["link_rate_sum"] / _total if _total > 0 else 0
                             bm = _brand_mention_by_cat.get(cat35, {"total": 0, "brand_count": 0})
                             bmr = bm["brand_count"] / bm["total"] * 100 if bm["total"] > 0 else 0
                             # Industry keywords: brand mention rate ~91.8% overall
-                            link_coverage_i = hl * 100 / t if t > 0 else 0
+                            link_coverage_i = hl * 100 / _total if _total > 0 else 0
                             _overall_brand_rate_i = 91.8
                             if bmr > link_coverage_i:
                                 bmr = bmr
@@ -6699,7 +6699,7 @@ elif _page_idx == 7:
                                 bmr = min(100.0, link_coverage_i + (100 - link_coverage_i) * (_overall_brand_rate_i / 100))
                             else:
                                 bmr = _overall_brand_rate_i
-                            ind_rows.append({"类别": cat35, "短语数": t, "品牌/产品名称提及率": f"{bmr:.1f}%", "官方链接覆盖率": f"{link_coverage_i:.1f}%", "平均链接率(7平台)": f"{alr:.1f}%", "_lk": alr})
+                            ind_rows.append({"类别": cat35, "短语数": _total, "品牌/产品名称提及率": f"{bmr:.1f}%", "官方链接覆盖率": f"{link_coverage_i:.1f}%", "平均链接率(7平台)": f"{alr:.1f}%", "_lk": alr})
                         df_i = pd.DataFrame(ind_rows).sort_values("_lk", ascending=False).reset_index(drop=True)
                         df_i.index = df_i.index + 1
                         st.dataframe(df_i[[c for c in df_i.columns if c != "_lk"]], use_container_width=True)
