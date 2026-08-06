@@ -1478,10 +1478,14 @@ elif _page_idx == 1:
     # --- Rules section removed (no longer needed for any region) ---
     # Ahrefs download still available for non-CN users via render_ahrefs_zhiku below
 
+    # For zhiku page: yujiashi sees the same user interface as regular users
+    # Only 'admin' account sees the admin view
+    _zhiku_is_admin = is_admin and current_user.lower() == "admin"
+
     # ============================================================
     # USER VIEW: Simplified 3-tab interface
     # ============================================================
-    if not is_admin:
+    if not _zhiku_is_admin:
         tab_seed, tab_persona, tab_upload = st.tabs([
             t("ui.seed_expansion"),
             t("ui.persona_expansion"),
