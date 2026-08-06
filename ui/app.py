@@ -2791,6 +2791,35 @@ elif _page_idx == 2:
                             progress.progress(done / total)
                             continue
 
+                        # For ROA/non-CN users: use Claude simulation (no real API tokens)
+                        _is_roa_user = st.session_state.get("_user_region", "CN") != "CN"
+                        if _is_roa_user:
+                            # Simulate verification via Claude
+                            try:
+                                sim_prompt = f"你是 AI 搜索引擎 {ZHICE_PLATFORMS.get(platform, platform)}。用50字以内回答这个卖家问题：{query}"
+                                answer = _verify_claude(sim_prompt, max_tokens=200)
+                            except Exception:
+                                answer = ""
+                            has_brand = any(kw in answer for kw in BRAND_KEYWORDS) if answer else False
+                            has_link = ("amazon" in answer.lower() or "gs.amazon" in answer.lower()) if answer else False
+                            answer_lower = answer.lower() if answer else ""
+                            competitors_found = [name for name, kws in COMPETITOR_KEYWORDS.items() if any(kw in answer_lower for kw in kws)]
+                            POSITIVE_KEYWORDS_SIM = ["机会", "优势", "简单", "容易", "推荐", "值得", "利润", "增长", "成功", "便捷", "高效", "支持", "帮助", "适合", "前景"]
+                            NEGATIVE_KEYWORDS_SIM = ["风险", "难", "门槛", "亏损", "复杂", "竞争激烈", "封号", "侵权", "骗局", "不建议", "谨慎", "失败", "淘汰", "内卷"]
+                            pos_count = sum(1 for kw in POSITIVE_KEYWORDS_SIM if kw in answer_lower)
+                            neg_count = sum(1 for kw in NEGATIVE_KEYWORDS_SIM if kw in answer_lower)
+                            sentiment = "positive" if pos_count > neg_count else ("negative" if neg_count > pos_count else "neutral")
+                            results.append({
+                                "ai_query": query, "platform": platform,
+                                "has_brand_mention": has_brand, "has_official_link": has_link,
+                                "competitors_mentioned": ", ".join(competitors_found) if competitors_found else "",
+                                "sentiment": sentiment,
+                                "source": "模拟验证",
+                            })
+                            done += 1
+                            progress.progress(done / total)
+                            continue
+
                         api_func = REAL_API_MAP.get(platform)
                         answer = ""
                         try:
