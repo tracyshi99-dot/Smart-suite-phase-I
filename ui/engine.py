@@ -1187,7 +1187,7 @@ def run_zhiyou_score(batch_id: str, progress_callback=None) -> dict:
 # ============================================================
 # STEP 3.5: 智优执行
 # ============================================================
-def run_zhiyou_execute(batch_id: str, progress_callback=None) -> dict:
+def run_zhiyou_execute(batch_id: str, progress_callback=None, content_language: str = "zh-CN") -> dict:
     """Execute Step 3.5: Rewrite content based on scorecard suggestions."""
     steering = load_steering()
 
@@ -1263,6 +1263,15 @@ def run_zhiyou_execute(batch_id: str, progress_callback=None) -> dict:
             if _reg_kb_path.exists():
                 _reg_extra += f"\n\n【注册类知识库（只能使用以下事实）】\n{_reg_kb_path.read_text(encoding='utf-8')[:3000]}\n"
 
+        # Build language instruction for zhiyou
+        _zhiyou_lang_instruction = ""
+        if content_language == "zh-TW":
+            _zhiyou_lang_instruction = "\n\n【語言要求】優化後的文章必須使用繁體中文（正體中文），包括標題、正文、FAQ。不得輸出簡體中文。使用台灣地區慣用表達。\n"
+        elif content_language == "ko":
+            _zhiyou_lang_instruction = "\n\n【언어 요구사항】최적화된 기사는 한국어로 작성되어야 합니다.\n"
+        elif content_language == "vi":
+            _zhiyou_lang_instruction = "\n\n【Yêu cầu ngôn ngữ】Bài viết tối ưu phải được viết bằng tiếng Việt.\n"
+
         system_prompt = f"""你是内容优化专家。根据评分建议重写文章，使其更容易被AI搜索引擎引用。
 
 输出规则：
@@ -1282,7 +1291,7 @@ def run_zhiyou_execute(batch_id: str, progress_callback=None) -> dict:
 四、违规操作/敏感行为词：破解、屏蔽、担保、诈骗、稳赚、必爆、躺赚、稳出单
 五、禁止句式：绝对能做爆海外市场、做跨境轻松稳赚大钱、加微信/QQ领取出海干货、留联系方式对接海外货源、垄断海外多国电商市场、全网最强跨境运营玩法、100%稳定出单无风险、极致打法横扫海外同行
 注意：如果原文中含有上述敏感词，优化时必须用中性客观的表述替代。
-{_reg_extra}"""
+{_reg_extra}{_zhiyou_lang_instruction}"""
 
         user_prompt = f"""请根据评分建议重写优化以下文章。
 
@@ -1300,6 +1309,14 @@ def run_zhiyou_execute(batch_id: str, progress_callback=None) -> dict:
 
         # --- Stage 3: Chinese naturalness polish via Qwen ---
         try:
+            _polish_lang_note = ""
+            if content_language == "zh-TW":
+                _polish_lang_note = "\n8. 【重要】全文必須使用繁體中文（正體中文），不得有任何簡體中文字。使用台灣慣用表達。\n"
+            elif content_language == "ko":
+                _polish_lang_note = "\n8. 전체 기사는 한국어로 유지해야 합니다.\n"
+            elif content_language == "vi":
+                _polish_lang_note = "\n8. Toàn bộ bài viết phải được giữ bằng tiếng Việt.\n"
+
             polish_prompt = f"""你是一位资深中文编辑。请对以下文章做最终润色，只优化中文表达的自然度和流畅性。
 
 规则：
@@ -1309,12 +1326,15 @@ def run_zhiyou_execute(batch_id: str, progress_callback=None) -> dict:
 4. 不添加新信息
 5. 只修改不自然、生硬、翻译腔的表达，让文章读起来更像母语人士写的
 6. 保持专业、客观中立的语气
-7. 输出完整文章，格式不变
+7. 输出完整文章，格式不变{_polish_lang_note}
 
 文章：
 {response}"""
+            _polish_sys = "你是中文内容润色专家。只优化表达自然度，不改变结构、事实和链接。"
+            if content_language == "zh-TW":
+                _polish_sys = "你是繁體中文內容潤色專家。確保全文使用繁體中文（正體中文），使用台灣慣用表達。只優化表達自然度，不改變結構、事實和連結。"
             response = call_zhiyou_polish(
-                "你是中文内容润色专家。只优化表达自然度，不改变结构、事实和链接。",
+                _polish_sys,
                 polish_prompt, max_tokens=MAX_TOKENS
             )
         except Exception:

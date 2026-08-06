@@ -970,7 +970,7 @@ def _execute_rule_action(rule_name: str, batch_id: str) -> tuple:
             result = run_zhiyou_score(batch_id)
             if result.get("success"):
                 # Also run execute (rewrite)
-                run_zhiyou_execute(batch_id)
+                run_zhiyou_execute(batch_id, content_language=st.session_state.get("content_language", "zh-CN"))
                 return True, f"Auto-scored and optimized {result.get('scored_count', 0)} articles"
             return False, result.get("error", "Unknown error")
 
@@ -3909,7 +3909,7 @@ elif _page_idx == 4:
             else:
                 progress_bar.progress(0.4)
                 status_text.text(t("ui.step_35_rewriting"))
-                r2 = run_zhiyou_execute(selected_batch)
+                r2 = run_zhiyou_execute(selected_batch, content_language=st.session_state.get("content_language", "zh-CN"))
                 if not r2["success"]:
                     st.error(f"{'Rewrite failed' if is_en else '重写失败'}: {r2['error']}")
                 else:
