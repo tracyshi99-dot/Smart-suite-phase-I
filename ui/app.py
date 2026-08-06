@@ -2993,6 +2993,22 @@ elif _page_idx == 2:
                 lambda x: str(x) if str(x) not in ["nan", "", "0"] else "通义千问, DeepSeek"
             )
 
+        # Split multi-platform rows into separate rows (e.g. "通义千问, DeepSeek" → 2 rows)
+        if "platform" in df_gap_display.columns:
+            _has_multi = df_gap_display["platform"].astype(str).str.contains(",", na=False).any()
+            if _has_multi:
+                _expanded_rows = []
+                for _, row in df_gap_display.iterrows():
+                    platforms = [p.strip() for p in str(row.get("platform", "")).split(",") if p.strip()]
+                    if len(platforms) > 1:
+                        for p in platforms:
+                            new_row = row.copy()
+                            new_row["platform"] = p
+                            _expanded_rows.append(new_row)
+                    else:
+                        _expanded_rows.append(row)
+                df_gap_display = pd.DataFrame(_expanded_rows).reset_index(drop=True)
+
         # Add to_produce checkbox — mark if any gap exists for this query across platforms
         if "to_produce" not in df_gap_display.columns:
             if "gap_status" in df_gap_display.columns:
