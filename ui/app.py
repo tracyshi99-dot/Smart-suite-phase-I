@@ -1159,19 +1159,34 @@ with st.sidebar:
     # Auto-set language based on user profile (on first login)
     _current_user_for_lang = st.session_state.get("app_user", "")
     # Determine default language index for the selectbox
+    # Options: ["English", "简体中文", "繁體中文", "한국어", "Tiếng Việt"]
     _default_lang_idx = 0  # English
     if "ui_lang" in st.session_state:
-        # Use existing selection
+        # Use existing selection (user already picked a language)
         _UI_LANG_OPTIONS_PRE = ["English", "简体中文", "繁體中文", "한국어", "Tiếng Việt"]
         _cur_lang = st.session_state.get("ui_lang", "English")
         if _cur_lang in _UI_LANG_OPTIONS_PRE:
             _default_lang_idx = _UI_LANG_OPTIONS_PRE.index(_cur_lang)
     elif _current_user_for_lang:
-        # First login — auto-detect from user profile
-        if _user_lang_map.get(_current_user_for_lang) == "en":
-            _default_lang_idx = 0  # English
-        else:
+        # First login — auto-detect from user_region + sub_region
+        try:
+            _users_data_lang = json.loads(_users_file.read_text(encoding="utf-8")) if _users_file.exists() else {}
+            _u_region = _users_data_lang.get("user_region", {}).get(_current_user_for_lang, "CN")
+            _u_sub_region = _users_data_lang.get("user_sub_region", {}).get(_current_user_for_lang, "")
+        except Exception:
+            _u_region = "CN"
+            _u_sub_region = ""
+        
+        if _u_sub_region == "TW":
+            _default_lang_idx = 2  # 繁體中文
+        elif _u_sub_region == "KR":
+            _default_lang_idx = 3  # 한국어
+        elif _u_sub_region == "VN":
+            _default_lang_idx = 4  # Tiếng Việt
+        elif _u_region == "CN":
             _default_lang_idx = 1  # 简体中文
+        else:
+            _default_lang_idx = 0  # English (NA/EU/other)
 
     st.title("🧠 Smart Suite")
 
