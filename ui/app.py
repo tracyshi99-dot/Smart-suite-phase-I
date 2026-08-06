@@ -6075,36 +6075,62 @@ elif _page_idx == 7:
             if geo_input_file.exists():
                 df_geo_summary = load_csv_safe(geo_input_file)
                 if not df_geo_summary.empty:
-                    st.markdown("**📊 GEO 效果汇总 (月度)**")
+                    st.markdown("**📊 GEO 引用追踪总表 (月度)**")
                     month_cols_geo = [c for c in df_geo_summary.columns if c != "指标"]
 
                     # KPI cards - latest month
                     latest_m = month_cols_geo[-1] if month_cols_geo else None
                     if latest_m:
-                        kpi1, kpi2, kpi3, kpi4, kpi5 = st.columns(5)
                         def _get_geo_val(metric_name):
                             row = df_geo_summary[df_geo_summary["指标"] == metric_name]
                             if not row.empty:
                                 return str(row.iloc[0][latest_m])
                             return "N/A"
 
-                        with kpi1:
-                            v = _get_geo_val("提示词#")
-                            st.metric(f"提示词数 ({latest_m})", v)
-                        with kpi2:
-                            v = _get_geo_val("品牌词链接提及")
-                            st.metric(f"品牌链接提及 ({latest_m})", v)
-                        with kpi3:
-                            v = _get_geo_val("品牌词链接提及率")
-                            st.metric(f"链接提及率 ({latest_m})", v)
-                        with kpi4:
-                            v = _get_geo_val("新建内容#")
-                            st.metric(f"新建内容 ({latest_m})", v)
-                        with kpi5:
-                            v = _get_geo_val("监控平台数")
-                            st.metric(f"监控平台 ({latest_m})", v)
+                        # === 总表 ===
+                        st.markdown("#### 📋 总览")
+                        tc1, tc2, tc3 = st.columns(3)
+                        with tc1:
+                            st.metric("总检索短语", _get_geo_val("提示词#"))
+                        with tc2:
+                            st.metric("总链接提及率", _get_geo_val("品牌词链接提及率"))
+                        with tc3:
+                            st.metric("官网链接提及量", _get_geo_val("官网链接提及总量"))
+
+                        st.divider()
+
+                        # === 品牌词 ===
+                        st.markdown("#### 🏷️ 品牌检索短语")
+                        bc1, bc2, bc3 = st.columns(3)
+                        with bc1:
+                            st.metric("品牌短语数", _get_geo_val("品牌提示词"))
+                        with bc2:
+                            st.metric("品牌链接提及率", _get_geo_val("品牌词链接提及率"))
+                        with bc3:
+                            st.metric("品牌链接提及量", _get_geo_val("品牌词链接提及"))
+
+                        # === 行业词 ===
+                        st.markdown("#### 🏭 行业检索短语")
+                        ic1, ic2, ic3 = st.columns(3)
+                        with ic1:
+                            st.metric("行业短语数", _get_geo_val("行业提示词"))
+                        with ic2:
+                            st.metric("行业提及率", _get_geo_val("行业词提及率"))
+                        with ic3:
+                            st.metric("行业提及量", _get_geo_val("行业词提及#"))
+
+                        st.divider()
+
+                        # === 内容产出 ===
+                        st.markdown("#### ✍️ 内容产出")
+                        cc1, cc2 = st.columns(2)
+                        with cc1:
+                            st.metric("新建内容", _get_geo_val("新建内容#"))
+                        with cc2:
+                            st.metric("旧内容优化", _get_geo_val("旧内容优化#"))
 
                     st.divider()
+                    st.markdown("**📋 明细数据**")
                     st.dataframe(df_geo_summary, use_container_width=True, hide_index=True)
 
                     # Trend chart - key metrics
