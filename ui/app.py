@@ -2958,7 +2958,7 @@ elif _page_idx == 2:
     # Ensure compatibility: add missing columns for old data
     if not df_gap_display.empty:
         if "sentiment" not in df_gap_display.columns:
-            df_gap_display["sentiment"] = "😐 未检测"
+            df_gap_display["sentiment"] = "😐 中性"
         if "competitors" not in df_gap_display.columns:
             df_gap_display["competitors"] = "—"
         if "competitor_gap" not in df_gap_display.columns:
@@ -3060,10 +3060,13 @@ elif _page_idx == 2:
 
                 # Collect edits from all platform tables
                 all_edited_dfs = []
+                # Default expanded: DeepSeek and 千问/通义千问
+                _default_expanded = ["DeepSeek", "通义千问"]
                 for plat in platforms_sorted:
                     df_plat = df_gap_display[df_gap_display["platform"] == plat]
                     gap_count = len(df_plat[df_plat["gap_status"].isin(["full_gap", "partial_gap"])]) if "gap_status" in df_plat.columns else 0
-                    with st.expander(f"**{plat}** — {len(df_plat)} queries, {gap_count} gaps", expanded=True):
+                    _expanded = plat in _default_expanded
+                    with st.expander(f"**{plat}** — {len(df_plat)} queries, {gap_count} gaps", expanded=_expanded):
                         _plat_show = [c for c in show_cols_with_select if c in df_plat.columns]
                         edited_plat = st.data_editor(
                             df_plat[_plat_show].reset_index(drop=True),
