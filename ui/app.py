@@ -2599,8 +2599,8 @@ Requirements:
             else:
                 st.caption(t("ui.no_history_records_yet"))
 
-    # --- Ahrefs Brand Radar Section (rickylan only) ---
-    if AHREFS_AVAILABLE:
+    # --- Ahrefs Brand Radar Section (not shown for yujiashi) ---
+    if AHREFS_AVAILABLE and current_user.lower() != "yujiashi":
         render_ahrefs_zhiku(current_user, is_en)
 
 
