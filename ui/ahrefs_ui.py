@@ -59,15 +59,25 @@ def render_ahrefs_zhiku(current_user: str, is_en: bool = False):
     if df_queries.empty:
         return
 
+    # Determine region label
+    _region_label = "TW"
+    try:
+        from region_adapter import get_user_sub_region
+        _usr = get_user_sub_region(current_user)
+        if _usr:
+            _region_label = _usr
+    except Exception:
+        pass
+
     # Show compact summary (data is already merged into main table)
     total_queries = len(df_queries)
     platforms = df_queries["data_source"].nunique()
     with_link = int(df_queries["has_official_link"].sum())
     st.caption(
-        f"🔗 Ahrefs: {total_queries} queries from {platforms} AI platforms merged (source=ahrefs) | "
+        f"🔗 Ahrefs [{_region_label}]: {total_queries} queries from {platforms} AI platforms merged (source=ahrefs) | "
         f"{with_link}/{total_queries} have official links"
         if is_en else
-        f"🔗 Ahrefs: 已合并 {total_queries} 条短语（来自 {platforms} 个 AI 平台，来源=ahrefs）| "
+        f"🔗 Ahrefs [{_region_label}]: 已合并 {total_queries} 条短语（来自 {platforms} 个 AI 平台，来源=ahrefs）| "
         f"{with_link}/{total_queries} 条含官方链接"
     )
 
@@ -175,12 +185,31 @@ def render_ahrefs_zhixi(current_user: str, is_en: bool = False):
     if not _check_access(current_user):
         return
 
+    # Determine region from user
+    _region_label = "🇹🇼 TW"  # Currently TW only; will expand to other regions
+    try:
+        from region_adapter import get_user_region, get_user_sub_region
+        _ur = get_user_region(current_user)
+        _usr = get_user_sub_region(current_user)
+        if _usr:
+            _region_map = {"TW": "🇹🇼 TW", "KR": "🇰🇷 KR", "VN": "🇻🇳 VN"}
+            _region_label = _region_map.get(_usr, f"🌏 {_usr}")
+        elif _ur == "NA":
+            _region_label = "🇺🇸 NA"
+        elif _ur == "EU":
+            _region_label = "🇪🇺 EU"
+        elif _ur == "CN":
+            _region_label = "🇨🇳 CN"
+    except Exception:
+        pass
+
     st.divider()
-    with st.expander("🔗 Ahrefs Brand Radar — " + ("Full AI Visibility Dashboard" if is_en else "AI 可见度完整看板"), expanded=True):
+    with st.expander(f"🔗 Ahrefs Brand Radar [{_region_label}] — " + ("Full AI Visibility Dashboard" if is_en else "AI 可见度完整看板"), expanded=True):
         st.caption(
+            f"Region: {_region_label} | " + (
             "Complete Brand Radar view — AI visibility metrics, mention trends, competitor share of voice, query-level gap analysis"
             if is_en else
-            "Brand Radar 全景 — AI 可见度指标、提及趋势、竞品声量占比、查询级 Gap 分析"
+            "Brand Radar 全景 — AI 可见度指标、提及趋势、竞品声量占比、查询级 Gap 分析")
         )
 
         try:
