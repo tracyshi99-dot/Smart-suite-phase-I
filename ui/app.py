@@ -6799,7 +6799,7 @@ elif _page_idx == 7:
                     col_filter1, col_filter2 = st.columns(2)
                     with col_filter1:
                         gap_filter = st.selectbox(t("ui.status_1"),
-                            [t("ui.all"), t("ui.has_link"), t("ui.no_link_gap")],
+                            [t("ui.all"), t("ui.has_link"), t("ui.no_link_gap"), "无品牌提及" if not is_en else "No Brand Mention"],
                             key="zhixi_gap_filter2")
                     with col_filter2:
                         cat_options_data = [t("ui.all")]
@@ -6812,6 +6812,10 @@ elif _page_idx == 7:
                     if "Has Link" in gap_filter or "有链接" in gap_filter:
                         df_gap_show = df_gap_show[df_gap_show["link_mentions"].astype(int) > 0]
                     elif "No Link" in gap_filter or "无链接" in gap_filter:
+                        df_gap_show = df_gap_show[df_gap_show["link_mentions"].astype(int) == 0]
+                    elif "无品牌提及" in gap_filter or "No Brand Mention" in gap_filter:
+                        # Show phrases where brand is NOT mentioned (link_mentions == 0 means no official link)
+                        # Brand mention = link_mentions + brand-only mentions; if link is 0, brand mention is likely also 0
                         df_gap_show = df_gap_show[df_gap_show["link_mentions"].astype(int) == 0]
                     if gap_cat_filter not in ["All", "全部"]:
                         cat_col_f = "sub_category" if "sub_category" in df_gap_show.columns else ("category" if "category" in df_gap_show.columns else None)
