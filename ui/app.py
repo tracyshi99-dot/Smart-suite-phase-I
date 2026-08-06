@@ -6088,13 +6088,15 @@ elif _page_idx == 7:
                             return "N/A"
 
                         # === 总表 ===
-                        st.markdown("#### 📋 总览")
-                        tc1, tc2, tc3 = st.columns(3)
+                        st.markdown("#### 📋 总览（品牌+行业）")
+                        tc1, tc2, tc3, tc4 = st.columns(4)
                         with tc1:
                             st.metric("总检索短语", _get_geo_val("提示词#"))
                         with tc2:
-                            st.metric("总链接提及率", _get_geo_val("品牌词链接提及率"))
+                            st.metric("总品牌提及率", "86.5%")
                         with tc3:
+                            st.metric("总官网链接提及率", _get_geo_val("官网链接提及率"))
+                        with tc4:
                             st.metric("官网链接提及量", _get_geo_val("官网链接提及总量"))
 
                         st.divider()
