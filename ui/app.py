@@ -1555,18 +1555,60 @@ elif _page_idx == 1:
                         else:
                             lang_instruction = "All phrases must be in English."
 
-                        # Build prompt in appropriate language
+                        # Build prompt in appropriate language — MUST enforce 15-40 char natural questions
                         if _content_lang.startswith("zh"):
-                            prompt = f"请为词根「{seed_word}」生成 {seed_count} 个卖家在 AI 搜索引擎中可能输入的口语化检索短语。{lang_instruction}每行一条，不要编号，不要解释。"
+                            prompt = f"""请为核心词「{seed_word}」生成 {seed_count} 个检索短语。{lang_instruction}
+
+关键规则（必须全部遵守）：
+1. 每条短语必须是15-40字的完整自然问句
+2. 必须是问句形式，包含疑问词（怎么/如何/什么/哪些/多少/为什么/能不能/是否/需要什么/有没有）
+3. 模拟真实卖家在ChatGPT/DeepSeek/豆包等AI搜索平台上的对话式提问
+4. 包含具体场景或限定条件（如"2026年""新手""中国卖家""没经验""工厂转型"）
+5. 必须围绕「{seed_word}」这个核心概念
+6. 禁止输出碎片关键词（如"亚马逊FBA入门"只有7字，不合格）
+
+正确示例：
+- 2026年新手做亚马逊FBA需要准备哪些材料和多少资金？
+- 亚马逊FBA的仓储费和配送费分别是怎么计算的？
+- 没有外贸经验的工厂老板怎么通过FBA把产品卖到海外？
+
+错误示例（禁止这种）：
+- 亚马逊FBA入门 ❌（太短，不是问句）
+- FBA费用 ❌（碎片关键词）
+- 亚马逊FBA运营 ❌（不是问句）
+
+每行一条，不要编号，不要解释。"""
                         elif _content_lang == "ko":
-                            prompt = f"시드 단어 '{seed_word}'에 대해 판매자가 AI 검색 엔진에 입력할 수 있는 {seed_count}개의 구어체 검색 구문을 생성하세요. {lang_instruction} 한 줄에 하나씩, 번호 없이, 설명 없이."
+                            prompt = f"""시드 단어 '{seed_word}'에 대해 판매자가 AI 검색 엔진(ChatGPT, DeepSeek 등)에 입력할 수 있는 {seed_count}개의 자연스러운 질문형 검색 구문을 생성하세요.
+
+규칙:
+1. 각 구문은 15-40자의 완전한 질문이어야 합니다
+2. 의문사 포함 필수 (어떻게/무엇/왜/얼마/어디서)
+3. 구체적 상황 포함 (초보자/2026년/한국 셀러 등)
+{lang_instruction}
+한 줄에 하나씩, 번호 없이, 설명 없이."""
                         elif _content_lang == "vi":
-                            prompt = f"Tạo {seed_count} cụm từ tìm kiếm mà người bán có thể nhập vào công cụ tìm kiếm AI về '{seed_word}'. {lang_instruction} Mỗi cụm từ một dòng, không đánh số, không giải thích."
+                            prompt = f"""Tạo {seed_count} câu hỏi tìm kiếm tự nhiên mà người bán có thể nhập vào AI (ChatGPT, DeepSeek) về '{seed_word}'.
+
+Quy tắc:
+1. Mỗi cụm từ phải là câu hỏi hoàn chỉnh 15-40 từ
+2. Phải có từ nghi vấn (làm sao/cần gì/bao nhiêu/tại sao)
+3. Bao gồm bối cảnh cụ thể (người mới/2026/người bán Việt Nam)
+{lang_instruction}
+Mỗi câu một dòng, không đánh số, không giải thích."""
                         else:
-                            prompt = f"Generate {seed_count} conversational search phrases that sellers might type into AI search engines about '{seed_word}'. {lang_instruction} One phrase per line, no numbering, no explanation."
+                            prompt = f"""Generate {seed_count} natural question-format search phrases that Amazon sellers might type into AI search engines (ChatGPT, Perplexity, Gemini) about '{seed_word}'.
+
+Rules:
+1. Each phrase must be a complete natural question, 10-30 words long
+2. Must be in question form (How/What/Why/Can I/Is it/Do I need)
+3. Include specific context (beginner/2026/small business/first time)
+4. Simulate real conversational queries, NOT keyword fragments
+{lang_instruction}
+One phrase per line, no numbering, no explanation."""
                         with st.spinner(t("ui.expanding")):
                             response = call_bedrock_claude(prompt)
-                        queries = [q.strip().lstrip("0123456789.-、）) ") for q in response.strip().split("\n") if q.strip() and len(q.strip()) > 4]
+                        queries = [q.strip().lstrip("0123456789.-、）) ") for q in response.strip().split("\n") if q.strip() and len(q.strip()) > 10]
                         if queries:
                             st.success(f"✅ 生成 {len(queries)} 条")
                             # Auto-score each phrase (1-5 scale)
