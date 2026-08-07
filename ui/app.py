@@ -1863,6 +1863,10 @@ Requirements:
             except Exception:
                 pass
 
+        # For yujiashi: filter out any old ahrefs-sourced rows from the display
+        if current_user.lower() == "yujiashi" and not df_zhiku_user.empty and "source" in df_zhiku_user.columns:
+            df_zhiku_user = df_zhiku_user[~df_zhiku_user["source"].astype(str).str.lower().str.contains("ahrefs", na=False)].reset_index(drop=True)
+
         total_phrases_u = len(df_zhiku_user) if not df_zhiku_user.empty else 0
         selected_count_u = 0
         if not df_zhiku_user.empty and "is_selected" in df_zhiku_user.columns:
@@ -1958,6 +1962,8 @@ Requirements:
                 col_config = {}
                 if "is_selected" in show_cols:
                     col_config["is_selected"] = st.column_config.CheckboxColumn(t("ui.selected"))
+                # Keep track of original indices for proper save-back
+                _display_indices = df_display.index.tolist()
                 edited_df = st.data_editor(df_display[show_cols].reset_index(drop=True),
                                            column_config=col_config,
                                            use_container_width=True, hide_index=True,
@@ -1965,10 +1971,12 @@ Requirements:
 
                 # Save changes
                 if st.button("💾 " + (t("ui.save_changes")), key="user_save_zhiku"):
-                    # Apply edits back
+                    # Apply edits back to the correct rows using original indices
                     for col in show_cols:
-                        if col in edited_df.columns:
-                            df_zhiku_user[col] = edited_df[col].values[:len(df_zhiku_user)]
+                        if col in edited_df.columns and col in df_zhiku_user.columns:
+                            for i, orig_idx in enumerate(_display_indices):
+                                if i < len(edited_df) and orig_idx in df_zhiku_user.index:
+                                    df_zhiku_user.at[orig_idx, col] = edited_df.iloc[i][col]
                     zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
                     df_zhiku_user.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
                     mark_data_changed()
