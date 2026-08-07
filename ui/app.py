@@ -2816,7 +2816,7 @@ elif _page_idx == 2:
     # Set default platforms based on region
     _user_region_zhice = st.session_state.get("_user_region", "CN")
     if _user_region_zhice == "CN":
-        _zhice_default_platforms = ["chatgpt", "gemini", "deepseek", "kimi", "doubao", "qianwen"]
+        _zhice_default_platforms = ["deepseek", "qianwen"]
     else:
         _zhice_default_platforms = ["chatgpt", "gemini"]
     selected_platforms = st.multiselect(t("ui.verification_platforms"), list(ZHICE_PLATFORMS.keys()), default=_zhice_default_platforms, format_func=lambda x: ZHICE_PLATFORMS[x], key="zhice_platforms")
