@@ -4721,8 +4721,9 @@ elif _page_idx == 5:
     # CTA → next step
     st.divider()
 
-    # Show user's current publish request status
-    if not is_admin:
+    # Show user's current publish request status (CN users only)
+    _user_region_zhibu = st.session_state.get("_user_region", "CN")
+    if not is_admin and _user_region_zhibu == "CN":
         _user_pub_status_file = OUTPUT_PATH / "requests" / current_user / "publish_status.json"
         _user_pub_req_file = OUTPUT_PATH / "requests" / current_user / "publish_request.json"
         if _user_pub_status_file.exists():
@@ -4741,7 +4742,9 @@ elif _page_idx == 5:
                     st.warning(f"❌ {'Publish request was rejected' if is_en else '发布申请被驳回'} ({_pub_rq.get('requested_at', '')})")
             except Exception:
                 pass
-    if not is_admin:
+    # Publish request button: only for CN users (ROA/WW don't publish to gs.amazon.cn)
+    _user_region_zhibu = st.session_state.get("_user_region", "CN")
+    if not is_admin and _user_region_zhibu == "CN":
         if st.button(t("ui.submit_for_publishing"), type="primary", key="cta_zhibu_publish_request"):
             # Save publish request to per-user directory
             _req_dir = OUTPUT_PATH / "requests" / current_user
