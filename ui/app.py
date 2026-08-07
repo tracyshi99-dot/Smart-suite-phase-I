@@ -1966,6 +1966,7 @@ Requirements:
                 if "is_selected" in show_cols:
                     col_config["is_selected"] = st.column_config.CheckboxColumn(t("ui.selected"))
                     # Convert string TRUE/FALSE to actual boolean for CheckboxColumn to work
+                    df_display = df_display.copy()
                     df_display["is_selected"] = df_display["is_selected"].astype(str).str.strip().str.upper().isin(["TRUE", "1", "YES"])
                 # Keep track of original indices for proper save-back
                 _display_indices = df_display.index.tolist()
@@ -1984,8 +1985,10 @@ Requirements:
                                     val = edited_df.iloc[i][col]
                                     # Convert boolean back to string for is_selected
                                     if col == "is_selected":
-                                        val = "TRUE" if val else "FALSE"
-                                    df_zhiku_user.at[orig_idx, col] = val
+                                        val = "TRUE" if bool(val) else "FALSE"
+                                    else:
+                                        val = str(val) if val is not None else ""
+                                    df_zhiku_user.loc[orig_idx, col] = val
                     zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
                     df_zhiku_user.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
                     mark_data_changed()
