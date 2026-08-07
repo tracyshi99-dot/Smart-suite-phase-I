@@ -1977,18 +1977,18 @@ Requirements:
 
                 # Save changes
                 if st.button("💾 " + (t("ui.save_changes")), key="user_save_zhiku"):
-                    # Apply edits back to the correct rows using original indices
-                    for col in show_cols:
-                        if col in edited_df.columns and col in df_zhiku_user.columns:
-                            for i, orig_idx in enumerate(_display_indices):
-                                if i < len(edited_df) and orig_idx in df_zhiku_user.index:
-                                    val = edited_df.iloc[i][col]
-                                    # Convert boolean back to string for is_selected
-                                    if col == "is_selected":
-                                        val = "TRUE" if bool(val) else "FALSE"
-                                    else:
-                                        val = str(val) if val is not None else ""
-                                    df_zhiku_user.loc[orig_idx, col] = val
+                    # Apply edits: rebuild is_selected from edited checkboxes
+                    if "is_selected" in edited_df.columns:
+                        # Map edited boolean values back to original DataFrame indices
+                        new_selected = {}
+                        for i, orig_idx in enumerate(_display_indices):
+                            if i < len(edited_df):
+                                new_selected[orig_idx] = "TRUE" if bool(edited_df.iloc[i]["is_selected"]) else "FALSE"
+                        # Ensure is_selected column is string type
+                        df_zhiku_user["is_selected"] = df_zhiku_user["is_selected"].astype(str)
+                        for idx, val in new_selected.items():
+                            if idx in df_zhiku_user.index:
+                                df_zhiku_user.iloc[df_zhiku_user.index.get_loc(idx), df_zhiku_user.columns.get_loc("is_selected")] = val
                     zhiku_file = OUTPUT_PATH / selected_batch / "01_zhiku" / "zhiku_ai_queries.csv"
                     df_zhiku_user.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
                     mark_data_changed()
