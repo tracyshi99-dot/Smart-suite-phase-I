@@ -230,48 +230,58 @@ export default function OverviewPage() {
       </div>
       {/* Hero */}
       <section className="text-center py-10">
-        {/* Logo - identical to Streamlit wiki version */}
-        <div className="relative inline-block mb-6" style={{ width: "110px", height: "110px" }}>
-          {/* Glow */}
+        {/* Logo - AI/Tech feel with animated effects */}
+        <div className="relative inline-block mb-6" style={{ width: "120px", height: "120px" }}>
+          {/* Particle dots orbiting */}
+          <div className="absolute inset-0 animate-spin" style={{ animationDuration: "20s" }}>
+            <div className="absolute w-1.5 h-1.5 rounded-full bg-cyan-400 top-0 left-1/2 -ml-0.5" style={{ boxShadow: "0 0 6px rgba(0,188,212,0.8)" }} />
+            <div className="absolute w-1 h-1 rounded-full bg-purple-400 bottom-2 right-2" style={{ boxShadow: "0 0 4px rgba(171,71,188,0.6)" }} />
+          </div>
+          {/* Outer glow ring */}
           <div
             className="absolute rounded-full animate-pulse"
             style={{
-              width: "80px", height: "80px",
+              width: "110px", height: "110px",
               top: "50%", left: "50%",
-              marginTop: "-40px", marginLeft: "-40px",
-              background: "radial-gradient(circle, rgba(0,188,212,0.15) 0%, transparent 70%)",
+              marginTop: "-55px", marginLeft: "-55px",
+              background: "radial-gradient(circle, rgba(0,188,212,0.08) 0%, transparent 70%)",
             }}
           />
-          {/* Outer ring spinning */}
+          {/* Spinning outer ring - cyan */}
           <div
             className="absolute rounded-full animate-spin"
             style={{
-              width: "94px", height: "94px",
+              width: "100px", height: "100px",
               top: "50%", left: "50%",
-              marginTop: "-47px", marginLeft: "-47px",
-              border: "1.5px solid rgba(0,188,212,0.4)",
-              animationDuration: "8s",
+              marginTop: "-50px", marginLeft: "-50px",
+              border: "1.5px solid transparent",
+              borderTopColor: "rgba(0,188,212,0.6)",
+              borderRightColor: "rgba(0,188,212,0.2)",
+              animationDuration: "6s",
             }}
           />
-          {/* Inner ring reverse */}
+          {/* Counter-spinning inner ring - purple */}
           <div
             className="absolute rounded-full animate-spin"
             style={{
-              width: "106px", height: "106px",
+              width: "108px", height: "108px",
               top: "50%", left: "50%",
-              marginTop: "-53px", marginLeft: "-53px",
-              border: "1px solid rgba(0,188,212,0.15)",
-              animationDuration: "12s",
+              marginTop: "-54px", marginLeft: "-54px",
+              border: "1px solid transparent",
+              borderBottomColor: "rgba(171,71,188,0.4)",
+              borderLeftColor: "rgba(171,71,188,0.15)",
+              animationDuration: "10s",
               animationDirection: "reverse",
             }}
           />
-          {/* Logo PNG with black 智 overlay */}
+          {/* Logo image */}
           <div
-            className="absolute rounded-full z-10 flex items-center justify-center"
+            className="absolute rounded-full z-10 flex items-center justify-center overflow-hidden"
             style={{
               width: "80px", height: "80px",
               top: "50%", left: "50%",
               marginTop: "-40px", marginLeft: "-40px",
+              boxShadow: "0 0 24px rgba(0,188,212,0.15), 0 0 48px rgba(171,71,188,0.08), inset 0 0 20px rgba(0,0,0,0.1)",
             }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -280,9 +290,27 @@ export default function OverviewPage() {
               alt=""
               className="absolute inset-0 w-full h-full rounded-full"
             />
-            <span className="relative text-3xl font-black text-black select-none z-10">
+            <span className="relative text-3xl font-black text-black select-none z-10" style={{ textShadow: "0 0 1px rgba(255,255,255,0.3)" }}>
               {"\u667A"}
             </span>
+          </div>
+          {/* Scan line effect */}
+          <div
+            className="absolute z-20 rounded-full overflow-hidden pointer-events-none"
+            style={{
+              width: "80px", height: "80px",
+              top: "50%", left: "50%",
+              marginTop: "-40px", marginLeft: "-40px",
+            }}
+          >
+            <div
+              className="absolute w-full h-[2px] left-0 animate-pulse"
+              style={{
+                top: "50%",
+                background: "linear-gradient(90deg, transparent, rgba(0,188,212,0.4), transparent)",
+                animationDuration: "3s",
+              }}
+            />
           </div>
         </div>
         {/* Title with gradient - same as Streamlit */}
