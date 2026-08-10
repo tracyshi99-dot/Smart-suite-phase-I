@@ -153,6 +153,17 @@ def zhiku_expand(req: SeedExpansionRequest):
             language=req.language,
             batch_id=req.batch_id,
         )
+        # Read back the generated phrases to include in response
+        output_file = result.get("output_file", "")
+        phrases = []
+        if output_file:
+            try:
+                df = pd.read_csv(output_file, encoding="utf-8-sig", on_bad_lines="skip")
+                if "ai_query" in df.columns:
+                    phrases = df["ai_query"].dropna().tolist()
+            except Exception:
+                pass
+        result["phrases"] = phrases
         return result
     except Exception as e1:
         # Fallback: try direct Claude/Bedrock call
