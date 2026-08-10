@@ -89,14 +89,14 @@ export const PIPELINE_MODULES = [
 ] as const;
 
 export const PERSONA_IDENTITIES_ZH = [
-  "新卖家（未注册）",
-  "新卖家（已注册）",
-  "新卖家（已上线）",
-  "< 1年卖家",
-  "1-2年卖家",
-  "2-3年卖家",
-  "3年以上卖家",
-  "服务商",
+  "\u65B0\u5356\u5BB6(P2L\u4EE5\u524D)",
+  "\u65B0\u5356\u5BB6(P2L)",
+  "\u65B0\u5356\u5BB6(L2L)",
+  "1\u5E74\u4EE5\u4E0B\u5356\u5BB6",
+  "1-2\u5E74\u5356\u5BB6",
+  "2-3\u5E74\u5356\u5BB6",
+  "3\u5E74\u4EE5\u4E0A\u5356\u5BB6",
+  "\u670D\u52A1\u5546",
 ];
 
 export const PERSONA_IDENTITIES_EN = [
@@ -111,12 +111,12 @@ export const PERSONA_IDENTITIES_EN = [
 ];
 
 export const PERSONA_COMPANY_TYPES_ZH = [
-  "品牌+自有工厂",
-  "品牌+代工工厂",
-  "工厂（无品牌）",
-  "经销商/贸易商",
-  "个人",
-  "其他",
+  "\u6709\u54C1\u724C\u6709\u5DE5\u5382",
+  "\u6709\u54C1\u724C\u6709\u5408\u4F5C\u5DE5\u5382",
+  "\u81EA\u6709\u5DE5\u5382\u65E0\u54C1\u724C",
+  "\u7ECF\u9500\u5546/\u5206\u9500\u5546",
+  "\u4E2A\u4EBA",
+  "\u5176\u4ED6",
 ];
 
 export const PERSONA_COMPANY_TYPES_EN = [
@@ -128,16 +128,30 @@ export const PERSONA_COMPANY_TYPES_EN = [
   "Other",
 ];
 
+export const PERSONA_ROLES_ZH = ["\u7BA1\u7406\u8005", "\u8FD0\u8425\u8005", "\u5176\u4ED6"];
+export const PERSONA_ROLES_EN = ["Manager/Owner", "Operations Staff", "Other"];
+
+export const PERSONA_REVENUE_ZH = ["500W\u4EE5\u4E0B", "1000W\u4EE5\u4E0B", "1000W\u4EE5\u4E0A", "1\u4EBF\u4EE5\u4E0A"];
+export const PERSONA_REVENUE_EN = ["< $500K", "< $1M", "< $10M", "> $10M"];
+
+export const PERSONA_BIZ_TYPES_ZH = ["\u5DE5\u5382", "\u8D38\u6613\u5546", "\u54C1\u724C\u65B9", "\u670D\u52A1\u5546\u6216\u5176\u4ED6"];
+export const PERSONA_BIZ_TYPES_EN = ["Factory", "Trading Company", "Brand Owner", "Service Provider/Other"];
+
+export const PERSONA_FULFILLMENT_ZH = ["FBA", "\u81EA\u53D1\u8D27", "\u8FD8\u6CA1\u51B3\u5B9A"];
+export const PERSONA_FULFILLMENT_EN = ["FBA", "FBM (Self-fulfillment)", "Not Decided Yet"];
+
 export const PERSONA_MARKETPLACES_EN = [
   "US", "Canada", "Mexico", "UK", "Germany", "France",
   "Italy", "Spain", "Japan", "UAE", "Saudi Arabia",
-  "Brazil", "Australia", "India",
+  "Brazil", "Australia", "India", "Turkey", "Netherlands",
+  "Sweden", "Poland", "Belgium",
 ];
 
 export const PERSONA_MARKETPLACES_ZH = [
-  "美国站", "加拿大站", "墨西哥站", "英国站", "德国站", "法国站",
-  "意大利站", "西班牙站", "日本站", "阿联酋站", "沙特站",
-  "巴西站", "澳洲站", "印度站",
+  "\u7F8E\u56FD\u7AD9", "\u52A0\u62FF\u5927\u7AD9", "\u58A8\u897F\u54E5\u7AD9", "\u82F1\u56FD\u7AD9", "\u5FB7\u56FD\u7AD9", "\u6CD5\u56FD\u7AD9",
+  "\u610F\u5927\u5229\u7AD9", "\u897F\u73ED\u7259\u7AD9", "\u65E5\u672C\u7AD9", "\u963F\u8054\u914B\u7AD9", "\u6C99\u7279\u7AD9",
+  "\u5DF4\u897F\u7AD9", "\u6FB3\u6D32\u7AD9", "\u5370\u5EA6\u7AD9", "\u571F\u8033\u5176\u7AD9", "\u8377\u5170\u7AD9",
+  "\u745E\u5178\u7AD9", "\u6CE2\u5170\u7AD9", "\u6BD4\u5229\u65F6\u7AD9",
 ];
 
 export const PERSONA_CONTENT_CATEGORIES_EN = [
@@ -149,11 +163,11 @@ export const PERSONA_CONTENT_CATEGORIES_EN = [
 ];
 
 export const PERSONA_CONTENT_CATEGORIES_ZH = [
-  "新手指南", "选品方法", "合规政策",
-  "物流与FBA", "品牌建设", "旺季引流",
-  "企业购", "百科", "卖家成长服务",
-  "工厂专区", "跨境支付", "品类分析",
-  "PPC与广告",
+  "\u65B0\u624B\u6307\u5357", "\u9009\u54C1", "\u5408\u89C4",
+  "\u7269\u6D41\u4ED3\u50A8", "\u54C1\u724C\u6253\u9020", "\u65FA\u5B63\u4E0E\u6D41\u91CF",
+  "\u4F01\u4E1A\u8D2D", "\u5356\u5BB6\u767E\u79D1", "\u5356\u5BB6\u6210\u957F\u670D\u52A1",
+  "\u5DE5\u5382\u4E13\u533A", "\u8DE8\u5883\u6536\u4ED8\u6B3E", "\u54C1\u7C7B\u6D1E\u5BDF",
+  "\u5E7F\u544A\u63A8\u5E7F",
 ];
 
 export const SUPPORTED_LOCALES = ["en", "zh-CN", "zh-TW", "ko", "vi"] as const;

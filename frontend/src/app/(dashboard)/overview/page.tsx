@@ -157,10 +157,50 @@ const MODULES: ModuleData[] = [
       { v: "Auto", en: "Weekly Plans", zh: "\u5468\u5EA6\u8BA1\u5212" },
     ],
   },
+  {
+    id: "zhichuan", path: "/zhongshu", icon: "\u{1F4E1}",
+    color: "#26c6da", tag: "Dev",
+    name: { en: "Content Distributor", zh: "\u667A\u4F20 Content Distributor" },
+    sub: { en: "Multi-Channel Automated Distribution", zh: "\u591A\u6E20\u9053\u81EA\u52A8\u5206\u53D1" },
+    desc: {
+      en: "Automates multi-channel content distribution across official website, blog, knowledge center, and third-party platforms.",
+      zh: "\u81EA\u52A8\u5316\u591A\u6E20\u9053\u5185\u5BB9\u5206\u53D1\uFF0C\u8986\u76D6\u5B98\u7F51\u3001\u535A\u5BA2\u3001\u77E5\u8BC6\u4E2D\u5FC3\u53CA\u7B2C\u4E09\u65B9\u5E73\u53F0\u3002",
+    },
+    caps: {
+      en: ["One-click multi-channel distribution", "Scheduled publishing with timezone", "A/B content variant management", "Cross-platform workflow automation"],
+      zh: ["\u591A\u6E20\u9053\u4E00\u952E\u5206\u53D1", "\u652F\u6301\u65F6\u533A\u7684\u5B9A\u65F6\u53D1\u5E03", "A/B \u5185\u5BB9\u53D8\u4F53\u7BA1\u7406", "\u8DE8\u5E73\u53F0\u53D1\u5E03\u5DE5\u4F5C\u6D41"],
+    },
+    impact: [
+      { v: "Multi", en: "Channels", zh: "\u6E20\u9053\u6570" },
+      { v: "Auto", en: "Scheduling", zh: "\u5B9A\u65F6\u53D1\u5E03" },
+      { v: "A/B", en: "Variant Testing", zh: "\u53D8\u4F53\u6D4B\u8BD5" },
+      { v: "E2E", en: "Integration", zh: "\u5E73\u53F0\u96C6\u6210" },
+    ],
+  },
+  {
+    id: "s3", path: "/zhongshu", icon: "\u{2601}\uFE0F",
+    color: "#42a5f5", tag: "Dev",
+    name: { en: "S3 Memory Keeper", zh: "S3 Memory Keeper" },
+    sub: { en: "Persistent Knowledge Storage Layer", zh: "\u6301\u4E45\u5316\u77E5\u8BC6\u5B58\u50A8\u5C42" },
+    desc: {
+      en: "AWS S3-based persistent storage serving as the unified data foundation for all Smart Suite modules with version control.",
+      zh: "\u57FA\u4E8E AWS S3 \u7684\u6301\u4E45\u5316\u5B58\u50A8\u5C42\uFF0C\u4E3A\u5168\u6A21\u5757\u63D0\u4F9B\u7EDF\u4E00\u6570\u636E\u5E95\u5EA7\uFF0C\u652F\u6301\u7248\u672C\u63A7\u5236\u3002",
+    },
+    caps: {
+      en: ["Unified storage for all modules", "Version-controlled repository", "Cross-module data sync", "Batch archival & retrieval"],
+      zh: ["\u5168\u6A21\u5757\u6570\u636E\u7EDF\u4E00\u5B58\u50A8", "\u7248\u672C\u5316\u5185\u5BB9\u4ED3\u5E93", "\u8DE8\u6A21\u5757\u6570\u636E\u540C\u6B65", "\u6279\u6B21\u5F52\u6863\u4E0E\u68C0\u7D22"],
+    },
+    impact: [
+      { v: "\u221E", en: "Scalable", zh: "\u5F39\u6027\u6269\u5C55" },
+      { v: "99.99%", en: "Durability", zh: "\u6301\u4E45\u6027" },
+      { v: "9 modules", en: "Connected", zh: "\u6A21\u5757\u4E92\u901A" },
+      { v: "Versioned", en: "Audit Trail", zh: "\u5BA1\u8BA1\u8FFD\u8E2A" },
+    ],
+  },
 ];
 
 const STATS = [
-  { value: "8", label: { en: "AI Tools", zh: "AI \u5DE5\u5177" } },
+  { value: "9", label: { en: "AI Tools", zh: "AI \u5DE5\u5177" } },
   { value: "9", label: { en: "AI Platforms", zh: "AI \u5E73\u53F0" } },
   { value: "+65%", label: { en: "YTD YoY Growth", zh: "YTD \u589E\u957F YoY" } },
   { value: "+78 ppts", label: { en: "vs SSR Benchmark", zh: "\u8DD1\u8D62 SSR \u5927\u76D8" } },

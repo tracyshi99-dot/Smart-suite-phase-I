@@ -23,6 +23,14 @@ import {
   PERSONA_IDENTITIES_EN,
   PERSONA_COMPANY_TYPES_ZH,
   PERSONA_COMPANY_TYPES_EN,
+  PERSONA_ROLES_ZH,
+  PERSONA_ROLES_EN,
+  PERSONA_REVENUE_ZH,
+  PERSONA_REVENUE_EN,
+  PERSONA_BIZ_TYPES_ZH,
+  PERSONA_BIZ_TYPES_EN,
+  PERSONA_FULFILLMENT_ZH,
+  PERSONA_FULFILLMENT_EN,
   PERSONA_MARKETPLACES_ZH,
   PERSONA_MARKETPLACES_EN,
   PERSONA_CONTENT_CATEGORIES_ZH,
@@ -52,6 +60,10 @@ export default function ZhikuPage() {
   // Persona expansion state
   const [identity, setIdentity] = useState("");
   const [companyType, setCompanyType] = useState("");
+  const [role, setRole] = useState("");
+  const [revenue, setRevenue] = useState("");
+  const [bizType, setBizType] = useState("");
+  const [fulfillment, setFulfillment] = useState("");
   const [marketplaces, setMarketplaces] = useState<string[]>([]);
   const [contentFocus, setContentFocus] = useState<string[]>([]);
   const [personaCount, setPersonaCount] = useState(10);
@@ -262,6 +274,10 @@ export default function ZhikuPage() {
   // Persona option lists
   const identities = isZh ? PERSONA_IDENTITIES_ZH : PERSONA_IDENTITIES_EN;
   const companyTypes = isZh ? PERSONA_COMPANY_TYPES_ZH : PERSONA_COMPANY_TYPES_EN;
+  const roles = isZh ? PERSONA_ROLES_ZH : PERSONA_ROLES_EN;
+  const revenues = isZh ? PERSONA_REVENUE_ZH : PERSONA_REVENUE_EN;
+  const bizTypes = isZh ? PERSONA_BIZ_TYPES_ZH : PERSONA_BIZ_TYPES_EN;
+  const fulfillments = isZh ? PERSONA_FULFILLMENT_ZH : PERSONA_FULFILLMENT_EN;
   const marketplaceOptions = isZh ? PERSONA_MARKETPLACES_ZH : PERSONA_MARKETPLACES_EN;
   const contentOptions = isZh ? PERSONA_CONTENT_CATEGORIES_ZH : PERSONA_CONTENT_CATEGORIES_EN;
 
@@ -351,7 +367,7 @@ export default function ZhikuPage() {
       {activeTab === "persona" && (
         <GlassCard>
           <p className="text-xs text-[var(--text-secondary)] mb-4">{t("zhiku.persona_desc")}</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-xs text-[var(--text-secondary)] mb-1">{t("zhiku.identity")}</label>
               <select
@@ -359,9 +375,9 @@ export default function ZhikuPage() {
                 onChange={(e) => setIdentity(e.target.value)}
                 className="w-full bg-white/5 border border-[var(--border-glass)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
               >
-                <option value="" className="bg-[var(--bg-secondary)]">--</option>
+                <option value="" className="bg-[var(--bg-surface)]">--</option>
                 {identities.map((i) => (
-                  <option key={i} value={i} className="bg-[var(--bg-secondary)]">{i}</option>
+                  <option key={i} value={i} className="bg-[var(--bg-surface)]">{i}</option>
                 ))}
               </select>
             </div>
@@ -372,13 +388,65 @@ export default function ZhikuPage() {
                 onChange={(e) => setCompanyType(e.target.value)}
                 className="w-full bg-white/5 border border-[var(--border-glass)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
               >
-                <option value="" className="bg-[var(--bg-secondary)]">--</option>
+                <option value="" className="bg-[var(--bg-surface)]">--</option>
                 {companyTypes.map((c) => (
-                  <option key={c} value={c} className="bg-[var(--bg-secondary)]">{c}</option>
+                  <option key={c} value={c} className="bg-[var(--bg-surface)]">{c}</option>
                 ))}
               </select>
             </div>
             <div>
+              <label className="block text-xs text-[var(--text-secondary)] mb-1">{isZh ? "\u804C\u4F4D" : "Role"}</label>
+              <select
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="w-full bg-white/5 border border-[var(--border-glass)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+              >
+                <option value="" className="bg-[var(--bg-surface)]">--</option>
+                {roles.map((r) => (
+                  <option key={r} value={r} className="bg-[var(--bg-surface)]">{r}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-[var(--text-secondary)] mb-1">{isZh ? "\u5E74\u9500\u552E\u989D" : "Annual Revenue"}</label>
+              <select
+                value={revenue}
+                onChange={(e) => setRevenue(e.target.value)}
+                className="w-full bg-white/5 border border-[var(--border-glass)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+              >
+                <option value="" className="bg-[var(--bg-surface)]">--</option>
+                {revenues.map((r) => (
+                  <option key={r} value={r} className="bg-[var(--bg-surface)]">{r}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-[var(--text-secondary)] mb-1">{isZh ? "\u516C\u53F8\u7C7B\u578B" : "Business Model"}</label>
+              <select
+                value={bizType}
+                onChange={(e) => setBizType(e.target.value)}
+                className="w-full bg-white/5 border border-[var(--border-glass)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+              >
+                <option value="" className="bg-[var(--bg-surface)]">--</option>
+                {bizTypes.map((b) => (
+                  <option key={b} value={b} className="bg-[var(--bg-surface)]">{b}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-[var(--text-secondary)] mb-1">{isZh ? "\u53D1\u8D27\u65B9\u5F0F" : "Fulfillment"}</label>
+              <select
+                value={fulfillment}
+                onChange={(e) => setFulfillment(e.target.value)}
+                className="w-full bg-white/5 border border-[var(--border-glass)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+              >
+                <option value="" className="bg-[var(--bg-surface)]">--</option>
+                {fulfillments.map((f) => (
+                  <option key={f} value={f} className="bg-[var(--bg-surface)]">{f}</option>
+                ))}
+              </select>
+            </div>
+            <div className="md:col-span-3">
               <label className="block text-xs text-[var(--text-secondary)] mb-1">{t("zhiku.marketplace")}</label>
               <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto p-2 bg-white/5 border border-[var(--border-glass)] rounded-lg">
                 {marketplaceOptions.map((m) => (
@@ -394,7 +462,7 @@ export default function ZhikuPage() {
                 ))}
               </div>
             </div>
-            <div>
+            <div className="md:col-span-3">
               <label className="block text-xs text-[var(--text-secondary)] mb-1">{t("zhiku.content_focus")}</label>
               <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto p-2 bg-white/5 border border-[var(--border-glass)] rounded-lg">
                 {contentOptions.map((c) => (
@@ -427,7 +495,7 @@ export default function ZhikuPage() {
               {t("zhiku.generate_persona")}
             </Button>
           </div>
-          {personaExpanding && <ProgressBar percent={50} label={isZh ? "推演中..." : "Generating..."} className="mt-3" />}
+          {personaExpanding && <ProgressBar percent={50} label={isZh ? "\u63A8\u6F14\u4E2D..." : "Generating..."} className="mt-3" />}
           {personaError && <p className="text-sm text-[var(--error)] mt-2">{personaError}</p>}
         </GlassCard>
       )}
