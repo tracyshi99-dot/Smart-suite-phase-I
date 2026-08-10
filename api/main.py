@@ -1,6 +1,7 @@
 """
 Smart Suite FastAPI Backend
 Wraps engine.py into REST endpoints for Next.js frontend.
+Deployed via AWS Lambda + API Gateway using Mangum.
 """
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,6 +9,7 @@ from pydantic import BaseModel
 from typing import Optional, List
 import sys
 from pathlib import Path
+from mangum import Mangum
 
 # Add parent dir for engine imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "ui"))
@@ -17,7 +19,12 @@ app = FastAPI(title="Smart Suite API", version="2.0.0")
 # CORS for Next.js frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://geo-smartsuite.app", "http://localhost:3000"],
+    allow_origins=[
+        "https://geo-smartsuite.app",
+        "https://smartsuite-geo.vercel.app",
+        "https://smartsuite-geo-cngs.vercel.app",
+        "http://localhost:3000",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -226,3 +233,7 @@ def zhixi_summary():
         return {"data": []}
     df = pd.read_csv(summary_file, encoding="utf-8-sig")
     return {"data": df.to_dict(orient="records")}
+
+
+# --- Lambda Handler ---
+handler = Mangum(app, lifespan="off")
