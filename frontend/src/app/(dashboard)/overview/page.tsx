@@ -216,38 +216,71 @@ export default function OverviewPage() {
     <div className="space-y-10 max-w-[1100px] pb-16">
       {/* Hero */}
       <section className="text-center py-10">
-        {/* Logo */}
+        {/* Logo - same as Streamlit wiki version */}
         <div className="relative inline-block mb-6">
-          <div className="w-20 h-20 rounded-full mx-auto flex items-center justify-center relative"
+          {/* Outer spinning ring */}
+          <div
+            className="absolute rounded-full border-2 animate-spin"
+            style={{
+              width: "94px", height: "94px",
+              top: "50%", left: "50%",
+              marginTop: "-47px", marginLeft: "-47px",
+              borderColor: "transparent",
+              borderTopColor: "rgba(0,188,212,0.5)",
+              borderRightColor: "rgba(171,71,188,0.3)",
+              animationDuration: "8s",
+            }}
+          />
+          {/* Inner reverse ring */}
+          <div
+            className="absolute rounded-full border animate-spin"
+            style={{
+              width: "106px", height: "106px",
+              top: "50%", left: "50%",
+              marginTop: "-53px", marginLeft: "-53px",
+              borderColor: "transparent",
+              borderBottomColor: "rgba(0,188,212,0.2)",
+              animationDuration: "12s",
+              animationDirection: "reverse",
+            }}
+          />
+          {/* Glow background */}
+          <div
+            className="absolute rounded-full"
+            style={{
+              width: "80px", height: "80px",
+              top: "50%", left: "50%",
+              marginTop: "-40px", marginLeft: "-40px",
+              background: "radial-gradient(circle, rgba(0,188,212,0.12) 0%, transparent 70%)",
+            }}
+          />
+          {/* Logo circle with gradient */}
+          <div
+            className="relative w-20 h-20 rounded-full mx-auto flex items-center justify-center z-10"
             style={{ background: "conic-gradient(from 200deg, #ff6b35, #e91e63, #9c27b0, #2196f3, #00bcd4, #4caf50, #ffeb3b, #ff6b35)" }}
           >
-            <span className="text-3xl font-black text-white drop-shadow-lg select-none"
-              style={{ textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}
-            >
+            <span className="text-3xl font-black text-white select-none" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.5)" }}>
               {"\u667A"}
             </span>
           </div>
-          {/* Animated ring */}
-          <div className="absolute inset-0 w-20 h-20 mx-auto rounded-full border-2 border-transparent animate-spin"
-            style={{
-              borderTopColor: "rgba(0,188,212,0.6)",
-              borderRightColor: "rgba(171,71,188,0.4)",
-              animationDuration: "8s",
-              width: "88px", height: "88px",
-              top: "-4px", left: "50%", marginLeft: "-44px",
-            }}
-          />
         </div>
-        <h1 className="text-3xl font-extrabold text-[var(--text-primary)] mb-3">
-          Smart Suite
+        {/* Title with gradient */}
+        <h1
+          className="text-3xl font-extrabold mb-2"
+          style={{
+            background: "linear-gradient(135deg, #ff6b35, #e91e63, #9c27b0, #2196f3, #00bcd4)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}
+        >
+          {"\u667A\u7CFB\u5217"} Smart Suite
         </h1>
-        <p className="text-sm font-medium text-[var(--accent)] tracking-wide mb-2">
+        <p className="text-sm font-medium text-[var(--accent)] tracking-wide mb-3">
           AI-Powered GEO Content Intelligence
         </p>
-        <p className="text-base text-[var(--text-secondary)] max-w-2xl mx-auto">
-          {isZh
-            ? "\u4ECE\u788E\u7247\u5316\u5185\u5BB9\u5DE5\u4F5C\u6D41\uFF0C\u5230 AI \u9A71\u52A8\u7684\u7AEF\u5230\u7AEF GEO \u5185\u5BB9\u667A\u80FD\u751F\u4EA7\u3001\u4F18\u5316\u4E0E\u6548\u679C\u8FFD\u8E2A\u3002"
-            : "From fragmented content workflows to AI-powered end-to-end GEO content intelligence, optimization, and performance tracking."}
+        <p className="text-sm text-[var(--text-secondary)] max-w-2xl mx-auto leading-relaxed">
+          Smart Suite is an AI-native marketing platform that integrates insights, content, governance, and measurement into a scalable operating model, transforming marketing from manual execution to intelligent, continuously evolving growth.
         </p>
         <div className="flex justify-center gap-10 mt-8">
           {STATS.map((s, i) => (
