@@ -136,8 +136,29 @@ export default function ZhikuPage() {
         market: regionConfig?.region_code ?? "CN",
         batch_id: activeBatch,
       };
-      await apiPost("/api/zhiku/expand", req, { timeout: LONG_OP_TIMEOUT_MS });
-      await loadPhrases();
+      const res = await apiPost<{ success?: boolean; count?: number; phrases?: string[] }>(
+        "/api/zhiku/expand", req, { timeout: LONG_OP_TIMEOUT_MS }
+      );
+      // Use phrases from response directly
+      if (res.phrases && res.phrases.length > 0) {
+        const newPhrases: PhraseData[] = res.phrases.map((q) => ({
+          ai_query: q,
+          source: `seed_${seed.trim()}`,
+          is_selected: "FALSE",
+          priority_score: 3.0,
+          intent_type: "",
+          estimated_volume: 0,
+          category: "",
+          created_at: new Date().toISOString(),
+        }));
+        setPhrases((prev) => {
+          const existing = new Set(prev.map((p) => p.ai_query));
+          const unique = newPhrases.filter((p) => !existing.has(p.ai_query));
+          return [...prev, ...unique];
+        });
+      } else {
+        await loadPhrases();
+      }
     } catch {
       setExpandError(isZh ? "裂变失败 — 后端 LLM 服务未配置。请确认 Lambda 有 Bedrock 权限或 DEEPSEEK_API_KEY 环境变量。" : "Expansion failed — backend LLM not configured. Ensure Lambda has Bedrock access or DEEPSEEK_API_KEY env var.");
     } finally {
