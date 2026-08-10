@@ -265,18 +265,22 @@ export default function OverviewPage() {
               animationDirection: "reverse",
             }}
           />
-          {/* Logo circle with gradient background + black 智 */}
+          {/* Logo PNG with black 智 overlay */}
           <div
             className="absolute rounded-full z-10 flex items-center justify-center"
             style={{
               width: "80px", height: "80px",
               top: "50%", left: "50%",
               marginTop: "-40px", marginLeft: "-40px",
-              background: "conic-gradient(from 200deg, #ff6b35, #e91e63, #9c27b0, #2196f3, #00bcd4, #4caf50, #ffeb3b, #ff6b35)",
-              boxShadow: "0 0 20px rgba(0,188,212,0.2)",
             }}
           >
-            <span className="text-4xl font-black text-black select-none">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.png"
+              alt=""
+              className="absolute inset-0 w-full h-full rounded-full"
+            />
+            <span className="relative text-3xl font-black text-black select-none z-10">
               {"\u667A"}
             </span>
           </div>
