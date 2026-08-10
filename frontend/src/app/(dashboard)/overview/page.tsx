@@ -201,9 +201,9 @@ const MODULES: ModuleData[] = [
 
 const STATS = [
   { value: "9", label: { en: "AI Tools", zh: "AI \u5DE5\u5177" } },
-  { value: "9", label: { en: "AI Platforms", zh: "AI \u5E73\u53F0" } },
+  { value: "7+", label: { en: "AI Search Platforms", zh: "AI \u68C0\u7D22\u5E73\u53F0" } },
   { value: "+65%", label: { en: "YTD YoY Growth", zh: "YTD \u589E\u957F YoY" } },
-  { value: "+78 ppts", label: { en: "vs SSR Benchmark", zh: "\u8DD1\u8D62 SSR \u5927\u76D8" } },
+  { value: "+8,400 bps", label: { en: "vs SSR Benchmark", zh: "Reg Start vs SSR \u5927\u76D8\u9006\u8F6C" } },
 ];
 
 export default function OverviewPage() {
@@ -216,55 +216,56 @@ export default function OverviewPage() {
     <div className="space-y-10 max-w-[1100px] pb-16">
       {/* Hero */}
       <section className="text-center py-10">
-        {/* Logo - same as Streamlit wiki version */}
-        <div className="relative inline-block mb-6">
-          {/* Outer spinning ring */}
+        {/* Logo - identical to Streamlit wiki version */}
+        <div className="relative inline-block mb-6" style={{ width: "110px", height: "110px" }}>
+          {/* Glow */}
           <div
-            className="absolute rounded-full border-2 animate-spin"
-            style={{
-              width: "94px", height: "94px",
-              top: "50%", left: "50%",
-              marginTop: "-47px", marginLeft: "-47px",
-              borderColor: "transparent",
-              borderTopColor: "rgba(0,188,212,0.5)",
-              borderRightColor: "rgba(171,71,188,0.3)",
-              animationDuration: "8s",
-            }}
-          />
-          {/* Inner reverse ring */}
-          <div
-            className="absolute rounded-full border animate-spin"
-            style={{
-              width: "106px", height: "106px",
-              top: "50%", left: "50%",
-              marginTop: "-53px", marginLeft: "-53px",
-              borderColor: "transparent",
-              borderBottomColor: "rgba(0,188,212,0.2)",
-              animationDuration: "12s",
-              animationDirection: "reverse",
-            }}
-          />
-          {/* Glow background */}
-          <div
-            className="absolute rounded-full"
+            className="absolute rounded-full animate-pulse"
             style={{
               width: "80px", height: "80px",
               top: "50%", left: "50%",
               marginTop: "-40px", marginLeft: "-40px",
-              background: "radial-gradient(circle, rgba(0,188,212,0.12) 0%, transparent 70%)",
+              background: "radial-gradient(circle, rgba(0,188,212,0.15) 0%, transparent 70%)",
             }}
           />
-          {/* Logo circle with gradient */}
+          {/* Outer ring spinning */}
           <div
-            className="relative w-20 h-20 rounded-full mx-auto flex items-center justify-center z-10"
-            style={{ background: "conic-gradient(from 200deg, #ff6b35, #e91e63, #9c27b0, #2196f3, #00bcd4, #4caf50, #ffeb3b, #ff6b35)" }}
-          >
-            <span className="text-3xl font-black text-white select-none" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.5)" }}>
-              {"\u667A"}
-            </span>
-          </div>
+            className="absolute rounded-full animate-spin"
+            style={{
+              width: "94px", height: "94px",
+              top: "50%", left: "50%",
+              marginTop: "-47px", marginLeft: "-47px",
+              border: "1.5px solid rgba(0,188,212,0.4)",
+              animationDuration: "8s",
+            }}
+          />
+          {/* Inner ring reverse */}
+          <div
+            className="absolute rounded-full animate-spin"
+            style={{
+              width: "106px", height: "106px",
+              top: "50%", left: "50%",
+              marginTop: "-53px", marginLeft: "-53px",
+              border: "1px solid rgba(0,188,212,0.15)",
+              animationDuration: "12s",
+              animationDirection: "reverse",
+            }}
+          />
+          {/* Actual logo PNG */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo.png"
+            alt="Smart Suite Logo"
+            className="absolute rounded-full z-10"
+            style={{
+              width: "80px", height: "80px",
+              top: "50%", left: "50%",
+              marginTop: "-40px", marginLeft: "-40px",
+              boxShadow: "0 0 20px rgba(0,188,212,0.2)",
+            }}
+          />
         </div>
-        {/* Title with gradient */}
+        {/* Title with gradient - same as Streamlit */}
         <h1
           className="text-3xl font-extrabold mb-2"
           style={{
