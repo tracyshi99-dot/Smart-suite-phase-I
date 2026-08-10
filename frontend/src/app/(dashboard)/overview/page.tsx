@@ -326,10 +326,10 @@ export default function OverviewPage() {
           {"\u667A\u7CFB\u5217"} Smart Suite
         </h1>
         <p className="text-sm font-medium text-[var(--accent)] tracking-wide mb-3">
-          AI-Powered GEO Content Intelligence
+          AI-Native GEO Marketing Intelligence &amp; Automation
         </p>
         <p className="text-sm text-[var(--text-secondary)] max-w-2xl mx-auto leading-relaxed">
-          Smart Suite is an AI-native marketing platform that integrates insights, content, governance, and measurement into a scalable operating model, transforming marketing from manual execution to intelligent, continuously evolving growth.
+          Smart Suite is an AI-native marketing platform that integrates GEO insights, content, governance, and measurement into a scalable operating model, transforming marketing from manual execution to intelligent, continuously evolving growth.
         </p>
         <div className="flex justify-center gap-10 mt-8">
           {STATS.map((s, i) => (
