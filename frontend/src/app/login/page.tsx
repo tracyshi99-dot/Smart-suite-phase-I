@@ -36,7 +36,6 @@ export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showApply, setShowApply] = useState(false);
   const [applyName, setApplyName] = useState("");
   const [applySuccess, setApplySuccess] = useState(false);
 
@@ -90,17 +89,22 @@ export default function LoginPage() {
             >
               Login Name
             </label>
-            <select
+            <input
               id="username"
+              type="text"
+              list="user-list"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              placeholder="Enter or select your login name"
               className="w-full border border-[var(--border-card)] rounded-lg px-4 py-2.5 text-[var(--text-primary)] bg-white focus:outline-none focus:border-[var(--accent)] transition-colors"
-            >
-              <option value="">-- Select your login name --</option>
+              autoFocus
+              autoComplete="off"
+            />
+            <datalist id="user-list">
               {ALLOWED_USERS.map((u) => (
-                <option key={u} value={u}>{u}</option>
+                <option key={u} value={u} />
               ))}
-            </select>
+            </datalist>
           </div>
 
           {error && (
@@ -120,42 +124,36 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        {/* Apply for access */}
+        {/* Apply for access - always visible like Streamlit */}
         <div className="mt-6 pt-4 border-t border-[var(--border-card)]">
-          {!showApply ? (
-            <button
-              onClick={() => setShowApply(true)}
-              className="w-full text-sm text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
-            >
-              No access? Apply here / \u6CA1\u6709\u8D26\u53F7\uFF1F\u7533\u8BF7\u6743\u9650
-            </button>
-          ) : applySuccess ? (
+          <p className="text-sm text-[var(--text-secondary)] mb-3">
+            {"\u6CA1\u6709\u6743\u9650\uFF1F"} / No access?
+          </p>
+          <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">
+            {"\u7533\u8BF7"} Login
+          </label>
+          <input
+            type="text"
+            value={applyName}
+            onChange={(e) => setApplyName(e.target.value)}
+            placeholder={"\u8F93\u5165\u60A8\u60F3\u7533\u8BF7\u7684\u767B\u5F55\u540D"}
+            className="w-full border border-[var(--border-card)] rounded-lg px-4 py-2.5 text-sm text-[var(--text-primary)] bg-white focus:outline-none focus:border-[var(--accent)] mb-3"
+          />
+          {applySuccess ? (
             <p className="text-sm text-[var(--success)] text-center">
-              {"\u2705"} Application submitted. Admin will review. / \u7533\u8BF7\u5DF2\u63D0\u4EA4\uFF0C\u7B49\u5F85\u7BA1\u7406\u5458\u5BA1\u6838\u3002
+              {"\u2705"} {"\u7533\u8BF7\u5DF2\u63D0\u4EA4\uFF0C\u7B49\u5F85\u7BA1\u7406\u5458\u5BA1\u6838"}
             </p>
           ) : (
-            <div className="space-y-3">
-              <p className="text-xs text-[var(--text-muted)]">
-                Enter your desired login name / \u8F93\u5165\u60F3\u7533\u8BF7\u7684\u767B\u5F55\u540D
-              </p>
-              <input
-                type="text"
-                value={applyName}
-                onChange={(e) => setApplyName(e.target.value)}
-                placeholder="your-login-name"
-                className="w-full border border-[var(--border-card)] rounded-lg px-4 py-2 text-sm text-[var(--text-primary)] bg-white focus:outline-none focus:border-[var(--accent)]"
-              />
-              <Button
-                onClick={() => {
-                  if (applyName.trim()) setApplySuccess(true);
-                }}
-                disabled={!applyName.trim()}
-                variant="secondary"
-                className="w-full"
-              >
-                {"\u{1F4E8}"} Apply for Access / \u7533\u8BF7\u6743\u9650
-              </Button>
-            </div>
+            <Button
+              onClick={() => {
+                if (applyName.trim()) setApplySuccess(true);
+              }}
+              disabled={!applyName.trim()}
+              variant="secondary"
+              className="w-full"
+            >
+              {"\u{1F4E8}"} {"\u7533\u8BF7\u6743\u9650"}
+            </Button>
           )}
         </div>
       </GlassCard>
