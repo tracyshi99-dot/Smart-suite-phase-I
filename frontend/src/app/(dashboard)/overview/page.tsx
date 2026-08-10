@@ -260,22 +260,23 @@ export default function OverviewPage() {
               animationDirection: "reverse",
             }}
           />
-          {/* Logo image only - no text overlay */}
+          {/* Logo - rainbow ring + black 智 on white bg */}
           <div
-            className="absolute rounded-full z-10 overflow-hidden"
+            className="absolute rounded-full z-10 flex items-center justify-center"
             style={{
               width: "80px", height: "80px",
               top: "50%", left: "50%",
               marginTop: "-40px", marginLeft: "-40px",
-              boxShadow: "0 0 24px rgba(0,188,212,0.15), 0 0 48px rgba(171,71,188,0.08)",
+              background: "conic-gradient(from 30deg, #ff6b35, #ffa726, #4caf50, #00bcd4, #2196f3, #9c27b0, #e91e63, #ff6b35)",
+              boxShadow: "0 0 20px rgba(0,188,212,0.12)",
+              padding: "6px",
             }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/logo.png"
-              alt="Smart Suite"
-              className="w-full h-full"
-            />
+            <div className="w-full h-full rounded-full bg-white flex items-center justify-center">
+              <span className="text-3xl font-black text-[#1a1a2e] select-none">
+                {"\u667A"}
+              </span>
+            </div>
           </div>
           {/* Scan line effect */}
           <div
