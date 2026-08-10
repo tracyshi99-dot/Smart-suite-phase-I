@@ -71,7 +71,7 @@ const MODULES: ModuleData[] = [
       zh: ["GEO \u4F18\u5148\u7ED3\u6784\u5316\u8F93\u51FA", "\u77E5\u8BC6\u5E93\u9A71\u52A8\u5199\u4F5C", "\u5355\u7BC7 3h\u219210min", "\u6708\u4EA7 100+ \u7BC7"],
     },
     impact: [
-      { v: "3h\u219210m", en: "Per Article", zh: "\u5355\u7BC7\u65F6\u95F4" },
+      { v: "3h\u219210min", en: "Per Article", zh: "\u5355\u7BC7\u65F6\u95F4" },
       { v: "800-3000", en: "Words/Article", zh: "\u6BCF\u7BC7\u5B57\u6570" },
       { v: "100%", en: "GEO Compliance", zh: "GEO \u5408\u89C4" },
       { v: "100+/mo", en: "Output Capacity", zh: "\u6708\u4EA7\u80FD" },
@@ -111,10 +111,30 @@ const MODULES: ModuleData[] = [
       zh: ["LEGO CMS JSON \u683C\u5F0F", "\u5143\u6570\u636E\u81EA\u52A8\u586B\u5145", "\u6279\u91CF\u5904\u7406", "\u7248\u672C\u8FFD\u8E2A"],
     },
     impact: [
-      { v: "30\u21922m", en: "Per Article", zh: "\u5355\u7BC7\u65F6\u95F4" },
+      { v: "30\u21922min", en: "Per Article", zh: "\u5355\u7BC7\u65F6\u95F4" },
       { v: "0 errors", en: "Accuracy", zh: "\u51C6\u786E\u7387" },
       { v: "Batch", en: "Processing", zh: "\u6279\u91CF\u5904\u7406" },
       { v: "JSON", en: "CMS-Ready", zh: "CMS \u5C31\u7EEA" },
+    ],
+  },
+  {
+    id: "zhichuan", path: "/zhongshu", icon: "\u{1F4E1}",
+    color: "#26c6da", tag: "Dev",
+    name: { en: "Content Distributor", zh: "\u667A\u4F20 Content Distributor" },
+    sub: { en: "Multi-Channel Automated Distribution", zh: "\u591A\u6E20\u9053\u81EA\u52A8\u5206\u53D1" },
+    desc: {
+      en: "Automates multi-channel content distribution across official website, blog, knowledge center, and third-party platforms.",
+      zh: "\u81EA\u52A8\u5316\u591A\u6E20\u9053\u5185\u5BB9\u5206\u53D1\uFF0C\u8986\u76D6\u5B98\u7F51\u3001\u535A\u5BA2\u3001\u77E5\u8BC6\u4E2D\u5FC3\u53CA\u7B2C\u4E09\u65B9\u5E73\u53F0\u3002",
+    },
+    caps: {
+      en: ["One-click multi-channel distribution", "Scheduled publishing with timezone", "A/B content variant management", "Cross-platform workflow automation"],
+      zh: ["\u591A\u6E20\u9053\u4E00\u952E\u5206\u53D1", "\u652F\u6301\u65F6\u533A\u7684\u5B9A\u65F6\u53D1\u5E03", "A/B \u5185\u5BB9\u53D8\u4F53\u7BA1\u7406", "\u8DE8\u5E73\u53F0\u53D1\u5E03\u5DE5\u4F5C\u6D41"],
+    },
+    impact: [
+      { v: "Multi", en: "Channels", zh: "\u6E20\u9053\u6570" },
+      { v: "Auto", en: "Scheduling", zh: "\u5B9A\u65F6\u53D1\u5E03" },
+      { v: "A/B", en: "Variant Testing", zh: "\u53D8\u4F53\u6D4B\u8BD5" },
+      { v: "E2E", en: "Integration", zh: "\u5E73\u53F0\u96C6\u6210" },
     ],
   },
   {
@@ -155,26 +175,6 @@ const MODULES: ModuleData[] = [
       { v: "7 rules", en: "Decision Engine", zh: "\u51B3\u7B56\u5F15\u64CE" },
       { v: "8hrs/wk", en: "Time Saved", zh: "\u8282\u7701\u65F6\u95F4" },
       { v: "Auto", en: "Weekly Plans", zh: "\u5468\u5EA6\u8BA1\u5212" },
-    ],
-  },
-  {
-    id: "zhichuan", path: "/zhongshu", icon: "\u{1F4E1}",
-    color: "#26c6da", tag: "Dev",
-    name: { en: "Content Distributor", zh: "\u667A\u4F20 Content Distributor" },
-    sub: { en: "Multi-Channel Automated Distribution", zh: "\u591A\u6E20\u9053\u81EA\u52A8\u5206\u53D1" },
-    desc: {
-      en: "Automates multi-channel content distribution across official website, blog, knowledge center, and third-party platforms.",
-      zh: "\u81EA\u52A8\u5316\u591A\u6E20\u9053\u5185\u5BB9\u5206\u53D1\uFF0C\u8986\u76D6\u5B98\u7F51\u3001\u535A\u5BA2\u3001\u77E5\u8BC6\u4E2D\u5FC3\u53CA\u7B2C\u4E09\u65B9\u5E73\u53F0\u3002",
-    },
-    caps: {
-      en: ["One-click multi-channel distribution", "Scheduled publishing with timezone", "A/B content variant management", "Cross-platform workflow automation"],
-      zh: ["\u591A\u6E20\u9053\u4E00\u952E\u5206\u53D1", "\u652F\u6301\u65F6\u533A\u7684\u5B9A\u65F6\u53D1\u5E03", "A/B \u5185\u5BB9\u53D8\u4F53\u7BA1\u7406", "\u8DE8\u5E73\u53F0\u53D1\u5E03\u5DE5\u4F5C\u6D41"],
-    },
-    impact: [
-      { v: "Multi", en: "Channels", zh: "\u6E20\u9053\u6570" },
-      { v: "Auto", en: "Scheduling", zh: "\u5B9A\u65F6\u53D1\u5E03" },
-      { v: "A/B", en: "Variant Testing", zh: "\u53D8\u4F53\u6D4B\u8BD5" },
-      { v: "E2E", en: "Integration", zh: "\u5E73\u53F0\u96C6\u6210" },
     ],
   },
   {
