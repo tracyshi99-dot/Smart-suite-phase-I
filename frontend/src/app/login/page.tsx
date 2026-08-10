@@ -9,11 +9,24 @@ import { Button } from "@/components/ui/Button";
 import { ApiError } from "@/lib/types";
 
 const ALLOWED_USERS = [
-  "fanting", "czhaamzn", "yuchy", "porzh", "linzhshi",
-  "fenixau", "tianranh", "qiudanie", "quadaisy", "budhiraja",
-  "mbudhira", "xinyill", "xdhuang", "gracezjy", "htp",
-  "jinghuaf", "mxyzhang", "emilwliu", "qdhwzj", "panjf",
-  "rickylan", "yountlim", "phunghd", "oanhhtk",
+  "htp", "shencm", "chienlin", "emilwliu", "gurusuh", "hangntt", "nijuno", "zhjiayue", "gracezjy", "jessyhan",
+  "fengceci", "effiezhu", "jltian", "qdhwzj", "siyundai", "tzuchunf", "yudiwan",
+  "ykimche", "liangles", "rickylan", "sylviayj",
+  "cshumin", "xinyill", "kexuache", "yirua", "huiml", "xdhuang", "aizhen",
+  "eunsong", "joouns", "yountlim",
+  "hanhdo", "ntkgiang", "ttthong", "ducnghia", "oanhhtk", "phunghd",
+  "akiyww", "elynj", "zhengyea", "ruoxhuan", "zuezhang",
+  "hengshaz", "qiuwenhl", "lingkzho", "bcoliang", "tyagao", "ngwxuyen",
+  "linzhshi", "luntian", "kouxo", "mxyzhang", "mingcaz", "shiyingp", "shuanyu", "gutingt", "robinyxy", "porzh", "miazhe",
+  "oyingcl", "yanganny", "sdjessie", "jochuang", "keweidu", "lubyshaw", "xiaoldin", "czhaamzn", "fanting", "viviying", "wenliwu", "gwenying", "xuhengl", "yuchy", "zzjn",
+  "llnamzn", "panjf", "ketng", "zhangzq", "vyuqwang",
+  "jinghuaf", "jundingl", "yangqiay", "xisjiang", "shihanya", "xlvhui", "uhlingfe",
+  "yurachel", "bozhuang", "zhanpinn", "xiyang", "fangweii", "sangxiao", "evacui", "patekliu", "atangamz", "yduamzn",
+  "shenhon", "wangnli", "gaoqinfe", "zennying", "liuyixua",
+  "daisiwei", "lynnzl", "miazihui", "nicosun",
+  "renahh", "mengyazm", "syanzhou", "eliangsh", "zhuzinin",
+  "fenixau", "yanyx", "jiayizh", "jiayuch", "jiayunjy", "juliezl", "llzha", "meilig", "tianranh", "yihuaz", "caxiaoto",
+  "quadaisy", "mbudhira",
 ];
 
 export default function LoginPage() {
