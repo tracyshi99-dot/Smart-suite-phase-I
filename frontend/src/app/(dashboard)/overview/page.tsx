@@ -290,7 +290,7 @@ export default function OverviewPage() {
               alt=""
               className="absolute inset-0 w-full h-full rounded-full"
             />
-            <span className="relative text-3xl font-black text-black select-none z-10" style={{ textShadow: "0 0 1px rgba(255,255,255,0.3)" }}>
+            <span className="relative text-3xl font-black text-black select-none z-10">
               {"\u667A"}
             </span>
           </div>
