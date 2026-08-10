@@ -260,25 +260,22 @@ export default function OverviewPage() {
               animationDirection: "reverse",
             }}
           />
-          {/* Logo image */}
+          {/* Logo image only - no text overlay */}
           <div
-            className="absolute rounded-full z-10 flex items-center justify-center overflow-hidden"
+            className="absolute rounded-full z-10 overflow-hidden"
             style={{
               width: "80px", height: "80px",
               top: "50%", left: "50%",
               marginTop: "-40px", marginLeft: "-40px",
-              boxShadow: "0 0 24px rgba(0,188,212,0.15), 0 0 48px rgba(171,71,188,0.08), inset 0 0 20px rgba(0,0,0,0.1)",
+              boxShadow: "0 0 24px rgba(0,188,212,0.15), 0 0 48px rgba(171,71,188,0.08)",
             }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo.png"
-              alt=""
-              className="absolute inset-0 w-full h-full rounded-full"
+              alt="Smart Suite"
+              className="w-full h-full"
             />
-            <span className="relative text-3xl font-black text-black select-none z-10">
-              {"\u667A"}
-            </span>
           </div>
           {/* Scan line effect */}
           <div
@@ -299,7 +296,7 @@ export default function OverviewPage() {
             />
           </div>
         </div>
-        {/* Title with gradient - same as Streamlit */}
+        {/* Title */}
         <h1
           className="text-3xl font-extrabold mb-2"
           style={{
@@ -312,10 +309,10 @@ export default function OverviewPage() {
           {"\u667A\u7CFB\u5217"} Smart Suite
         </h1>
         <p className="text-sm font-medium text-[var(--accent)] tracking-wide mb-3">
-          AI-Native GEO Marketing Intelligence &amp; Automation
+          AI-Native GEO Marketing Operating Model
         </p>
         <p className="text-sm text-[var(--text-secondary)] max-w-2xl mx-auto leading-relaxed">
-          Smart Suite is an AI-native marketing platform that integrates GEO insights, content, governance, and measurement into a scalable operating model, transforming marketing from manual execution to intelligent, continuously evolving growth.
+          Smart Suite unifies GEO insights, content, governance, and measurement into one intelligent operating model—enabling marketing to continuously learn, optimize, and scale.
         </p>
         <div className="flex justify-center gap-10 mt-8">
           {STATS.map((s, i) => (
