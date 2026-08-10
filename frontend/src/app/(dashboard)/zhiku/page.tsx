@@ -35,7 +35,28 @@ export default function ZhikuPage() {
   const [filterIntent, setFilterIntent] = useState("");
   const [filterMinScore, setFilterMinScore] = useState(0);
 
-  // Load phrases
+  // Load phrases on mount / batch change
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchPhrases() {
+      setLoading(true);
+      try {
+        const res = await apiGet<PhraseListResponse>("/api/zhiku/phrases", {
+          batch_id: activeBatch,
+          user: user ?? "",
+        });
+        if (!cancelled) setPhrases(res.phrases);
+      } catch {
+        // Keep existing phrases on error
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    fetchPhrases();
+    return () => { cancelled = true; };
+  }, [activeBatch, user]);
+
+  // Reload helper for use after expand
   const loadPhrases = useCallback(async () => {
     setLoading(true);
     try {
@@ -45,15 +66,11 @@ export default function ZhikuPage() {
       });
       setPhrases(res.phrases);
     } catch {
-      // Keep existing phrases on error
+      // Keep existing
     } finally {
       setLoading(false);
     }
   }, [activeBatch, user]);
-
-  useEffect(() => {
-    loadPhrases();
-  }, [loadPhrases]);
 
   // Expand seed
   const handleExpand = async () => {

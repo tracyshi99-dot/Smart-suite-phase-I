@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 import { useI18nStore } from "@/stores/i18n-store";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { ChatPanel } from "@/components/layout/ChatPanel";
 
 export default function DashboardLayout({
   children,
@@ -55,6 +56,7 @@ export default function DashboardLayout({
       <main className="flex-1 ml-[var(--sidebar-collapsed)] lg:ml-[var(--sidebar-width)] p-6 transition-all duration-200">
         {children}
       </main>
+      <ChatPanel />
     </div>
   );
 }
