@@ -207,13 +207,27 @@ const STATS = [
 ];
 
 export default function OverviewPage() {
-  const { locale } = useI18nStore();
+  const { locale, setLocale } = useI18nStore();
   const isZh = locale.startsWith("zh");
   const t = (obj: { en: string; zh: string }) => (isZh ? obj.zh : obj.en);
   const tArr = (obj: { en: string[]; zh: string[] }) => (isZh ? obj.zh : obj.en);
 
   return (
-    <div className="space-y-10 max-w-[1100px] pb-16">
+    <div className="space-y-10 max-w-[1100px] pb-16 relative">
+      {/* Language switcher top-right */}
+      <div className="absolute top-0 right-0">
+        <select
+          value={locale}
+          onChange={(e) => setLocale(e.target.value as "en" | "zh-CN" | "zh-TW" | "ko" | "vi")}
+          className="border border-[var(--border-card)] rounded-lg px-3 py-1.5 text-xs text-[var(--text-secondary)] bg-white focus:outline-none focus:border-[var(--accent)]"
+        >
+          <option value="en">English</option>
+          <option value="zh-CN">{"\u7B80\u4F53\u4E2D\u6587"}</option>
+          <option value="zh-TW">{"\u7E41\u9AD4\u4E2D\u6587"}</option>
+          <option value="ko">{"\uD55C\uAD6D\uC5B4"}</option>
+          <option value="vi">Ti\u1EBFng Vi\u1EC7t</option>
+        </select>
+      </div>
       {/* Hero */}
       <section className="text-center py-10">
         {/* Logo - identical to Streamlit wiki version */}
@@ -251,19 +265,21 @@ export default function OverviewPage() {
               animationDirection: "reverse",
             }}
           />
-          {/* Actual logo PNG */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/logo.png"
-            alt="Smart Suite Logo"
-            className="absolute rounded-full z-10"
+          {/* Logo circle with gradient background + black 智 */}
+          <div
+            className="absolute rounded-full z-10 flex items-center justify-center"
             style={{
               width: "80px", height: "80px",
               top: "50%", left: "50%",
               marginTop: "-40px", marginLeft: "-40px",
+              background: "conic-gradient(from 200deg, #ff6b35, #e91e63, #9c27b0, #2196f3, #00bcd4, #4caf50, #ffeb3b, #ff6b35)",
               boxShadow: "0 0 20px rgba(0,188,212,0.2)",
             }}
-          />
+          >
+            <span className="text-4xl font-black text-black select-none">
+              {"\u667A"}
+            </span>
+          </div>
         </div>
         {/* Title with gradient - same as Streamlit */}
         <h1
