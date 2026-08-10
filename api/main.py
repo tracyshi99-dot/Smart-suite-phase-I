@@ -141,6 +141,9 @@ def check_auth(user: str = Query(...)):
 @app.post("/api/zhiku/expand")
 def zhiku_expand(req: SeedExpansionRequest):
     """Expand a seed word into AI search phrases."""
+    import pandas as pd
+    from datetime import datetime
+
     try:
         from engine import run_semantic_expansion
         result = run_semantic_expansion(
@@ -151,8 +154,67 @@ def zhiku_expand(req: SeedExpansionRequest):
             batch_id=req.batch_id,
         )
         return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as e1:
+        # Fallback: try direct Claude/Bedrock call
+        try:
+            from engine import call_bedrock_claude
+
+            if req.language.startswith("zh"):
+                prompt = f"""请为核心词「{req.seed_word}」生成 {req.count} 个检索短语。
+
+关键规则：
+1. 每条短语必须是15-40字的完整自然问句
+2. 必须是问句形式（怎么/如何/什么/哪些/多少/为什么）
+3. 模拟真实卖家在AI搜索平台上的对话式提问
+4. 包含具体场景或限定条件
+5. 禁止输出碎片关键词
+
+每行一条，不要编号，不要解释。"""
+            else:
+                prompt = f"""Generate {req.count} natural question-format search phrases about '{req.seed_word}'.
+
+Rules:
+1. Each phrase must be a complete natural question, 10-30 words long
+2. Must be in question form (How/What/Why/Can I/Is it/Do I need)
+3. Include specific context (beginner/2026/small business)
+4. Simulate real conversational queries, NOT keyword fragments
+
+One phrase per line, no numbering, no explanation."""
+
+            response = call_bedrock_claude(prompt)
+            queries = [q.strip().lstrip("0123456789.-) ") for q in response.strip().split("\n") if q.strip() and len(q.strip()) > 10]
+
+            if not queries:
+                raise HTTPException(status_code=500, detail=f"No phrases generated. Engine error: {str(e1)}")
+
+            # Save to CSV
+            output_path = Path(__file__).parent.parent / "output"
+            zhiku_file = output_path / req.batch_id / "01_zhiku" / "zhiku_ai_queries.csv"
+            zhiku_file.parent.mkdir(parents=True, exist_ok=True)
+
+            new_df = pd.DataFrame({
+                "ai_query": queries,
+                "source": f"seed_{req.seed_word}",
+                "is_selected": "FALSE",
+                "priority_score": 3.0,
+                "intent_type": "",
+                "estimated_volume": 0,
+                "category": "",
+                "created_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
+            })
+
+            if zhiku_file.exists():
+                existing = pd.read_csv(zhiku_file, encoding="utf-8-sig", on_bad_lines="skip")
+                merged = pd.concat([existing, new_df], ignore_index=True)
+                if "ai_query" in merged.columns:
+                    merged = merged.drop_duplicates(subset=["ai_query"], keep="last")
+            else:
+                merged = new_df
+
+            merged.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
+            return {"success": True, "count": len(queries), "phrases": queries}
+        except Exception as e2:
+            raise HTTPException(status_code=500, detail=f"Expansion failed: {str(e1)} | Fallback failed: {str(e2)}")
 
 
 @app.get("/api/zhiku/phrases")

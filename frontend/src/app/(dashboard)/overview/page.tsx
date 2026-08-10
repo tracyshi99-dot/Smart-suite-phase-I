@@ -207,27 +207,13 @@ const STATS = [
 ];
 
 export default function OverviewPage() {
-  const { locale, setLocale } = useI18nStore();
+  const { locale } = useI18nStore();
   const isZh = locale.startsWith("zh");
   const t = (obj: { en: string; zh: string }) => (isZh ? obj.zh : obj.en);
   const tArr = (obj: { en: string[]; zh: string[] }) => (isZh ? obj.zh : obj.en);
 
   return (
-    <div className="space-y-10 max-w-[1100px] pb-16 relative">
-      {/* Language switcher top-right */}
-      <div className="absolute top-0 right-0">
-        <select
-          value={locale}
-          onChange={(e) => setLocale(e.target.value as "en" | "zh-CN" | "zh-TW" | "ko" | "vi")}
-          className="border border-[var(--border-card)] rounded-lg px-3 py-1.5 text-xs text-[var(--text-secondary)] bg-white focus:outline-none focus:border-[var(--accent)]"
-        >
-          <option value="en">English</option>
-          <option value="zh-CN">{"\u7B80\u4F53\u4E2D\u6587"}</option>
-          <option value="zh-TW">{"\u7E41\u9AD4\u4E2D\u6587"}</option>
-          <option value="ko">{"\uD55C\uAD6D\uC5B4"}</option>
-          <option value="vi">Ti\u1EBFng Vi\u1EC7t</option>
-        </select>
-      </div>
+    <div className="space-y-10 max-w-[1100px] pb-16">
       {/* Hero */}
       <section className="text-center py-10">
         {/* Logo - AI/Tech feel with animated effects */}

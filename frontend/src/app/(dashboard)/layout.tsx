@@ -6,6 +6,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useI18nStore } from "@/stores/i18n-store";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { ChatPanel } from "@/components/layout/ChatPanel";
+import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 
 export default function DashboardLayout({
   children,
@@ -53,7 +54,11 @@ export default function DashboardLayout({
   return (
     <div className="flex min-h-screen bg-[var(--bg-surface)]">
       <Sidebar />
-      <main className="flex-1 ml-[var(--sidebar-collapsed)] lg:ml-[var(--sidebar-width)] p-6 transition-all duration-200">
+      <main className="flex-1 ml-[var(--sidebar-collapsed)] lg:ml-[var(--sidebar-width)] p-6 transition-all duration-200 relative">
+        {/* Global language switcher - top right */}
+        <div className="absolute top-4 right-4 z-30">
+          <LanguageSwitcher />
+        </div>
         {children}
       </main>
       <ChatPanel />
