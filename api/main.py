@@ -58,6 +58,22 @@ class ZhiyouRequest(BaseModel):
     content_language: str = "zh-CN"
 
 
+class PersonaExpansionRequest(BaseModel):
+    identity: str
+    company_type: str = ""
+    marketplace: List[str] = []
+    content_focus: List[str] = []
+    count: int = 10
+    language: str = "zh-CN"
+    batch_id: str = "batch_001"
+
+
+class UploadPhrasesRequest(BaseModel):
+    phrases: List[str]
+    source: str = "manual_upload"
+    batch_id: str = "batch_001"
+
+
 # --- Auth helper ---
 def get_user_region(user: str) -> str:
     """Get user region from users.json (local or S3)."""
@@ -170,6 +186,113 @@ def zhiku_select(batch_id: str, indices: List[int], selected: bool = True):
             df.iloc[idx, df.columns.get_loc("is_selected")] = "TRUE" if selected else "FALSE"
     df.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
     return {"success": True, "updated": len(indices)}
+
+
+@app.post("/api/zhiku/expand-persona")
+def zhiku_expand_persona(req: PersonaExpansionRequest):
+    """Expand phrases based on seller persona."""
+    try:
+        from engine import call_bedrock_claude
+        import pandas as pd
+        from datetime import datetime
+
+        marketplace_str = ", ".join(req.marketplace) if req.marketplace else "US"
+        content_str = ", ".join(req.content_focus) if req.content_focus else "Getting Started"
+
+        if req.language.startswith("zh"):
+            prompt = f"""请为以下画像的卖家推演 {req.count} 个他们在 AI 搜索引擎中最可能输入的检索短语。
+
+画像：身份={req.identity}, 企业类型={req.company_type}, 目标站点={marketplace_str}, 关注内容={content_str}
+
+要求：
+1. 每条短语必须是15-40字的完整自然问句
+2. 必须是问句形式（怎么/如何/什么/哪些/多少/为什么）
+3. 模拟真实卖家在AI搜索平台上的对话式提问
+4. 与该画像的身份、站点、关注内容高度相关
+5. 每行一条，不要编号，不要解释"""
+        else:
+            prompt = f"""Generate {req.count} natural question-format search phrases that a seller with the following profile would type into AI search engines.
+
+Profile: Identity={req.identity}, Company={req.company_type}, Target Marketplace={marketplace_str}, Content Focus={content_str}
+
+Requirements:
+1. Each phrase must be a complete natural question, 10-30 words long
+2. Must be in question form (How/What/Why/Can I/Is it)
+3. Include specific context relevant to the persona
+4. One phrase per line, no numbering, no explanation"""
+
+        response = call_bedrock_claude(prompt)
+        queries = [q.strip().lstrip("0123456789.-) ") for q in response.strip().split("\n") if q.strip() and len(q.strip()) > 10]
+
+        if not queries:
+            raise HTTPException(status_code=500, detail="No phrases generated")
+
+        # Save to zhiku CSV
+        output_path = Path(__file__).parent.parent / "output"
+        zhiku_file = output_path / req.batch_id / "01_zhiku" / "zhiku_ai_queries.csv"
+        zhiku_file.parent.mkdir(parents=True, exist_ok=True)
+
+        new_df = pd.DataFrame({
+            "ai_query": queries,
+            "source": f"persona_{req.identity}",
+            "is_selected": "FALSE",
+            "priority_score": 3.5,
+            "intent_type": "",
+            "estimated_volume": 0,
+            "category": content_str.split(",")[0].strip() if content_str else "",
+            "created_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
+        })
+
+        if zhiku_file.exists():
+            existing = pd.read_csv(zhiku_file, encoding="utf-8-sig", on_bad_lines="skip")
+            merged = pd.concat([existing, new_df], ignore_index=True)
+            if "ai_query" in merged.columns:
+                merged = merged.drop_duplicates(subset=["ai_query"], keep="last")
+        else:
+            merged = new_df
+
+        merged.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
+        return {"success": True, "count": len(queries), "phrases": queries}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/zhiku/upload")
+def zhiku_upload(req: UploadPhrasesRequest):
+    """Upload phrases directly to the knowledge base."""
+    import pandas as pd
+    from datetime import datetime
+
+    if not req.phrases:
+        raise HTTPException(status_code=400, detail="No phrases provided")
+
+    output_path = Path(__file__).parent.parent / "output"
+    zhiku_file = output_path / req.batch_id / "01_zhiku" / "zhiku_ai_queries.csv"
+    zhiku_file.parent.mkdir(parents=True, exist_ok=True)
+
+    new_df = pd.DataFrame({
+        "ai_query": req.phrases,
+        "source": req.source,
+        "is_selected": "TRUE",
+        "priority_score": 3.0,
+        "intent_type": "",
+        "estimated_volume": 0,
+        "category": "",
+        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
+    })
+
+    if zhiku_file.exists():
+        existing = pd.read_csv(zhiku_file, encoding="utf-8-sig", on_bad_lines="skip")
+        merged = pd.concat([existing, new_df], ignore_index=True)
+        if "ai_query" in merged.columns:
+            merged = merged.drop_duplicates(subset=["ai_query"], keep="last")
+    else:
+        merged = new_df
+
+    merged.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
+    return {"success": True, "count": len(req.phrases)}
 
 
 # --- 智测 ---

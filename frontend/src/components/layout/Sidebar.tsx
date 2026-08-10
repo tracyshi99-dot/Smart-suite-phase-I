@@ -89,6 +89,7 @@ export function Sidebar() {
 
 function getNavIcon(id: string): string {
   const icons: Record<string, string> = {
+    overview: "🏠",
     zhiku: "📚",
     zhice: "🔍",
     zhizao: "⚡",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useI18nStore } from "@/stores/i18n-store";
 import { useBatchStore } from "@/stores/batch-store";
 import { useAuthStore } from "@/stores/auth-store";
@@ -9,22 +10,60 @@ import { Button } from "@/components/ui/Button";
 import { BatchSelector } from "@/components/ui/BatchSelector";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { apiGet, apiPost } from "@/lib/api-client";
-import { PhraseData, PhraseListResponse, SeedExpansionRequest } from "@/lib/types";
+import {
+  PhraseData,
+  PhraseListResponse,
+  SeedExpansionRequest,
+  PersonaExpansionRequest,
+  UploadPhrasesRequest,
+} from "@/lib/types";
 import { LONG_OP_TIMEOUT_MS } from "@/lib/constants";
+import {
+  PERSONA_IDENTITIES_ZH,
+  PERSONA_IDENTITIES_EN,
+  PERSONA_COMPANY_TYPES_ZH,
+  PERSONA_COMPANY_TYPES_EN,
+  PERSONA_MARKETPLACES_ZH,
+  PERSONA_MARKETPLACES_EN,
+  PERSONA_CONTENT_CATEGORIES_ZH,
+  PERSONA_CONTENT_CATEGORIES_EN,
+} from "@/lib/constants";
 import { truncateText } from "@/lib/utils";
 
+type TabId = "seed" | "persona" | "upload";
+
 export default function ZhikuPage() {
-  const { t } = useI18nStore();
+  const { t, locale } = useI18nStore();
   const { activeBatch } = useBatchStore();
   const { user, regionConfig } = useAuthStore();
+  const router = useRouter();
+  const isZh = locale.startsWith("zh");
+
+  // Tab state
+  const [activeTab, setActiveTab] = useState<TabId>("seed");
 
   // Seed expansion state
   const [seed, setSeed] = useState("");
   const [count, setCount] = useState(15);
   const [language, setLanguage] = useState("zh-CN");
-  const [market, setMarket] = useState("CN");
   const [expanding, setExpanding] = useState(false);
   const [expandError, setExpandError] = useState<string | null>(null);
+
+  // Persona expansion state
+  const [identity, setIdentity] = useState("");
+  const [companyType, setCompanyType] = useState("");
+  const [marketplaces, setMarketplaces] = useState<string[]>([]);
+  const [contentFocus, setContentFocus] = useState<string[]>([]);
+  const [personaCount, setPersonaCount] = useState(10);
+  const [personaExpanding, setPersonaExpanding] = useState(false);
+  const [personaError, setPersonaError] = useState<string | null>(null);
+
+  // Upload state
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadType, setUploadType] = useState<"phrases" | "keywords">("phrases");
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
 
   // Phrase table state
   const [phrases, setPhrases] = useState<PhraseData[]>([]);
@@ -34,6 +73,7 @@ export default function ZhikuPage() {
   const [filterCategory, setFilterCategory] = useState("");
   const [filterIntent, setFilterIntent] = useState("");
   const [filterMinScore, setFilterMinScore] = useState(0);
+  const [searchText, setSearchText] = useState("");
 
   // Load phrases on mount / batch change
   useEffect(() => {
@@ -56,7 +96,6 @@ export default function ZhikuPage() {
     return () => { cancelled = true; };
   }, [activeBatch, user]);
 
-  // Reload helper for use after expand
   const loadPhrases = useCallback(async () => {
     setLoading(true);
     try {
@@ -82,16 +121,81 @@ export default function ZhikuPage() {
         seed_word: seed.trim(),
         count,
         language,
-        market,
+        market: regionConfig?.region_code ?? "CN",
         batch_id: activeBatch,
       };
       await apiPost("/api/zhiku/expand", req, { timeout: LONG_OP_TIMEOUT_MS });
-      // Reload phrases after expansion
       await loadPhrases();
     } catch {
-      setExpandError("裂变失败，请重试 / Expansion failed, please retry");
+      setExpandError(isZh ? "裂变失败，请重试" : "Expansion failed, please retry");
     } finally {
       setExpanding(false);
+    }
+  };
+
+  // Persona expansion
+  const handlePersonaExpand = async () => {
+    if (!identity) return;
+    setPersonaExpanding(true);
+    setPersonaError(null);
+    try {
+      const req: PersonaExpansionRequest = {
+        identity,
+        company_type: companyType,
+        marketplace: marketplaces,
+        content_focus: contentFocus,
+        count: personaCount,
+        language,
+        batch_id: activeBatch,
+      };
+      await apiPost("/api/zhiku/expand-persona", req, { timeout: LONG_OP_TIMEOUT_MS });
+      await loadPhrases();
+    } catch {
+      setPersonaError(isZh ? "画像推演失败，请重试" : "Persona expansion failed, retry");
+    } finally {
+      setPersonaExpanding(false);
+    }
+  };
+
+  // Upload handler
+  const handleUpload = async () => {
+    if (!uploadFile) return;
+    setUploading(true);
+    setUploadError(null);
+    setUploadSuccess(null);
+    try {
+      const text = await uploadFile.text();
+      const lines = text.split("\n").map((l) => l.trim()).filter((l) => l.length > 0);
+      // Try to detect header row
+      const hasHeader = lines[0]?.toLowerCase().includes("query") ||
+        lines[0]?.toLowerCase().includes("keyword") ||
+        lines[0]?.includes("检索") || lines[0]?.includes("关键");
+      const dataLines = hasHeader ? lines.slice(1) : lines;
+      // Extract first column (CSV)
+      const phrases = dataLines
+        .map((l) => l.split(",")[0]?.trim().replace(/^["']|["']$/g, ""))
+        .filter((p) => p.length > 3);
+
+      if (phrases.length === 0) {
+        setUploadError(isZh ? "未检测到有效短语" : "No valid phrases detected");
+        return;
+      }
+
+      const req: UploadPhrasesRequest = {
+        phrases,
+        source: uploadType === "keywords" ? "seo_sem_upload" : "manual_upload",
+        batch_id: activeBatch,
+      };
+      await apiPost("/api/zhiku/upload", req, { timeout: LONG_OP_TIMEOUT_MS });
+      await loadPhrases();
+      setUploadSuccess(
+        isZh ? `✅ 导入 ${phrases.length} 条` : `✅ Imported ${phrases.length} phrases`
+      );
+      setUploadFile(null);
+    } catch {
+      setUploadError(isZh ? "上传失败，请重试" : "Upload failed, please retry");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -100,63 +204,72 @@ export default function ZhikuPage() {
     const phrase = filteredPhrases[idx];
     const originalIdx = phrases.indexOf(phrase);
     const newSelected = phrase.is_selected !== "TRUE";
-
-    // Optimistic update
     setPhrases((prev) => {
       const updated = [...prev];
-      updated[originalIdx] = {
-        ...updated[originalIdx],
-        is_selected: newSelected ? "TRUE" : "FALSE",
-      };
+      updated[originalIdx] = { ...updated[originalIdx], is_selected: newSelected ? "TRUE" : "FALSE" };
       return updated;
     });
-
     try {
-      await apiPost("/api/zhiku/select", {
-        batch_id: activeBatch,
-        indices: [originalIdx],
-        selected: newSelected,
-      });
+      await apiPost("/api/zhiku/select", { batch_id: activeBatch, indices: [originalIdx], selected: newSelected });
     } catch {
-      // Revert on failure
       setPhrases((prev) => {
         const reverted = [...prev];
-        reverted[originalIdx] = {
-          ...reverted[originalIdx],
-          is_selected: newSelected ? "FALSE" : "TRUE",
-        };
+        reverted[originalIdx] = { ...reverted[originalIdx], is_selected: newSelected ? "FALSE" : "TRUE" };
         return reverted;
       });
     }
   };
 
+  // Bulk select/deselect
+  const handleBulkSelect = async (selectAll: boolean) => {
+    const newValue = selectAll ? "TRUE" : "FALSE";
+    const prevPhrases = [...phrases];
+    setPhrases((prev) => prev.map((p) => ({ ...p, is_selected: newValue })));
+    try {
+      await apiPost("/api/zhiku/select", {
+        batch_id: activeBatch,
+        indices: phrases.map((_, i) => i),
+        selected: selectAll,
+      });
+    } catch {
+      setPhrases(prevPhrases);
+    }
+  };
+
   // Sort & filter
   const handleSort = (key: keyof PhraseData) => {
-    if (sortKey === key) {
-      setSortAsc(!sortAsc);
-    } else {
-      setSortKey(key);
-      setSortAsc(true);
-    }
+    if (sortKey === key) setSortAsc(!sortAsc);
+    else { setSortKey(key); setSortAsc(true); }
   };
 
   const categories = [...new Set(phrases.map((p) => p.category).filter(Boolean))];
   const intentTypes = [...new Set(phrases.map((p) => p.intent_type).filter(Boolean))];
+  const selectedCount = phrases.filter((p) => p.is_selected === "TRUE").length;
 
   const filteredPhrases = phrases
     .filter((p) => !filterCategory || p.category === filterCategory)
     .filter((p) => !filterIntent || p.intent_type === filterIntent)
     .filter((p) => p.priority_score >= filterMinScore)
+    .filter((p) => !searchText || p.ai_query.toLowerCase().includes(searchText.toLowerCase()))
     .sort((a, b) => {
       const aVal = a[sortKey];
       const bVal = b[sortKey];
-      if (typeof aVal === "number" && typeof bVal === "number") {
+      if (typeof aVal === "number" && typeof bVal === "number")
         return sortAsc ? aVal - bVal : bVal - aVal;
-      }
-      return sortAsc
-        ? String(aVal).localeCompare(String(bVal))
-        : String(bVal).localeCompare(String(aVal));
+      return sortAsc ? String(aVal).localeCompare(String(bVal)) : String(bVal).localeCompare(String(aVal));
     });
+
+  // Persona option lists
+  const identities = isZh ? PERSONA_IDENTITIES_ZH : PERSONA_IDENTITIES_EN;
+  const companyTypes = isZh ? PERSONA_COMPANY_TYPES_ZH : PERSONA_COMPANY_TYPES_EN;
+  const marketplaceOptions = isZh ? PERSONA_MARKETPLACES_ZH : PERSONA_MARKETPLACES_EN;
+  const contentOptions = isZh ? PERSONA_CONTENT_CATEGORIES_ZH : PERSONA_CONTENT_CATEGORIES_EN;
+
+  const tabs: { id: TabId; label: string }[] = [
+    { id: "seed", label: t("zhiku.tab_seed") },
+    { id: "persona", label: t("zhiku.tab_persona") },
+    { id: "upload", label: t("zhiku.tab_upload") },
+  ];
 
   return (
     <div className="space-y-6 max-w-[1400px]">
@@ -166,66 +279,236 @@ export default function ZhikuPage() {
         <BatchSelector />
       </div>
 
-      {/* Seed Expansion */}
-      <GlassCard>
-        <div className="flex flex-wrap gap-3 items-end">
-          <div className="flex-1 min-w-[200px]">
-            <label className="block text-xs text-[var(--text-secondary)] mb-1">
-              {t("zhiku.seed")}
-            </label>
-            <input
-              type="text"
-              value={seed}
-              onChange={(e) => setSeed(e.target.value)}
-              placeholder={regionConfig?.default_seeds?.[0] ?? "跨境电商怎么做"}
-              className="w-full bg-white/5 border border-[var(--border-glass)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)]"
-            />
-          </div>
-          <div className="w-20">
-            <label className="block text-xs text-[var(--text-secondary)] mb-1">
-              {t("zhiku.count")}
-            </label>
-            <input
-              type="number"
-              min={1}
-              max={50}
-              value={count}
-              onChange={(e) => setCount(Number(e.target.value))}
-              className="w-full bg-white/5 border border-[var(--border-glass)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
-            />
-          </div>
-          <div className="w-28">
-            <label className="block text-xs text-[var(--text-secondary)] mb-1">Language</label>
-            <select
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-              className="w-full bg-white/5 border border-[var(--border-glass)] rounded-lg px-2 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
-            >
-              {(regionConfig?.content_languages ?? [{ code: "zh-CN", name: "中文" }]).map((l) => (
-                <option key={l.code} value={l.code} className="bg-[var(--bg-secondary)]">
-                  {l.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <Button onClick={handleExpand} loading={expanding} disabled={!seed.trim()}>
-            {t("zhiku.expand")}
-          </Button>
-        </div>
-        {expanding && <ProgressBar percent={50} label="裂变中..." className="mt-3" />}
-        {expandError && (
-          <p className="text-sm text-[var(--error)] mt-2">{expandError}</p>
-        )}
-      </GlassCard>
+      {/* Tabs */}
+      <div className="flex gap-1 border-b border-[var(--border-glass)]">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
+              activeTab === tab.id
+                ? "bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/30 border-b-transparent"
+                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/5"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
-      {/* Filters */}
+      {/* Tab: Seed Expansion */}
+      {activeTab === "seed" && (
+        <GlassCard>
+          <div className="flex flex-wrap gap-3 items-end">
+            <div className="flex-1 min-w-[200px]">
+              <label className="block text-xs text-[var(--text-secondary)] mb-1">
+                {t("zhiku.seed")}
+              </label>
+              <input
+                type="text"
+                value={seed}
+                onChange={(e) => setSeed(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleExpand()}
+                placeholder={regionConfig?.default_seeds?.[0] ?? "跨境电商怎么做"}
+                className="w-full bg-white/5 border border-[var(--border-glass)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)]"
+              />
+            </div>
+            <div className="w-20">
+              <label className="block text-xs text-[var(--text-secondary)] mb-1">
+                {t("zhiku.count")}
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={50}
+                value={count}
+                onChange={(e) => setCount(Number(e.target.value))}
+                className="w-full bg-white/5 border border-[var(--border-glass)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+              />
+            </div>
+            <div className="w-28">
+              <label className="block text-xs text-[var(--text-secondary)] mb-1">Language</label>
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                className="w-full bg-white/5 border border-[var(--border-glass)] rounded-lg px-2 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+              >
+                {(regionConfig?.content_languages ?? [{ code: "zh-CN", name: "中文" }, { code: "en", name: "English" }]).map((l) => (
+                  <option key={l.code} value={l.code} className="bg-[var(--bg-secondary)]">{l.name}</option>
+                ))}
+              </select>
+            </div>
+            <Button onClick={handleExpand} loading={expanding} disabled={!seed.trim()}>
+              {t("zhiku.expand")}
+            </Button>
+          </div>
+          {expanding && <ProgressBar percent={50} label={isZh ? "裂变中..." : "Expanding..."} className="mt-3" />}
+          {expandError && <p className="text-sm text-[var(--error)] mt-2">{expandError}</p>}
+        </GlassCard>
+      )}
+
+      {/* Tab: Persona Expansion */}
+      {activeTab === "persona" && (
+        <GlassCard>
+          <p className="text-xs text-[var(--text-secondary)] mb-4">{t("zhiku.persona_desc")}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-[var(--text-secondary)] mb-1">{t("zhiku.identity")}</label>
+              <select
+                value={identity}
+                onChange={(e) => setIdentity(e.target.value)}
+                className="w-full bg-white/5 border border-[var(--border-glass)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+              >
+                <option value="" className="bg-[var(--bg-secondary)]">--</option>
+                {identities.map((i) => (
+                  <option key={i} value={i} className="bg-[var(--bg-secondary)]">{i}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-[var(--text-secondary)] mb-1">{t("zhiku.company_type")}</label>
+              <select
+                value={companyType}
+                onChange={(e) => setCompanyType(e.target.value)}
+                className="w-full bg-white/5 border border-[var(--border-glass)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+              >
+                <option value="" className="bg-[var(--bg-secondary)]">--</option>
+                {companyTypes.map((c) => (
+                  <option key={c} value={c} className="bg-[var(--bg-secondary)]">{c}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-[var(--text-secondary)] mb-1">{t("zhiku.marketplace")}</label>
+              <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto p-2 bg-white/5 border border-[var(--border-glass)] rounded-lg">
+                {marketplaceOptions.map((m) => (
+                  <label key={m} className="flex items-center gap-1 text-xs text-[var(--text-secondary)] cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={marketplaces.includes(m)}
+                      onChange={(e) => setMarketplaces(e.target.checked ? [...marketplaces, m] : marketplaces.filter((x) => x !== m))}
+                      className="accent-[var(--accent)] w-3 h-3"
+                    />
+                    {m}
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs text-[var(--text-secondary)] mb-1">{t("zhiku.content_focus")}</label>
+              <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto p-2 bg-white/5 border border-[var(--border-glass)] rounded-lg">
+                {contentOptions.map((c) => (
+                  <label key={c} className="flex items-center gap-1 text-xs text-[var(--text-secondary)] cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={contentFocus.includes(c)}
+                      onChange={(e) => setContentFocus(e.target.checked ? [...contentFocus, c] : contentFocus.filter((x) => x !== c))}
+                      className="accent-[var(--accent)] w-3 h-3"
+                    />
+                    {c}
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="flex items-end gap-3 mt-4">
+            <div className="w-24">
+              <label className="block text-xs text-[var(--text-secondary)] mb-1">{t("zhiku.count")}</label>
+              <input
+                type="number"
+                min={5}
+                max={30}
+                value={personaCount}
+                onChange={(e) => setPersonaCount(Number(e.target.value))}
+                className="w-full bg-white/5 border border-[var(--border-glass)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+              />
+            </div>
+            <Button onClick={handlePersonaExpand} loading={personaExpanding} disabled={!identity}>
+              {t("zhiku.generate_persona")}
+            </Button>
+          </div>
+          {personaExpanding && <ProgressBar percent={50} label={isZh ? "推演中..." : "Generating..."} className="mt-3" />}
+          {personaError && <p className="text-sm text-[var(--error)] mt-2">{personaError}</p>}
+        </GlassCard>
+      )}
+
+      {/* Tab: Upload */}
+      {activeTab === "upload" && (
+        <GlassCard>
+          <p className="text-xs text-[var(--text-secondary)] mb-4">{t("zhiku.upload_desc")}</p>
+          <div className="flex gap-3 mb-4">
+            <button
+              onClick={() => setUploadType("phrases")}
+              className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
+                uploadType === "phrases"
+                  ? "bg-[var(--accent)]/10 text-[var(--accent)] border-[var(--accent)]/30"
+                  : "text-[var(--text-secondary)] border-[var(--border-glass)] hover:bg-white/5"
+              }`}
+            >
+              {isZh ? "检索短语" : "Search Phrases"}
+            </button>
+            <button
+              onClick={() => setUploadType("keywords")}
+              className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
+                uploadType === "keywords"
+                  ? "bg-[var(--accent)]/10 text-[var(--accent)] border-[var(--accent)]/30"
+                  : "text-[var(--text-secondary)] border-[var(--border-glass)] hover:bg-white/5"
+              }`}
+            >
+              {isZh ? "SEO/SEM 关键词" : "SEO/SEM Keywords"}
+            </button>
+          </div>
+          <p className="text-xs text-[var(--text-muted)] mb-3">
+            {uploadType === "phrases"
+              ? (isZh ? "CSV 必须包含 ai_query 列（或第一列为短语）" : "CSV must have ai_query column (or first column as phrases)")
+              : (isZh ? "CSV 应包含 keyword 列，上传后将自动裂变为检索短语" : "CSV should have keyword column, will be expanded to search phrases")
+            }
+          </p>
+          <div className="flex items-center gap-3">
+            <label className="flex-1">
+              <input
+                type="file"
+                accept=".csv,.xlsx"
+                onChange={(e) => setUploadFile(e.target.files?.[0] ?? null)}
+                className="block w-full text-xs text-[var(--text-secondary)] file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border file:border-[var(--border-glass)] file:text-xs file:font-medium file:bg-white/5 file:text-[var(--text-primary)] hover:file:bg-white/10 file:cursor-pointer"
+              />
+            </label>
+            <Button onClick={handleUpload} loading={uploading} disabled={!uploadFile}>
+              {t("zhiku.upload_btn")}
+            </Button>
+          </div>
+          {uploadError && <p className="text-sm text-[var(--error)] mt-2">{uploadError}</p>}
+          {uploadSuccess && <p className="text-sm text-[var(--success)] mt-2">{uploadSuccess}</p>}
+        </GlassCard>
+      )}
+
+      {/* Metrics */}
+      <div className="flex gap-4">
+        <GlassCard padding="sm" className="flex-1">
+          <p className="text-xs text-[var(--text-muted)]">{t("zhiku.total")}</p>
+          <p className="text-lg font-bold text-[var(--accent)]">{phrases.length}</p>
+        </GlassCard>
+        <GlassCard padding="sm" className="flex-1">
+          <p className="text-xs text-[var(--text-muted)]">{t("zhiku.selected")}</p>
+          <p className="text-lg font-bold text-[var(--success)]">{selectedCount}</p>
+        </GlassCard>
+      </div>
+
+      {/* Filters & Actions */}
       <div className="flex flex-wrap gap-3 items-center">
+        <input
+          type="text"
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          placeholder={isZh ? "搜索短语..." : "Search phrases..."}
+          className="bg-white/5 border border-[var(--border-glass)] rounded-lg px-3 py-1.5 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] w-48"
+        />
         <select
           value={filterCategory}
           onChange={(e) => setFilterCategory(e.target.value)}
           className="bg-white/5 border border-[var(--border-glass)] rounded-lg px-3 py-1.5 text-xs text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent)]"
         >
-          <option value="">All Categories</option>
+          <option value="">{isZh ? "所有分类" : "All Categories"}</option>
           {categories.map((c) => (
             <option key={c} value={c} className="bg-[var(--bg-secondary)]">{c}</option>
           ))}
@@ -235,7 +518,7 @@ export default function ZhikuPage() {
           onChange={(e) => setFilterIntent(e.target.value)}
           className="bg-white/5 border border-[var(--border-glass)] rounded-lg px-3 py-1.5 text-xs text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent)]"
         >
-          <option value="">All Intent Types</option>
+          <option value="">{isZh ? "所有意图" : "All Intent Types"}</option>
           {intentTypes.map((i) => (
             <option key={i} value={i} className="bg-[var(--bg-secondary)]">{i}</option>
           ))}
@@ -252,39 +535,51 @@ export default function ZhikuPage() {
             className="w-16 bg-white/5 border border-[var(--border-glass)] rounded px-2 py-1 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
           />
         </div>
-        <span className="text-xs text-[var(--text-muted)] ml-auto">
-          {filteredPhrases.length} / {phrases.length} phrases
-        </span>
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            onClick={() => handleBulkSelect(true)}
+            className="text-xs text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors"
+          >
+            ☑️ {t("zhiku.select_all")}
+          </button>
+          <button
+            onClick={() => handleBulkSelect(false)}
+            className="text-xs text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors"
+          >
+            ☐ {t("zhiku.deselect_all")}
+          </button>
+          <span className="text-xs text-[var(--text-muted)]">
+            {filteredPhrases.length} / {phrases.length}
+          </span>
+        </div>
       </div>
 
       {/* Phrase Table */}
       <GlassCard padding="sm">
         {loading ? (
-          <div className="text-center py-8 text-[var(--text-secondary)]">
-            {t("common.loading")}
-          </div>
+          <div className="text-center py-8 text-[var(--text-secondary)]">{t("common.loading")}</div>
         ) : filteredPhrases.length === 0 ? (
-          <div className="text-center py-8 text-[var(--text-secondary)]">
-            {t("zhiku.empty")}
-          </div>
+          <div className="text-center py-8 text-[var(--text-secondary)]">{t("zhiku.empty")}</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[var(--border-glass)]">
                   <th className="px-2 py-2 text-left w-8">✓</th>
-                  {(["ai_query", "intent_type", "priority_score", "estimated_volume", "category"] as const).map(
-                    (col) => (
-                      <th
-                        key={col}
-                        className="px-2 py-2 text-left cursor-pointer hover:text-[var(--accent)] transition-colors text-xs text-[var(--text-secondary)]"
-                        onClick={() => handleSort(col)}
-                      >
-                        {col}
-                        {sortKey === col && (sortAsc ? " ↑" : " ↓")}
-                      </th>
-                    )
-                  )}
+                  {(["ai_query", "source", "intent_type", "priority_score", "category"] as const).map((col) => (
+                    <th
+                      key={col}
+                      className="px-2 py-2 text-left cursor-pointer hover:text-[var(--accent)] transition-colors text-xs text-[var(--text-secondary)]"
+                      onClick={() => handleSort(col)}
+                    >
+                      {col === "ai_query" ? (isZh ? "检索短语" : "Query")
+                        : col === "source" ? (isZh ? "来源" : "Source")
+                        : col === "intent_type" ? (isZh ? "意图" : "Intent")
+                        : col === "priority_score" ? (isZh ? "评分" : "Score")
+                        : col === "category" ? (isZh ? "分类" : "Category") : col}
+                      {sortKey === col && (sortAsc ? " ↑" : " ↓")}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
@@ -305,9 +600,11 @@ export default function ZhikuPage() {
                     <td className="px-2 py-2 text-[var(--text-primary)] max-w-[300px]">
                       {truncateText(phrase.ai_query, 60)}
                     </td>
+                    <td className="px-2 py-2 text-[var(--text-muted)] text-xs">
+                      {phrase.source ?? "—"}
+                    </td>
                     <td className="px-2 py-2 text-[var(--text-secondary)]">{phrase.intent_type}</td>
                     <td className="px-2 py-2 text-[var(--accent)] font-mono">{phrase.priority_score}</td>
-                    <td className="px-2 py-2 text-[var(--text-secondary)] font-mono">{phrase.estimated_volume}</td>
                     <td className="px-2 py-2 text-[var(--text-muted)]">{phrase.category}</td>
                   </tr>
                 ))}
@@ -316,6 +613,15 @@ export default function ZhikuPage() {
           </div>
         )}
       </GlassCard>
+
+      {/* CTA to next step */}
+      {selectedCount > 0 && (
+        <div className="flex justify-end">
+          <Button onClick={() => router.push("/zhice")}>
+            {t("zhiku.next_step")}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

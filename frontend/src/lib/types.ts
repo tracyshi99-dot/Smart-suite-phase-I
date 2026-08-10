@@ -16,6 +16,22 @@ export interface SeedExpansionRequest {
   batch_id: string;
 }
 
+export interface PersonaExpansionRequest {
+  identity: string;
+  company_type: string;
+  marketplace: string[];
+  content_focus: string[];
+  count: number;
+  language: string;
+  batch_id: string;
+}
+
+export interface UploadPhrasesRequest {
+  phrases: string[];
+  source: string;
+  batch_id: string;
+}
+
 export interface PhraseData {
   ai_query: string;
   intent_type: string;

@@ -31,7 +31,7 @@ export default function LoginPage() {
         if (regionConfig?.ui_language) {
           setLocale(regionConfig.ui_language as "en" | "zh-CN" | "zh-TW" | "ko" | "vi");
         }
-        router.replace("/zhiku");
+        router.replace("/overview");
       } else {
         setError("访问被拒绝 / Access Denied");
       }
