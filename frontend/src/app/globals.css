@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+:root {
+  --bg-primary: #0a0a1a;
+  --bg-secondary: #1a1a2e;
+  --bg-card: rgba(255, 255, 255, 0.05);
+  --border-glass: rgba(255, 255, 255, 0.1);
+  --accent: #00d4aa;
+  --accent-hover: #00e6bb;
+  --accent-glow: 0 0 20px rgba(0, 212, 170, 0.3);
+  --text-primary: #ffffff;
+  --text-secondary: #a0a0b0;
+  --text-muted: #6b6b7b;
+  --success: #00d4aa;
+  --error: #ff4d6a;
+  --warning: #ffb347;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --sidebar-width: 240px;
+  --sidebar-collapsed: 64px;
+}
+
+@theme inline {
+  --color-background: var(--bg-primary);
+  --color-foreground: var(--text-primary);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-card: var(--bg-card);
+  --color-border: var(--border-glass);
+  --color-muted: var(--text-muted);
+  --color-secondary: var(--text-secondary);
+  --color-success: var(--success);
+  --color-error: var(--error);
+  --color-warning: var(--warning);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  color: var(--text-primary);
+  font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
+  min-height: 100vh;
+}
+
+/* Glassmorphism utilities */
+.glass {
+  background: var(--bg-card);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
+}
+
+.glass-glow {
+  box-shadow: var(--accent-glow);
+  border-color: var(--accent);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
