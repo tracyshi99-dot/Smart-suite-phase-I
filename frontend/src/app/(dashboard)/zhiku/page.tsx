@@ -129,19 +129,30 @@ export default function ZhikuPage() {
     setExpanding(true);
     setExpandError(null);
     try {
-      const req: SeedExpansionRequest = {
-        seed_word: seed.trim(),
-        count,
-        language,
-        market: regionConfig?.region_code ?? "CN",
-        batch_id: activeBatch,
-      };
-      const res = await apiPost<{ success?: boolean; count?: number; phrases?: string[] }>(
-        "/api/zhiku/expand", req, { timeout: LONG_OP_TIMEOUT_MS }
-      );
-      // Use phrases from response directly
-      if (res.phrases && res.phrases.length > 0) {
-        const newPhrases: PhraseData[] = res.phrases.map((q) => ({
+      // Split into batches of 5 to fit within API Gateway 30s timeout
+      const batchSize = 5;
+      const batches = Math.ceil(count / batchSize);
+      const allPhrases: string[] = [];
+
+      for (let i = 0; i < batches; i++) {
+        const thisCount = Math.min(batchSize, count - allPhrases.length);
+        const req: SeedExpansionRequest = {
+          seed_word: seed.trim(),
+          count: thisCount,
+          language,
+          market: regionConfig?.region_code ?? "CN",
+          batch_id: activeBatch,
+        };
+        const res = await apiPost<{ success?: boolean; count?: number; phrases?: string[] }>(
+          "/api/zhiku/expand", req, { timeout: LONG_OP_TIMEOUT_MS }
+        );
+        if (res.phrases && res.phrases.length > 0) {
+          allPhrases.push(...res.phrases);
+        }
+      }
+
+      if (allPhrases.length > 0) {
+        const newPhrases: PhraseData[] = allPhrases.map((q) => ({
           ai_query: q,
           source: `seed_${seed.trim()}`,
           is_selected: "FALSE",
@@ -160,7 +171,7 @@ export default function ZhikuPage() {
         await loadPhrases();
       }
     } catch {
-      setExpandError(isZh ? "裂变失败 — 后端 LLM 服务未配置。请确认 Lambda 有 Bedrock 权限或 DEEPSEEK_API_KEY 环境变量。" : "Expansion failed — backend LLM not configured. Ensure Lambda has Bedrock access or DEEPSEEK_API_KEY env var.");
+      setExpandError(isZh ? "\u88C2\u53D8\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5" : "Expansion failed, please retry");
     } finally {
       setExpanding(false);
     }

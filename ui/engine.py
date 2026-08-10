@@ -31,7 +31,7 @@ if not INPUT_PATH.exists():
     INPUT_PATH = Path(tempfile.gettempdir()) / "smartsuite_input"
     INPUT_PATH.mkdir(parents=True, exist_ok=True)
 
-MODEL_ID = "anthropic.claude-3-sonnet-20240229-v1:0"
+MODEL_ID = "anthropic.claude-3-haiku-20240307-v1:0"
 REGION = "us-east-1"
 MAX_TOKENS = 4096
 
