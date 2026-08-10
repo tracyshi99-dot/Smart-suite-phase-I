@@ -47,6 +47,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Inter',sans-serif;
 .icard .iv{font-size:22px;font-weight:700;margin-bottom:4px}
 .icard .il{font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:.4px}
 .c-zhiku h2,.c-zhiku .iv{color:#ffa726}
+.c-zhice h2,.c-zhice .iv{color:#00bfa5}
 .c-zhizao h2,.c-zhizao .iv{color:#ffcc02}
 .c-zhiyou h2,.c-zhiyou .iv{color:#e91e63}
 .c-zhibu h2,.c-zhibu .iv{color:#29b6f6}
@@ -95,6 +96,14 @@ const DATA = {
      caps:{en:["Connects to 7 mainstream AI search platforms for real-time trend capture","Multi-intent query generation (informational / navigational / transactional / comparison)","Bilingual search phrase expansion covering CN + WW markets","Priority scoring engine (1-5) to filter high-value queries"],
            zh:["对接 7 大主流 AI 检索平台，捕获实时检索趋势","基于用户意图分层的多维查询生成（信息/导航/交易/对比）","中英双语检索短语扩展，覆盖 CN + WW 市场","优先级评分引擎 (1-5)，筛选高价值查询"]},
      impact:[{v:"7",en:"AI Platforms Connected",zh:"AI 平台对接"},{v:"Real-time",en:"Search Phrase Freshness",zh:"检索短语时效性"},{v:"3–5x",en:"Query Variants per Topic",zh:"每主题查询变体"},{v:"35",en:"Topic Categories Mapped",zh:"话题类别覆盖"}]
+    },
+    {id:"zhice", cls:"c-zhice", name:{en:"智测 AI Search Tester",zh:"智测 AI Search Tester"},
+     sub:{en:"AI Search Coverage Verification",zh:"AI 搜索覆盖验证"},
+     desc:{en:"Verifies phrase coverage across 7 AI search platforms, discovers content gaps, and guides precision content production. Detects brand mentions and official links in AI-generated answers to classify gap status.",
+           zh:"在 7 大 AI 搜索平台上验证短语覆盖情况，发现内容缺口，指导精准内容生产。检测 AI 回答中的品牌提及和官方链接，分类 Gap 状态。"},
+     caps:{en:["7-platform full coverage verification","Brand mention + official link dual detection","Gap auto-classification (full_gap / partial_gap / covered)","AI auto-execution + manual upload support"],
+           zh:["7 平台全覆盖验证","品牌提及 + 官方链接双重检测","Gap 自动分类（完全缺口/部分缺口/已覆盖）","AI 自动执行 + 手动上传支持"]},
+     impact:[{v:"7",en:"AI Platforms",zh:"AI 平台"},{v:"Real-time",en:"Gap Detection",zh:"实时 Gap 检测"},{v:"3 types",en:"Gap Classification",zh:"Gap 分类"},{v:"→",en:"Guides Content Creation",zh:"指导内容生产"}]
     },
     {id:"zhizao", cls:"c-zhizao", name:{en:"智造 Content Creator",zh:"智造 Content Creator"},
      sub:{en:"AI-Optimized Content Generation",zh:"AI 优化内容生成"},
@@ -169,8 +178,8 @@ function render(){
     `<div><div class="stat-v">${s.v}</div><div class="stat-l">${t(s)}</div></div>`).join('');
   // Nav
   const navLabels = {
-    en: {zhiku:"Prompt Intelligencer",zhizao:"Content Creator",zhiyou:"Content Optimizer",zhibu:"Publisher",zhichuan:"Distributor",zhixi:"Performance Analyzer",zhishu:"Orchestrator",s3:"S3 Memory"},
-    zh: {zhiku:"智库",zhizao:"智造",zhiyou:"智优",zhibu:"智布",zhichuan:"智传",zhixi:"智析",zhishu:"智中枢",s3:"S3"}
+    en: {zhiku:"Prompt Intelligencer",zhice:"AI Search Tester",zhizao:"Content Creator",zhiyou:"Content Optimizer",zhibu:"Publisher",zhichuan:"Distributor",zhixi:"Performance Analyzer",zhishu:"Orchestrator",s3:"S3 Memory"},
+    zh: {zhiku:"智库",zhice:"智测",zhizao:"智造",zhiyou:"智优",zhibu:"智布",zhichuan:"智传",zhixi:"智析",zhishu:"智中枢",s3:"S3"}
   };
   document.getElementById('nav').innerHTML = DATA.tools.map(tool => {
     const label = navLabels[lang][tool.id] || tool.name.en.split(' ')[0];

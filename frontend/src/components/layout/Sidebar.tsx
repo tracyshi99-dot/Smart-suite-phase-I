@@ -12,9 +12,9 @@ export function Sidebar() {
   const { locale, setLocale, t } = useI18nStore();
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-[var(--sidebar-width)] bg-[var(--bg-secondary)]/80 backdrop-blur-md border-r border-[var(--border-glass)] flex flex-col z-40 lg:w-[var(--sidebar-width)] md:w-[var(--sidebar-collapsed)] transition-all duration-200">
+    <aside className="fixed left-0 top-0 h-full w-[var(--sidebar-width)] bg-[#232f3e] flex flex-col z-40 lg:w-[var(--sidebar-width)] md:w-[var(--sidebar-collapsed)] transition-all duration-200">
       {/* Logo / Title */}
-      <div className="p-4 border-b border-[var(--border-glass)]">
+      <div className="p-4 border-b border-white/10">
         <h1 className="text-lg font-bold text-[var(--accent)] md:text-center lg:text-left">
           <span className="lg:inline md:hidden">Smart Suite</span>
           <span className="lg:hidden md:inline">SS</span>
@@ -23,7 +23,7 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 py-4 overflow-y-auto" aria-label="Main navigation">
-        <ul className="space-y-1 px-2">
+        <ul className="space-y-0.5 px-2">
           {NAV_ITEMS.map((item) => {
             const isActive = pathname === item.path;
             return (
@@ -34,8 +34,8 @@ export function Sidebar() {
                     flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all
                     ${
                       isActive
-                        ? "bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/30"
-                        : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/5"
+                        ? "bg-[var(--accent)]/15 text-[var(--accent)] font-semibold"
+                        : "text-white/70 hover:text-white hover:bg-white/8"
                     }
                   `}
                   aria-current={isActive ? "page" : undefined}
@@ -54,16 +54,16 @@ export function Sidebar() {
       </nav>
 
       {/* Bottom section */}
-      <div className="p-3 border-t border-[var(--border-glass)] space-y-2">
+      <div className="p-3 border-t border-white/10 space-y-2">
         {/* Language switcher */}
         <select
           value={locale}
           onChange={(e) => setLocale(e.target.value as SupportedLocale)}
-          className="w-full bg-white/5 border border-[var(--border-glass)] rounded-lg px-2 py-1.5 text-xs text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent)]"
+          className="w-full bg-white/10 border border-white/15 rounded-lg px-2 py-1.5 text-xs text-white/70 focus:outline-none focus:border-[var(--accent)]"
           aria-label={t("lang.switch")}
         >
           {SUPPORTED_LOCALES.map((loc) => (
-            <option key={loc} value={loc} className="bg-[var(--bg-secondary)]">
+            <option key={loc} value={loc} className="bg-[#232f3e] text-white">
               {LOCALE_LABELS[loc]}
             </option>
           ))}
@@ -71,12 +71,12 @@ export function Sidebar() {
 
         {/* User + Logout */}
         <div className="flex items-center justify-between">
-          <span className="text-xs text-[var(--text-muted)] truncate lg:inline md:hidden">
+          <span className="text-xs text-white/50 truncate lg:inline md:hidden">
             {user}
           </span>
           <button
             onClick={logout}
-            className="text-xs text-[var(--text-secondary)] hover:text-[var(--error)] transition-colors"
+            className="text-xs text-white/50 hover:text-[var(--error)] transition-colors"
             aria-label={t("auth.logout")}
           >
             {t("auth.logout")}
