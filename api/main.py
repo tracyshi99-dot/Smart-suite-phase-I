@@ -60,13 +60,39 @@ class ZhiyouRequest(BaseModel):
 
 # --- Auth helper ---
 def get_user_region(user: str) -> str:
-    """Get user region from users.json."""
+    """Get user region from users.json (local or S3)."""
     import json
+    data = _load_users_data()
+    return data.get("user_region", {}).get(user, "CN")
+
+
+def _load_users_data() -> dict:
+    """Load users.json from local file or S3."""
+    import json
+    import os
+    
+    # Try local first
     users_file = Path(__file__).parent.parent / "output" / "users.json"
     if users_file.exists():
-        data = json.loads(users_file.read_text(encoding="utf-8"))
-        return data.get("user_region", {}).get(user, "CN")
-    return "CN"
+        return json.loads(users_file.read_text(encoding="utf-8"))
+    
+    # Try relative to current working dir (Lambda)
+    users_file2 = Path("output") / "users.json"
+    if users_file2.exists():
+        return json.loads(users_file2.read_text(encoding="utf-8"))
+    
+    # Try S3
+    try:
+        import boto3
+        bucket = os.environ.get("SMARTSUITE_S3_BUCKET", "smartsuite-sync-data")
+        prefix = os.environ.get("SMARTSUITE_S3_PREFIX", "smartsuite/")
+        s3 = boto3.client("s3")
+        obj = s3.get_object(Bucket=bucket, Key=f"{prefix}output/users.json")
+        return json.loads(obj["Body"].read().decode("utf-8"))
+    except Exception:
+        pass
+    
+    return {"allowed": []}
 
 
 # --- Health ---
@@ -79,22 +105,19 @@ def health():
 @app.get("/api/auth/check")
 def check_auth(user: str = Query(...)):
     """Check if user is allowed."""
-    import json
-    users_file = Path(__file__).parent.parent / "output" / "users.json"
-    if users_file.exists():
-        data = json.loads(users_file.read_text(encoding="utf-8"))
-        allowed = data.get("allowed", [])
-        if user.lower() in [u.lower() for u in allowed]:
-            region = data.get("user_region", {}).get(user.lower(), "CN")
-            sub_region = data.get("user_sub_region", {}).get(user.lower(), "")
-            is_admin = user.lower() in data.get("admins", [])
-            return {
-                "allowed": True,
-                "user": user.lower(),
-                "region": region,
-                "sub_region": sub_region,
-                "is_admin": is_admin,
-            }
+    data = _load_users_data()
+    allowed = data.get("allowed", [])
+    if user.lower() in [u.lower() for u in allowed]:
+        region = data.get("user_region", {}).get(user.lower(), "CN")
+        sub_region = data.get("user_sub_region", {}).get(user.lower(), "")
+        is_admin = user.lower() in data.get("admins", [])
+        return {
+            "allowed": True,
+            "user": user.lower(),
+            "region": region,
+            "sub_region": sub_region,
+            "is_admin": is_admin,
+        }
     return {"allowed": False, "user": user}
 
 
