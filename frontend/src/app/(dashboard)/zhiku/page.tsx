@@ -139,7 +139,7 @@ export default function ZhikuPage() {
       await apiPost("/api/zhiku/expand", req, { timeout: LONG_OP_TIMEOUT_MS });
       await loadPhrases();
     } catch {
-      setExpandError(isZh ? "裂变失败，请重试" : "Expansion failed, please retry");
+      setExpandError(isZh ? "裂变失败 — 后端 LLM 服务未配置。请确认 Lambda 有 Bedrock 权限或 DEEPSEEK_API_KEY 环境变量。" : "Expansion failed — backend LLM not configured. Ensure Lambda has Bedrock access or DEEPSEEK_API_KEY env var.");
     } finally {
       setExpanding(false);
     }
@@ -292,7 +292,6 @@ export default function ZhikuPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold">{t("zhiku.title")}</h1>
-        <BatchSelector />
       </div>
 
       {/* Tabs */}

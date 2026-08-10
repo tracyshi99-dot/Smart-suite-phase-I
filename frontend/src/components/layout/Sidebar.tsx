@@ -4,12 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 import { useI18nStore } from "@/stores/i18n-store";
-import { NAV_ITEMS, LOCALE_LABELS, SUPPORTED_LOCALES, SupportedLocale } from "@/lib/constants";
+import { NAV_ITEMS } from "@/lib/constants";
 
 export function Sidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
-  const { locale, setLocale, t } = useI18nStore();
+  const { t } = useI18nStore();
 
   return (
     <aside className="fixed left-0 top-0 h-full w-[var(--sidebar-width)] bg-[#232f3e] flex flex-col z-40 lg:w-[var(--sidebar-width)] md:w-[var(--sidebar-collapsed)] transition-all duration-200">
@@ -55,20 +55,6 @@ export function Sidebar() {
 
       {/* Bottom section */}
       <div className="p-3 border-t border-white/10 space-y-2">
-        {/* Language switcher */}
-        <select
-          value={locale}
-          onChange={(e) => setLocale(e.target.value as SupportedLocale)}
-          className="w-full bg-white/10 border border-white/15 rounded-lg px-2 py-1.5 text-xs text-white/70 focus:outline-none focus:border-[var(--accent)]"
-          aria-label={t("lang.switch")}
-        >
-          {SUPPORTED_LOCALES.map((loc) => (
-            <option key={loc} value={loc} className="bg-[#232f3e] text-white">
-              {LOCALE_LABELS[loc]}
-            </option>
-          ))}
-        </select>
-
         {/* User + Logout */}
         <div className="flex items-center justify-between">
           <span className="text-xs text-white/50 truncate lg:inline md:hidden">
