@@ -7,6 +7,7 @@
   "nav.zhibu": { "en": "Distribute", "zh-CN": "智布", "zh-TW": "智布", "ko": "배포", "vi": "Phân phối" },
   "nav.zhixi": { "en": "Analytics", "zh-CN": "智析", "zh-TW": "智析", "ko": "분석", "vi": "Phân tích" },
   "nav.zhongshu": { "en": "Hub", "zh-CN": "智中枢", "zh-TW": "智中樞", "ko": "허브", "vi": "Trung tâm" },
+  "nav.request": { "en": "Request", "zh-CN": "需求提交", "zh-TW": "需求提交", "ko": "요청", "vi": "Yêu cầu" },
   "app.title": { "en": "Smart Suite", "zh-CN": "Smart Suite", "zh-TW": "Smart Suite", "ko": "Smart Suite", "vi": "Smart Suite" },
   "auth.login": { "en": "Login", "zh-CN": "登录", "zh-TW": "登入", "ko": "로그인", "vi": "Đăng nhập" },
   "auth.logout": { "en": "Logout", "zh-CN": "退出", "zh-TW": "登出", "ko": "로그아웃", "vi": "Đăng xuất" },

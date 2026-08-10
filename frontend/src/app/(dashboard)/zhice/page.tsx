@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useI18nStore } from "@/stores/i18n-store";
 import { useBatchStore } from "@/stores/batch-store";
 import { useAuthStore } from "@/stores/auth-store";
@@ -8,25 +8,56 @@ import { GlassCard } from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/Button";
 import { BatchSelector } from "@/components/ui/BatchSelector";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { apiPost } from "@/lib/api-client";
-import { ZhiceRequest, ZhiceResult } from "@/lib/types";
+import { apiGet, apiPost } from "@/lib/api-client";
+import { PhraseListResponse, ZhiceRequest, ZhiceResult } from "@/lib/types";
 import { ALL_PLATFORMS, LONG_OP_TIMEOUT_MS } from "@/lib/constants";
 
 export default function ZhicePage() {
-  const { t } = useI18nStore();
+  const { t, locale } = useI18nStore();
   const { activeBatch } = useBatchStore();
   const { user, regionConfig } = useAuthStore();
+  const isZh = locale.startsWith("zh");
 
-  const [topic, setTopic] = useState("");
-  const [phraseCount, setPhraseCount] = useState(10);
+  // Source phrases from zhiku
+  const [zhikuPhrases, setZhikuPhrases] = useState<string[]>([]);
+  const [loadingPhrases, setLoadingPhrases] = useState(true);
+
+  // Manual input
+  const [manualPhrases, setManualPhrases] = useState("");
+  const [inputMode, setInputMode] = useState<"zhiku" | "manual">("zhiku");
+
+  // Platform selection
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(
     regionConfig?.verification_platforms ?? ["deepseek", "chatgpt"]
   );
+
+  // Execution state
   const [testing, setTesting] = useState(false);
   const [progress, setProgress] = useState(0);
   const [results, setResults] = useState<ZhiceResult[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [step, setStep] = useState(1); // 1-5 workflow steps
+
+  // Load selected phrases from zhiku
+  useEffect(() => {
+    async function loadSelected() {
+      setLoadingPhrases(true);
+      try {
+        const res = await apiGet<PhraseListResponse>("/api/zhiku/phrases", {
+          batch_id: activeBatch,
+          user: user ?? "",
+        });
+        const selected = res.phrases
+          .filter((p) => p.is_selected === "TRUE")
+          .map((p) => p.ai_query);
+        setZhikuPhrases(selected);
+      } catch {
+        setZhikuPhrases([]);
+      } finally {
+        setLoadingPhrases(false);
+      }
+    }
+    loadSelected();
+  }, [activeBatch, user]);
 
   const togglePlatform = (p: string) => {
     setSelectedPlatforms((prev) =>
@@ -34,37 +65,48 @@ export default function ZhicePage() {
     );
   };
 
+  const getPhrasesToTest = (): string[] => {
+    if (inputMode === "zhiku") return zhikuPhrases;
+    return manualPhrases.split("\n").map((l) => l.trim()).filter((l) => l.length > 3);
+  };
+
   const handleRunTest = async () => {
-    if (!topic.trim() || selectedPlatforms.length === 0) return;
+    const phrases = getPhrasesToTest();
+    if (phrases.length === 0 || selectedPlatforms.length === 0) return;
     setTesting(true);
     setError(null);
-    setProgress(30);
+    setProgress(10);
+    setResults([]);
 
     try {
       const req: ZhiceRequest = {
-        phrases: [topic.trim()], // In full version, generate multiple phrases
+        phrases,
         platforms: selectedPlatforms,
         user: user ?? "",
       };
-      const res = await apiPost<{ status: string; results?: ZhiceResult[] }>(
+      setProgress(30);
+      const res = await apiPost<{ status: string; results?: ZhiceResult[]; message?: string }>(
         "/api/zhice/verify",
         req,
         { timeout: LONG_OP_TIMEOUT_MS }
       );
       setProgress(100);
       setResults(res.results ?? []);
-      setStep(2);
     } catch {
-      setError("测试失败，请重试 / Test failed, please retry");
+      setError(isZh ? "验证失败，请重试" : "Verification failed, please retry");
     } finally {
       setTesting(false);
     }
   };
 
-  const coverageRate = results.length > 0
-    ? (results.filter((r) => r.has_official_link).length / results.length) * 100
-    : 0;
-  const gaps = results.filter((r) => !r.has_official_link);
+  // Analysis
+  const totalTested = results.length;
+  const withLink = results.filter((r) => r.has_official_link).length;
+  const withBrand = results.filter((r) => r.has_brand_mention).length;
+  const coverageRate = totalTested > 0 ? (withLink / totalTested) * 100 : 0;
+  const brandRate = totalTested > 0 ? (withBrand / totalTested) * 100 : 0;
+  const gaps = results.filter((r) => !r.has_official_link && !r.has_brand_mention);
+  const partialGaps = results.filter((r) => !r.has_official_link && r.has_brand_mention);
 
   return (
     <div className="space-y-6 max-w-[1400px]">
@@ -73,130 +115,181 @@ export default function ZhicePage() {
         <BatchSelector />
       </div>
 
-      {/* Workflow Stepper */}
-      <div className="flex items-center gap-2">
-        {["Execute", "Analysis", "Opportunities", "Status", "Dashboard"].map((label, i) => (
-          <div key={i} className="flex items-center">
-            <span
-              className={`px-3 py-1 rounded-lg text-xs ${
-                step === i + 1
-                  ? "bg-[var(--accent)]/15 text-[var(--accent)] border border-[var(--accent)]/40"
-                  : "bg-white/5 text-[var(--text-muted)]"
+      {/* Source Selection */}
+      <GlassCard>
+        <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-3">
+          ① {isZh ? "待验证短语" : "Phrases to Verify"}
+        </h2>
+        <div className="flex gap-2 mb-3">
+          <button
+            onClick={() => setInputMode("zhiku")}
+            className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
+              inputMode === "zhiku"
+                ? "bg-[var(--accent)]/10 text-[var(--accent)] border-[var(--accent)]/30"
+                : "text-[var(--text-secondary)] border-[var(--border-glass)] hover:bg-white/5"
+            }`}
+          >
+            {isZh ? `从智库 (${zhikuPhrases.length} 条已选)` : `From Knowledge Base (${zhikuPhrases.length} selected)`}
+          </button>
+          <button
+            onClick={() => setInputMode("manual")}
+            className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
+              inputMode === "manual"
+                ? "bg-[var(--accent)]/10 text-[var(--accent)] border-[var(--accent)]/30"
+                : "text-[var(--text-secondary)] border-[var(--border-glass)] hover:bg-white/5"
+            }`}
+          >
+            {isZh ? "手动输入" : "Manual Input"}
+          </button>
+        </div>
+
+        {inputMode === "zhiku" && (
+          <div>
+            {loadingPhrases ? (
+              <p className="text-xs text-[var(--text-muted)]">{t("common.loading")}</p>
+            ) : zhikuPhrases.length === 0 ? (
+              <p className="text-xs text-[var(--text-muted)]">
+                {isZh ? "暂无选中短语，请先到智库选择" : "No selected phrases. Go to Knowledge Base first."}
+              </p>
+            ) : (
+              <div className="max-h-40 overflow-y-auto bg-white/5 rounded-lg p-2 border border-[var(--border-glass)]">
+                {zhikuPhrases.slice(0, 30).map((p, i) => (
+                  <p key={i} className="text-xs text-[var(--text-primary)] py-0.5">{p}</p>
+                ))}
+                {zhikuPhrases.length > 30 && (
+                  <p className="text-xs text-[var(--text-muted)]">...+{zhikuPhrases.length - 30} more</p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {inputMode === "manual" && (
+          <textarea
+            value={manualPhrases}
+            onChange={(e) => setManualPhrases(e.target.value)}
+            placeholder={isZh ? "每行一条检索短语..." : "One phrase per line..."}
+            rows={5}
+            className="w-full bg-white/5 border border-[var(--border-glass)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] resize-y"
+          />
+        )}
+      </GlassCard>
+
+      {/* Platform Selection */}
+      <GlassCard>
+        <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-3">
+          ② {isZh ? "选择验证平台" : "Select Platforms"}
+        </h2>
+        <div className="flex flex-wrap gap-2">
+          {ALL_PLATFORMS.map((p) => (
+            <button
+              key={p}
+              onClick={() => togglePlatform(p)}
+              className={`px-3 py-1.5 rounded-lg text-xs transition-all ${
+                selectedPlatforms.includes(p)
+                  ? "bg-[var(--accent)]/20 text-[var(--accent)] border border-[var(--accent)]/40"
+                  : "bg-white/5 text-[var(--text-muted)] border border-[var(--border-glass)] hover:border-[var(--accent)]/30"
               }`}
             >
-              {label}
-            </span>
-            {i < 4 && <span className="mx-1 text-[var(--border-glass)]">→</span>}
-          </div>
-        ))}
-      </div>
-
-      {/* Test Configuration */}
-      {step === 1 && (
-        <GlassCard>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-xs text-[var(--text-secondary)] mb-1">{t("zhice.topic")}</label>
-              <input
-                type="text"
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-                placeholder="e.g. 跨境电商注册流程"
-                className="w-full bg-white/5 border border-[var(--border-glass)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)]"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-[var(--text-secondary)] mb-1">{t("zhice.platforms")}</label>
-              <div className="flex flex-wrap gap-2">
-                {ALL_PLATFORMS.map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => togglePlatform(p)}
-                    className={`px-3 py-1 rounded-lg text-xs transition-all ${
-                      selectedPlatforms.includes(p)
-                        ? "bg-[var(--accent)]/20 text-[var(--accent)] border border-[var(--accent)]/40"
-                        : "bg-white/5 text-[var(--text-muted)] border border-[var(--border-glass)] hover:border-[var(--accent)]/30"
-                    }`}
-                  >
-                    {p}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div>
-                <label className="block text-xs text-[var(--text-secondary)] mb-1">Phrases (3-30)</label>
-                <input
-                  type="number"
-                  min={3}
-                  max={30}
-                  value={phraseCount}
-                  onChange={(e) => setPhraseCount(Number(e.target.value))}
-                  className="w-20 bg-white/5 border border-[var(--border-glass)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
-                />
-              </div>
-              <Button onClick={handleRunTest} loading={testing} disabled={!topic.trim()}>
-                {t("zhice.run")}
-              </Button>
-            </div>
-            {testing && <ProgressBar percent={progress} label="Testing..." />}
-            {error && <p className="text-sm text-[var(--error)]">{error}</p>}
-          </div>
-        </GlassCard>
-      )}
+              {p}
+            </button>
+          ))}
+        </div>
+        <div className="mt-4 flex items-center gap-3">
+          <Button
+            onClick={handleRunTest}
+            loading={testing}
+            disabled={getPhrasesToTest().length === 0 || selectedPlatforms.length === 0}
+          >
+            {t("zhice.run")} ({getPhrasesToTest().length} × {selectedPlatforms.length})
+          </Button>
+          <span className="text-xs text-[var(--text-muted)]">
+            = {getPhrasesToTest().length * selectedPlatforms.length} {isZh ? "次验证" : "verifications"}
+          </span>
+        </div>
+        {testing && <ProgressBar percent={progress} label={isZh ? "验证中..." : "Verifying..."} className="mt-3" />}
+        {error && <p className="text-sm text-[var(--error)] mt-2">{error}</p>}
+      </GlassCard>
 
       {/* Results */}
-      {step >= 2 && results.length > 0 && (
+      {results.length > 0 && (
         <>
-          {/* Gap Analysis Summary */}
-          <div className="grid grid-cols-3 gap-4">
+          {/* Summary Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             <GlassCard padding="sm" className="text-center">
-              <p className="text-xs text-[var(--text-secondary)]">Total Tested</p>
-              <p className="text-2xl font-bold">{results.length}</p>
+              <p className="text-xs text-[var(--text-muted)]">{isZh ? "总测试数" : "Total"}</p>
+              <p className="text-xl font-bold">{totalTested}</p>
             </GlassCard>
             <GlassCard padding="sm" className="text-center">
-              <p className="text-xs text-[var(--text-secondary)]">Coverage Rate</p>
-              <p className="text-2xl font-bold text-[var(--success)]">{coverageRate.toFixed(0)}%</p>
+              <p className="text-xs text-[var(--text-muted)]">{isZh ? "官方链接" : "Has Link"}</p>
+              <p className="text-xl font-bold text-[var(--success)]">{coverageRate.toFixed(0)}%</p>
             </GlassCard>
             <GlassCard padding="sm" className="text-center">
-              <p className="text-xs text-[var(--text-secondary)]">Gaps</p>
-              <p className="text-2xl font-bold text-[var(--error)]">{gaps.length}</p>
+              <p className="text-xs text-[var(--text-muted)]">{isZh ? "品牌提及" : "Brand"}</p>
+              <p className="text-xl font-bold text-[var(--accent)]">{brandRate.toFixed(0)}%</p>
+            </GlassCard>
+            <GlassCard padding="sm" className="text-center">
+              <p className="text-xs text-[var(--text-muted)]">{isZh ? "完全缺口" : "Full Gap"}</p>
+              <p className="text-xl font-bold text-[var(--error)]">{gaps.length}</p>
+            </GlassCard>
+            <GlassCard padding="sm" className="text-center">
+              <p className="text-xs text-[var(--text-muted)]">{isZh ? "部分缺口" : "Partial"}</p>
+              <p className="text-xl font-bold text-yellow-400">{partialGaps.length}</p>
             </GlassCard>
           </div>
 
           {/* Results Table */}
           <GlassCard padding="sm">
+            <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">
+              ③ {isZh ? "验证结果" : "Results"}
+            </h2>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[var(--border-glass)]">
-                    <th className="px-2 py-2 text-left text-xs text-[var(--text-secondary)]">Query</th>
-                    <th className="px-2 py-2 text-left text-xs text-[var(--text-secondary)]">Platform</th>
-                    <th className="px-2 py-2 text-left text-xs text-[var(--text-secondary)]">Official Link</th>
-                    <th className="px-2 py-2 text-left text-xs text-[var(--text-secondary)]">Brand Mention</th>
-                    <th className="px-2 py-2 text-left text-xs text-[var(--text-secondary)]">Preview</th>
+                    <th className="px-2 py-2 text-left text-xs text-[var(--text-secondary)]">{isZh ? "检索短语" : "Query"}</th>
+                    <th className="px-2 py-2 text-left text-xs text-[var(--text-secondary)]">{isZh ? "平台" : "Platform"}</th>
+                    <th className="px-2 py-2 text-center text-xs text-[var(--text-secondary)]">{isZh ? "官方链接" : "Link"}</th>
+                    <th className="px-2 py-2 text-center text-xs text-[var(--text-secondary)]">{isZh ? "品牌提及" : "Brand"}</th>
+                    <th className="px-2 py-2 text-left text-xs text-[var(--text-secondary)]">{isZh ? "Gap" : "Gap"}</th>
+                    <th className="px-2 py-2 text-left text-xs text-[var(--text-secondary)]">{isZh ? "预览" : "Preview"}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {results.map((r, idx) => (
-                    <tr key={idx} className="border-b border-[var(--border-glass)]/50 hover:bg-white/5">
-                      <td className="px-2 py-2">{r.query}</td>
-                      <td className="px-2 py-2 text-[var(--text-secondary)]">{r.platform}</td>
-                      <td className="px-2 py-2">
-                        <span className={r.has_official_link ? "text-[var(--success)]" : "text-[var(--error)]"}>
-                          {r.has_official_link ? "✓" : "✗"}
-                        </span>
-                      </td>
-                      <td className="px-2 py-2">
-                        <span className={r.has_brand_mention ? "text-[var(--success)]" : "text-[var(--text-muted)]"}>
-                          {r.has_brand_mention ? "✓" : "—"}
-                        </span>
-                      </td>
-                      <td className="px-2 py-2 text-[var(--text-muted)] text-xs max-w-[200px] truncate">
-                        {r.answer_preview}
-                      </td>
-                    </tr>
-                  ))}
+                  {results.map((r, idx) => {
+                    const gapStatus = !r.has_official_link && !r.has_brand_mention ? "full_gap"
+                      : !r.has_official_link ? "partial_gap" : "covered";
+                    return (
+                      <tr key={idx} className="border-b border-[var(--border-glass)]/50 hover:bg-white/5">
+                        <td className="px-2 py-2 max-w-[250px] truncate">{r.query}</td>
+                        <td className="px-2 py-2 text-[var(--text-secondary)]">{r.platform}</td>
+                        <td className="px-2 py-2 text-center">
+                          <span className={r.has_official_link ? "text-[var(--success)]" : "text-[var(--error)]"}>
+                            {r.has_official_link ? "✅" : "❌"}
+                          </span>
+                        </td>
+                        <td className="px-2 py-2 text-center">
+                          <span className={r.has_brand_mention ? "text-[var(--success)]" : "text-[var(--error)]"}>
+                            {r.has_brand_mention ? "✅" : "❌"}
+                          </span>
+                        </td>
+                        <td className="px-2 py-2">
+                          <span className={`text-xs px-1.5 py-0.5 rounded ${
+                            gapStatus === "full_gap" ? "bg-red-500/10 text-red-400"
+                              : gapStatus === "partial_gap" ? "bg-yellow-500/10 text-yellow-400"
+                              : "bg-green-500/10 text-green-400"
+                          }`}>
+                            {gapStatus === "full_gap" ? (isZh ? "完全缺口" : "Full Gap")
+                              : gapStatus === "partial_gap" ? (isZh ? "部分缺口" : "Partial")
+                              : (isZh ? "已覆盖" : "Covered")}
+                          </span>
+                        </td>
+                        <td className="px-2 py-2 text-[var(--text-muted)] text-xs max-w-[180px] truncate">
+                          {r.answer_preview || "—"}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

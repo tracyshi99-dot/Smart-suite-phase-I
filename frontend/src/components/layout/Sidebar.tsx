@@ -97,6 +97,7 @@ function getNavIcon(id: string): string {
     zhibu: "📤",
     zhixi: "📊",
     zhongshu: "🎛️",
+    request: "🔄",
   };
   return icons[id] ?? "•";
 }

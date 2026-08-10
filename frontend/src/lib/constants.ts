@@ -33,6 +33,7 @@ export const NAV_ITEMS = [
   { id: "zhibu", path: "/zhibu", label: "智布", labelEn: "Distribute" },
   { id: "zhixi", path: "/zhixi", label: "智析", labelEn: "Analytics" },
   { id: "zhongshu", path: "/zhongshu", label: "智中枢", labelEn: "Hub" },
+  { id: "request", path: "/request", label: "需求提交", labelEn: "Request" },
 ] as const;
 
 export const PIPELINE_MODULES = [
