@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useI18nStore } from "@/stores/i18n-store";
 import { useBatchStore } from "@/stores/batch-store";
 import { useAuthStore } from "@/stores/auth-store";
@@ -14,6 +15,7 @@ import { TEMPLATES, LONG_OP_TIMEOUT_MS } from "@/lib/constants";
 import { truncateText } from "@/lib/utils";
 
 export default function ZhizaoPage() {
+  const router = useRouter();
   const { t } = useI18nStore();
   const { activeBatch } = useBatchStore();
   const { regionConfig } = useAuthStore();
@@ -130,6 +132,13 @@ export default function ZhizaoPage() {
           ))}
         </div>
       )}
+
+      {/* CTA */}
+      <div className="flex justify-end pt-4">
+        <button onClick={() => router.push("/zhiyou")} className="px-4 py-2 rounded-lg text-sm font-medium bg-[var(--accent)] text-black hover:bg-[var(--accent-hover)] transition-colors">
+          {t("zhizao.title") ? "下一步：内容优化 →" : "Next: Optimize →"}
+        </button>
+      </div>
     </div>
   );
 }

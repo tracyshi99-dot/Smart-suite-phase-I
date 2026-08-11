@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useI18nStore } from "@/stores/i18n-store";
 import { useBatchStore } from "@/stores/batch-store";
 import { useAuthStore } from "@/stores/auth-store";
@@ -13,6 +14,7 @@ import { PhraseListResponse, ZhiceRequest, ZhiceResult } from "@/lib/types";
 import { ALL_PLATFORMS, LONG_OP_TIMEOUT_MS } from "@/lib/constants";
 
 export default function ZhicePage() {
+  const router = useRouter();
   const { t, locale } = useI18nStore();
   const { activeBatch } = useBatchStore();
   const { user, regionConfig } = useAuthStore();
@@ -296,6 +298,13 @@ export default function ZhicePage() {
           </GlassCard>
         </>
       )}
+
+      {/* CTA to next step */}
+      <div className="flex justify-end pt-4">
+        <button onClick={() => router.push("/zhizao")} className="px-4 py-2 rounded-lg text-sm font-medium bg-[var(--accent)] text-black hover:bg-[var(--accent-hover)] transition-colors">
+          {isZh ? "下一步：生成内容 →" : "Next: Generate Content →"}
+        </button>
+      </div>
     </div>
   );
 }

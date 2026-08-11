@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useI18nStore } from "@/stores/i18n-store";
 import { useBatchStore } from "@/stores/batch-store";
 import { GlassCard } from "@/components/ui/GlassCard";
@@ -12,6 +13,7 @@ import { ZhiyouRequest, ScoreResult, OptimizeResult } from "@/lib/types";
 import { LONG_OP_TIMEOUT_MS } from "@/lib/constants";
 
 export default function ZhiyouPage() {
+  const router = useRouter();
   const { t } = useI18nStore();
   const { activeBatch } = useBatchStore();
 
@@ -136,6 +138,13 @@ export default function ZhiyouPage() {
           </div>
         </GlassCard>
       )}
+
+      {/* CTA */}
+      <div className="flex justify-end pt-4">
+        <button onClick={() => router.push("/zhibu")} className="px-4 py-2 rounded-lg text-sm font-medium bg-[var(--accent)] text-black hover:bg-[var(--accent-hover)] transition-colors">
+          下一步：内容发布 →
+        </button>
+      </div>
     </div>
   );
 }

@@ -17,7 +17,7 @@ import {
   PersonaExpansionRequest,
   UploadPhrasesRequest,
 } from "@/lib/types";
-import { LONG_OP_TIMEOUT_MS } from "@/lib/constants";
+import { LONG_OP_TIMEOUT_MS, CATEGORIES_35 } from "@/lib/constants";
 import {
   PERSONA_IDENTITIES_ZH,
   PERSONA_IDENTITIES_EN,
@@ -353,7 +353,7 @@ export default function ZhikuPage() {
     else { setSortKey(key); setSortAsc(true); }
   };
 
-  const categories = [...new Set(phrases.map((p) => p.category).filter(Boolean))];
+  const categories = CATEGORIES_35;
   const intentTypes = [...new Set(phrases.map((p) => p.intent_type).filter(Boolean))];
   const selectedCount = phrases.filter((p) => p.is_selected === "TRUE").length;
 
