@@ -268,31 +268,28 @@ Requirements:
         if not queries:
             raise HTTPException(status_code=500, detail="No phrases generated")
 
-        # Save to zhiku CSV
-        output_path = Path(__file__).parent.parent / "output"
-        zhiku_file = output_path / req.batch_id / "01_zhiku" / "zhiku_ai_queries.csv"
-        zhiku_file.parent.mkdir(parents=True, exist_ok=True)
+        # Save to S3
+        try:
+            from s3_storage import read_csv, write_csv
+            new_df = pd.DataFrame({
+                "ai_query": queries,
+                "source": f"persona_{req.identity}",
+                "is_selected": "FALSE",
+                "priority_score": 3.5,
+                "intent_type": "",
+                "estimated_volume": 0,
+                "category": content_str.split(",")[0].strip() if content_str else "",
+                "created_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
+            })
+            existing = read_csv(req.batch_id, "01_zhiku", "zhiku_ai_queries.csv")
+            if not existing.empty:
+                merged = pd.concat([existing, new_df], ignore_index=True).drop_duplicates(subset=["ai_query"], keep="last")
+            else:
+                merged = new_df
+            write_csv(req.batch_id, "01_zhiku", "zhiku_ai_queries.csv", merged)
+        except Exception:
+            pass  # S3 save best-effort
 
-        new_df = pd.DataFrame({
-            "ai_query": queries,
-            "source": f"persona_{req.identity}",
-            "is_selected": "FALSE",
-            "priority_score": 3.5,
-            "intent_type": "",
-            "estimated_volume": 0,
-            "category": content_str.split(",")[0].strip() if content_str else "",
-            "created_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
-        })
-
-        if zhiku_file.exists():
-            existing = pd.read_csv(zhiku_file, encoding="utf-8-sig", on_bad_lines="skip")
-            merged = pd.concat([existing, new_df], ignore_index=True)
-            if "ai_query" in merged.columns:
-                merged = merged.drop_duplicates(subset=["ai_query"], keep="last")
-        else:
-            merged = new_df
-
-        merged.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
         return {"success": True, "count": len(queries), "phrases": queries}
     except HTTPException:
         raise

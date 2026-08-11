@@ -177,25 +177,56 @@ export default function ZhikuPage() {
     }
   };
 
-  // Persona expansion
+  // Persona expansion - split batches like seed expand
   const handlePersonaExpand = async () => {
     if (!identity) return;
     setPersonaExpanding(true);
     setPersonaError(null);
     try {
-      const req: PersonaExpansionRequest = {
-        identity,
-        company_type: companyType,
-        marketplace: marketplaces,
-        content_focus: contentFocus,
-        count: personaCount,
-        language,
-        batch_id: activeBatch,
-      };
-      await apiPost("/api/zhiku/expand-persona", req, { timeout: LONG_OP_TIMEOUT_MS });
-      await loadPhrases();
+      const batchSize = 5;
+      const batches = Math.ceil(personaCount / batchSize);
+      const allPhrases: string[] = [];
+
+      for (let i = 0; i < batches; i++) {
+        const thisCount = Math.min(batchSize, personaCount - allPhrases.length);
+        const req: PersonaExpansionRequest = {
+          identity,
+          company_type: companyType,
+          marketplace: marketplaces,
+          content_focus: contentFocus,
+          count: thisCount,
+          language,
+          batch_id: activeBatch,
+        };
+        const res = await apiPost<{ success?: boolean; phrases?: string[] }>(
+          "/api/zhiku/expand-persona", req, { timeout: LONG_OP_TIMEOUT_MS }
+        );
+        if (res.phrases && res.phrases.length > 0) {
+          allPhrases.push(...res.phrases);
+        }
+      }
+
+      if (allPhrases.length > 0) {
+        const newPhrases: PhraseData[] = allPhrases.map((q) => ({
+          ai_query: q,
+          source: `persona_${identity}`,
+          is_selected: "FALSE",
+          priority_score: 3.5,
+          intent_type: "",
+          estimated_volume: 0,
+          category: contentFocus[0] ?? "",
+          created_at: new Date().toISOString(),
+        }));
+        setPhrases((prev) => {
+          const existing = new Set(prev.map((p) => p.ai_query));
+          const unique = newPhrases.filter((p) => !existing.has(p.ai_query));
+          return [...prev, ...unique];
+        });
+      } else {
+        await loadPhrases();
+      }
     } catch {
-      setPersonaError(isZh ? "画像推演失败，请重试" : "Persona expansion failed, retry");
+      setPersonaError(isZh ? "\u753B\u50CF\u63A8\u6F14\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5" : "Persona expansion failed, retry");
     } finally {
       setPersonaExpanding(false);
     }
