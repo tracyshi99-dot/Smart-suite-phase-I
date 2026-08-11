@@ -576,9 +576,14 @@ def chat_stream(req: ChatRequest):
 
         # If user wants phrases
         if wants_phrases:
-            # Extract topic from message
-            topic_prompt = f"From this user request, extract the main topic/seed word (1-3 words only, no explanation): '{req.message}'"
-            topic = call_bedrock_claude(topic_prompt).strip().strip('"').strip("'")
+            # Extract the core topic (not "检索短语" itself)
+            topic_prompt = f"从用户请求中提取核心主题词（只输出1-3个词，不要包含'检索短语''搜索词'等元描述词）: '{req.message}'"
+            topic = call_bedrock_claude(topic_prompt).strip().strip('"').strip("'").strip()
+            # Remove meta words that might leak through
+            for remove_word in ["检索短语", "搜索词", "关键词", "top", "热度"]:
+                topic = topic.replace(remove_word, "").strip()
+            if not topic:
+                topic = "跨境电商"
 
             # Determine count
             count = 10
@@ -586,9 +591,17 @@ def chat_stream(req: ChatRequest):
             if num_match:
                 count = min(int(num_match.group(1)), 20)
 
-            # Generate phrases directly
+            # Generate phrases - same prompt as seed expansion
             prompt = f"""请为核心词「{topic}」生成 {count} 个检索短语。
-规则：每条15-40字完整自然问句，模拟卖家在AI搜索平台的提问。每行一条，不要编号。"""
+
+关键规则：
+1. 每条短语必须是15-40字的完整自然问句
+2. 必须是问句形式（怎么/如何/什么/哪些/多少/为什么）
+3. 模拟真实卖家在ChatGPT/DeepSeek/豆包等AI搜索平台上的对话式提问
+4. 包含具体场景或限定条件（如"2026年""新手""中国卖家"）
+5. 必须围绕「{topic}」这个核心概念
+
+每行一条，不要编号，不要解释。"""
             response = call_bedrock_claude(prompt)
             queries = [q.strip().lstrip("0123456789.-) ") for q in response.strip().split("\n") if q.strip() and len(q.strip()) > 10]
 
