@@ -179,11 +179,22 @@ One phrase per line, no numbering, no explanation."""
         # Save to S3 (persistent)
         try:
             from s3_storage import read_csv, write_csv
+
+            # Dynamic scoring like Streamlit's _quick_score
+            def _score(q):
+                s = 3.0
+                if 10 <= len(q) <= 25: s += 0.5
+                elif len(q) > 25: s += 0.3
+                if any(w in q for w in ["怎么","如何","多少","哪些","为什么","什么","能不能","how","what","why"]): s += 0.5
+                if any(w in q.lower() for w in ["亚马逊","amazon","fba","注册","开店","选品","物流","广告","listing"]): s += 0.5
+                if any(w in q for w in ["吗","呢","啊","吧","?","？"]): s += 0.3
+                return min(5.0, round(s, 1))
+
             new_df = pd.DataFrame({
                 "ai_query": queries,
                 "source": f"seed_{req.seed_word}",
                 "is_selected": "FALSE",
-                "priority_score": 3.0,
+                "priority_score": [_score(q) for q in queries],
                 "created_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
             })
             existing = read_csv(req.batch_id, "01_zhiku", "zhiku_ai_queries.csv")
@@ -271,11 +282,21 @@ Requirements:
         # Save to S3
         try:
             from s3_storage import read_csv, write_csv
+
+            def _score_p(q):
+                s = 3.5
+                if 10 <= len(q) <= 25: s += 0.5
+                elif len(q) > 25: s += 0.3
+                if any(w in q for w in ["怎么","如何","多少","哪些","为什么","什么","能不能","how","what","why"]): s += 0.5
+                if any(w in q.lower() for w in ["亚马逊","amazon","fba","注册","开店","选品","物流","广告"]): s += 0.3
+                if any(w in q for w in ["吗","呢","啊","吧","?","？"]): s += 0.2
+                return min(5.0, round(s, 1))
+
             new_df = pd.DataFrame({
                 "ai_query": queries,
                 "source": f"persona_{req.identity}",
                 "is_selected": "FALSE",
-                "priority_score": 3.5,
+                "priority_score": [_score_p(q) for q in queries],
                 "intent_type": "",
                 "estimated_volume": 0,
                 "category": content_str.split(",")[0].strip() if content_str else "",

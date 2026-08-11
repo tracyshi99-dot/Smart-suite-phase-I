@@ -311,6 +311,42 @@ export default function ZhikuPage() {
     }
   };
 
+  // Archive selected items
+  const handleArchiveSelected = async () => {
+    const selectedIndices = phrases
+      .map((p, i) => (p.is_selected === "TRUE" ? i : -1))
+      .filter((i) => i >= 0);
+    if (selectedIndices.length === 0) return;
+    try {
+      await apiPost("/api/archive", {
+        batch_id: activeBatch,
+        step: "01_zhiku",
+        filename: "zhiku_ai_queries.csv",
+        indices: selectedIndices,
+      });
+      setPhrases((prev) => prev.filter((p) => p.is_selected !== "TRUE"));
+    } catch {
+      // ignore
+    }
+  };
+
+  // Archive all items
+  const handleArchiveAll = async () => {
+    if (phrases.length === 0) return;
+    if (!confirm(isZh ? "确定清除全部短语？（将保存到历史记录）" : "Clear all phrases? (will be saved to history)")) return;
+    try {
+      await apiPost("/api/archive", {
+        batch_id: activeBatch,
+        step: "01_zhiku",
+        filename: "zhiku_ai_queries.csv",
+        indices: [],
+      });
+      setPhrases([]);
+    } catch {
+      // ignore
+    }
+  };
+
   // Sort & filter
   const handleSort = (key: keyof PhraseData) => {
     if (sortKey === key) setSortAsc(!sortAsc);
@@ -677,6 +713,18 @@ export default function ZhikuPage() {
             className="text-xs text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors"
           >
             ☐ {t("zhiku.deselect_all")}
+          </button>
+          <button
+            onClick={handleArchiveSelected}
+            className="text-xs text-[var(--error)] hover:text-red-600 transition-colors"
+          >
+            🗑️ {isZh ? "清除选中" : "Clear Selected"}
+          </button>
+          <button
+            onClick={handleArchiveAll}
+            className="text-xs text-[var(--error)] hover:text-red-600 transition-colors"
+          >
+            🗑️ {isZh ? "清除全部" : "Clear All"}
           </button>
           <span className="text-xs text-[var(--text-muted)]">
             {filteredPhrases.length} / {phrases.length}
