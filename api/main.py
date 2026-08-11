@@ -566,27 +566,51 @@ def chat_stream(req: ChatRequest):
 
         # Content generation takes priority if both detected
         if wants_content:
-            # Extract the topic/phrase from the message
-            topic_prompt = f"从用户请求中提取他想要创建内容的主题或检索短语（只输出主题本身，1-2句话，不要解释）: '{req.message}'"
+            # First, try to find the phrase from the user's library
+            from s3_storage import read_csv as _s3_read
+            df_lib = _s3_read(req.batch_id, "01_zhiku", "zhiku_ai_queries.csv")
+
+            # Extract what phrase/topic user refers to
+            topic_prompt = f"从用户消息中提取他想要创建内容的核心检索短语或主题（只输出短语本身，不要解释）: '{req.message}'"
             topic = call_bedrock_claude(topic_prompt).strip().strip('"').strip("'")
 
-            # Generate actual content (article)
-            content_prompt = f"""请为检索短语「{topic}」生成一篇 GEO 优化的文章。
+            # Try to find matching phrase in library
+            target_phrase = topic
+            if not df_lib.empty and "ai_query" in df_lib.columns:
+                # Find best match from library
+                phrases_list = df_lib["ai_query"].tolist()
+                # Check if user refers to "top 1" or specific number
+                num_match = re.search(r"top\s*(\d+)|第(\d+)", req.message)
+                if num_match:
+                    idx = int(num_match.group(1) or num_match.group(2)) - 1
+                    if 0 <= idx < len(phrases_list):
+                        target_phrase = phrases_list[idx]
+                else:
+                    # Try fuzzy match
+                    for p in phrases_list:
+                        if topic.lower() in p.lower() or any(w in p for w in topic.split() if len(w) > 2):
+                            target_phrase = p
+                            break
+
+            # Generate article for the target phrase
+            content_prompt = f"""请为检索短语「{target_phrase}」生成一篇 GEO 优化的文章。
 
 要求：
-1. 800-1500字
-2. 开头直接回答问题（倒金字塔结构）
-3. 包含表格或列表
-4. 包含 FAQ 部分（3个常见问题）
-5. 自然融入"亚马逊全球开店"品牌词
-6. 语言风格：专业、实用、易懂
+1. 800-1500字，直接回答这个问题
+2. 开头第一段就给出核心答案（倒金字塔结构）
+3. 包含表格或结构化列表
+4. 包含 3 个相关 FAQ
+5. 自然融入"亚马逊全球开店"品牌词和相关官方链接
+6. 语言风格：专业、实用、面向跨境电商卖家
 
-直接输出文章内容，不要输出标题标注。"""
+直接输出文章内容。"""
             article = call_bedrock_claude(content_prompt)
 
             if article and len(article) > 100:
-                result_text = f"已为「{topic}」生成内容：\n\n{article}\n\n💡 提示：前往智造页面可以批量生成更多内容。"
+                result_text = f"已为短语「{target_phrase}」生成内容：\n\n{article}"
                 return {"content": result_text, "role": "assistant"}
+            else:
+                return {"content": f"内容生成失败，请重试。目标短语：{target_phrase}", "role": "assistant"}
 
         # If user wants phrases
         if wants_phrases:
