@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
@@ -45,10 +45,16 @@ function scorePhrase(q: string): number {
   let s = 3.0;
   if (q.length >= 15 && q.length <= 30) s += 0.5;
   else if (q.length > 30) s += 0.3;
-  if (/[怎如多哪为什能]|how|what|why/i.test(q)) s += 0.5;
-  if (/亚马逊|amazon|fba|注册|开店|选品|物流|广告|listing/i.test(q)) s += 0.5;
-  if (/[吗呢啊吧？?]/.test(q)) s += 0.3;
+  if (/[鎬庡澶氬摢涓轰粈鑳絔|how|what|why/i.test(q)) s += 0.5;
+  if (/浜氶┈閫妡amazon|fba|娉ㄥ唽|寮€搴梶閫夊搧|鐗╂祦|骞垮憡|listing/i.test(q)) s += 0.5;
+  if (/[鍚楀憿鍟婂惂锛?]/.test(q)) s += 0.3;
   return Math.min(5.0, Math.round(s * 10) / 10);
+}
+
+// Helper: check if is_selected is truthy (handles "TRUE", true, "true", 1)
+function isSelected(val: unknown): boolean {
+  if (val === true || val === "TRUE" || val === "true" || val === "1" || val === 1) return true;
+  return false;
 }
 
 export default function ZhikuPage() {
@@ -255,7 +261,7 @@ export default function ZhikuPage() {
       // Try to detect header row
       const hasHeader = lines[0]?.toLowerCase().includes("query") ||
         lines[0]?.toLowerCase().includes("keyword") ||
-        lines[0]?.includes("检索") || lines[0]?.includes("关键");
+        lines[0]?.includes("妫€绱?) || lines[0]?.includes("鍏抽敭");
       const dataLines = hasHeader ? lines.slice(1) : lines;
       // Extract first column (CSV)
       const phrases = dataLines
@@ -263,7 +269,7 @@ export default function ZhikuPage() {
         .filter((p) => p.length > 3);
 
       if (phrases.length === 0) {
-        setUploadError(isZh ? "未检测到有效短语" : "No valid phrases detected");
+        setUploadError(isZh ? "鏈娴嬪埌鏈夋晥鐭" : "No valid phrases detected");
         return;
       }
 
@@ -275,11 +281,11 @@ export default function ZhikuPage() {
       await apiPost("/api/zhiku/upload", req, { timeout: LONG_OP_TIMEOUT_MS });
       await loadPhrases();
       setUploadSuccess(
-        isZh ? `✅ 导入 ${phrases.length} 条` : `✅ Imported ${phrases.length} phrases`
+        isZh ? `鉁?瀵煎叆 ${phrases.length} 鏉 : `鉁?Imported ${phrases.length} phrases`
       );
       setUploadFile(null);
     } catch {
-      setUploadError(isZh ? "上传失败，请重试" : "Upload failed, please retry");
+      setUploadError(isZh ? "涓婁紶澶辫触锛岃閲嶈瘯" : "Upload failed, please retry");
     } finally {
       setUploading(false);
     }
@@ -325,7 +331,7 @@ export default function ZhikuPage() {
   // Archive selected items
   const handleArchiveSelected = async () => {
     const selectedIndices = phrases
-      .map((p, i) => (p.is_selected === "TRUE" ? i : -1))
+      .map((p, i) => (isSelected(p.is_selected) ? i : -1))
       .filter((i) => i >= 0);
     if (selectedIndices.length === 0) return;
     try {
@@ -335,7 +341,7 @@ export default function ZhikuPage() {
         filename: "zhiku_ai_queries.csv",
         indices: selectedIndices,
       });
-      setPhrases((prev) => prev.filter((p) => p.is_selected !== "TRUE"));
+      setPhrases((prev) => prev.filter((p) => !isSelected(p.is_selected)));
     } catch {
       // ignore
     }
@@ -344,7 +350,7 @@ export default function ZhikuPage() {
   // Archive all items
   const handleArchiveAll = async () => {
     if (phrases.length === 0) return;
-    if (!confirm(isZh ? "确定清除全部短语？（将保存到历史记录）" : "Clear all phrases? (will be saved to history)")) return;
+    if (!confirm(isZh ? "纭畾娓呴櫎鍏ㄩ儴鐭锛燂紙灏嗕繚瀛樺埌鍘嗗彶璁板綍锛? : "Clear all phrases? (will be saved to history)")) return;
     try {
       await apiPost("/api/archive", {
         batch_id: activeBatch,
@@ -366,7 +372,7 @@ export default function ZhikuPage() {
 
   const categories = CATEGORIES_35;
   const intentTypes = [...new Set(phrases.map((p) => p.intent_type).filter(Boolean))];
-  const selectedCount = phrases.filter((p) => p.is_selected === "TRUE").length;
+  const selectedCount = phrases.filter((p) => isSelected(p.is_selected)).length;
 
   const filteredPhrases = phrases
     .filter((p) => !filterCategory || p.category === filterCategory)
@@ -434,7 +440,7 @@ export default function ZhikuPage() {
                 value={seed}
                 onChange={(e) => setSeed(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleExpand()}
-                placeholder={regionConfig?.default_seeds?.[0] ?? "跨境电商怎么做"}
+                placeholder={regionConfig?.default_seeds?.[0] ?? "璺ㄥ鐢靛晢鎬庝箞鍋?}
                 className="w-full bg-white/5 border border-[var(--border-glass)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)]"
               />
             </div>
@@ -458,7 +464,7 @@ export default function ZhikuPage() {
                 onChange={(e) => setLanguage(e.target.value)}
                 className="w-full bg-white/5 border border-[var(--border-glass)] rounded-lg px-2 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
               >
-                {(regionConfig?.content_languages ?? [{ code: "zh-CN", name: "中文" }, { code: "en", name: "English" }]).map((l) => (
+                {(regionConfig?.content_languages ?? [{ code: "zh-CN", name: "涓枃" }, { code: "en", name: "English" }]).map((l) => (
                   <option key={l.code} value={l.code} className="bg-[var(--bg-secondary)]">{l.name}</option>
                 ))}
               </select>
@@ -467,7 +473,7 @@ export default function ZhikuPage() {
               {t("zhiku.expand")}
             </Button>
           </div>
-          {expanding && <ProgressBar percent={50} label={isZh ? "裂变中..." : "Expanding..."} className="mt-3" />}
+          {expanding && <ProgressBar percent={50} label={isZh ? "瑁傚彉涓?.." : "Expanding..."} className="mt-3" />}
           {expandError && <p className="text-sm text-[var(--error)] mt-2">{expandError}</p>}
         </GlassCard>
       )}
@@ -622,7 +628,7 @@ export default function ZhikuPage() {
                   : "text-[var(--text-secondary)] border-[var(--border-glass)] hover:bg-white/5"
               }`}
             >
-              {isZh ? "检索短语" : "Search Phrases"}
+              {isZh ? "妫€绱㈢煭璇? : "Search Phrases"}
             </button>
             <button
               onClick={() => setUploadType("keywords")}
@@ -632,13 +638,13 @@ export default function ZhikuPage() {
                   : "text-[var(--text-secondary)] border-[var(--border-glass)] hover:bg-white/5"
               }`}
             >
-              {isZh ? "SEO/SEM 关键词" : "SEO/SEM Keywords"}
+              {isZh ? "SEO/SEM 鍏抽敭璇? : "SEO/SEM Keywords"}
             </button>
           </div>
           <p className="text-xs text-[var(--text-muted)] mb-3">
             {uploadType === "phrases"
-              ? (isZh ? "CSV 必须包含 ai_query 列（或第一列为短语）" : "CSV must have ai_query column (or first column as phrases)")
-              : (isZh ? "CSV 应包含 keyword 列，上传后将自动裂变为检索短语" : "CSV should have keyword column, will be expanded to search phrases")
+              ? (isZh ? "CSV 蹇呴』鍖呭惈 ai_query 鍒楋紙鎴栫涓€鍒椾负鐭锛? : "CSV must have ai_query column (or first column as phrases)")
+              : (isZh ? "CSV 搴斿寘鍚?keyword 鍒楋紝涓婁紶鍚庡皢鑷姩瑁傚彉涓烘绱㈢煭璇? : "CSV should have keyword column, will be expanded to search phrases")
             }
           </p>
           <div className="flex items-center gap-3">
@@ -677,7 +683,7 @@ export default function ZhikuPage() {
           type="text"
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
-          placeholder={isZh ? "搜索短语..." : "Search phrases..."}
+          placeholder={isZh ? "鎼滅储鐭..." : "Search phrases..."}
           className="bg-white/5 border border-[var(--border-glass)] rounded-lg px-3 py-1.5 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] w-48"
         />
         <select
@@ -685,7 +691,7 @@ export default function ZhikuPage() {
           onChange={(e) => setFilterCategory(e.target.value)}
           className="bg-white/5 border border-[var(--border-glass)] rounded-lg px-3 py-1.5 text-xs text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent)]"
         >
-          <option value="">{isZh ? "所有分类" : "All Categories"}</option>
+          <option value="">{isZh ? "鎵€鏈夊垎绫? : "All Categories"}</option>
           {categories.map((c) => (
             <option key={c} value={c} className="bg-[var(--bg-secondary)]">{c}</option>
           ))}
@@ -695,7 +701,7 @@ export default function ZhikuPage() {
           onChange={(e) => setFilterIntent(e.target.value)}
           className="bg-white/5 border border-[var(--border-glass)] rounded-lg px-3 py-1.5 text-xs text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent)]"
         >
-          <option value="">{isZh ? "所有意图" : "All Intent Types"}</option>
+          <option value="">{isZh ? "鎵€鏈夋剰鍥? : "All Intent Types"}</option>
           {intentTypes.map((i) => (
             <option key={i} value={i} className="bg-[var(--bg-secondary)]">{i}</option>
           ))}
@@ -717,25 +723,25 @@ export default function ZhikuPage() {
             onClick={() => handleBulkSelect(true)}
             className="text-xs text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors"
           >
-            ☑️ {t("zhiku.select_all")}
+            鈽戯笍 {t("zhiku.select_all")}
           </button>
           <button
             onClick={() => handleBulkSelect(false)}
             className="text-xs text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors"
           >
-            ☐ {t("zhiku.deselect_all")}
+            鈽?{t("zhiku.deselect_all")}
           </button>
           <button
             onClick={handleArchiveSelected}
             className="text-xs text-[var(--error)] hover:text-red-600 transition-colors"
           >
-            🗑️ {isZh ? "清除选中" : "Clear Selected"}
+            馃棏锔?{isZh ? "娓呴櫎閫変腑" : "Clear Selected"}
           </button>
           <button
             onClick={handleArchiveAll}
             className="text-xs text-[var(--error)] hover:text-red-600 transition-colors"
           >
-            🗑️ {isZh ? "清除全部" : "Clear All"}
+            馃棏锔?{isZh ? "娓呴櫎鍏ㄩ儴" : "Clear All"}
           </button>
           <span className="text-xs text-[var(--text-muted)]">
             {filteredPhrases.length} / {phrases.length}
@@ -754,19 +760,19 @@ export default function ZhikuPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[var(--border-glass)]">
-                  <th className="px-2 py-2 text-left w-8">✓</th>
+                  <th className="px-2 py-2 text-left w-8">鉁?/th>
                   {(["ai_query", "source", "intent_type", "priority_score", "category"] as const).map((col) => (
                     <th
                       key={col}
                       className="px-2 py-2 text-left cursor-pointer hover:text-[var(--accent)] transition-colors text-xs text-[var(--text-secondary)]"
                       onClick={() => handleSort(col)}
                     >
-                      {col === "ai_query" ? (isZh ? "检索短语" : "Query")
-                        : col === "source" ? (isZh ? "来源" : "Source")
-                        : col === "intent_type" ? (isZh ? "意图" : "Intent")
-                        : col === "priority_score" ? (isZh ? "评分" : "Score")
-                        : col === "category" ? (isZh ? "分类" : "Category") : col}
-                      {sortKey === col && (sortAsc ? " ↑" : " ↓")}
+                      {col === "ai_query" ? (isZh ? "妫€绱㈢煭璇? : "Query")
+                        : col === "source" ? (isZh ? "鏉ユ簮" : "Source")
+                        : col === "intent_type" ? (isZh ? "鎰忓浘" : "Intent")
+                        : col === "priority_score" ? (isZh ? "璇勫垎" : "Score")
+                        : col === "category" ? (isZh ? "鍒嗙被" : "Category") : col}
+                      {sortKey === col && (sortAsc ? " 鈫? : " 鈫?)}
                     </th>
                   ))}
                 </tr>
@@ -780,7 +786,7 @@ export default function ZhikuPage() {
                     <td className="px-2 py-2">
                       <input
                         type="checkbox"
-                        checked={phrase.is_selected === "TRUE"}
+                        checked={isSelected(phrase.is_selected)}
                         onChange={() => handleToggleSelect(idx)}
                         className="accent-[var(--accent)]"
                         aria-label={`Select ${phrase.ai_query}`}
@@ -790,7 +796,7 @@ export default function ZhikuPage() {
                       {truncateText(phrase.ai_query, 60)}
                     </td>
                     <td className="px-2 py-2 text-[var(--text-muted)] text-xs">
-                      {phrase.source ?? "—"}
+                      {phrase.source ?? "鈥?}
                     </td>
                     <td className="px-2 py-2 text-[var(--text-secondary)]">{phrase.intent_type}</td>
                     <td className="px-2 py-2 text-[var(--accent)] font-mono">{phrase.priority_score}</td>
@@ -808,7 +814,7 @@ export default function ZhikuPage() {
       <div className="flex items-center justify-end gap-3">
         {selectedCount > 0 && (
           <span className="text-xs text-[var(--success)]">
-            ✓ {selectedCount} {isZh ? "条已选中（自动保存）" : "selected (auto-saved)"}
+            鉁?{selectedCount} {isZh ? "鏉″凡閫変腑锛堣嚜鍔ㄤ繚瀛橈級" : "selected (auto-saved)"}
           </span>
         )}
         <Button onClick={() => router.push("/zhice")}>
@@ -820,7 +826,7 @@ export default function ZhikuPage() {
       <GlassCard>
         <details>
           <summary className="cursor-pointer text-sm font-medium text-[var(--text-secondary)] select-none">
-            📂 {isZh ? "历史记录（已归档）" : "History (Archived)"}
+            馃搨 {isZh ? "鍘嗗彶璁板綍锛堝凡褰掓。锛? : "History (Archived)"}
           </summary>
           <HistoryPanel batchId={activeBatch} isZh={isZh} onRestore={loadPhrases} />
         </details>
@@ -890,19 +896,19 @@ function HistoryPanel({ batchId, isZh, onRestore }: { batchId: string; isZh: boo
     }
   };
 
-  if (loading) return <p className="text-xs text-[var(--text-muted)] py-2">{isZh ? "加载中..." : "Loading..."}</p>;
-  if (archived.length === 0) return <p className="text-xs text-[var(--text-muted)] py-2">{isZh ? "暂无历史记录" : "No history yet"}</p>;
+  if (loading) return <p className="text-xs text-[var(--text-muted)] py-2">{isZh ? "鍔犺浇涓?.." : "Loading..."}</p>;
+  if (archived.length === 0) return <p className="text-xs text-[var(--text-muted)] py-2">{isZh ? "鏆傛棤鍘嗗彶璁板綍" : "No history yet"}</p>;
 
   return (
     <div className="mt-3 space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-xs text-[var(--text-muted)]">{archived.length} {isZh ? "条已归档" : "archived items"}</span>
+        <span className="text-xs text-[var(--text-muted)]">{archived.length} {isZh ? "鏉″凡褰掓。" : "archived items"}</span>
         <button
           onClick={handleRestoreAll}
           disabled={restoring}
           className="text-xs text-[var(--accent)] hover:underline disabled:opacity-50"
         >
-          🔄 {isZh ? "全部恢复" : "Restore All"}
+          馃攧 {isZh ? "鍏ㄩ儴鎭㈠" : "Restore All"}
         </button>
       </div>
       <div className="max-h-48 overflow-y-auto border border-[var(--border-card)] rounded-lg">
@@ -918,7 +924,7 @@ function HistoryPanel({ batchId, isZh, onRestore }: { batchId: string; isZh: boo
                     disabled={restoring}
                     className="text-[var(--accent)] hover:underline disabled:opacity-50"
                   >
-                    {isZh ? "恢复" : "Restore"}
+                    {isZh ? "鎭㈠" : "Restore"}
                   </button>
                 </td>
               </tr>
@@ -929,3 +935,4 @@ function HistoryPanel({ batchId, isZh, onRestore }: { batchId: string; isZh: boo
     </div>
   );
 }
+

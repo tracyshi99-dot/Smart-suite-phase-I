@@ -49,7 +49,7 @@ export default function ZhicePage() {
           user: user ?? "",
         });
         const selected = res.phrases
-          .filter((p) => p.is_selected === "TRUE")
+          .filter((p) => p.is_selected === "TRUE" || p.is_selected === true || p.is_selected === "true")
           .map((p) => p.ai_query);
         setZhikuPhrases(selected);
       } catch {
