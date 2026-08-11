@@ -66,6 +66,8 @@ export interface ZhiceResult {
   platform: string;
   has_official_link: boolean;
   has_brand_mention: boolean;
+  sentiment?: string;
+  competitors?: string;
   answer_preview: string;
   error?: string;
 }

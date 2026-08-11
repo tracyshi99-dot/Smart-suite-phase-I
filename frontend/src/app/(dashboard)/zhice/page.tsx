@@ -274,61 +274,85 @@ export default function ZhicePage() {
             </GlassCard>
           </div>
 
-          {/* Results Table */}
+          {/* Results Table - Grouped by Platform */}
           <GlassCard padding="sm">
             <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">
               ③ {isZh ? "验证结果" : "Results"}
             </h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-[var(--border-glass)]">
-                    <th className="px-2 py-2 text-left text-xs text-[var(--text-secondary)]">{isZh ? "检索短语" : "Query"}</th>
-                    <th className="px-2 py-2 text-left text-xs text-[var(--text-secondary)]">{isZh ? "平台" : "Platform"}</th>
-                    <th className="px-2 py-2 text-center text-xs text-[var(--text-secondary)]">{isZh ? "官方链接" : "Link"}</th>
-                    <th className="px-2 py-2 text-center text-xs text-[var(--text-secondary)]">{isZh ? "品牌提及" : "Brand"}</th>
-                    <th className="px-2 py-2 text-left text-xs text-[var(--text-secondary)]">{isZh ? "Gap" : "Gap"}</th>
-                    <th className="px-2 py-2 text-left text-xs text-[var(--text-secondary)]">{isZh ? "预览" : "Preview"}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {results.map((r, idx) => {
-                    const gapStatus = !r.has_official_link && !r.has_brand_mention ? "full_gap"
-                      : !r.has_official_link ? "partial_gap" : "covered";
-                    return (
-                      <tr key={idx} className="border-b border-[var(--border-glass)]/50 hover:bg-white/5">
-                        <td className="px-2 py-2 max-w-[250px] truncate">{r.query}</td>
-                        <td className="px-2 py-2 text-[var(--text-secondary)]">{r.platform}</td>
-                        <td className="px-2 py-2 text-center">
-                          <span className={r.has_official_link ? "text-[var(--success)]" : "text-[var(--error)]"}>
-                            {r.has_official_link ? "✅" : "❌"}
-                          </span>
-                        </td>
-                        <td className="px-2 py-2 text-center">
-                          <span className={r.has_brand_mention ? "text-[var(--success)]" : "text-[var(--error)]"}>
-                            {r.has_brand_mention ? "✅" : "❌"}
-                          </span>
-                        </td>
-                        <td className="px-2 py-2">
-                          <span className={`text-xs px-1.5 py-0.5 rounded ${
-                            gapStatus === "full_gap" ? "bg-red-500/10 text-red-400"
-                              : gapStatus === "partial_gap" ? "bg-yellow-500/10 text-yellow-400"
-                              : "bg-green-500/10 text-green-400"
-                          }`}>
-                            {gapStatus === "full_gap" ? (isZh ? "完全缺口" : "Full Gap")
-                              : gapStatus === "partial_gap" ? (isZh ? "部分缺口" : "Partial")
-                              : (isZh ? "已覆盖" : "Covered")}
-                          </span>
-                        </td>
-                        <td className="px-2 py-2 text-[var(--text-muted)] text-xs max-w-[180px] truncate">
-                          {r.answer_preview || "—"}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            {selectedPlatforms.map((platform) => {
+              const platformResults = results.filter((r) => r.platform === platform);
+              if (platformResults.length === 0) return null;
+              const platformLink = platformResults.filter((r) => r.has_official_link).length;
+              const platformBrand = platformResults.filter((r) => r.has_brand_mention).length;
+              return (
+                <div key={platform} className="mb-6">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-sm font-semibold text-[var(--accent)]">{platform}</span>
+                    <span className="text-xs text-[var(--text-muted)]">
+                      {isZh ? "\u5B98\u65B9\u94FE\u63A5" : "Link"}: {platformLink}/{platformResults.length} |
+                      {isZh ? " \u54C1\u724C\u63D0\u53CA" : " Brand"}: {platformBrand}/{platformResults.length}
+                    </span>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-[var(--border-glass)]">
+                          <th className="px-2 py-2 text-left text-xs text-[var(--text-secondary)]">{isZh ? "\u68C0\u7D22\u77ED\u8BED" : "Query"}</th>
+                          <th className="px-2 py-2 text-center text-xs text-[var(--text-secondary)]">{isZh ? "\u5B98\u65B9\u94FE\u63A5" : "Link"}</th>
+                          <th className="px-2 py-2 text-center text-xs text-[var(--text-secondary)]">{isZh ? "\u54C1\u724C\u63D0\u53CA" : "Brand"}</th>
+                          <th className="px-2 py-2 text-center text-xs text-[var(--text-secondary)]">{isZh ? "\u60C5\u611F" : "Sentiment"}</th>
+                          <th className="px-2 py-2 text-left text-xs text-[var(--text-secondary)]">{isZh ? "\u7ADE\u54C1" : "Competitors"}</th>
+                          <th className="px-2 py-2 text-left text-xs text-[var(--text-secondary)]">Gap</th>
+                          <th className="px-2 py-2 text-left text-xs text-[var(--text-secondary)]">{isZh ? "\u9884\u89C8" : "Preview"}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {platformResults.map((r, idx) => {
+                          const gapStatus = !r.has_official_link && !r.has_brand_mention ? "full_gap"
+                            : !r.has_official_link ? "partial_gap" : "covered";
+                          const sentimentLabel = r.sentiment === "positive" ? (isZh ? "\u79EF\u6781" : "Positive")
+                            : r.sentiment === "negative" ? (isZh ? "\u6D88\u6781" : "Negative")
+                            : (isZh ? "\u4E2D\u6027" : "Neutral");
+                          const sentimentColor = r.sentiment === "positive" ? "text-green-400"
+                            : r.sentiment === "negative" ? "text-red-400" : "text-gray-400";
+                          return (
+                            <tr key={idx} className="border-b border-[var(--border-glass)]/50 hover:bg-white/5">
+                              <td className="px-2 py-2 max-w-[220px] truncate">{r.query}</td>
+                              <td className="px-2 py-2 text-center">
+                                <span className={r.has_official_link ? "text-[var(--success)]" : "text-[var(--error)]"}>
+                                  {r.has_official_link ? "\u2705" : "\u274C"}
+                                </span>
+                              </td>
+                              <td className="px-2 py-2 text-center">
+                                <span className={r.has_brand_mention ? "text-[var(--success)]" : "text-[var(--error)]"}>
+                                  {r.has_brand_mention ? "\u2705" : "\u274C"}
+                                </span>
+                              </td>
+                              <td className={`px-2 py-2 text-center text-xs ${sentimentColor}`}>{sentimentLabel}</td>
+                              <td className="px-2 py-2 text-xs text-yellow-400 max-w-[120px] truncate">{r.competitors || "\u2014"}</td>
+                              <td className="px-2 py-2">
+                                <span className={`text-xs px-1.5 py-0.5 rounded ${
+                                  gapStatus === "full_gap" ? "bg-red-500/10 text-red-400"
+                                    : gapStatus === "partial_gap" ? "bg-yellow-500/10 text-yellow-400"
+                                    : "bg-green-500/10 text-green-400"
+                                }`}>
+                                  {gapStatus === "full_gap" ? (isZh ? "\u5B8C\u5168\u7F3A\u53E3" : "Full Gap")
+                                    : gapStatus === "partial_gap" ? (isZh ? "\u90E8\u5206\u7F3A\u53E3" : "Partial")
+                                    : (isZh ? "\u5DF2\u8986\u76D6" : "Covered")}
+                                </span>
+                              </td>
+                              <td className="px-2 py-2 text-[var(--text-muted)] text-xs max-w-[160px] truncate">
+                                {r.answer_preview || "\u2014"}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              );
+            })}
           </GlassCard>
         </>
       )}
