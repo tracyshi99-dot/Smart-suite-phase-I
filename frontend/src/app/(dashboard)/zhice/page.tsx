@@ -115,16 +115,18 @@ export default function ZhicePage() {
         user: user ?? "",
       };
       setProgress(30);
-      const res = await apiPost<{ status: string; results?: ZhiceResult[]; message?: string }>(
-        "/api/zhice/verify",
-        req,
-        { timeout: LONG_OP_TIMEOUT_MS }
-      );
+      // Use Next.js API route (runs on Vercel serverless, no Lambda needed)
+      const res = await fetch("/api/zhice/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(req),
+      });
+      const data = await res.json() as { status: string; results?: ZhiceResult[]; message?: string };
       setProgress(100);
-      if (res.results && res.results.length > 0) {
-        setResults(res.results);
+      if (data.results && data.results.length > 0) {
+        setResults(data.results);
       } else {
-        setError(isZh ? "API \u672A\u8FD4\u56DE\u7ED3\u679C\uFF0C\u8BF7\u68C0\u67E5\u540E\u7AEF\u65E5\u5FD7" : "API returned no results, check backend logs");
+        setError(isZh ? `API \u672A\u8FD4\u56DE\u7ED3\u679C: ${data.message || "unknown"}` : `API returned no results: ${data.message || "unknown"}`);
       }
     } catch {
       setError(isZh ? "验证失败，请重试" : "Verification failed, please retry");
