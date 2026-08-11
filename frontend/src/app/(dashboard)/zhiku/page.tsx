@@ -817,7 +817,12 @@ export default function ZhikuPage() {
             鉁?{selectedCount} {isZh ? "鏉″凡閫変腑锛堣嚜鍔ㄤ繚瀛橈級" : "selected (auto-saved)"}
           </span>
         )}
-        <Button onClick={() => router.push("/zhice")}>
+        <Button onClick={() => {
+          // Save selected phrases to localStorage for zhice to pick up
+          const selectedPhrases = phrases.filter((p) => isSelected(p.is_selected)).map((p) => p.ai_query);
+          localStorage.setItem("zhiku_selected_phrases", JSON.stringify(selectedPhrases));
+          router.push("/zhice");
+        }}>
           {t("zhiku.next_step")}
         </Button>
       </div>

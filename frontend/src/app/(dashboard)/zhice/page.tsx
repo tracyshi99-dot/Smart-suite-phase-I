@@ -44,6 +44,17 @@ export default function ZhicePage() {
     async function loadSelected() {
       setLoadingPhrases(true);
       try {
+        // First check localStorage (direct pass from zhiku page)
+        const cached = localStorage.getItem("zhiku_selected_phrases");
+        if (cached) {
+          const parsed = JSON.parse(cached) as string[];
+          if (parsed.length > 0) {
+            setZhikuPhrases(parsed);
+            setLoadingPhrases(false);
+            return;
+          }
+        }
+        // Fallback: load from API
         const res = await apiGet<PhraseListResponse>("/api/zhiku/phrases", {
           batch_id: activeBatch,
           user: user ?? "",
