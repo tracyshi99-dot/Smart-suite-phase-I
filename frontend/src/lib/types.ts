@@ -38,7 +38,7 @@ export interface PhraseData {
   priority_score: number;
   estimated_volume: number;
   category: string;
-  is_selected: string; // "TRUE" | "FALSE"
+  is_selected: string | boolean; // "TRUE" | "FALSE" | true | false
   created_at: string;
   source?: string;
 }
