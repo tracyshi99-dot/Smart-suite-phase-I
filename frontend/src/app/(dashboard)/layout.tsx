@@ -24,16 +24,20 @@ export default function DashboardLayout({
     }
   }, [loaded, loadStrings]);
 
-  // Check auth
+  // Check auth - delay to allow hydration from localStorage
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.replace("/login");
-      return;
-    }
-    if (isSessionExpired()) {
-      logout();
-      router.replace("/login");
-    }
+    // Give zustand persist time to hydrate from localStorage
+    const timer = setTimeout(() => {
+      if (!isAuthenticated) {
+        router.replace("/login");
+        return;
+      }
+      if (isSessionExpired()) {
+        logout();
+        router.replace("/login");
+      }
+    }, 100);
+    return () => clearTimeout(timer);
   }, [isAuthenticated, isSessionExpired, logout, router]);
 
   // Track user activity for session timeout
