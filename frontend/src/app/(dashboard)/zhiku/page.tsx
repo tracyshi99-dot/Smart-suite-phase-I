@@ -794,7 +794,12 @@ export default function ZhikuPage() {
 
       {/* CTA to next step */}
       {/* CTA to next step */}
-      <div className="flex justify-end">
+      <div className="flex items-center justify-end gap-3">
+        {selectedCount > 0 && (
+          <span className="text-xs text-[var(--success)]">
+            ✓ {selectedCount} {isZh ? "条已选中（自动保存）" : "selected (auto-saved)"}
+          </span>
+        )}
         <Button onClick={() => router.push("/zhice")}>
           {t("zhiku.next_step")}
         </Button>
