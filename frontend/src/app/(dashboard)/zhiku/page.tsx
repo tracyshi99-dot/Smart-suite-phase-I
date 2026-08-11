@@ -800,6 +800,117 @@ export default function ZhikuPage() {
           </Button>
         </div>
       )}
+
+      {/* History / Archive Section */}
+      <GlassCard>
+        <details>
+          <summary className="cursor-pointer text-sm font-medium text-[var(--text-secondary)] select-none">
+            📂 {isZh ? "历史记录（已归档）" : "History (Archived)"}
+          </summary>
+          <HistoryPanel batchId={activeBatch} isZh={isZh} onRestore={loadPhrases} />
+        </details>
+      </GlassCard>
+    </div>
+  );
+}
+
+function HistoryPanel({ batchId, isZh, onRestore }: { batchId: string; isZh: boolean; onRestore: () => void }) {
+  const [archived, setArchived] = useState<Record<string, unknown>[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [restoring, setRestoring] = useState(false);
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
+      try {
+        const res = await apiGet<{ items: Record<string, unknown>[]; total: number }>("/api/archive", {
+          batch_id: batchId,
+          step: "01_zhiku",
+        });
+        setArchived(res.items);
+      } catch {
+        setArchived([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, [batchId]);
+
+  const handleRestore = async (query: string) => {
+    setRestoring(true);
+    try {
+      await apiPost("/api/restore", {
+        batch_id: batchId,
+        step: "01_zhiku",
+        filename: "zhiku_ai_queries.csv",
+        queries: [query],
+      });
+      setArchived((prev) => prev.filter((item) => item.ai_query !== query));
+      onRestore();
+    } catch {
+      // ignore
+    } finally {
+      setRestoring(false);
+    }
+  };
+
+  const handleRestoreAll = async () => {
+    if (archived.length === 0) return;
+    setRestoring(true);
+    try {
+      const allQueries = archived.map((item) => String(item.ai_query ?? "")).filter(Boolean);
+      await apiPost("/api/restore", {
+        batch_id: batchId,
+        step: "01_zhiku",
+        filename: "zhiku_ai_queries.csv",
+        queries: allQueries,
+      });
+      setArchived([]);
+      onRestore();
+    } catch {
+      // ignore
+    } finally {
+      setRestoring(false);
+    }
+  };
+
+  if (loading) return <p className="text-xs text-[var(--text-muted)] py-2">{isZh ? "加载中..." : "Loading..."}</p>;
+  if (archived.length === 0) return <p className="text-xs text-[var(--text-muted)] py-2">{isZh ? "暂无历史记录" : "No history yet"}</p>;
+
+  return (
+    <div className="mt-3 space-y-2">
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-[var(--text-muted)]">{archived.length} {isZh ? "条已归档" : "archived items"}</span>
+        <button
+          onClick={handleRestoreAll}
+          disabled={restoring}
+          className="text-xs text-[var(--accent)] hover:underline disabled:opacity-50"
+        >
+          🔄 {isZh ? "全部恢复" : "Restore All"}
+        </button>
+      </div>
+      <div className="max-h-48 overflow-y-auto border border-[var(--border-card)] rounded-lg">
+        <table className="w-full text-xs">
+          <tbody>
+            {archived.slice(0, 30).map((item, idx) => (
+              <tr key={idx} className="border-b border-[var(--border-card)]/50 hover:bg-[var(--bg-surface)]">
+                <td className="px-2 py-1.5 max-w-[300px] truncate">{String(item.ai_query ?? "")}</td>
+                <td className="px-2 py-1.5 text-[var(--text-muted)]">{String(item._archived_at ?? "")}</td>
+                <td className="px-1 py-1.5">
+                  <button
+                    onClick={() => handleRestore(String(item.ai_query ?? ""))}
+                    disabled={restoring}
+                    className="text-[var(--accent)] hover:underline disabled:opacity-50"
+                  >
+                    {isZh ? "恢复" : "Restore"}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
