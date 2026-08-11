@@ -126,6 +126,12 @@ export default function ZhicePage() {
       setProgress(100);
       if (data.results && data.results.length > 0) {
         setResults(data.results);
+        // Auto-select all gaps (full_gap + partial_gap) by default
+        const gapIndices = new Set<number>();
+        data.results.forEach((r, i) => {
+          if (!r.has_official_link) gapIndices.add(i);
+        });
+        setSelectedIndices(gapIndices);
       } else {
         setError(isZh ? `API \u672A\u8FD4\u56DE\u7ED3\u679C: ${data.message || "unknown"}` : `API returned no results: ${data.message || "unknown"}`);
       }
