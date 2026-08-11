@@ -54,28 +54,35 @@ export function ChatPanel() {
     setMessages((prev) => [...prev, assistantMessage]);
 
     try {
-      const stream = apiStream("/api/chat/stream", {
-        message: userMessage.content,
-        user: user ?? "",
-        batch_id: activeBatch,
-        history: messages.slice(-10).map((m) => ({
-          role: m.role,
-          content: m.content,
-        })),
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "https://asq6n6kw78.execute-api.us-east-1.amazonaws.com"}/api/chat/stream`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: userMessage.content,
+            user: user ?? "",
+            batch_id: activeBatch,
+            history: messages.slice(-10).map((m) => ({
+              role: m.role,
+              content: m.content,
+            })),
+          }),
+        }
+      );
 
-      let fullContent = "";
-      for await (const chunk of stream) {
-        fullContent += chunk;
-        setMessages((prev) => {
-          const updated = [...prev];
-          const lastIdx = updated.length - 1;
-          if (updated[lastIdx]?.role === "assistant") {
-            updated[lastIdx] = { ...updated[lastIdx], content: fullContent };
-          }
-          return updated;
-        });
-      }
+      if (!response.ok) throw new Error("API error");
+      const data = await response.json();
+      const fullContent = data.content || "No response";
+
+      setMessages((prev) => {
+        const updated = [...prev];
+        const lastIdx = updated.length - 1;
+        if (updated[lastIdx]?.role === "assistant") {
+          updated[lastIdx] = { ...updated[lastIdx], content: fullContent };
+        }
+        return updated;
+      });
     } catch {
       setError("连接中断，请重试 / Connection interrupted");
       // Keep the partial message if any

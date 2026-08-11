@@ -428,5 +428,44 @@ def zhixi_summary():
     return {"data": df.to_dict(orient="records")}
 
 
+# --- Agent Chat ---
+class ChatRequest(BaseModel):
+    message: str
+    user: str = ""
+    batch_id: str = "batch_001"
+    history: List[dict] = []
+
+
+@app.post("/api/chat/stream")
+def chat_stream(req: ChatRequest):
+    """Simple chat endpoint using Bedrock Claude."""
+    try:
+        from engine import call_bedrock_claude
+
+        # Build context from history
+        history_text = ""
+        if req.history:
+            for msg in req.history[-6:]:  # Last 3 pairs
+                role = msg.get("role", "user")
+                content = msg.get("content", "")
+                history_text += f"\n{role}: {content}"
+
+        prompt = f"""You are Smart Suite Agent, an AI assistant for the GEO content intelligence platform.
+You help users with: search phrase expansion, content gap verification, content generation, optimization, and analytics.
+Current batch: {req.batch_id}
+User: {req.user}
+
+{f"Recent conversation:{history_text}" if history_text else ""}
+
+User's message: {req.message}
+
+Respond helpfully in the same language as the user's message. Be concise and actionable."""
+
+        response = call_bedrock_claude(prompt)
+        return {"content": response, "role": "assistant"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # --- Lambda Handler ---
 handler = Mangum(app, lifespan="off")
