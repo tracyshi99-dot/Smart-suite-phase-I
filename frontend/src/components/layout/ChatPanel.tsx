@@ -113,8 +113,8 @@ export function ChatPanel() {
           flex items-center justify-center text-xl
           transition-all duration-200 shadow-lg
           ${isOpen
-            ? "bg-[var(--bg-secondary)] border border-[var(--border-glass)] text-[var(--text-secondary)]"
-            : "bg-[var(--accent)] text-black shadow-[var(--accent-glow)]"
+            ? "bg-white border border-[var(--border-card)] text-[var(--text-secondary)]"
+            : "bg-[var(--accent)] text-white shadow-lg"
           }
         `}
         aria-label={isOpen ? "Close chat" : "Open chat"}
@@ -124,9 +124,9 @@ export function ChatPanel() {
 
       {/* Chat Panel */}
       {isOpen && (
-        <div className="fixed top-0 right-0 h-full w-[400px] max-w-[90vw] z-40 bg-[var(--bg-secondary)]/95 backdrop-blur-md border-l border-[var(--border-glass)] flex flex-col shadow-2xl">
+        <div className="fixed top-0 right-0 h-full w-[400px] max-w-[90vw] z-40 bg-white border-l border-[var(--border-card)] flex flex-col shadow-2xl">
           {/* Header */}
-          <div className="px-4 py-3 border-b border-[var(--border-glass)] flex items-center justify-between">
+          <div className="px-4 py-3 border-b border-[var(--border-card)] flex items-center justify-between">
             <div>
               <h2 className="text-sm font-medium text-[var(--text-primary)]">Agent Chat</h2>
               <p className="text-xs text-[var(--text-muted)]">
@@ -162,7 +162,7 @@ export function ChatPanel() {
                     max-w-[85%] px-3 py-2 rounded-lg text-sm whitespace-pre-wrap
                     ${msg.role === "user"
                       ? "bg-[var(--accent)]/15 text-[var(--text-primary)] rounded-br-sm"
-                      : "bg-white/5 text-[var(--text-secondary)] rounded-bl-sm border border-[var(--border-glass)]"
+                      : "bg-[var(--bg-surface)] text-[var(--text-secondary)] rounded-bl-sm border border-[var(--border-card)]"
                     }
                   `}
                 >
@@ -189,7 +189,7 @@ export function ChatPanel() {
           )}
 
           {/* Input */}
-          <div className="px-4 py-3 border-t border-[var(--border-glass)]">
+          <div className="px-4 py-3 border-t border-[var(--border-card)]">
             <div className="flex gap-2">
               <textarea
                 ref={inputRef}
@@ -198,7 +198,7 @@ export function ChatPanel() {
                 onKeyDown={handleKeyDown}
                 placeholder="Type a message... (Enter to send)"
                 rows={2}
-                className="flex-1 bg-white/5 border border-[var(--border-glass)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] resize-none"
+                className="flex-1 bg-[var(--bg-surface)] border border-[var(--border-card)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] resize-none"
                 disabled={streaming}
               />
               <Button

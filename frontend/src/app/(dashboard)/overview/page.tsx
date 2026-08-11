@@ -213,7 +213,7 @@ export default function OverviewPage() {
   const tArr = (obj: { en: string[]; zh: string[] }) => (isZh ? obj.zh : obj.en);
 
   return (
-    <div className="space-y-10 max-w-[1100px] pb-16">
+    <div className="space-y-10 max-w-[1400px] mx-auto pb-16">
       {/* Hero */}
       <section className="text-center py-10">
         {/* Logo - AI/Tech feel with animated effects */}
