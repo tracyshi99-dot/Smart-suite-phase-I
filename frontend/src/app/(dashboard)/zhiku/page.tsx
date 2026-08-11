@@ -40,6 +40,17 @@ import { truncateText } from "@/lib/utils";
 
 type TabId = "seed" | "persona" | "upload";
 
+// Client-side scoring - same logic as Streamlit's _quick_score
+function scorePhrase(q: string): number {
+  let s = 3.0;
+  if (q.length >= 15 && q.length <= 30) s += 0.5;
+  else if (q.length > 30) s += 0.3;
+  if (/[怎如多哪为什能]|how|what|why/i.test(q)) s += 0.5;
+  if (/亚马逊|amazon|fba|注册|开店|选品|物流|广告|listing/i.test(q)) s += 0.5;
+  if (/[吗呢啊吧？?]/.test(q)) s += 0.3;
+  return Math.min(5.0, Math.round(s * 10) / 10);
+}
+
 export default function ZhikuPage() {
   const { t, locale } = useI18nStore();
   const { activeBatch } = useBatchStore();
@@ -156,7 +167,7 @@ export default function ZhikuPage() {
           ai_query: q,
           source: `seed_${seed.trim()}`,
           is_selected: "FALSE",
-          priority_score: 3.0,
+          priority_score: scorePhrase(q),
           intent_type: "",
           estimated_volume: 0,
           category: "",
@@ -211,7 +222,7 @@ export default function ZhikuPage() {
           ai_query: q,
           source: `persona_${identity}`,
           is_selected: "FALSE",
-          priority_score: 3.5,
+          priority_score: scorePhrase(q),
           intent_type: "",
           estimated_volume: 0,
           category: contentFocus[0] ?? "",
