@@ -66,7 +66,7 @@ export default function ZhikuPage() {
   const [fulfillment, setFulfillment] = useState("");
   const [marketplaces, setMarketplaces] = useState<string[]>([]);
   const [contentFocus, setContentFocus] = useState<string[]>([]);
-  const [personaCount, setPersonaCount] = useState(10);
+  const [personaCount, setPersonaCount] = useState(5);
   const [personaExpanding, setPersonaExpanding] = useState(false);
   const [personaError, setPersonaError] = useState<string | null>(null);
 
