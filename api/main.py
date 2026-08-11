@@ -438,28 +438,57 @@ class ChatRequest(BaseModel):
 
 @app.post("/api/chat/stream")
 def chat_stream(req: ChatRequest):
-    """Simple chat endpoint using Bedrock Claude."""
+    """Chat endpoint using Bedrock Claude with Smart Suite knowledge."""
     try:
-        from engine import call_bedrock_claude
+        from engine import call_bedrock_claude, load_steering
+
+        # Load Smart Suite knowledge base
+        steering = ""
+        try:
+            steering = load_steering()
+            if len(steering) > 6000:
+                steering = steering[:6000]  # Truncate to fit context
+        except Exception:
+            pass
 
         # Build context from history
         history_text = ""
         if req.history:
-            for msg in req.history[-6:]:  # Last 3 pairs
+            for msg in req.history[-6:]:
                 role = msg.get("role", "user")
                 content = msg.get("content", "")
                 history_text += f"\n{role}: {content}"
 
-        prompt = f"""You are Smart Suite Agent, an AI assistant for the GEO content intelligence platform.
-You help users with: search phrase expansion, content gap verification, content generation, optimization, and analytics.
-Current batch: {req.batch_id}
-User: {req.user}
+        prompt = f"""You are Smart Suite Agent (智系列智能助手), the built-in AI assistant for Smart Suite — an AI-native GEO marketing operating model platform.
+
+## Your Knowledge Base:
+Smart Suite consists of 9 modules:
+1. 智库 (Prompt Intelligencer) - AI search phrase discovery, seed expansion, persona-based generation
+2. 智测 (AI Search Tester) - 7-platform coverage verification, gap detection (full_gap/partial_gap/covered)
+3. 智造 (Content Creator) - GEO-structured content generation from high-value phrases
+4. 智优 (Content Optimizer) - 5-dimension scoring, auto-rewrite, Amazon compliance
+5. 智布 (Content Publisher) - LEGO CMS JSON output formatting
+6. 智传 (Content Distributor) - Multi-channel automated distribution
+7. 智析 (Performance Analyzer) - Full-channel attribution, Weekly/Monthly/YTD reporting
+8. 智中枢 (Workflow Orchestrator) - E2E pipeline orchestration, 7-rule decision engine
+9. S3 Memory Keeper - Persistent knowledge storage layer
+
+Pipeline flow: 智库 → 智测 → 智造 → 智优 → 智布 → 智传 → 智析 → 智中枢
+
+{f"## Additional Context:{chr(10)}{steering}" if steering else ""}
+
+## Rules:
+- ONLY answer questions about Smart Suite, GEO content strategy, AI search optimization, and cross-border e-commerce
+- If asked about unrelated topics, politely redirect to Smart Suite capabilities
+- Be concise and actionable
+- Respond in the same language as the user's message
+- Reference specific modules when relevant (e.g., "You can use 智库 to expand this phrase")
+
+Current user: {req.user} | Current batch: {req.batch_id}
 
 {f"Recent conversation:{history_text}" if history_text else ""}
 
-User's message: {req.message}
-
-Respond helpfully in the same language as the user's message. Be concise and actionable."""
+User: {req.message}"""
 
         response = call_bedrock_claude(prompt)
         return {"content": response, "role": "assistant"}
