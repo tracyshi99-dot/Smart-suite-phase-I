@@ -121,7 +121,11 @@ export default function ZhicePage() {
         { timeout: LONG_OP_TIMEOUT_MS }
       );
       setProgress(100);
-      setResults(res.results ?? []);
+      if (res.results && res.results.length > 0) {
+        setResults(res.results);
+      } else {
+        setError(isZh ? "API \u672A\u8FD4\u56DE\u7ED3\u679C\uFF0C\u8BF7\u68C0\u67E5\u540E\u7AEF\u65E5\u5FD7" : "API returned no results, check backend logs");
+      }
     } catch {
       setError(isZh ? "验证失败，请重试" : "Verification failed, please retry");
     } finally {
