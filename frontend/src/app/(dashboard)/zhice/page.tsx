@@ -44,24 +44,39 @@ export default function ZhicePage() {
     async function loadSelected() {
       setLoadingPhrases(true);
       try {
-        // First check localStorage (direct pass from zhiku page)
-        const cached = localStorage.getItem("zhiku_selected_phrases");
-        if (cached) {
-          const parsed = JSON.parse(cached) as string[];
+        // Method 1: Check URL search params (passed directly)
+        const urlParams = new URLSearchParams(window.location.search);
+        const fromUrl = urlParams.get("phrases");
+        if (fromUrl) {
+          const parsed = JSON.parse(decodeURIComponent(fromUrl)) as string[];
           if (parsed.length > 0) {
             setZhikuPhrases(parsed);
             setLoadingPhrases(false);
             return;
           }
         }
-        // Fallback: load from API
+
+        // Method 2: Check localStorage (set by zhiku page)
+        const cached = localStorage.getItem("zhiku_selected_phrases");
+        if (cached) {
+          try {
+            const parsed = JSON.parse(cached) as string[];
+            if (parsed.length > 0) {
+              setZhikuPhrases(parsed);
+              setLoadingPhrases(false);
+              return;
+            }
+          } catch { /* ignore parse error */ }
+        }
+
+        // Method 3: Fallback to API
         const res = await apiGet<PhraseListResponse>("/api/zhiku/phrases", {
           batch_id: activeBatch,
           user: user ?? "",
         });
         const selected = res.phrases
-          .filter((p) => p.is_selected === "TRUE" || p.is_selected === true || p.is_selected === "true")
-          .map((p) => p.ai_query);
+          .filter((p: Record<string, unknown>) => p.is_selected === "TRUE" || p.is_selected === true || p.is_selected === "true")
+          .map((p: Record<string, unknown>) => String(p.ai_query));
         setZhikuPhrases(selected);
       } catch {
         setZhikuPhrases([]);

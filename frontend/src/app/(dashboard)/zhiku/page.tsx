@@ -818,10 +818,12 @@ export default function ZhikuPage() {
           </span>
         )}
         <Button onClick={() => {
-          // Save selected phrases to localStorage for zhice to pick up
+          // Save selected phrases for zhice page
           const selectedPhrases = phrases.filter((p) => isSelected(p.is_selected)).map((p) => p.ai_query);
           localStorage.setItem("zhiku_selected_phrases", JSON.stringify(selectedPhrases));
-          router.push("/zhice");
+          // Also pass via URL as backup
+          const encoded = encodeURIComponent(JSON.stringify(selectedPhrases));
+          router.push(`/zhice?phrases=${encoded}`);
         }}>
           {t("zhiku.next_step")}
         </Button>
