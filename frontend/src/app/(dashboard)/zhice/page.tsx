@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useI18nStore } from "@/stores/i18n-store";
 import { useBatchStore } from "@/stores/batch-store";
 import { useAuthStore } from "@/stores/auth-store";
@@ -15,6 +15,7 @@ import { ALL_PLATFORMS, LONG_OP_TIMEOUT_MS } from "@/lib/constants";
 
 export default function ZhicePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t, locale } = useI18nStore();
   const { activeBatch } = useBatchStore();
   const { user, regionConfig } = useAuthStore();
@@ -44,16 +45,17 @@ export default function ZhicePage() {
     async function loadSelected() {
       setLoadingPhrases(true);
       try {
-        // Method 1: Check URL search params (passed directly)
-        const urlParams = new URLSearchParams(window.location.search);
-        const fromUrl = urlParams.get("phrases");
+        // Method 1: Check URL search params (passed via Next.js router)
+        const fromUrl = searchParams.get("phrases");
         if (fromUrl) {
-          const parsed = JSON.parse(decodeURIComponent(fromUrl)) as string[];
-          if (parsed.length > 0) {
-            setZhikuPhrases(parsed);
-            setLoadingPhrases(false);
-            return;
-          }
+          try {
+            const parsed = JSON.parse(decodeURIComponent(fromUrl)) as string[];
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setZhikuPhrases(parsed);
+              setLoadingPhrases(false);
+              return;
+            }
+          } catch { /* ignore parse error, try next method */ }
         }
 
         // Method 2: Check localStorage (set by zhiku page)
@@ -61,7 +63,7 @@ export default function ZhicePage() {
         if (cached) {
           try {
             const parsed = JSON.parse(cached) as string[];
-            if (parsed.length > 0) {
+            if (Array.isArray(parsed) && parsed.length > 0) {
               setZhikuPhrases(parsed);
               setLoadingPhrases(false);
               return;
@@ -75,8 +77,8 @@ export default function ZhicePage() {
           user: user ?? "",
         });
         const selected = res.phrases
-          .filter((p: Record<string, unknown>) => p.is_selected === "TRUE" || p.is_selected === true || p.is_selected === "true")
-          .map((p: Record<string, unknown>) => String(p.ai_query));
+          .filter((p) => p.is_selected === "TRUE" || p.is_selected === true || p.is_selected === "true")
+          .map((p) => p.ai_query);
         setZhikuPhrases(selected);
       } catch {
         setZhikuPhrases([]);
@@ -85,7 +87,7 @@ export default function ZhicePage() {
       }
     }
     loadSelected();
-  }, [activeBatch, user]);
+  }, [activeBatch, user, searchParams]);
 
   const togglePlatform = (p: string) => {
     setSelectedPlatforms((prev) =>
