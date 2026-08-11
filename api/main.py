@@ -216,9 +216,17 @@ def zhiku_get_phrases(batch_id: str = "batch_001", user: str = ""):
     """Get current phrase list for a batch from S3."""
     try:
         from s3_storage import read_csv
+        import numpy as np
+        import pandas as pd
         df = read_csv(batch_id, "01_zhiku", "zhiku_ai_queries.csv")
         if df.empty:
             return {"phrases": [], "total": 0}
+        # Replace NaN/inf with defaults to prevent JSON serialization errors
+        df = df.fillna("")
+        df = df.replace([np.inf, -np.inf], 0)
+        # Ensure priority_score is numeric
+        if "priority_score" in df.columns:
+            df["priority_score"] = pd.to_numeric(df["priority_score"], errors="coerce").fillna(3.0)
         # Filter out ahrefs for CN users
         try:
             region = get_user_region(user) if user else "CN"
@@ -549,15 +557,15 @@ def chat_stream(req: ChatRequest):
 
         message_lower = req.message.lower()
 
-        # Detect action intent: phrase expansion vs content generation vs general chat
-        expand_keywords = ["检索短语", "裂变", "生成短语", "expand phrases", "top.*短语", "搜索词", "热度高的"]
-        content_keywords = ["创建内容", "生成内容", "写文章", "创建文章", "generate content", "write article", "create content", "对应内容", "文章内容"]
+        # Detect action intent: content generation takes priority over phrase expansion
+        expand_keywords = ["检索短语", "裂变", "生成短语", "expand phrases", "搜索词", "热度高的"]
+        content_keywords = ["创建内容", "生成内容", "写文章", "创建文章", "generate content", "write article", "create content", "对应内容", "文章内容", "创建一篇", "帮忙创建", "对应的内容"]
 
         wants_phrases = any(kw in message_lower for kw in expand_keywords)
         wants_content = any(kw in message_lower for kw in content_keywords)
 
-        # If user wants content, generate an article (not phrases)
-        if wants_content and not wants_phrases:
+        # Content generation takes priority if both detected
+        if wants_content:
             # Extract the topic/phrase from the message
             topic_prompt = f"从用户请求中提取他想要创建内容的主题或检索短语（只输出主题本身，1-2句话，不要解释）: '{req.message}'"
             topic = call_bedrock_claude(topic_prompt).strip().strip('"').strip("'")
