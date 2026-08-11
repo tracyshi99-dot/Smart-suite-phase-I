@@ -41,6 +41,17 @@ export default function ZhicePage() {
   const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
   const [error, setError] = useState<string | null>(null);
 
+  // Auto-select gaps when results change
+  useEffect(() => {
+    if (results.length > 0) {
+      const gapIndices = new Set<number>();
+      results.forEach((r, i) => {
+        if (!r.has_official_link) gapIndices.add(i);
+      });
+      setSelectedIndices(gapIndices);
+    }
+  }, [results]);
+
   // Load selected phrases from zhiku
   useEffect(() => {
     async function loadSelected() {
