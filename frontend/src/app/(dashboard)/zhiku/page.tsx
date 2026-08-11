@@ -793,13 +793,12 @@ export default function ZhikuPage() {
       </GlassCard>
 
       {/* CTA to next step */}
-      {selectedCount > 0 && (
-        <div className="flex justify-end">
-          <Button onClick={() => router.push("/zhice")}>
-            {t("zhiku.next_step")}
-          </Button>
-        </div>
-      )}
+      {/* CTA to next step */}
+      <div className="flex justify-end">
+        <Button onClick={() => router.push("/zhice")}>
+          {t("zhiku.next_step")}
+        </Button>
+      </div>
 
       {/* History / Archive Section */}
       <GlassCard>

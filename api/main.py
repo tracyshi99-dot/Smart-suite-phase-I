@@ -240,18 +240,26 @@ def zhiku_get_phrases(batch_id: str = "batch_001", user: str = ""):
         raise HTTPException(status_code=500, detail=f"zhiku_get_phrases error: {str(e)}")
 
 
+class SelectRequest(BaseModel):
+    batch_id: str
+    indices: List[int]
+    selected: bool = True
+
+
 @app.post("/api/zhiku/select")
-def zhiku_select(batch_id: str, indices: List[int], selected: bool = True):
+def zhiku_select(req: SelectRequest):
     """Select/deselect phrases by index. Persists to S3."""
     from s3_storage import read_csv, write_csv
-    df = read_csv(batch_id, "01_zhiku", "zhiku_ai_queries.csv")
+    df = read_csv(req.batch_id, "01_zhiku", "zhiku_ai_queries.csv")
     if df.empty:
         raise HTTPException(status_code=404, detail="Phrase file not found")
-    for idx in indices:
+    if "is_selected" not in df.columns:
+        df["is_selected"] = "FALSE"
+    for idx in req.indices:
         if 0 <= idx < len(df):
-            df.iloc[idx, df.columns.get_loc("is_selected")] = "TRUE" if selected else "FALSE"
-    write_csv(batch_id, "01_zhiku", "zhiku_ai_queries.csv", df)
-    return {"success": True, "updated": len(indices)}
+            df.iloc[idx, df.columns.get_loc("is_selected")] = "TRUE" if req.selected else "FALSE"
+    write_csv(req.batch_id, "01_zhiku", "zhiku_ai_queries.csv", df)
+    return {"success": True, "updated": len(req.indices)}
 
 
 @app.post("/api/zhiku/expand-persona")
