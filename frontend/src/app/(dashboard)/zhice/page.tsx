@@ -38,6 +38,7 @@ export default function ZhicePage() {
   const [testing, setTesting] = useState(false);
   const [progress, setProgress] = useState(0);
   const [results, setResults] = useState<ZhiceResult[]>([]);
+  const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
   const [error, setError] = useState<string | null>(null);
 
   // Load selected phrases from zhiku
@@ -276,9 +277,32 @@ export default function ZhicePage() {
 
           {/* Results Table - Grouped by Platform */}
           <GlassCard padding="sm">
-            <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">
-              ③ {isZh ? "验证结果" : "Results"}
-            </h2>
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-sm font-medium text-[var(--text-secondary)]">
+                ③ {isZh ? "验证结果" : "Results"}
+              </h2>
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-[var(--text-muted)]">
+                  {selectedIndices.size} {isZh ? "\u6761\u5DF2\u9009" : "selected"}
+                </span>
+                <button
+                  onClick={() => {
+                    const gapIndices = new Set<number>();
+                    results.forEach((r, i) => { if (!r.has_official_link) gapIndices.add(i); });
+                    setSelectedIndices(gapIndices);
+                  }}
+                  className="text-xs text-[var(--accent)] hover:underline"
+                >
+                  {isZh ? "\u9009\u4E2D\u6240\u6709\u7F3A\u53E3" : "Select all gaps"}
+                </button>
+                <button onClick={() => setSelectedIndices(new Set(results.map((_, i) => i)))} className="text-xs text-[var(--text-secondary)] hover:text-[var(--accent)]">
+                  {isZh ? "\u5168\u9009" : "Select all"}
+                </button>
+                <button onClick={() => setSelectedIndices(new Set())} className="text-xs text-[var(--text-secondary)] hover:text-[var(--accent)]">
+                  {isZh ? "\u53D6\u6D88" : "Clear"}
+                </button>
+              </div>
+            </div>
             {selectedPlatforms.map((platform) => {
               const platformResults = results.filter((r) => r.platform === platform);
               if (platformResults.length === 0) return null;
@@ -297,6 +321,7 @@ export default function ZhicePage() {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-[var(--border-glass)]">
+                          <th className="px-2 py-2 text-center w-8">{"\u2713"}</th>
                           <th className="px-2 py-2 text-left text-xs text-[var(--text-secondary)]">{isZh ? "\u68C0\u7D22\u77ED\u8BED" : "Query"}</th>
                           <th className="px-2 py-2 text-center text-xs text-[var(--text-secondary)]">{isZh ? "\u5B98\u65B9\u94FE\u63A5" : "Link"}</th>
                           <th className="px-2 py-2 text-center text-xs text-[var(--text-secondary)]">{isZh ? "\u54C1\u724C\u63D0\u53CA" : "Brand"}</th>
@@ -307,7 +332,8 @@ export default function ZhicePage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {platformResults.map((r, idx) => {
+                        {platformResults.map((r) => {
+                          const globalIdx = results.indexOf(r);
                           const gapStatus = !r.has_official_link && !r.has_brand_mention ? "full_gap"
                             : !r.has_official_link ? "partial_gap" : "covered";
                           const sentimentLabel = r.sentiment === "positive" ? (isZh ? "\u79EF\u6781" : "Positive")
@@ -316,7 +342,22 @@ export default function ZhicePage() {
                           const sentimentColor = r.sentiment === "positive" ? "text-green-400"
                             : r.sentiment === "negative" ? "text-red-400" : "text-gray-400";
                           return (
-                            <tr key={idx} className="border-b border-[var(--border-glass)]/50 hover:bg-white/5">
+                            <tr key={globalIdx} className="border-b border-[var(--border-glass)]/50 hover:bg-white/5">
+                              <td className="px-2 py-2 text-center">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedIndices.has(globalIdx)}
+                                  onChange={() => {
+                                    setSelectedIndices((prev) => {
+                                      const next = new Set(prev);
+                                      if (next.has(globalIdx)) next.delete(globalIdx);
+                                      else next.add(globalIdx);
+                                      return next;
+                                    });
+                                  }}
+                                  className="accent-[var(--accent)]"
+                                />
+                              </td>
                               <td className="px-2 py-2 max-w-[220px] truncate">{r.query}</td>
                               <td className="px-2 py-2 text-center">
                                 <span className={r.has_official_link ? "text-[var(--success)]" : "text-[var(--error)]"}>
@@ -358,9 +399,28 @@ export default function ZhicePage() {
       )}
 
       {/* CTA to next step */}
-      <div className="flex justify-end pt-4">
-        <button onClick={() => router.push("/zhizao")} className="px-4 py-2 rounded-lg text-sm font-medium bg-[var(--accent)] text-black hover:bg-[var(--accent-hover)] transition-colors">
-          {isZh ? "下一步：生成内容 →" : "Next: Generate Content →"}
+      <div className="flex items-center justify-end gap-3 pt-4">
+        {selectedIndices.size > 0 && (
+          <span className="text-xs text-[var(--success)]">
+            {"\u2705"} {selectedIndices.size} {isZh ? "\u6761\u5DF2\u9009\u4E2D" : "selected for content generation"}
+          </span>
+        )}
+        <button
+          onClick={() => {
+            // Pass selected queries to zhizao via localStorage
+            const selectedQueries = [...selectedIndices].map((i) => results[i]?.query).filter(Boolean);
+            const unique = [...new Set(selectedQueries)];
+            localStorage.setItem("zhice_selected_queries", JSON.stringify(unique));
+            router.push("/zhizao");
+          }}
+          disabled={selectedIndices.size === 0}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            selectedIndices.size > 0
+              ? "bg-[var(--accent)] text-black hover:bg-[var(--accent-hover)]"
+              : "bg-gray-600 text-gray-400 cursor-not-allowed"
+          }`}
+        >
+          {isZh ? `\u4E0B\u4E00\u6B65\uFF1A\u751F\u6210\u5185\u5BB9 (${selectedIndices.size}) \u2192` : `Next: Generate Content (${selectedIndices.size}) \u2192`}
         </button>
       </div>
     </div>
