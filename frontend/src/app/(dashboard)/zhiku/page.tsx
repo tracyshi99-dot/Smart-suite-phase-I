@@ -45,12 +45,11 @@ function scorePhrase(q: string): number {
   let s = 3.0;
   if (q.length >= 15 && q.length <= 30) s += 0.5;
   else if (q.length > 30) s += 0.3;
-  if (/[鎬庡澶氬摢涓轰粈鑳絔|how|what|why/i.test(q)) s += 0.5;
-  if (/浜氶┈閫妡amazon|fba|娉ㄥ唽|寮€搴梶閫夊搧|鐗╂祦|骞垮憡|listing/i.test(q)) s += 0.5;
-  if (/[鍚楀憿鍟婂惂锛?]/.test(q)) s += 0.3;
+  if (/[\u600E\u5982\u591A\u54EA\u4E3A\u4EC0\u80FD]|how|what|why/i.test(q)) s += 0.5;
+  if (/\u4E9A\u9A6C\u900A|amazon|fba|\u6CE8\u518C|\u5F00\u5E97|\u9009\u54C1|\u7269\u6D41|\u5E7F\u544A|listing/i.test(q)) s += 0.5;
+  if (/[\u5417\u5462\u554A\u5427\uFF1F?]/.test(q)) s += 0.3;
   return Math.min(5.0, Math.round(s * 10) / 10);
 }
-
 // Helper: check if is_selected is truthy (handles "TRUE", true, "true", 1)
 function isSelected(val: unknown): boolean {
   if (val === true || val === "TRUE" || val === "true" || val === "1" || val === 1) return true;
