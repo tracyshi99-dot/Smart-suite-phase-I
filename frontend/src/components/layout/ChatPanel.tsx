@@ -123,11 +123,11 @@ export function ChatPanel() {
 
   return (
     <>
-      {/* Toggle Button */}
+      {/* Toggle Button - moved up to not block input */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`
-          fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full
+          fixed bottom-20 right-6 z-50 w-12 h-12 rounded-full
           flex items-center justify-center text-xl
           transition-all duration-200 shadow-lg
           ${isOpen

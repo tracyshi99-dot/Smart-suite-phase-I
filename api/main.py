@@ -517,11 +517,39 @@ def chat_stream(req: ChatRequest):
 
         message_lower = req.message.lower()
 
-        # Detect action intent: if user wants phrases/expansion, do it directly
-        expand_keywords = ["检索短语", "裂变", "生成短语", "expand", "phrases", "top", "搜索词", "关键词"]
-        wants_action = any(kw in message_lower for kw in expand_keywords)
+        # Detect action intent: phrase expansion vs content generation vs general chat
+        expand_keywords = ["检索短语", "裂变", "生成短语", "expand phrases", "top.*短语", "搜索词", "热度高的"]
+        content_keywords = ["创建内容", "生成内容", "写文章", "创建文章", "generate content", "write article", "create content", "对应内容", "文章内容"]
 
-        if wants_action:
+        wants_phrases = any(kw in message_lower for kw in expand_keywords)
+        wants_content = any(kw in message_lower for kw in content_keywords)
+
+        # If user wants content, generate an article (not phrases)
+        if wants_content and not wants_phrases:
+            # Extract the topic/phrase from the message
+            topic_prompt = f"从用户请求中提取他想要创建内容的主题或检索短语（只输出主题本身，1-2句话，不要解释）: '{req.message}'"
+            topic = call_bedrock_claude(topic_prompt).strip().strip('"').strip("'")
+
+            # Generate actual content (article)
+            content_prompt = f"""请为检索短语「{topic}」生成一篇 GEO 优化的文章。
+
+要求：
+1. 800-1500字
+2. 开头直接回答问题（倒金字塔结构）
+3. 包含表格或列表
+4. 包含 FAQ 部分（3个常见问题）
+5. 自然融入"亚马逊全球开店"品牌词
+6. 语言风格：专业、实用、易懂
+
+直接输出文章内容，不要输出标题标注。"""
+            article = call_bedrock_claude(content_prompt)
+
+            if article and len(article) > 100:
+                result_text = f"已为「{topic}」生成内容：\n\n{article}\n\n💡 提示：前往智造页面可以批量生成更多内容。"
+                return {"content": result_text, "role": "assistant"}
+
+        # If user wants phrases
+        if wants_phrases:
             # Extract topic from message
             topic_prompt = f"From this user request, extract the main topic/seed word (1-3 words only, no explanation): '{req.message}'"
             topic = call_bedrock_claude(topic_prompt).strip().strip('"').strip("'")
