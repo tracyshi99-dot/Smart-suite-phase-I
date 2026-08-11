@@ -73,7 +73,18 @@ export function ChatPanel() {
 
       if (!response.ok) throw new Error("API error");
       const data = await response.json();
-      const fullContent = data.content || "No response";
+      // Handle both direct object and string-encoded JSON
+      let fullContent: string;
+      if (typeof data === "string") {
+        try {
+          const parsed = JSON.parse(data);
+          fullContent = parsed.content || data;
+        } catch {
+          fullContent = data;
+        }
+      } else {
+        fullContent = data.content || JSON.stringify(data);
+      }
 
       setMessages((prev) => {
         const updated = [...prev];

@@ -489,20 +489,64 @@ class ChatRequest(BaseModel):
 
 @app.post("/api/chat/stream")
 def chat_stream(req: ChatRequest):
-    """Chat endpoint using Bedrock Claude with Smart Suite knowledge."""
+    """Chat endpoint - detects action intent and executes operations."""
     try:
-        from engine import call_bedrock_claude, load_steering
+        from engine import call_bedrock_claude
+        import re
 
-        # Load Smart Suite knowledge base
-        steering = ""
-        try:
-            steering = load_steering()
-            if len(steering) > 6000:
-                steering = steering[:6000]  # Truncate to fit context
-        except Exception:
-            pass
+        message_lower = req.message.lower()
 
-        # Build context from history
+        # Detect action intent: if user wants phrases/expansion, do it directly
+        expand_keywords = ["检索短语", "裂变", "生成短语", "expand", "phrases", "top", "搜索词", "关键词"]
+        wants_action = any(kw in message_lower for kw in expand_keywords)
+
+        if wants_action:
+            # Extract topic from message
+            topic_prompt = f"From this user request, extract the main topic/seed word (1-3 words only, no explanation): '{req.message}'"
+            topic = call_bedrock_claude(topic_prompt).strip().strip('"').strip("'")
+
+            # Determine count
+            count = 10
+            num_match = re.search(r"(\d+)", req.message)
+            if num_match:
+                count = min(int(num_match.group(1)), 20)
+
+            # Generate phrases directly
+            prompt = f"""请为核心词「{topic}」生成 {count} 个检索短语。
+规则：每条15-40字完整自然问句，模拟卖家在AI搜索平台的提问。每行一条，不要编号。"""
+            response = call_bedrock_claude(prompt)
+            queries = [q.strip().lstrip("0123456789.-) ") for q in response.strip().split("\n") if q.strip() and len(q.strip()) > 10]
+
+            if queries:
+                # Save to S3
+                try:
+                    from s3_storage import read_csv, write_csv
+                    import pandas as pd
+                    from datetime import datetime
+                    new_df = pd.DataFrame({
+                        "ai_query": queries,
+                        "source": f"agent_chat_{topic}",
+                        "is_selected": "FALSE",
+                        "priority_score": 3.0,
+                        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                    })
+                    existing = read_csv(req.batch_id, "01_zhiku", "zhiku_ai_queries.csv")
+                    if not existing.empty:
+                        merged = pd.concat([existing, new_df], ignore_index=True).drop_duplicates(subset=["ai_query"], keep="last")
+                    else:
+                        merged = new_df
+                    write_csv(req.batch_id, "01_zhiku", "zhiku_ai_queries.csv", merged)
+                except Exception:
+                    pass
+
+                # Format as readable result
+                result_text = f"已为「{topic}」生成 {len(queries)} 条检索短语，已保存到智库：\n\n"
+                for i, q in enumerate(queries, 1):
+                    result_text += f"{i}. {q}\n"
+                result_text += f"\n💡 提示：前往智库页面查看完整列表并选择短语。"
+                return {"content": result_text, "role": "assistant"}
+
+        # Regular chat (no action detected)
         history_text = ""
         if req.history:
             for msg in req.history[-6:]:
@@ -510,34 +554,17 @@ def chat_stream(req: ChatRequest):
                 content = msg.get("content", "")
                 history_text += f"\n{role}: {content}"
 
-        prompt = f"""You are Smart Suite Agent (智系列智能助手), the built-in AI assistant for Smart Suite — an AI-native GEO marketing operating model platform.
+        prompt = f"""You are Smart Suite Agent (智系列智能助手). You help users operate the Smart Suite platform.
 
-## Your Knowledge Base:
-Smart Suite consists of 9 modules:
-1. 智库 (Prompt Intelligencer) - AI search phrase discovery, seed expansion, persona-based generation
-2. 智测 (AI Search Tester) - 7-platform coverage verification, gap detection (full_gap/partial_gap/covered)
-3. 智造 (Content Creator) - GEO-structured content generation from high-value phrases
-4. 智优 (Content Optimizer) - 5-dimension scoring, auto-rewrite, Amazon compliance
-5. 智布 (Content Publisher) - LEGO CMS JSON output formatting
-6. 智传 (Content Distributor) - Multi-channel automated distribution
-7. 智析 (Performance Analyzer) - Full-channel attribution, Weekly/Monthly/YTD reporting
-8. 智中枢 (Workflow Orchestrator) - E2E pipeline orchestration, 7-rule decision engine
-9. S3 Memory Keeper - Persistent knowledge storage layer
+Modules: 智库(phrases) → 智测(verify) → 智造(generate) → 智优(optimize) → 智布(publish) → 智析(analytics)
 
-Pipeline flow: 智库 → 智测 → 智造 → 智优 → 智布 → 智传 → 智析 → 智中枢
-
-{f"## Additional Context:{chr(10)}{steering}" if steering else ""}
-
-## Rules:
-- ONLY answer questions about Smart Suite, GEO content strategy, AI search optimization, and cross-border e-commerce
-- If asked about unrelated topics, politely redirect to Smart Suite capabilities
+Rules:
+- Answer about Smart Suite, GEO, cross-border e-commerce ONLY
 - Be concise and actionable
-- Respond in the same language as the user's message
-- Reference specific modules when relevant (e.g., "You can use 智库 to expand this phrase")
+- Use same language as user
+- If user wants to generate/expand phrases, tell them to type specific requests like "帮我生成关于FBA的10条检索短语"
 
-Current user: {req.user} | Current batch: {req.batch_id}
-
-{f"Recent conversation:{history_text}" if history_text else ""}
+{f"History:{history_text}" if history_text else ""}
 
 User: {req.message}"""
 
