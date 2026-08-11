@@ -2,10 +2,7 @@ import { ApiError } from "./types";
 import { API_TIMEOUT_MS, MAX_RETRIES } from "./constants";
 import { sleep } from "./utils";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || (() => {
-  console.warn("[api-client] NEXT_PUBLIC_API_URL not set, falling back to API Gateway");
-  return "https://asq6n6kw78.execute-api.us-east-1.amazonaws.com";
-})();
+const API_BASE = "https://asq6n6kw78.execute-api.us-east-1.amazonaws.com";
 
 interface ApiOptions {
   timeout?: number;
