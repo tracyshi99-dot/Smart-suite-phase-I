@@ -176,11 +176,9 @@ One phrase per line, no numbering, no explanation."""
         if not queries:
             raise HTTPException(status_code=500, detail="No phrases generated")
 
-        # Save to CSV (best effort on Lambda /tmp)
+        # Save to S3 (persistent)
         try:
-            output_path = Path("/tmp/smartsuite_output")
-            zhiku_file = output_path / req.batch_id / "01_zhiku" / "zhiku_ai_queries.csv"
-            zhiku_file.parent.mkdir(parents=True, exist_ok=True)
+            from s3_storage import read_csv, write_csv
             new_df = pd.DataFrame({
                 "ai_query": queries,
                 "source": f"seed_{req.seed_word}",
@@ -188,14 +186,14 @@ One phrase per line, no numbering, no explanation."""
                 "priority_score": 3.0,
                 "created_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
             })
-            if zhiku_file.exists():
-                existing = pd.read_csv(zhiku_file, encoding="utf-8-sig", on_bad_lines="skip")
+            existing = read_csv(req.batch_id, "01_zhiku", "zhiku_ai_queries.csv")
+            if not existing.empty:
                 merged = pd.concat([existing, new_df], ignore_index=True).drop_duplicates(subset=["ai_query"], keep="last")
             else:
                 merged = new_df
-            merged.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
+            write_csv(req.batch_id, "01_zhiku", "zhiku_ai_queries.csv", merged)
         except Exception:
-            pass  # CSV save is best-effort; phrases are returned in response
+            pass  # S3 save is best-effort; phrases are returned in response
 
         return {"success": True, "count": len(queries), "phrases": queries}
     except Exception as e:
@@ -204,13 +202,11 @@ One phrase per line, no numbering, no explanation."""
 
 @app.get("/api/zhiku/phrases")
 def zhiku_get_phrases(batch_id: str = "batch_001", user: str = ""):
-    """Get current phrase list for a batch."""
-    import pandas as pd
-    output_path = Path(__file__).parent.parent / "output"
-    zhiku_file = output_path / batch_id / "01_zhiku" / "zhiku_ai_queries.csv"
-    if not zhiku_file.exists():
+    """Get current phrase list for a batch from S3."""
+    from s3_storage import read_csv
+    df = read_csv(batch_id, "01_zhiku", "zhiku_ai_queries.csv")
+    if df.empty:
         return {"phrases": [], "total": 0}
-    df = pd.read_csv(zhiku_file, encoding="utf-8-sig", on_bad_lines="skip")
     # Filter out ahrefs for CN users
     region = get_user_region(user) if user else "CN"
     if region == "CN" and "source" in df.columns:
@@ -221,17 +217,15 @@ def zhiku_get_phrases(batch_id: str = "batch_001", user: str = ""):
 
 @app.post("/api/zhiku/select")
 def zhiku_select(batch_id: str, indices: List[int], selected: bool = True):
-    """Select/deselect phrases by index."""
-    import pandas as pd
-    output_path = Path(__file__).parent.parent / "output"
-    zhiku_file = output_path / batch_id / "01_zhiku" / "zhiku_ai_queries.csv"
-    if not zhiku_file.exists():
+    """Select/deselect phrases by index. Persists to S3."""
+    from s3_storage import read_csv, write_csv
+    df = read_csv(batch_id, "01_zhiku", "zhiku_ai_queries.csv")
+    if df.empty:
         raise HTTPException(status_code=404, detail="Phrase file not found")
-    df = pd.read_csv(zhiku_file, encoding="utf-8-sig", on_bad_lines="skip")
     for idx in indices:
         if 0 <= idx < len(df):
             df.iloc[idx, df.columns.get_loc("is_selected")] = "TRUE" if selected else "FALSE"
-    df.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
+    write_csv(batch_id, "01_zhiku", "zhiku_ai_queries.csv", df)
     return {"success": True, "updated": len(indices)}
 
 
@@ -308,16 +302,13 @@ Requirements:
 
 @app.post("/api/zhiku/upload")
 def zhiku_upload(req: UploadPhrasesRequest):
-    """Upload phrases directly to the knowledge base."""
+    """Upload phrases directly to the knowledge base via S3."""
     import pandas as pd
     from datetime import datetime
+    from s3_storage import read_csv, write_csv
 
     if not req.phrases:
         raise HTTPException(status_code=400, detail="No phrases provided")
-
-    output_path = Path(__file__).parent.parent / "output"
-    zhiku_file = output_path / req.batch_id / "01_zhiku" / "zhiku_ai_queries.csv"
-    zhiku_file.parent.mkdir(parents=True, exist_ok=True)
 
     new_df = pd.DataFrame({
         "ai_query": req.phrases,
@@ -330,16 +321,79 @@ def zhiku_upload(req: UploadPhrasesRequest):
         "created_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
     })
 
-    if zhiku_file.exists():
-        existing = pd.read_csv(zhiku_file, encoding="utf-8-sig", on_bad_lines="skip")
+    existing = read_csv(req.batch_id, "01_zhiku", "zhiku_ai_queries.csv")
+    if not existing.empty:
         merged = pd.concat([existing, new_df], ignore_index=True)
         if "ai_query" in merged.columns:
             merged = merged.drop_duplicates(subset=["ai_query"], keep="last")
     else:
         merged = new_df
 
-    merged.to_csv(zhiku_file, index=False, encoding="utf-8-sig")
+    write_csv(req.batch_id, "01_zhiku", "zhiku_ai_queries.csv", merged)
     return {"success": True, "count": len(req.phrases)}
+
+
+# --- Archive & Restore ---
+class ArchiveRequest(BaseModel):
+    batch_id: str
+    step: str  # e.g., "01_zhiku", "zhice", "02_zhizao"
+    filename: str = "zhiku_ai_queries.csv"
+    indices: List[int] = []  # indices to archive (empty = all)
+
+
+class RestoreRequest(BaseModel):
+    batch_id: str
+    step: str
+    filename: str = "zhiku_ai_queries.csv"
+    queries: List[str] = []  # ai_query values to restore (empty = all)
+
+
+@app.post("/api/archive")
+def archive_items_endpoint(req: ArchiveRequest):
+    """Archive selected items (move to _archived.csv in S3)."""
+    from s3_storage import read_csv, write_csv, archive_items
+    import pandas as pd
+
+    df = read_csv(req.batch_id, req.step, req.filename)
+    if df.empty:
+        raise HTTPException(status_code=404, detail="No data found")
+
+    if req.indices:
+        mask = pd.Series([False] * len(df))
+        for idx in req.indices:
+            if 0 <= idx < len(df):
+                mask.iloc[idx] = True
+    else:
+        mask = pd.Series([True] * len(df))
+
+    df_to_archive = df[mask]
+    df_remaining = df[~mask]
+
+    if df_to_archive.empty:
+        return {"success": True, "archived": 0}
+
+    archive_items(req.batch_id, req.step, req.filename, df_to_archive)
+    write_csv(req.batch_id, req.step, req.filename, df_remaining)
+
+    return {"success": True, "archived": len(df_to_archive), "remaining": len(df_remaining)}
+
+
+@app.get("/api/archive")
+def get_archived_items(batch_id: str = "batch_001", step: str = "01_zhiku"):
+    """Get archived items for a step."""
+    from s3_storage import get_archived
+    df = get_archived(batch_id, step)
+    if df.empty:
+        return {"items": [], "total": 0}
+    return {"items": df.to_dict(orient="records"), "total": len(df)}
+
+
+@app.post("/api/restore")
+def restore_items_endpoint(req: RestoreRequest):
+    """Restore items from archive back to main file."""
+    from s3_storage import restore_items
+    merged = restore_items(req.batch_id, req.step, req.filename, req.queries)
+    return {"success": True, "total": len(merged)}
 
 
 # --- 智测 ---
