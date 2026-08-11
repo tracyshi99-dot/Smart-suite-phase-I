@@ -48,8 +48,6 @@ def read_csv(batch_id: str, step: str, filename: str) -> pd.DataFrame:
         s3 = _get_s3()
         obj = s3.get_object(Bucket=S3_BUCKET, Key=key)
         return pd.read_csv(io.BytesIO(obj["Body"].read()), encoding="utf-8-sig", on_bad_lines="skip")
-    except s3.exceptions.NoSuchKey:
-        return pd.DataFrame()
     except Exception:
         return pd.DataFrame()
 

@@ -214,16 +214,22 @@ One phrase per line, no numbering, no explanation."""
 @app.get("/api/zhiku/phrases")
 def zhiku_get_phrases(batch_id: str = "batch_001", user: str = ""):
     """Get current phrase list for a batch from S3."""
-    from s3_storage import read_csv
-    df = read_csv(batch_id, "01_zhiku", "zhiku_ai_queries.csv")
-    if df.empty:
-        return {"phrases": [], "total": 0}
-    # Filter out ahrefs for CN users
-    region = get_user_region(user) if user else "CN"
-    if region == "CN" and "source" in df.columns:
-        df = df[~df["source"].astype(str).str.lower().str.contains("ahrefs", na=False)]
-    phrases = df.to_dict(orient="records")
-    return {"phrases": phrases, "total": len(phrases)}
+    try:
+        from s3_storage import read_csv
+        df = read_csv(batch_id, "01_zhiku", "zhiku_ai_queries.csv")
+        if df.empty:
+            return {"phrases": [], "total": 0}
+        # Filter out ahrefs for CN users
+        try:
+            region = get_user_region(user) if user else "CN"
+        except Exception:
+            region = "CN"
+        if region == "CN" and "source" in df.columns:
+            df = df[~df["source"].astype(str).str.lower().str.contains("ahrefs", na=False)]
+        phrases = df.to_dict(orient="records")
+        return {"phrases": phrases, "total": len(phrases)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"zhiku_get_phrases error: {str(e)}")
 
 
 @app.post("/api/zhiku/select")
