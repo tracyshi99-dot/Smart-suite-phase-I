@@ -414,6 +414,32 @@ def restore_items_endpoint(req: RestoreRequest):
     return {"success": True, "total": len(merged)}
 
 
+@app.post("/api/zhiku/rescore")
+def zhiku_rescore(batch_id: str = "batch_001"):
+    """Rescore all phrases in a batch using the dynamic scoring algorithm."""
+    from s3_storage import read_csv, write_csv
+
+    df = read_csv(batch_id, "01_zhiku", "zhiku_ai_queries.csv")
+    if df.empty:
+        return {"success": True, "rescored": 0}
+
+    def _score(q):
+        q = str(q)
+        s = 3.0
+        if 15 <= len(q) <= 30: s += 0.5
+        elif len(q) > 30: s += 0.3
+        if any(w in q for w in ["怎么","如何","多少","哪些","为什么","什么","能不能","how","what","why"]): s += 0.5
+        if any(w in q.lower() for w in ["亚马逊","amazon","fba","注册","开店","选品","物流","广告","listing"]): s += 0.5
+        if any(w in q for w in ["吗","呢","啊","吧","?","？"]): s += 0.3
+        return min(5.0, round(s, 1))
+
+    if "ai_query" in df.columns:
+        df["priority_score"] = df["ai_query"].apply(_score)
+        write_csv(batch_id, "01_zhiku", "zhiku_ai_queries.csv", df)
+
+    return {"success": True, "rescored": len(df)}
+
+
 # --- 智测 ---
 @app.post("/api/zhice/verify")
 def zhice_verify(req: ZhiceRequest):
