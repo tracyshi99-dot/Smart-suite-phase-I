@@ -52,41 +52,52 @@ export default function ZhizaoPage() {
     }
     setGenerating(true);
     setError(null);
+    setDrafts([]);
+
+    const API_BASE = "https://asq6n6kw78.execute-api.us-east-1.amazonaws.com";
+    const limited = phrases.slice(0, contentLimit);
+
+    // Step 1: Upload phrases to S3 as selected
     try {
-      // Step 1: Upload phrases to S3 as selected (so Lambda can find them)
-      const API_BASE = "https://asq6n6kw78.execute-api.us-east-1.amazonaws.com";
       await fetch(`${API_BASE}/api/zhiku/upload`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          phrases: phrases,
+          phrases: limited,
           source: "zhice_verified",
           batch_id: activeBatch,
         }),
       });
+    } catch { /* best effort */ }
 
-      // Step 2: Call Lambda generate (uses Claude→Claude→Qianwen pipeline)
-      const res = await fetch(`${API_BASE}/api/zhizao/generate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          batch_id: activeBatch,
-          content_limit: contentLimit,
-          content_language: language,
-          template_id: template,
-        }),
-      });
-      const data = await res.json() as { drafts?: DraftContent[]; success?: boolean; error?: string; message?: string };
-      if (data.drafts && data.drafts.length > 0) {
-        setDrafts(data.drafts);
-      } else {
-        setError(isZh ? `\u751F\u6210\u5931\u8D25: ${data.error || data.message || "timeout"}` : `Generation failed: ${data.error || data.message || "timeout"}`);
+    // Step 2: Generate one article at a time (avoids API Gateway 30s timeout)
+    const allDrafts: DraftContent[] = [];
+    for (let i = 0; i < limited.length; i++) {
+      try {
+        const res = await fetch(`${API_BASE}/api/zhizao/generate`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            batch_id: activeBatch,
+            content_limit: 1,
+            content_language: language,
+            template_id: template,
+          }),
+        });
+        const data = await res.json() as { drafts?: DraftContent[]; success?: boolean; error?: string };
+        if (data.drafts && data.drafts.length > 0) {
+          allDrafts.push(...data.drafts);
+          setDrafts([...allDrafts]);
+        }
+      } catch {
+        // Continue with next article
       }
-    } catch {
-      setError(isZh ? "\u751F\u6210\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5" : "Generation failed, please retry");
-    } finally {
-      setGenerating(false);
     }
+
+    if (allDrafts.length === 0) {
+      setError(isZh ? "\u751F\u6210\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5\uFF08\u53EF\u80FD\u8D85\u65F6\uFF09" : "Generation failed (possible timeout), please retry");
+    }
+    setGenerating(false);
   };
 
   // Handle file upload (existing content / reference materials)

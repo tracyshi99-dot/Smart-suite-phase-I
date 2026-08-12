@@ -22,8 +22,11 @@ export function ChatPanel() {
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploadedFileContent, setUploadedFileContent] = useState<string>("");
+  const [uploadedFileName, setUploadedFileName] = useState<string>("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Persist chat messages in localStorage
   useEffect(() => {
@@ -54,9 +57,17 @@ export function ChatPanel() {
   const handleSend = useCallback(async () => {
     if (!input.trim() || streaming) return;
 
+    // Include file content in message if uploaded
+    let fullMessage = input.trim();
+    if (uploadedFileContent) {
+      fullMessage = `[上传文件: ${uploadedFileName}]\n文件内容:\n${uploadedFileContent.slice(0, 4000)}\n\n用户指令: ${input.trim()}`;
+      setUploadedFileContent("");
+      setUploadedFileName("");
+    }
+
     const userMessage: ChatMessage = {
       role: "user",
-      content: input.trim(),
+      content: input.trim() + (uploadedFileName ? ` 📎${uploadedFileName}` : ""),
       timestamp: Date.now(),
     };
 
@@ -81,7 +92,7 @@ export function ChatPanel() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            message: userMessage.content,
+            message: fullMessage,
             user: user ?? "",
             batch_id: activeBatch,
             history: messages.slice(-10).map((m) => ({
@@ -121,7 +132,7 @@ export function ChatPanel() {
     } finally {
       setStreaming(false);
     }
-  }, [input, streaming, user, activeBatch, messages]);
+  }, [input, streaming, user, activeBatch, messages, uploadedFileContent, uploadedFileName]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -229,7 +240,39 @@ export function ChatPanel() {
 
           {/* Input */}
           <div className="px-4 py-3 border-t border-[var(--border-card)]">
+            {/* File upload indicator */}
+            {uploadedFileName && (
+              <div className="flex items-center gap-2 mb-2 px-2 py-1 bg-[var(--accent)]/10 rounded-lg">
+                <span className="text-xs text-[var(--accent)]">{"\uD83D\uDCCE"} {uploadedFileName}</span>
+                <button onClick={() => { setUploadedFileContent(""); setUploadedFileName(""); }} className="text-xs text-[var(--text-muted)] hover:text-[var(--error)]">{"\u2715"}</button>
+              </div>
+            )}
             <div className="flex gap-2">
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".txt,.md,.csv,.json,.docx,.pdf"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  try {
+                    const text = await file.text();
+                    setUploadedFileContent(text.slice(0, 8000));
+                    setUploadedFileName(file.name);
+                  } catch { /* ignore */ }
+                  e.target.value = "";
+                }}
+              />
+              {/* Upload button */}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg border border-[var(--border-card)] text-[var(--text-muted)] hover:text-[var(--accent)] hover:border-[var(--accent)] transition-colors self-end"
+                title="Upload file"
+              >
+                {"\uD83D\uDCCE"}
+              </button>
               <textarea
                 ref={inputRef}
                 value={input}
@@ -246,7 +289,7 @@ export function ChatPanel() {
                 loading={streaming}
                 size="sm"
               >
-                ↑
+                {"\u2191"}
               </Button>
             </div>
             <p className="text-[10px] text-[var(--text-muted)] mt-1 text-right">
