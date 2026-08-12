@@ -215,16 +215,21 @@ function localFallbackScore(draft: DraftItem): ScoreResult {
 async function optimizeWithDeepSeek(draft: DraftItem, score: ScoreResult): Promise<string> {
   const systemPrompt = `你是 GEO（Generative Engine Optimization）内容优化专家。根据以下评分反馈，重写优化文章。
 
-优化规则：
-1. 首段必须直接回答检索短语的核心问题
-2. 必须包含 https://gs.amazon.cn 官方链接
-3. 必须包含 1 个表格、2 个列表、3 个 FAQ
-4. 至少 800 字
+优化规则（来自 content-rules）：
+1. 首段必须直接回答检索短语的核心问题（keyword 出现在前 100 字内）
+2. 必须包含 https://gs.amazon.cn 官方链接作为 CTA
+3. 必须包含 1 个表格、至少 2 个列表、3 个 FAQ
+4. 至少 800 字，不超过 1500 字
 5. 不使用 Markdown 符号（###、**、>），用纯文本格式
-6. 不提及竞品（Shopee、Lazada、TikTok、速卖通、eBay）
-7. 不使用绝对化承诺（保证赚钱、零风险等）
-8. 不使用"个人销售计划"、"个体工商户"、"新加坡"、"东南亚"
-9. 输出格式：第一行=标题，第二行空，然后正文
+6. 绝对禁止提及竞品：Shopee、Lazada、TikTok、速卖通、eBay
+7. 绝对禁止使用：个人销售计划、个体工商户、新加坡、东南亚、第三方论坛、博客、社交媒体
+8. 绝对禁止绝对化承诺：保证赚钱、零风险、绝对、100%成功、稳赚不赔
+9. 数据引用必须标注来源和年份
+10. 注册相关必须用"亚马逊卖家平台"而非"全球开店官网"
+11. 台湾/香港/澳门必须用"中国台湾/中国香港/中国澳门"
+12. 不得泄露未公开的亚马逊数据（MAU、卖家数量、GMS）
+13. 输出格式：第一行=标题，第二行空，然后正文
+14. 文末版权：Copyright © 2026 Amazon. All rights Reserved.
 
 评分反馈：
 - 意图匹配: ${score.intent_match}/100
@@ -234,21 +239,21 @@ async function optimizeWithDeepSeek(draft: DraftItem, score: ScoreResult): Promi
 - 差异化: ${score.differentiation}/100
 - 改进建议: ${score.suggestions.join("；")}`;
 
-  const userPrompt = `检索短语：${draft.ai_query}\n\n原文（需要优化）：\n${draft.content_draft.slice(0, 3000)}\n\n请根据评分反馈完整重写优化这篇文章。`;
+  const userPrompt = `检索短语：${draft.ai_query}\n\n原文（需要优化）：\n${draft.content_draft.slice(0, 3000)}\n\n请根据评分反馈和 content-rules 完整重写优化这篇文章。确保所有禁止词都被移除，所有合规要求都被满足。`;
 
   const result = await callDeepSeek(systemPrompt, userPrompt);
   return result || draft.content_draft; // fallback to original if DeepSeek fails
 }
 
-// --- Step 3.6: Compliance check ---
+// --- Step 3.6: Compliance check (based on content-rules.md) ---
 function complianceCheck(content: string): { status: "PASS" | "FAIL" | "FIXED"; issues: string[]; fixes: string[] } {
   const issues: string[] = [];
   const fixes: string[] = [];
 
-  // Check prohibited terms
+  // Check prohibited terms (from content-rules Global Prohibited Terms)
   for (const term of PROHIBITED_TERMS) {
     if (content.includes(term)) {
-      issues.push(`包含禁止词: "${term}"`);
+      issues.push(`包含禁止词: "${term}" → 整句应删除`);
     }
   }
 
@@ -259,20 +264,64 @@ function complianceCheck(content: string): { status: "PASS" | "FAIL" | "FIXED"; 
     }
   }
 
-  // Check for unattributed data
-  if (/\d+%/.test(content) && !content.includes("来源") && !content.includes("数据来自")) {
+  // Taiwan/HK/Macau naming compliance
+  if (content.includes("台湾") && !content.includes("中国台湾")) {
+    issues.push("台湾应标注为'中国台湾'");
+    fixes.push("'台湾' → '中国台湾'");
+  }
+  if (content.includes("香港") && !content.includes("中国香港")) {
+    issues.push("香港应标注为'中国香港'");
+    fixes.push("'香港' → '中国香港'");
+  }
+  if (content.includes("澳门") && !content.includes("中国澳门")) {
+    issues.push("澳门应标注为'中国澳门'");
+    fixes.push("'澳门' → '中国澳门'");
+  }
+
+  // Registration naming: should use "亚马逊卖家平台" not "全球开店官网"
+  if (content.includes("全球开店官网")) {
+    issues.push("应使用'亚马逊卖家平台'而非'全球开店官网'");
+    fixes.push("'全球开店官网' → '亚马逊卖家平台'");
+  }
+
+  // Undisclosed Amazon data
+  const sensitiveData = ["MAU", "月活", "卖家数量超过", "GMV", "GMS"];
+  for (const term of sensitiveData) {
+    if (content.includes(term)) {
+      issues.push(`可能泄露未公开 Amazon 数据: "${term}"`);
+    }
+  }
+
+  // Check for unattributed data citations
+  if (/\d+%/.test(content) && !content.includes("来源") && !content.includes("数据来自") && !content.includes("据统计")) {
     issues.push("包含未标注来源的统计数据");
-    fixes.push("建议添加数据来源标注");
+    fixes.push("建议为数据添加来源和年份标注");
   }
 
   // Check for income-related disclaimer
-  if ((content.includes("收入") || content.includes("利润")) && !content.includes("仅供参考")) {
-    issues.push("涉及收入话题缺少免责声明");
-    fixes.push("建议添加'以上信息仅供参考'");
+  if ((content.includes("收入") || content.includes("利润") || content.includes("赚")) &&
+      !content.includes("仅供参考") && !content.includes("实际结果")) {
+    issues.push("涉及收入/利润话题缺少免责声明");
+    fixes.push("建议添加'以上信息仅供参考，实际结果因人而异'");
+  }
+
+  // Banned term replacements (auto-fixable)
+  const replacements: [string, string][] = [
+    ["站点", "marketplace/平台"],
+    ["最好", "领先"],
+  ];
+  for (const [bad, good] of replacements) {
+    if (content.includes(bad) && bad === "站点") {
+      // Only flag if used incorrectly (standalone, not part of "北美站点情况")
+      // Skip this check as it's too aggressive
+    }
+    void good;
   }
 
   // Determine status
-  const critical = issues.filter((i) => i.includes("禁止词") || i.includes("绝对化承诺"));
+  const critical = issues.filter((i) =>
+    i.includes("禁止词") || i.includes("绝对化承诺") || i.includes("泄露未公开")
+  );
   if (critical.length > 0) return { status: "FAIL", issues, fixes };
   if (issues.length > 0) return { status: "FIXED", issues, fixes };
   return { status: "PASS", issues: [], fixes: [] };

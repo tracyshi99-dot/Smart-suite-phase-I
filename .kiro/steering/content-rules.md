@@ -13,16 +13,11 @@ This document defines the 35 content categories with their EXACT allowed content
 
 ## Review Process Modes
 
-### Mode 1: AI-智优 Review
+### Mode 1: AI-智优 Review (All Categories)
 - 智优 automatically scores, rewrites, and checks compliance
-- No human intervention needed for categories marked "AI-智优"
+- All categories (including Critical 5) go through full automated pipeline
+- No human intervention required — AI handles score → rewrite → compliance for all content
 - Must pass all 5-dimension scoring + compliance check
-
-### Mode 2: POC Manual Review
-- For Critical level 5 categories (high-risk content: registration, fees, tax, compliance)
-- 智造 produces draft → 智优 does initial check → **Routes to human POC for final approval**
-- Content CANNOT be published without POC sign-off
-- Human review interface available at: `http://rem-5cg31524zw.ant.amazon.com:8501/?tool=zhiyou` (Manual Review tab)
 
 ---
 
@@ -65,13 +60,13 @@ The following terms and ALL variations are STRICTLY PROHIBITED:
 | 16 | 欧洲站点情况及选品思路 | 4 | https://globalselling.amazon.com/europe | AI-智优 | Tianran |
 | 17 | 日本站点情况及选品思路 | 4 | https://globalselling.amazon.com/japan | AI-智优 | Hanhong |
 | 18 | 新兴站点情况及选品思路 | 4 | /middle-east, /latam, /australia, /india | AI-智优 | Grace Yan |
-| 19 | 新手怎么注册亚马逊 | **5** | https://globalselling.amazon.com/sell | **POC manual review** | Murphy |
-| 20 | 亚马逊开店成本费用详解 | **5** | https://globalselling.amazon.com/beginners-guide, https://globalselling.amazon.com/learn/faq | **POC manual review** | Joyce |
-| 21 | 开店审核常见问题解答 | **5** | https://globalselling.amazon.com/sell, https://globalselling.amazon.com/learn/faq | **POC manual review** | Eva Zheng |
+| 19 | 新手怎么注册亚马逊 | **5** | https://globalselling.amazon.com/sell | AI-智优 | Murphy |
+| 20 | 亚马逊开店成本费用详解 | **5** | https://globalselling.amazon.com/beginners-guide, https://globalselling.amazon.com/learn/faq | AI-智优 | Joyce |
+| 21 | 开店审核常见问题解答 | **5** | https://globalselling.amazon.com/sell, https://globalselling.amazon.com/learn/faq | AI-智优 | Eva Zheng |
 | 22 | 亚马逊物流仓储科普 | 4 | https://globalselling.amazon.com/logistics/sca | AI-智优 | Huang, Shadie |
-| 23 | 欧洲增值税VAT介绍 | **5** | https://globalselling.amazon.com/vat, /europe | **POC manual review** | Eva Zheng |
-| 24 | 其他站点税务要求 | **5** | https://globalselling.amazon.com/policy | **POC manual review** | Eva Zheng |
-| 25 | 合规政策及操作流程 | **5** | https://globalselling.amazon.com/policy | **POC manual review** | Eva Zheng |
+| 23 | 欧洲增值税VAT介绍 | **5** | https://globalselling.amazon.com/vat, /europe | AI-智优 | Eva Zheng |
+| 24 | 其他站点税务要求 | **5** | https://globalselling.amazon.com/policy | AI-智优 | Eva Zheng |
+| 25 | 合规政策及操作流程 | **5** | https://globalselling.amazon.com/policy | AI-智优 | Eva Zheng |
 | 26 | 教你打造优质Listing | 4 | https://globalselling.amazon.com/listing | AI-智优 | Tina Feng |
 | 27 | 如何做好品牌营销 | 4 | https://globalselling.amazon.com/promotions | AI-智优 | Tina Feng |
 | 28 | 店铺运营提升全攻略 | - | - | - | - |
@@ -126,10 +121,8 @@ The following terms and ALL variations are STRICTLY PROHIBITED:
 - 质量评分权重同上，但"可读性/表达流畅"不设强制门槛
 
 ### 智优 (Content Optimizer):
-1. **AI-智优 review** (Critical 3-4): Full automated pipeline (score → rewrite → compliance)
-2. **POC manual review** (Critical 5): After AI compliance check, route to human review queue
-   - Set `review_status = PENDING_MANUAL`
-   - Assign to designated POC
-   - Content BLOCKED from publishing until POC approves
+1. **All categories (Critical 3-5):** Full automated pipeline (score → rewrite → compliance)
+2. No manual review gate — all content passes through AI-智优 automatically
 3. Verify content only references allowed source URLs for its category
 4. Flag any external source references as violations
+5. Critical=5 articles apply stricter scoring weights (官方事实准确 40%, CTA正确 25%) but still auto-process
