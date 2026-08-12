@@ -86,8 +86,9 @@ export function ChatPanel() {
     setMessages((prev) => [...prev, assistantMessage]);
 
     try {
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || "https://asq6n6kw78.execute-api.us-east-1.amazonaws.com";
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "https://asq6n6kw78.execute-api.us-east-1.amazonaws.com"}/api/chat/stream`,
+        `${apiBase}/api/chat/stream`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -127,8 +128,16 @@ export function ChatPanel() {
         return updated;
       });
     } catch {
-      setError("连接中断，请重试 / Connection interrupted");
-      // Keep the partial message if any
+      // Offline fallback: provide helpful local response
+      const offlineResponse = generateOfflineResponse(fullMessage);
+      setMessages((prev) => {
+        const updated = [...prev];
+        const lastIdx = updated.length - 1;
+        if (updated[lastIdx]?.role === "assistant") {
+          updated[lastIdx] = { ...updated[lastIdx], content: offlineResponse };
+        }
+        return updated;
+      });
     } finally {
       setStreaming(false);
     }
@@ -300,4 +309,53 @@ export function ChatPanel() {
       )}
     </>
   );
+}
+
+// Offline response when backend API is unavailable
+function generateOfflineResponse(message: string): string {
+  const lower = message.toLowerCase();
+
+  if (lower.includes("生成") || lower.includes("generate") || lower.includes("文章")) {
+    return `⚠️ 后端 API 暂时不可用，无法生成内容。
+
+请直接使用左侧导航的「智造」模块生成文章：
+1. 进入智造页面
+2. 输入检索短语
+3. 点击"生成"按钮
+
+API 恢复后 Chat Agent 将恢复完整功能。`;
+  }
+
+  if (lower.includes("测试") || lower.includes("test") || lower.includes("验证")) {
+    return `⚠️ 后端 API 暂时不可用。
+
+请直接使用「智测」模块执行验证：
+1. 进入智测页面
+2. 选择待验证短语和平台
+3. 点击"开始测试"
+
+各模块可独立运行，无需通过 Chat Agent。`;
+  }
+
+  if (lower.includes("优化") || lower.includes("optimize") || lower.includes("评分")) {
+    return `⚠️ 后端 API 暂时不可用。
+
+请直接使用「智优」模块进行内容优化：
+1. 在智造中生成内容后点击"下一步"
+2. 在智优中点击"一键优化"
+3. 系统将自动执行 Claude 评分 + DeepSeek 优化 + 合规审查
+
+智优模块支持本地离线运行。`;
+  }
+
+  return `⚠️ Chat Agent 后端暂时连接不上（Lambda API Gateway 不可用）。
+
+你可以直接通过左侧导航使用各模块：
+• 智库 — 检索短语管理
+• 智测 — AI 搜索验证
+• 智造 — 内容生成
+• 智优 — 内容优化（Claude评分 + DeepSeek重写）
+• 智布 — 内容发布
+
+所有模块都支持独立运行，不依赖 Chat Agent。API 恢复后此功能将自动恢复。`;
 }
