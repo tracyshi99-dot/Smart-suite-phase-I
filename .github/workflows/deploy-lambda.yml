@@ -1,0 +1,51 @@
+name: Deploy API Lambda
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'api/**'
+      - 'ui/engine.py'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          mkdir -p package
+          pip install fastapi mangum pydantic boto3 pandas requests python-multipart -t package --quiet
+
+      - name: Package Lambda
+        run: |
+          cp api/main.py package/main.py
+          cp api/s3_storage.py package/s3_storage.py || true
+          cp api/__init__.py package/__init__.py || true
+          cp ui/engine.py package/engine.py
+          mkdir -p package/output
+          cp output/users.json package/output/users.json || true
+          cd package && zip -r ../lambda.zip . -x "*.pyc" "__pycache__/*"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Deploy to Lambda
+        run: |
+          # Upload to S3 first (Lambda zip > 50MB with deps)
+          aws s3 cp lambda.zip s3://smartsuite-sync-data/lambda/smartsuite_api.zip
+          # Update Lambda function code
+          aws lambda update-function-code \
+            --function-name smartsuite-api \
+            --s3-bucket smartsuite-sync-data \
+            --s3-key lambda/smartsuite_api.zip
+          echo "Lambda deployed successfully"
