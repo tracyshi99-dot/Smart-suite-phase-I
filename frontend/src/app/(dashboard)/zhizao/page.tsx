@@ -73,10 +73,29 @@ export default function ZhizaoPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const text = await file.text();
-      const lines = text.split("\n").map((l) => l.trim()).filter((l) => l.length > 5);
-      // If CSV, take first column
-      const items = lines.map((l) => l.split(",")[0]?.trim().replace(/^["']|["']$/g, "")).filter(Boolean);
+      let items: string[] = [];
+      const ext = file.name.split(".").pop()?.toLowerCase();
+
+      if (ext === "xlsx" || ext === "xls") {
+        // Parse Excel
+        const XLSX = await import("xlsx");
+        const buffer = await file.arrayBuffer();
+        const wb = XLSX.read(buffer, { type: "array" });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { header: 1 }) as unknown[][];
+        // Take first column, skip header if it looks like one
+        const startIdx = rows.length > 0 && typeof rows[0]?.[0] === "string" &&
+          (rows[0][0] as string).toLowerCase().includes("query") || (rows[0]?.[0] as string)?.includes("\u68C0\u7D22") ? 1 : 0;
+        items = rows.slice(startIdx)
+          .map((row) => String(row[0] ?? "").trim())
+          .filter((s) => s.length > 3);
+      } else {
+        // CSV / TXT / MD
+        const text = await file.text();
+        const lines = text.split("\n").map((l) => l.trim()).filter((l) => l.length > 5);
+        items = lines.map((l) => l.split(",")[0]?.trim().replace(/^["']|["']$/g, "")).filter(Boolean);
+      }
+
       if (items.length > 0) {
         setPhrases((prev) => [...new Set([...prev, ...items])]);
         setContentLimit((prev) => Math.max(prev, items.length));
@@ -130,12 +149,12 @@ export default function ZhizaoPage() {
           </label>
           <input
             type="file"
-            accept=".csv,.txt,.md"
+            accept=".csv,.txt,.md,.xlsx,.xls"
             onChange={handleUpload}
             className="text-xs text-[var(--text-secondary)] file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-[var(--border-glass)] file:text-xs file:bg-white/5 file:text-[var(--text-primary)] hover:file:bg-white/10 file:cursor-pointer"
           />
           <span className="text-[10px] text-[var(--text-muted)]">
-            {isZh ? "CSV/TXT/MD\uFF0C\u6BCF\u884C\u4E00\u6761\u77ED\u8BED\u6216\u5185\u5BB9" : "CSV/TXT/MD, one phrase or content per line"}
+            {isZh ? "CSV/TXT/MD/Excel\uFF0C\u6BCF\u884C\u4E00\u6761\u77ED\u8BED\u6216\u5185\u5BB9" : "CSV/TXT/MD/Excel, one phrase or content per line"}
           </span>
         </div>
       </GlassCard>
