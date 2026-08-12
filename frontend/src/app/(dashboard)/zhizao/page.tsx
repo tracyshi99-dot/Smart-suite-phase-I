@@ -297,6 +297,63 @@ export default function ZhizaoPage() {
         </div>
       )}
 
+      {/* Download Actions */}
+      {drafts.length > 0 && (
+        <div className="flex gap-3 items-center">
+          <button
+            onClick={() => {
+              // Download single article as MD
+              const content = drafts.map((d) => `# ${d.title}\n\n${d.content_draft}`).join("\n\n---\n\n");
+              const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `zhizao_${activeBatch}_${drafts.length}articles.md`;
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+            className="text-xs px-3 py-1.5 rounded-lg border border-[var(--border-glass)] text-[var(--text-secondary)] hover:text-[var(--accent)] hover:border-[var(--accent)] transition-colors"
+          >
+            {isZh ? "\u2B07 \u4E0B\u8F7D\u5168\u90E8 (Markdown)" : "\u2B07 Download All (MD)"}
+          </button>
+          <button
+            onClick={() => {
+              // Download as CSV
+              const header = "ai_query,title,word_count,content_draft\n";
+              const rows = drafts.map((d) => `"${d.ai_query.replace(/"/g, '""')}","${d.title.replace(/"/g, '""')}",${d.word_count},"${d.content_draft.replace(/"/g, '""')}"`).join("\n");
+              const blob = new Blob(["\uFEFF" + header + rows], { type: "text/csv;charset=utf-8" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `zhizao_${activeBatch}_drafts.csv`;
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+            className="text-xs px-3 py-1.5 rounded-lg border border-[var(--border-glass)] text-[var(--text-secondary)] hover:text-[var(--accent)] hover:border-[var(--accent)] transition-colors"
+          >
+            {isZh ? "\u2B07 \u4E0B\u8F7D\u5168\u90E8 (CSV)" : "\u2B07 Download All (CSV)"}
+          </button>
+          <button
+            onClick={() => {
+              // Download each article as separate MD files in a zip-like concatenation
+              drafts.forEach((d, i) => {
+                const blob = new Blob([`# ${d.title}\n\n${d.content_draft}`], { type: "text/markdown;charset=utf-8" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `${(i + 1).toString().padStart(2, "0")}_${d.title.slice(0, 30).replace(/[/\\?%*:|"<>]/g, "")}.md`;
+                a.click();
+                URL.revokeObjectURL(url);
+              });
+            }}
+            className="text-xs px-3 py-1.5 rounded-lg border border-[var(--border-glass)] text-[var(--text-secondary)] hover:text-[var(--accent)] hover:border-[var(--accent)] transition-colors"
+          >
+            {isZh ? "\u2B07 \u9010\u7BC7\u4E0B\u8F7D (MD)" : "\u2B07 Download Each (MD)"}
+          </button>
+          <span className="text-[10px] text-[var(--text-muted)]">{drafts.length} {isZh ? "\u7BC7" : "articles"}</span>
+        </div>
+      )}
+
       {/* CTA */}
       <div className="flex justify-end pt-4">
         <button onClick={() => router.push("/zhiyou")} className="px-4 py-2 rounded-lg text-sm font-medium bg-[var(--accent)] text-black hover:bg-[var(--accent-hover)] transition-colors">
