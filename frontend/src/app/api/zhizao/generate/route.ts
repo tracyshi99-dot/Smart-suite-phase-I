@@ -32,19 +32,62 @@ async function callClaude(systemPrompt: string, userPrompt: string, maxTokens = 
     },
   });
 
-  const command = new ConverseCommand({
-    modelId: "anthropic.claude-3-5-sonnet-20241022-v2:0",
-    messages: [{ role: "user", content: [{ text: userPrompt }] }],
-    system: [{ text: systemPrompt }],
-    inferenceConfig: { maxTokens, temperature: 0.3 },
-  });
+  // Try multiple model IDs (availability varies by account)
+  const models = [
+    "anthropic.claude-3-5-sonnet-20241022-v2:0",
+    "anthropic.claude-3-sonnet-20240229-v1:0",
+    "anthropic.claude-3-haiku-20240307-v1:0",
+  ];
 
-  const response = await client.send(command);
-  const content = response.output?.message?.content;
-  if (content && content[0] && "text" in content[0]) {
-    return content[0].text ?? "";
+  for (const modelId of models) {
+    try {
+      const command = new ConverseCommand({
+        modelId,
+        messages: [{ role: "user", content: [{ text: userPrompt }] }],
+        system: [{ text: systemPrompt }],
+        inferenceConfig: { maxTokens, temperature: 0.3 },
+      });
+
+      const response = await client.send(command);
+      const content = response.output?.message?.content;
+      if (content && content[0] && "text" in content[0] && content[0].text) {
+        return content[0].text;
+      }
+    } catch (err) {
+      // Try next model
+      const errMsg = String(err);
+      if (errMsg.includes("AccessDeniedException") || errMsg.includes("not authorized")) {
+        continue; // Model not enabled, try next
+      }
+      // For other errors, also try next model
+      continue;
+    }
   }
-  return "";
+
+  // All models failed — fallback to DeepSeek
+  return callDeepSeekFallback(systemPrompt, userPrompt);
+}
+
+// DeepSeek fallback for when Bedrock is unavailable
+async function callDeepSeekFallback(systemPrompt: string, userPrompt: string): Promise<string> {
+  const key = process.env.DEEPSEEK_REAL_API_KEY || process.env.DEEPSEEK_API_KEY || "";
+  if (!key) return "";
+  const res = await fetch("https://api.deepseek.com/chat/completions", {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${key}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "deepseek-chat",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+      max_tokens: 3000,
+      temperature: 0.3,
+    }),
+  });
+  if (!res.ok) return "";
+  const data = await res.json();
+  return data?.choices?.[0]?.message?.content ?? "";
 }
 
 // Qianwen polish
