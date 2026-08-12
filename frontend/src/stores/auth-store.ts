@@ -31,20 +31,52 @@ export const useAuthStore = create<AuthState>()(
       regionConfig: null,
 
       login: async (user: string) => {
-        const res = await apiGet<AuthResponse>("/api/auth/check", { user });
-        if (res.allowed) {
-          set({
-            user: res.user,
-            region: res.region ?? "CN",
-            subRegion: res.sub_region ?? "",
-            isAdmin: res.is_admin ?? false,
-            isAuthenticated: true,
-            lastActivity: Date.now(),
-          });
-          // Load region config after successful auth
-          await get().loadRegionConfig(res.region ?? "CN");
+        try {
+          const res = await apiGet<AuthResponse>("/api/auth/check", { user });
+          if (res.allowed) {
+            set({
+              user: res.user,
+              region: res.region ?? "CN",
+              subRegion: res.sub_region ?? "",
+              isAdmin: res.is_admin ?? false,
+              isAuthenticated: true,
+              lastActivity: Date.now(),
+            });
+            // Load region config after successful auth
+            await get().loadRegionConfig(res.region ?? "CN");
+          }
+          return res;
+        } catch {
+          // Offline fallback: if API is unreachable, allow known users locally
+          const OFFLINE_ALLOWED = [
+            "yujiashi", "htp", "shencm", "chienlin", "emilwliu", "gurusuh", "hangntt",
+            "nijuno", "zhjiayue", "gracezjy", "jessyhan", "fengceci", "effiezhu",
+            "jltian", "qdhwzj", "siyundai", "tzuchunf", "yudiwan",
+            "ykimche", "liangles", "rickylan", "sylviayj",
+            "cshumin", "xinyill", "kexuache", "yirua", "huiml", "xdhuang", "aizhen",
+          ];
+          const normalizedUser = user.trim().toLowerCase();
+          if (OFFLINE_ALLOWED.includes(normalizedUser)) {
+            const offlineRes: AuthResponse = {
+              allowed: true,
+              user: normalizedUser,
+              region: "CN",
+              is_admin: normalizedUser === "yujiashi",
+            };
+            set({
+              user: offlineRes.user,
+              region: offlineRes.region ?? "CN",
+              subRegion: "",
+              isAdmin: offlineRes.is_admin ?? false,
+              isAuthenticated: true,
+              lastActivity: Date.now(),
+            });
+            await get().loadRegionConfig("CN");
+            return offlineRes;
+          }
+          // Not in offline list, rethrow
+          throw { status: 0, message: "Connection error", isTimeout: true, retriesExhausted: true };
         }
-        return res;
       },
 
       logout: () => {
