@@ -64,8 +64,30 @@ async function callClaude(systemPrompt: string, userPrompt: string, maxTokens = 
     }
   }
 
-  // All models failed
-  return "";
+  // All models failed — fallback to DeepSeek (temporary while Bedrock models are being enabled)
+  return callDeepSeekForContent(systemPrompt, userPrompt);
+}
+
+// DeepSeek temporary fallback (only used if Bedrock unavailable)
+async function callDeepSeekForContent(systemPrompt: string, userPrompt: string): Promise<string> {
+  const key = process.env.DEEPSEEK_REAL_API_KEY || process.env.DEEPSEEK_API_KEY || "";
+  if (!key) return "";
+  const res = await fetch("https://api.deepseek.com/chat/completions", {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${key}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "deepseek-chat",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+      max_tokens: 3000,
+      temperature: 0.3,
+    }),
+  });
+  if (!res.ok) return "";
+  const data = await res.json();
+  return data?.choices?.[0]?.message?.content ?? "";
 }
 
 // Qianwen polish
