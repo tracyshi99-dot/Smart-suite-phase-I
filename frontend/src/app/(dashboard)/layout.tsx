@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 import { useI18nStore } from "@/stores/i18n-store";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { ChatPanel } from "@/components/layout/ChatPanel";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
+
+// Pages that don't require authentication
+const PUBLIC_PATHS = ["/overview"];
 
 export default function DashboardLayout({
   children,
@@ -14,8 +17,11 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { isAuthenticated, isSessionExpired, logout, touch } = useAuthStore();
   const { loadStrings, loaded } = useI18nStore();
+
+  const isPublicPage = PUBLIC_PATHS.includes(pathname);
 
   // Load i18n strings on mount
   useEffect(() => {
@@ -24,9 +30,10 @@ export default function DashboardLayout({
     }
   }, [loaded, loadStrings]);
 
-  // Check auth - delay to allow hydration from localStorage
+  // Check auth - only for non-public pages
   useEffect(() => {
-    // Give zustand persist time to hydrate from localStorage
+    if (isPublicPage) return; // Skip auth check for public pages
+
     const timer = setTimeout(() => {
       if (!isAuthenticated) {
         router.replace("/login");
@@ -38,7 +45,7 @@ export default function DashboardLayout({
       }
     }, 100);
     return () => clearTimeout(timer);
-  }, [isAuthenticated, isSessionExpired, logout, router]);
+  }, [isAuthenticated, isSessionExpired, logout, router, isPublicPage]);
 
   // Track user activity for session timeout
   useEffect(() => {
@@ -51,8 +58,9 @@ export default function DashboardLayout({
     };
   }, [touch]);
 
-  if (!isAuthenticated) {
-    return null; // Will redirect
+  // For non-public pages, block rendering if not authenticated
+  if (!isPublicPage && !isAuthenticated) {
+    return null; // Will redirect to login
   }
 
   return (
