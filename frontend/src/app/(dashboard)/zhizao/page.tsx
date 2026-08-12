@@ -13,6 +13,32 @@ import { apiPost } from "@/lib/api-client";
 import { ZhizaoRequest, DraftContent } from "@/lib/types";
 import { TEMPLATES, LONG_OP_TIMEOUT_MS } from "@/lib/constants";
 
+// --- History types ---
+interface ZhizaoSession {
+  id: string;
+  date: string;
+  topic: string;
+  phrases: string[];
+  drafts: DraftContent[];
+  archived?: boolean;
+}
+
+const ZHIZAO_SESSIONS_KEY = "zhizao_sessions";
+const ZHIZAO_HISTORY_KEY = "zhizao_history";
+
+function loadZhizaoSessions(): ZhizaoSession[] {
+  try { return JSON.parse(localStorage.getItem(ZHIZAO_SESSIONS_KEY) || "[]"); } catch { return []; }
+}
+function saveZhizaoSessions(data: ZhizaoSession[]) {
+  localStorage.setItem(ZHIZAO_SESSIONS_KEY, JSON.stringify(data));
+}
+function loadZhizaoHistory(): ZhizaoSession[] {
+  try { return JSON.parse(localStorage.getItem(ZHIZAO_HISTORY_KEY) || "[]"); } catch { return []; }
+}
+function saveZhizaoHistory(data: ZhizaoSession[]) {
+  localStorage.setItem(ZHIZAO_HISTORY_KEY, JSON.stringify(data));
+}
+
 export default function ZhizaoPage() {
   const router = useRouter();
   const { t, locale } = useI18nStore();
@@ -30,6 +56,27 @@ export default function ZhizaoPage() {
   const [selectedDrafts, setSelectedDrafts] = useState<Set<number>>(new Set());
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Sessions & History
+  const [sessions, setSessions] = useState<ZhizaoSession[]>([]);
+  const [historyItems, setHistoryItems] = useState<ZhizaoSession[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+
+  // Load persisted sessions + history on mount
+  useEffect(() => {
+    setSessions(loadZhizaoSessions());
+    setHistoryItems(loadZhizaoHistory());
+  }, []);
+
+  // Auto-restore last session drafts if nothing is loaded
+  useEffect(() => {
+    if (drafts.length === 0 && sessions.length > 0 && phrases.length === 0) {
+      const last = sessions[0];
+      setDrafts(last.drafts);
+      setPhrases(last.phrases);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessions]);
 
   // Load phrases from zhice (localStorage)
   useEffect(() => {
@@ -98,8 +145,68 @@ export default function ZhizaoPage() {
 
     if (allDrafts.length === 0) {
       setError(isZh ? "\u751F\u6210\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5\uFF08\u53EF\u80FD\u8D85\u65F6\uFF09" : "Generation failed (possible timeout), please retry");
+    } else {
+      // Persist to sessions
+      const entry: ZhizaoSession = {
+        id: `zhizao_${Date.now()}`,
+        date: new Date().toLocaleString(),
+        topic: limited.slice(0, 3).join(", ").slice(0, 50),
+        phrases: limited,
+        drafts: allDrafts,
+      };
+      const updated = [entry, ...sessions].slice(0, 20);
+      setSessions(updated);
+      saveZhizaoSessions(updated);
     }
     setGenerating(false);
+  };
+
+  // Delete session → move to history
+  const handleDeleteSession = (id: string) => {
+    const target = sessions.find((s) => s.id === id);
+    if (!target) return;
+    const updatedSessions = sessions.filter((s) => s.id !== id);
+    setSessions(updatedSessions);
+    saveZhizaoSessions(updatedSessions);
+    const updatedHistory = [{ ...target, archived: true }, ...historyItems].slice(0, 50);
+    setHistoryItems(updatedHistory);
+    saveZhizaoHistory(updatedHistory);
+    // Clear view if it was the active session
+    if (drafts.length > 0 && drafts[0]?.ai_query === target.drafts[0]?.ai_query) {
+      setDrafts([]);
+      setSelectedDrafts(new Set());
+    }
+  };
+
+  // Restore from history
+  const handleRestoreFromHistory = (id: string) => {
+    const target = historyItems.find((h) => h.id === id);
+    if (!target) return;
+    const updatedHistory = historyItems.filter((h) => h.id !== id);
+    setHistoryItems(updatedHistory);
+    saveZhizaoHistory(updatedHistory);
+    const restored = { ...target, archived: false };
+    const updatedSessions = [restored, ...sessions].slice(0, 20);
+    setSessions(updatedSessions);
+    saveZhizaoSessions(updatedSessions);
+    setDrafts(restored.drafts);
+    setPhrases(restored.phrases);
+  };
+
+  // Reuse phrases from history entry (load into input for regeneration)
+  const handleReusePhrases = (entry: ZhizaoSession) => {
+    setPhrases(entry.phrases);
+    setContentLimit(entry.phrases.length);
+    setDrafts([]);
+    setSelectedDrafts(new Set());
+    setShowHistory(false);
+  };
+
+  // Permanently delete from history
+  const handlePermanentDelete = (id: string) => {
+    const updatedHistory = historyItems.filter((h) => h.id !== id);
+    setHistoryItems(updatedHistory);
+    saveZhizaoHistory(updatedHistory);
   };
 
   // Handle file upload (existing content / reference materials)
@@ -260,12 +367,20 @@ export default function ZhizaoPage() {
                 onClick={() => {
                   const toDelete = [...selectedDrafts].sort((a, b) => b - a);
                   const deleted = toDelete.map((i) => drafts[i]);
-                  // Save to history
-                  const history = JSON.parse(localStorage.getItem("zhizao_history") || "[]") as DraftContent[];
-                  localStorage.setItem("zhizao_history", JSON.stringify([...history, ...deleted]));
+                  // Save deleted to single-draft history (legacy compat)
+                  const legacyHistory = JSON.parse(localStorage.getItem("zhizao_history") || "[]") as DraftContent[];
+                  localStorage.setItem("zhizao_history", JSON.stringify([...legacyHistory, ...deleted]));
                   // Remove from drafts
-                  setDrafts((prev) => prev.filter((_, i) => !selectedDrafts.has(i)));
+                  const remaining = drafts.filter((_, i) => !selectedDrafts.has(i));
+                  setDrafts(remaining);
                   setSelectedDrafts(new Set());
+                  // Update current session in storage
+                  if (sessions.length > 0) {
+                    const updatedSessions = [...sessions];
+                    updatedSessions[0] = { ...updatedSessions[0], drafts: remaining };
+                    setSessions(updatedSessions);
+                    saveZhizaoSessions(updatedSessions);
+                  }
                 }}
                 disabled={selectedDrafts.size === 0}
                 className="text-xs text-[var(--error)] hover:text-red-600 disabled:opacity-40"
@@ -305,11 +420,19 @@ export default function ZhizaoPage() {
                   >{isZh ? "\u590D\u5236" : "Copy"}</button>
                   <button
                     onClick={() => {
-                      const history = JSON.parse(localStorage.getItem("zhizao_history") || "[]") as DraftContent[];
-                      history.push(draft);
-                      localStorage.setItem("zhizao_history", JSON.stringify(history));
-                      setDrafts((prev) => prev.filter((_, i) => i !== idx));
+                      const legacyHistory = JSON.parse(localStorage.getItem("zhizao_history") || "[]") as DraftContent[];
+                      legacyHistory.push(draft);
+                      localStorage.setItem("zhizao_history", JSON.stringify(legacyHistory));
+                      const remaining = drafts.filter((_, i) => i !== idx);
+                      setDrafts(remaining);
                       setSelectedDrafts((prev) => { const n = new Set(prev); n.delete(idx); return n; });
+                      // Update current session
+                      if (sessions.length > 0) {
+                        const updatedSessions = [...sessions];
+                        updatedSessions[0] = { ...updatedSessions[0], drafts: remaining };
+                        setSessions(updatedSessions);
+                        saveZhizaoSessions(updatedSessions);
+                      }
                     }}
                     className="text-xs px-2 py-1 rounded border border-[var(--border-glass)] text-[var(--error)] hover:text-red-600"
                   >{isZh ? "\u5220\u9664" : "Del"}</button>
@@ -402,6 +525,111 @@ export default function ZhizaoPage() {
           <span className="text-[10px] text-[var(--text-muted)]">{drafts.length} {isZh ? "\u7BC7" : "articles"}</span>
         </div>
       )}
+
+      {/* Sessions & History Panel */}
+      <GlassCard>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-medium text-[var(--text-secondary)]">
+            {isZh ? "📋 生成记录" : "📋 Generation Sessions"}
+          </h2>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowHistory(false)}
+              className={`text-xs px-2 py-1 rounded ${!showHistory ? "bg-[var(--accent)]/10 text-[var(--accent)]" : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"}`}
+            >
+              {isZh ? `当前 (${sessions.length})` : `Current (${sessions.length})`}
+            </button>
+            <button
+              onClick={() => setShowHistory(true)}
+              className={`text-xs px-2 py-1 rounded ${showHistory ? "bg-[var(--accent)]/10 text-[var(--accent)]" : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"}`}
+            >
+              {isZh ? `历史记录 (${historyItems.length})` : `History (${historyItems.length})`}
+            </button>
+          </div>
+        </div>
+
+        {!showHistory ? (
+          sessions.length === 0 ? (
+            <p className="text-xs text-[var(--text-muted)]">{isZh ? "暂无生成记录，生成内容后自动保存" : "No sessions yet. Results are saved automatically."}</p>
+          ) : (
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {sessions.map((s) => (
+                <div key={s.id} className="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-[var(--border-glass)] hover:border-[var(--accent)]/30 transition-colors">
+                  <div
+                    className="flex-1 cursor-pointer"
+                    onClick={() => { setDrafts(s.drafts); setPhrases(s.phrases); setSelectedDrafts(new Set()); }}
+                  >
+                    <p className="text-xs font-medium text-[var(--text-primary)]">{s.topic}</p>
+                    <p className="text-[10px] text-[var(--text-muted)]">
+                      {s.date} • {s.drafts.length} {isZh ? "篇文章" : "articles"} • {s.phrases.length} {isZh ? "短语" : "phrases"}
+                    </p>
+                  </div>
+                  <div className="flex gap-1 shrink-0 ml-2">
+                    <button
+                      onClick={() => { setDrafts(s.drafts); setPhrases(s.phrases); setSelectedDrafts(new Set()); }}
+                      className="text-[10px] px-2 py-1 rounded border border-[var(--border-glass)] text-[var(--accent)] hover:bg-[var(--accent)]/10"
+                    >
+                      {isZh ? "查看" : "View"}
+                    </button>
+                    <button
+                      onClick={() => handleReusePhrases(s)}
+                      className="text-[10px] px-2 py-1 rounded border border-[var(--border-glass)] text-[var(--text-secondary)] hover:text-[var(--accent)]"
+                      title={isZh ? "复用短语重新生成" : "Reuse phrases to regenerate"}
+                    >
+                      {isZh ? "复用" : "Reuse"}
+                    </button>
+                    <button
+                      onClick={() => handleDeleteSession(s.id)}
+                      className="text-[10px] px-2 py-1 rounded border border-[var(--border-glass)] text-[var(--error)] hover:bg-red-500/10"
+                      title={isZh ? "删除到历史" : "Delete to history"}
+                    >
+                      {isZh ? "删除" : "Del"}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        ) : (
+          historyItems.length === 0 ? (
+            <p className="text-xs text-[var(--text-muted)]">{isZh ? "暂无历史记录" : "No history records"}</p>
+          ) : (
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {historyItems.map((h) => (
+                <div key={h.id} className="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-[var(--border-glass)] opacity-80 hover:opacity-100 transition-opacity">
+                  <div className="flex-1">
+                    <p className="text-xs font-medium text-[var(--text-primary)]">{h.topic}</p>
+                    <p className="text-[10px] text-[var(--text-muted)]">
+                      {h.date} • {h.drafts.length} {isZh ? "篇文章" : "articles"}
+                    </p>
+                  </div>
+                  <div className="flex gap-1 shrink-0 ml-2">
+                    <button
+                      onClick={() => handleRestoreFromHistory(h.id)}
+                      className="text-[10px] px-2 py-1 rounded border border-[var(--border-glass)] text-[var(--success)] hover:bg-green-500/10"
+                    >
+                      {isZh ? "恢复" : "Restore"}
+                    </button>
+                    <button
+                      onClick={() => handleReusePhrases(h)}
+                      className="text-[10px] px-2 py-1 rounded border border-[var(--border-glass)] text-[var(--text-secondary)] hover:text-[var(--accent)]"
+                      title={isZh ? "复用短语重新生成" : "Reuse phrases"}
+                    >
+                      {isZh ? "复用" : "Reuse"}
+                    </button>
+                    <button
+                      onClick={() => handlePermanentDelete(h.id)}
+                      className="text-[10px] px-2 py-1 rounded border border-[var(--border-glass)] text-[var(--error)] hover:bg-red-500/10"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        )}
+      </GlassCard>
 
       {/* CTA */}
       <div className="flex items-center justify-end gap-3 pt-4">

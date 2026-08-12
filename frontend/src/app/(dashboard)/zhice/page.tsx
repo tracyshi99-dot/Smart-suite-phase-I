@@ -13,6 +13,37 @@ import { apiGet, apiPost } from "@/lib/api-client";
 import { PhraseListResponse, ZhiceRequest, ZhiceResult } from "@/lib/types";
 import { ALL_PLATFORMS, LONG_OP_TIMEOUT_MS } from "@/lib/constants";
 
+// --- History types ---
+interface ZhiceHistoryEntry {
+  id: string;
+  date: string;
+  topic: string;
+  phrases: string[];
+  platforms: string[];
+  results: ZhiceResult[];
+  archived?: boolean; // true = user deleted → moved to history
+}
+
+const ZHICE_SESSIONS_KEY = "zhice_sessions";
+const ZHICE_HISTORY_KEY = "zhice_history";
+
+function loadSessions(): ZhiceHistoryEntry[] {
+  try {
+    return JSON.parse(localStorage.getItem(ZHICE_SESSIONS_KEY) || "[]");
+  } catch { return []; }
+}
+function saveSessions(data: ZhiceHistoryEntry[]) {
+  localStorage.setItem(ZHICE_SESSIONS_KEY, JSON.stringify(data));
+}
+function loadHistory(): ZhiceHistoryEntry[] {
+  try {
+    return JSON.parse(localStorage.getItem(ZHICE_HISTORY_KEY) || "[]");
+  } catch { return []; }
+}
+function saveHistory(data: ZhiceHistoryEntry[]) {
+  localStorage.setItem(ZHICE_HISTORY_KEY, JSON.stringify(data));
+}
+
 export default function ZhicePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -40,6 +71,26 @@ export default function ZhicePage() {
   const [results, setResults] = useState<ZhiceResult[]>([]);
   const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
   const [error, setError] = useState<string | null>(null);
+
+  // History & sessions
+  const [sessions, setSessions] = useState<ZhiceHistoryEntry[]>([]);
+  const [history, setHistory] = useState<ZhiceHistoryEntry[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+
+  // Load persisted sessions + history on mount
+  useEffect(() => {
+    setSessions(loadSessions());
+    setHistory(loadHistory());
+  }, []);
+
+  // Auto-restore last session results if no new test has been run
+  useEffect(() => {
+    if (results.length === 0 && sessions.length > 0) {
+      const last = sessions[0];
+      setResults(last.results);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessions]);
 
   // Auto-select gaps when results change
   useEffect(() => {
@@ -143,6 +194,19 @@ export default function ZhicePage() {
           if (!r.has_official_link) gapIndices.add(i);
         });
         setSelectedIndices(gapIndices);
+
+        // Persist to sessions
+        const entry: ZhiceHistoryEntry = {
+          id: `zhice_${Date.now()}`,
+          date: new Date().toLocaleString(),
+          topic: phrases.slice(0, 3).join(", ").slice(0, 50),
+          phrases,
+          platforms: selectedPlatforms,
+          results: data.results,
+        };
+        const updated = [entry, ...sessions].slice(0, 20); // keep last 20
+        setSessions(updated);
+        saveSessions(updated);
       } else {
         setError(isZh ? `API \u672A\u8FD4\u56DE\u7ED3\u679C: ${data.message || "unknown"}` : `API returned no results: ${data.message || "unknown"}`);
       }
@@ -151,6 +215,52 @@ export default function ZhicePage() {
     } finally {
       setTesting(false);
     }
+  };
+
+  // Delete a session → move to history
+  const handleDeleteSession = (id: string) => {
+    const target = sessions.find((s) => s.id === id);
+    if (!target) return;
+    const updatedSessions = sessions.filter((s) => s.id !== id);
+    setSessions(updatedSessions);
+    saveSessions(updatedSessions);
+    const updatedHistory = [{ ...target, archived: true }, ...history].slice(0, 50);
+    setHistory(updatedHistory);
+    saveHistory(updatedHistory);
+    // If we were viewing this session's results, clear them
+    if (results === target.results || (results.length > 0 && results[0]?.query === target.results[0]?.query)) {
+      setResults([]);
+      setSelectedIndices(new Set());
+    }
+  };
+
+  // Restore from history → put back in sessions and load results
+  const handleRestoreFromHistory = (id: string) => {
+    const target = history.find((h) => h.id === id);
+    if (!target) return;
+    const updatedHistory = history.filter((h) => h.id !== id);
+    setHistory(updatedHistory);
+    saveHistory(updatedHistory);
+    const restored = { ...target, archived: false };
+    const updatedSessions = [restored, ...sessions].slice(0, 20);
+    setSessions(updatedSessions);
+    saveSessions(updatedSessions);
+    setResults(restored.results);
+  };
+
+  // Reuse phrases from a history entry (load into input for re-testing)
+  const handleReusePhrasesFromHistory = (entry: ZhiceHistoryEntry) => {
+    setManualPhrases(entry.phrases.join("\n"));
+    setInputMode("manual");
+    setSelectedPlatforms(entry.platforms);
+    setShowHistory(false);
+  };
+
+  // Permanently delete from history
+  const handlePermanentDelete = (id: string) => {
+    const updatedHistory = history.filter((h) => h.id !== id);
+    setHistory(updatedHistory);
+    saveHistory(updatedHistory);
   };
 
   // Analysis
@@ -414,6 +524,116 @@ export default function ZhicePage() {
           </GlassCard>
         </>
       )}
+
+      {/* Sessions & History Panel */}
+      <GlassCard>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-medium text-[var(--text-secondary)]">
+            {isZh ? "📋 测试记录" : "📋 Test Sessions"}
+          </h2>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowHistory(false)}
+              className={`text-xs px-2 py-1 rounded ${!showHistory ? "bg-[var(--accent)]/10 text-[var(--accent)]" : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"}`}
+            >
+              {isZh ? `当前 (${sessions.length})` : `Current (${sessions.length})`}
+            </button>
+            <button
+              onClick={() => setShowHistory(true)}
+              className={`text-xs px-2 py-1 rounded ${showHistory ? "bg-[var(--accent)]/10 text-[var(--accent)]" : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"}`}
+            >
+              {isZh ? `历史记录 (${history.length})` : `History (${history.length})`}
+            </button>
+          </div>
+        </div>
+
+        {!showHistory ? (
+          /* Current Sessions */
+          sessions.length === 0 ? (
+            <p className="text-xs text-[var(--text-muted)]">{isZh ? "暂无测试记录，运行测试后自动保存" : "No sessions yet. Results are saved automatically."}</p>
+          ) : (
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {sessions.map((s) => (
+                <div key={s.id} className="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-[var(--border-glass)] hover:border-[var(--accent)]/30 transition-colors">
+                  <div
+                    className="flex-1 cursor-pointer"
+                    onClick={() => { setResults(s.results); setSelectedIndices(new Set()); }}
+                  >
+                    <p className="text-xs font-medium text-[var(--text-primary)]">{s.topic}</p>
+                    <p className="text-[10px] text-[var(--text-muted)]">
+                      {s.date} • {s.phrases.length} {isZh ? "短语" : "phrases"} × {s.platforms.join(", ")} • {s.results.length} {isZh ? "结果" : "results"}
+                    </p>
+                  </div>
+                  <div className="flex gap-1 shrink-0 ml-2">
+                    <button
+                      onClick={() => { setResults(s.results); setSelectedIndices(new Set()); }}
+                      className="text-[10px] px-2 py-1 rounded border border-[var(--border-glass)] text-[var(--accent)] hover:bg-[var(--accent)]/10"
+                      title={isZh ? "查看结果" : "View results"}
+                    >
+                      {isZh ? "查看" : "View"}
+                    </button>
+                    <button
+                      onClick={() => handleReusePhrasesFromHistory(s)}
+                      className="text-[10px] px-2 py-1 rounded border border-[var(--border-glass)] text-[var(--text-secondary)] hover:text-[var(--accent)]"
+                      title={isZh ? "复用短语重新测试" : "Reuse phrases for new test"}
+                    >
+                      {isZh ? "复用" : "Reuse"}
+                    </button>
+                    <button
+                      onClick={() => handleDeleteSession(s.id)}
+                      className="text-[10px] px-2 py-1 rounded border border-[var(--border-glass)] text-[var(--error)] hover:bg-red-500/10"
+                      title={isZh ? "删除到历史" : "Delete to history"}
+                    >
+                      {isZh ? "删除" : "Del"}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        ) : (
+          /* History (archived / deleted sessions) */
+          history.length === 0 ? (
+            <p className="text-xs text-[var(--text-muted)]">{isZh ? "暂无历史记录" : "No history records"}</p>
+          ) : (
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {history.map((h) => (
+                <div key={h.id} className="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-[var(--border-glass)] opacity-80 hover:opacity-100 transition-opacity">
+                  <div className="flex-1">
+                    <p className="text-xs font-medium text-[var(--text-primary)]">{h.topic}</p>
+                    <p className="text-[10px] text-[var(--text-muted)]">
+                      {h.date} • {h.phrases.length} {isZh ? "短语" : "phrases"} • {h.results.length} {isZh ? "结果" : "results"}
+                    </p>
+                  </div>
+                  <div className="flex gap-1 shrink-0 ml-2">
+                    <button
+                      onClick={() => handleRestoreFromHistory(h.id)}
+                      className="text-[10px] px-2 py-1 rounded border border-[var(--border-glass)] text-[var(--success)] hover:bg-green-500/10"
+                      title={isZh ? "恢复到当前" : "Restore"}
+                    >
+                      {isZh ? "恢复" : "Restore"}
+                    </button>
+                    <button
+                      onClick={() => handleReusePhrasesFromHistory(h)}
+                      className="text-[10px] px-2 py-1 rounded border border-[var(--border-glass)] text-[var(--text-secondary)] hover:text-[var(--accent)]"
+                      title={isZh ? "复用短语重新测试" : "Reuse phrases"}
+                    >
+                      {isZh ? "复用" : "Reuse"}
+                    </button>
+                    <button
+                      onClick={() => handlePermanentDelete(h.id)}
+                      className="text-[10px] px-2 py-1 rounded border border-[var(--border-glass)] text-[var(--error)] hover:bg-red-500/10"
+                      title={isZh ? "永久删除" : "Permanently delete"}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        )}
+      </GlassCard>
 
       {/* CTA to next step */}
       <div className="flex items-center justify-end gap-3 pt-4">
