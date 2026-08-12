@@ -40,14 +40,22 @@ import { truncateText } from "@/lib/utils";
 
 type TabId = "seed" | "persona" | "upload";
 
-// Client-side scoring - same logic as Streamlit's _quick_score
+// Client-side scoring - Query Intelligence Framework (8-dimension lite)
 function scorePhrase(q: string): number {
   let s = 3.0;
+  // Length: 15-30 chars is sweet spot
   if (q.length >= 15 && q.length <= 30) s += 0.5;
   else if (q.length > 30) s += 0.3;
-  if (/[\u600E\u5982\u591A\u54EA\u4E3A\u4EC0\u80FD]|how|what|why/i.test(q)) s += 0.5;
+  // Intent clarity: question words
+  if (/[\u600E\u5982\u591A\u54EA\u4E3A\u4EC0\u80FD]|how|what|why|which|can/i.test(q)) s += 0.5;
+  // Business relevance: brand/product keywords
   if (/\u4E9A\u9A6C\u900A|amazon|fba|\u6CE8\u518C|\u5F00\u5E97|\u9009\u54C1|\u7269\u6D41|\u5E7F\u544A|listing/i.test(q)) s += 0.5;
+  // Naturalness: question particles
   if (/[\u5417\u5462\u554A\u5427\uFF1F?]/.test(q)) s += 0.3;
+  // Context specificity: scenario words (新手/2026/中国卖家/美国站/欧洲站)
+  if (/\u65B0\u624B|\u5C0F\u767D|2026|2025|\u4E2D\u56FD\u5356\u5BB6|\u7F8E\u56FD\u7AD9|\u6B27\u6D32\u7AD9|\u65E5\u672C\u7AD9|beginner|chinese seller/i.test(q)) s += 0.3;
+  // Decision/comparison value: vs/对比/推荐/应该
+  if (/vs|\u8FD8\u662F|\u533A\u522B|\u5BF9\u6BD4|\u54EA\u4E2A\u597D|\u5E94\u8BE5|\u503C\u5F97|\u9002\u5408|\u63A8\u8350|\u6700\u597D|compare|recommend|should/i.test(q)) s += 0.3;
   return Math.min(5.0, Math.round(s * 10) / 10);
 }
 
@@ -469,10 +477,10 @@ export default function ZhikuPage() {
                 ) : (
                   <>
                     <option value={locale} className="bg-[var(--bg-secondary)]">
-                      {locale === "zh-CN" ? "\u4E2D\u6587" : locale === "zh-TW" ? "\u7E41\u9AD4\u4E2D\u6587" : locale === "ko" ? "\uD55C\uAD6D\uC5B4" : locale === "vi" ? "Ti\u1EBFng Vi\u1EC7t" : locale === "ja" ? "\u65E5\u672C\u8A9E" : locale}
+                      {locale === "zh-CN" ? "\u4E2D\u6587" : locale === "zh-TW" ? "\u7E41\u9AD4\u4E2D\u6587" : locale === "ko" ? "\uD55C\uAD6D\uC5B4" : locale === "vi" ? "Ti\u1EBFng Vi\u1EC7t" : locale}
                     </option>
                     <option value={`${locale}+en`} className="bg-[var(--bg-secondary)]">
-                      {locale === "zh-CN" ? "\u4E2D\u6587+English" : locale === "zh-TW" ? "\u7E41\u9AD4\u4E2D\u6587+English" : locale === "ko" ? "\uD55C\uAD6D\uC5B4+English" : locale === "vi" ? "Ti\u1EBFng Vi\u1EC7t+English" : locale === "ja" ? "\u65E5\u672C\u8A9E+English" : `${locale}+English`}
+                      {locale === "zh-CN" ? "\u4E2D\u6587+English" : locale === "zh-TW" ? "\u7E41\u9AD4\u4E2D\u6587+English" : locale === "ko" ? "\uD55C\uAD6D\uC5B4+English" : locale === "vi" ? "Ti\u1EBFng Vi\u1EC7t+English" : `${locale}+English`}
                     </option>
                   </>
                 )}

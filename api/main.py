@@ -181,14 +181,16 @@ One phrase per line, no numbering, no explanation."""
         try:
             from s3_storage import read_csv, write_csv
 
-            # Dynamic scoring like Streamlit's _quick_score
+            # Dynamic scoring - Query Intelligence Framework
             def _score(q):
                 s = 3.0
-                if 10 <= len(q) <= 25: s += 0.5
-                elif len(q) > 25: s += 0.3
-                if any(w in q for w in ["怎么","如何","多少","哪些","为什么","什么","能不能","how","what","why"]): s += 0.5
+                if 15 <= len(q) <= 30: s += 0.5
+                elif len(q) > 30: s += 0.3
+                if any(w in q for w in ["怎么","如何","多少","哪些","为什么","什么","能不能","how","what","why","which","can"]): s += 0.5
                 if any(w in q.lower() for w in ["亚马逊","amazon","fba","注册","开店","选品","物流","广告","listing"]): s += 0.5
                 if any(w in q for w in ["吗","呢","啊","吧","?","？"]): s += 0.3
+                if any(w in q for w in ["新手","小白","2026","2025","中国卖家","美国站","欧洲站","日本站","beginner"]): s += 0.3
+                if any(w in q for w in ["vs","还是","区别","对比","哪个好","应该","值得","适合","推荐","最好","compare","recommend"]): s += 0.3
                 return min(5.0, round(s, 1))
 
             new_df = pd.DataFrame({
@@ -452,9 +454,11 @@ def zhiku_rescore(batch_id: str = "batch_001"):
         s = 3.0
         if 15 <= len(q) <= 30: s += 0.5
         elif len(q) > 30: s += 0.3
-        if any(w in q for w in ["怎么","如何","多少","哪些","为什么","什么","能不能","how","what","why"]): s += 0.5
+        if any(w in q for w in ["怎么","如何","多少","哪些","为什么","什么","能不能","how","what","why","which","can"]): s += 0.5
         if any(w in q.lower() for w in ["亚马逊","amazon","fba","注册","开店","选品","物流","广告","listing"]): s += 0.5
         if any(w in q for w in ["吗","呢","啊","吧","?","？"]): s += 0.3
+        if any(w in q for w in ["新手","小白","2026","2025","中国卖家","美国站","欧洲站","日本站","beginner"]): s += 0.3
+        if any(w in q for w in ["vs","还是","区别","对比","哪个好","应该","值得","适合","推荐","最好","compare","recommend"]): s += 0.3
         return min(5.0, round(s, 1))
 
     if "ai_query" in df.columns:
@@ -737,9 +741,11 @@ def chat_stream(req: ChatRequest):
                         s = 3.0
                         if 15 <= len(q) <= 30: s += 0.5
                         elif len(q) > 30: s += 0.3
-                        if any(w in q for w in ["怎么","如何","多少","哪些","为什么","什么","能不能","how","what","why"]): s += 0.5
+                        if any(w in q for w in ["怎么","如何","多少","哪些","为什么","什么","能不能","how","what","why","which","can"]): s += 0.5
                         if any(w in q.lower() for w in ["亚马逊","amazon","fba","注册","开店","选品","物流","广告","listing"]): s += 0.5
                         if any(w in q for w in ["吗","呢","啊","吧","?","？"]): s += 0.3
+                        if any(w in q for w in ["新手","小白","2026","2025","中国卖家","美国站","欧洲站","日本站","beginner"]): s += 0.3
+                        if any(w in q for w in ["vs","还是","区别","对比","哪个好","应该","值得","适合","推荐","最好","compare","recommend"]): s += 0.3
                         return min(5.0, round(s, 1))
 
                     new_df = pd.DataFrame({
