@@ -46,11 +46,27 @@ export default function ZhizaoPage() {
   }, []);
 
   const handleGenerate = async () => {
+    if (phrases.length === 0) {
+      setError(isZh ? "\u6CA1\u6709\u5F85\u751F\u6210\u77ED\u8BED" : "No phrases to generate");
+      return;
+    }
     setGenerating(true);
     setError(null);
     try {
-      // Use Next.js API route with phrases from zhice
-      const res = await fetch("/api/zhizao/generate", {
+      // Step 1: Upload phrases to S3 as selected (so Lambda can find them)
+      const API_BASE = "https://asq6n6kw78.execute-api.us-east-1.amazonaws.com";
+      await fetch(`${API_BASE}/api/zhiku/upload`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phrases: phrases,
+          source: "zhice_verified",
+          batch_id: activeBatch,
+        }),
+      });
+
+      // Step 2: Call Lambda generate (uses Claude→Claude→Qianwen pipeline)
+      const res = await fetch(`${API_BASE}/api/zhizao/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -58,14 +74,13 @@ export default function ZhizaoPage() {
           content_limit: contentLimit,
           content_language: language,
           template_id: template,
-          phrases: phrases,
         }),
       });
-      const data = await res.json() as { drafts?: DraftContent[]; success?: boolean; message?: string };
+      const data = await res.json() as { drafts?: DraftContent[]; success?: boolean; error?: string; message?: string };
       if (data.drafts && data.drafts.length > 0) {
         setDrafts(data.drafts);
       } else {
-        setError(isZh ? `\u751F\u6210\u5931\u8D25: ${data.message || "unknown"}` : `Generation failed: ${data.message || "unknown"}`);
+        setError(isZh ? `\u751F\u6210\u5931\u8D25: ${data.error || data.message || "timeout"}` : `Generation failed: ${data.error || data.message || "timeout"}`);
       }
     } catch {
       setError(isZh ? "\u751F\u6210\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5" : "Generation failed, please retry");
