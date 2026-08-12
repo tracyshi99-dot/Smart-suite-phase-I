@@ -945,6 +945,8 @@ Output: First line = new title (no #), then blank line, then full body."""
             "word_count": len(content_body),
             "version": "v1",
             "created_at": timestamp(),
+            "confirmed": "True",
+            "include_zhiyou": "True",
         }
 
     # --- Execute in parallel (5 concurrent workers) ---

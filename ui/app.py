@@ -3536,6 +3536,34 @@ elif _page_idx == 3:
                 if result['articles_generated'] > 0:
                     st.success(f"✅ +{result['articles_generated']} {'articles' if is_en else '篇'}")
                     mark_data_changed()
+                    # Auto-flow prompt: offer to continue to zhiyou
+                    st.info(f"💡 {'Content generation complete. Run optimization (智优) to produce final publish-ready content.' if is_en else '智造完成。建议继续执行智优，生成可上线的最终版本内容。'}")
+                    if st.button(f"🚀 {'Auto-continue to Optimization (智优)' if is_en else '自动继续执行智优（评分+重写+合规）'}", type="secondary", key="auto_flow_zhiyou"):
+                        try:
+                            from engine import run_zhiyou_score, run_zhiyou_execute, run_zhiyou_compliance
+                            _af_bar = st.progress(0)
+                            _af_status = st.empty()
+                            _af_status.text(f"{'Scoring...' if is_en else '正在评分...'}")
+                            _af_bar.progress(0.1)
+                            r1 = run_zhiyou_score(selected_batch)
+                            if r1["success"]:
+                                _af_bar.progress(0.4)
+                                _af_status.text(f"{'Rewriting...' if is_en else '正在重写优化...'}")
+                                r2 = run_zhiyou_execute(selected_batch, content_language=st.session_state.get("content_language", "zh-CN"))
+                                if r2["success"]:
+                                    _af_bar.progress(0.7)
+                                    _af_status.text(f"{'Compliance check...' if is_en else '合规审查...'}")
+                                    r3 = run_zhiyou_compliance(selected_batch)
+                                    _af_bar.progress(1.0)
+                                    _af_status.text("")
+                                    st.success(f"✅ {'Full optimization complete! Content is publish-ready.' if is_en else '智优全流程完成！内容已达到可上线质量。'}")
+                                    mark_data_changed()
+                                else:
+                                    st.error(f"{'Rewrite failed' if is_en else '重写失败'}: {r2.get('error','')}")
+                            else:
+                                st.error(f"{'Scoring failed' if is_en else '评分失败'}: {r1.get('error','')}")
+                        except ImportError:
+                            st.error(t("ui.engine_module_not_ready"))
                 else:
                     err_detail = result.get('error_details', '')
                     st.warning(f"⚠️ Generated 0 articles. {err_detail}" if err_detail else "⚠️ API called successfully but generated 0 articles. Possible causes: API returned empty/error response, or all selected queries failed.")
@@ -3885,6 +3913,60 @@ elif _page_idx == 4:
                 st.success(f"✅ {'Uploaded' if is_en else '已上传'} {len(df_up)} {'articles, ready for Optimization' if is_en else '篇文章，可执行智优'}")
             except Exception as e:
                 st.error(f"{'Upload failed' if is_en else '上传失败'}: {e}")
+
+    # --- Batch Fix: detect batches with zhizao but no zhiyou ---
+    with st.expander(f"{'🔧 Batch Fix: Detect & fix batches missing optimization' if is_en else '🔧 批量补全：检测并修复缺少智优的批次'}", expanded=False):
+        # Scan all batches
+        _all_batches = sorted([d.name for d in OUTPUT_PATH.iterdir() if d.is_dir() and d.name.startswith("batch_")])
+        _missing_zhiyou = []
+        for _bid in _all_batches:
+            _zhizao_f = OUTPUT_PATH / _bid / "02_zhizao" / "zhizao_draft_content.csv"
+            _zhiyou_f = OUTPUT_PATH / _bid / "03_zhiyou" / "zhiyou_optimized_content.csv"
+            if _zhizao_f.exists() and not _zhiyou_f.exists():
+                try:
+                    _df_check = pd.read_csv(_zhizao_f, encoding="utf-8-sig", nrows=1)
+                    if not _df_check.empty:
+                        _missing_zhiyou.append(_bid)
+                except Exception:
+                    pass
+
+        if _missing_zhiyou:
+            st.warning(f"{'Found' if is_en else '发现'} **{len(_missing_zhiyou)}** {'batches with content (智造) but no optimization (智优):' if is_en else '个批次有智造内容但缺少智优优化：'}")
+            for _mb in _missing_zhiyou:
+                st.text(f"  ⚠️ {_mb}")
+            st.caption(f"{'These batches have draft content but were never optimized. Click below to run zhiyou for all of them.' if is_en else '这些批次有草稿内容但从未执行智优。点击下方按钮批量补全。'}")
+            if st.button(f"🚀 {'Run optimization for all missing batches' if is_en else '批量补全智优（评分+重写+合规）'}", key="batch_fix_zhiyou"):
+                try:
+                    from engine import run_zhiyou_score, run_zhiyou_execute, run_zhiyou_compliance
+                    _fix_bar = st.progress(0)
+                    _fix_status = st.empty()
+                    _fix_results = []
+                    for _fi, _fix_bid in enumerate(_missing_zhiyou):
+                        _fix_status.text(f"{'Processing' if is_en else '正在处理'} {_fix_bid} ({_fi+1}/{len(_missing_zhiyou)})...")
+                        _fix_bar.progress((_fi) / len(_missing_zhiyou))
+                        try:
+                            _r1 = run_zhiyou_score(_fix_bid)
+                            if _r1["success"]:
+                                _r2 = run_zhiyou_execute(_fix_bid, content_language=st.session_state.get("content_language", "zh-CN"))
+                                if _r2["success"]:
+                                    _r3 = run_zhiyou_compliance(_fix_bid)
+                                    _fix_results.append((_fix_bid, "✅", _r2.get("articles_rewritten", 0)))
+                                else:
+                                    _fix_results.append((_fix_bid, "⚠️ rewrite failed", 0))
+                            else:
+                                _fix_results.append((_fix_bid, f"⚠️ score failed: {_r1.get('error','')}", 0))
+                        except Exception as _fix_err:
+                            _fix_results.append((_fix_bid, f"❌ {str(_fix_err)[:50]}", 0))
+                    _fix_bar.progress(1.0)
+                    _fix_status.text("")
+                    st.success(f"{'Batch fix complete!' if is_en else '批量补全完成！'}")
+                    for _bid_r, _status_r, _count_r in _fix_results:
+                        st.text(f"  {_status_r} {_bid_r} ({_count_r} {'articles' if is_en else '篇'})")
+                    mark_data_changed()
+                except ImportError:
+                    st.error(t("ui.engine_module_not_ready"))
+        else:
+            st.success(f"{'All batches with content have been optimized ✅' if is_en else '所有有内容的批次都已完成智优 ✅'}")
 
     # --- Show incoming content from 智造 ---
     st.subheader(t("ui.content_from_content_creation"))
