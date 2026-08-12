@@ -49,18 +49,24 @@ export default function ZhizaoPage() {
     setGenerating(true);
     setError(null);
     try {
-      const req: ZhizaoRequest = {
-        batch_id: activeBatch,
-        content_limit: contentLimit,
-        content_language: language,
-        template_id: template,
-      };
-      const res = await apiPost<{ drafts?: DraftContent[]; success?: boolean }>(
-        "/api/zhizao/generate",
-        req,
-        { timeout: LONG_OP_TIMEOUT_MS }
-      );
-      setDrafts(res.drafts ?? []);
+      // Use Next.js API route with phrases from zhice
+      const res = await fetch("/api/zhizao/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          batch_id: activeBatch,
+          content_limit: contentLimit,
+          content_language: language,
+          template_id: template,
+          phrases: phrases,
+        }),
+      });
+      const data = await res.json() as { drafts?: DraftContent[]; success?: boolean; message?: string };
+      if (data.drafts && data.drafts.length > 0) {
+        setDrafts(data.drafts);
+      } else {
+        setError(isZh ? `\u751F\u6210\u5931\u8D25: ${data.message || "unknown"}` : `Generation failed: ${data.message || "unknown"}`);
+      }
     } catch {
       setError(isZh ? "\u751F\u6210\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5" : "Generation failed, please retry");
     } finally {
