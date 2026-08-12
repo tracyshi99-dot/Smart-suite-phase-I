@@ -32,11 +32,11 @@ async function callClaude(systemPrompt: string, userPrompt: string, maxTokens = 
     },
   });
 
-  // Try multiple model IDs (availability varies by account)
+  // Try multiple model IDs - Haiku first (fastest, good quality)
   const models = [
-    "anthropic.claude-3-5-sonnet-20241022-v2:0",
-    "anthropic.claude-3-sonnet-20240229-v1:0",
     "anthropic.claude-3-haiku-20240307-v1:0",
+    "anthropic.claude-3-sonnet-20240229-v1:0",
+    "anthropic.claude-3-5-sonnet-20241022-v2:0",
   ];
 
   for (const modelId of models) {
