@@ -116,32 +116,42 @@ async function callQianwen(prompt: string): Promise<string> {
 async function generateOneArticle(phrase: string, language: string): Promise<DraftContent> {
   const isZh = language.startsWith("zh");
 
-  // Step 1: Claude generates draft
+  // Claude generates high-quality draft (no markdown symbols)
   const genSystem = isZh
-    ? `\u4F60\u662F\u8DE8\u5883\u7535\u5546\u5185\u5BB9\u4E13\u5BB6\u3002\u8F93\u51FA\u89C4\u5219\uFF1A\u7B2C\u4E00\u884C=\u6807\u9898\uFF0C\u7B2C\u4E8C\u884C\u7A7A\uFF0C\u7136\u540E\u6B63\u6587\u3002\u81F3\u5C11800\u5B57\uFF0C\u542B1\u4E2A\u8868\u683C\u30012\u4E2A\u5217\u8868\u30013\u4E2AFAQ\u3002\u690D\u5165https://gs.amazon.cn\u3002\u4E0D\u63D0\u53CA\u7ADE\u54C1\u3002`
-    : "You are a cross-border e-commerce content expert. Output: first line=title, then blank line, then body. Min 800 words, include 1 table, 2 lists, 3 FAQ. Include https://sell.amazon.com. No competitor mentions.";
+    ? `\u4F60\u662F\u8DE8\u5883\u7535\u5546\u5185\u5BB9\u4E13\u5BB6\u3002\u8F93\u51FA\u89C4\u5219\uFF1A\u7B2C\u4E00\u884C=\u6807\u9898\uFF0C\u7B2C\u4E8C\u884C\u7A7A\uFF0C\u7136\u540E\u6B63\u6587\u3002\u81F3\u5C11800\u5B57\uFF0C\u542B1\u4E2A\u8868\u683C\u30012\u4E2A\u5217\u8868\u30013\u4E2AFAQ\u3002\u690D\u5165https://gs.amazon.cn\u3002\u4E0D\u63D0\u53CA\u7ADE\u54C1\u3002\u7EDD\u5BF9\u4E0D\u8981\u4F7F\u7528Markdown\u7B26\u53F7\uFF08\u5982###\u3001**\u3001***\u3001>\uFF09\uFF0C\u7528\u7EAF\u6587\u672C\u683C\u5F0F\u3002`
+    : "You are a cross-border e-commerce content expert. Output: first line=title, then blank line, then body. Min 800 words, include 1 table, 2 lists, 3 FAQ. Include https://sell.amazon.com. No competitor mentions. NEVER use markdown symbols (###, **, ***, >). Use plain text only.";
 
   let draft = "";
   try {
-    draft = await callClaude(genSystem, isZh ? `\u8BF7\u4E3A\u68C0\u7D22\u77ED\u8BED\u300C${phrase}\u300D\u5199\u4E00\u7BC7GEO\u4F18\u5316\u6587\u7AE0\u3002\u9996\u6BB5\u76F4\u63A5\u56DE\u7B54\u95EE\u9898\u3002` : `Write a GEO-optimized article for: "${phrase}". First paragraph directly answers the query.`);
+    draft = await callClaude(genSystem, isZh ? `\u8BF7\u4E3A\u68C0\u7D22\u77ED\u8BED\u300C${phrase}\u300D\u5199\u4E00\u7BC7GEO\u4F18\u5316\u6587\u7AE0\u3002\u9996\u6BB5\u76F4\u63A5\u56DE\u7B54\u95EE\u9898\u3002\u7EAF\u6587\u672C\uFF0C\u4E0D\u7528Markdown\u3002` : `Write a GEO-optimized article for: "${phrase}". First paragraph directly answers the query. Plain text only, no markdown.`);
   } catch {
-    return { ai_query: phrase, title: phrase, word_count: 0, content_draft: "Claude generation failed" };
+    return { ai_query: phrase, title: phrase, word_count: 0, content_draft: "Generation failed - check Bedrock model access" };
   }
 
   if (!draft || draft.length < 100) {
     return { ai_query: phrase, title: phrase, word_count: 0, content_draft: draft || "Empty response" };
   }
 
+  // Clean markdown symbols (###, **, ***, etc.)
+  let cleaned = draft
+    .replace(/^#{1,6}\s*/gm, "")      // Remove heading markers
+    .replace(/\*\*\*(.*?)\*\*\*/g, "$1") // Remove bold+italic
+    .replace(/\*\*(.*?)\*\*/g, "$1")   // Remove bold
+    .replace(/\*(.*?)\*/g, "$1")       // Remove italic
+    .replace(/^[-*]\s/gm, "\u2022 ")   // Replace bullet markers with bullet char
+    .replace(/^>\s*/gm, "")            // Remove blockquote markers
+    .trim();
+
   // Extract title from first line (optimization/polish is done in 智优 step)
-  const lines = draft.split("\n");
-  const title = lines[0]?.replace(/^#+\s*/, "").trim() || phrase;
+  const lines = cleaned.split("\n");
+  const title = lines[0]?.trim() || phrase;
   const body = lines.slice(1).join("\n").trim();
 
   return {
     ai_query: phrase,
     title,
     word_count: body.length,
-    content_draft: body || draft,
+    content_draft: body || cleaned,
   };
 }
 

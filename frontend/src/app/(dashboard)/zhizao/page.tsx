@@ -289,8 +289,8 @@ export default function ZhizaoPage() {
                     return updated;
                   });
                 }}
-                rows={15}
-                className="w-full bg-white/5 border border-[var(--border-glass)] rounded-lg px-4 py-3 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] resize-y font-mono leading-relaxed"
+                rows={25}
+                className="w-full bg-white/5 border border-[var(--border-glass)] rounded-lg px-4 py-3 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] resize-y leading-relaxed"
               />
             </GlassCard>
           ))}
