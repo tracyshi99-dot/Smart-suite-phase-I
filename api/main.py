@@ -171,7 +171,8 @@ Rules:
 One phrase per line, no numbering, no explanation."""
 
         response = call_bedrock_claude(prompt)
-        queries = [q.strip().lstrip("0123456789.-) ") for q in response.strip().split("\n") if q.strip() and len(q.strip()) > 10]
+        import re as _re_seed
+        queries = [_re_seed.sub(r"^\d+[\.\)\-\s]+", "", q.strip()) for q in response.strip().split("\n") if q.strip() and len(q.strip()) > 10]
 
         if not queries:
             raise HTTPException(status_code=500, detail="No phrases generated")
@@ -296,7 +297,8 @@ Requirements:
 4. One phrase per line, no numbering, no explanation"""
 
         response = call_bedrock_claude(prompt)
-        queries = [q.strip().lstrip("0123456789.-) ") for q in response.strip().split("\n") if q.strip() and len(q.strip()) > 10]
+        import re as _re_persona
+        queries = [_re_persona.sub(r"^\d+[\.\)\-\s]+", "", q.strip()) for q in response.strip().split("\n") if q.strip() and len(q.strip()) > 10]
 
         if not queries:
             raise HTTPException(status_code=500, detail="No phrases generated")
@@ -721,7 +723,8 @@ def chat_stream(req: ChatRequest):
 
 每行一条，不要编号，不要解释。"""
             response = call_bedrock_claude(prompt)
-            queries = [q.strip().lstrip("0123456789.-) ") for q in response.strip().split("\n") if q.strip() and len(q.strip()) > 10]
+            import re as _re_chat
+            queries = [_re_chat.sub(r"^\d+[\.\)\-\s]+", "", q.strip()) for q in response.strip().split("\n") if q.strip() and len(q.strip()) > 10]
 
             if queries:
                 # Save to S3
@@ -729,11 +732,21 @@ def chat_stream(req: ChatRequest):
                     from s3_storage import read_csv, write_csv
                     import pandas as pd
                     from datetime import datetime
+
+                    def _score_chat(q):
+                        s = 3.0
+                        if 15 <= len(q) <= 30: s += 0.5
+                        elif len(q) > 30: s += 0.3
+                        if any(w in q for w in ["怎么","如何","多少","哪些","为什么","什么","能不能","how","what","why"]): s += 0.5
+                        if any(w in q.lower() for w in ["亚马逊","amazon","fba","注册","开店","选品","物流","广告","listing"]): s += 0.5
+                        if any(w in q for w in ["吗","呢","啊","吧","?","？"]): s += 0.3
+                        return min(5.0, round(s, 1))
+
                     new_df = pd.DataFrame({
                         "ai_query": queries,
                         "source": f"agent_chat_{topic}",
                         "is_selected": "FALSE",
-                        "priority_score": 3.0,
+                        "priority_score": [_score_chat(q) for q in queries],
                         "created_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
                     })
                     existing = read_csv(req.batch_id, "01_zhiku", "zhiku_ai_queries.csv")
