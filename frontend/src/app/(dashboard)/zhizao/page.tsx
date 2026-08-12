@@ -24,7 +24,7 @@ export default function ZhizaoPage() {
   // Phrases from zhice
   const [phrases, setPhrases] = useState<string[]>([]);
   const [contentLimit, setContentLimit] = useState(5);
-  const [language, setLanguage] = useState(locale || "zh-CN");
+  const [language, setLanguage] = useState<string>(locale || "zh-CN");
   const [template, setTemplate] = useState("auto");
   const [generating, setGenerating] = useState(false);
   const [drafts, setDrafts] = useState<DraftContent[]>([]);
@@ -114,7 +114,7 @@ export default function ZhizaoPage() {
         const buffer = await file.arrayBuffer();
         const wb = XLSX.read(buffer, { type: "array" });
         const ws = wb.Sheets[wb.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { header: 1 }) as unknown[][];
+        const rows = XLSX.utils.sheet_to_json(ws, { header: 1 }) as unknown[][];
         // Take first column, skip header if it looks like one
         const startIdx = rows.length > 0 && typeof rows[0]?.[0] === "string" &&
           (rows[0][0] as string).toLowerCase().includes("query") || (rows[0]?.[0] as string)?.includes("\u68C0\u7D22") ? 1 : 0;

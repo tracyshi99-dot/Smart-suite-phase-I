@@ -78,7 +78,7 @@ export default function ZhikuPage() {
   // Seed expansion state
   const [seed, setSeed] = useState("");
   const [count, setCount] = useState(15);
-  const [language, setLanguage] = useState(locale || "zh-CN");
+  const [language, setLanguage] = useState<string>(locale || "zh-CN");
   const [expanding, setExpanding] = useState(false);
   const [expandError, setExpandError] = useState<string | null>(null);
 
