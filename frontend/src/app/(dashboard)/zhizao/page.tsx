@@ -70,11 +70,11 @@ export default function ZhizaoPage() {
       });
     } catch { /* best effort */ }
 
-    // Step 2: Generate one article at a time (avoids API Gateway 30s timeout)
+    // Step 2: Generate one article at a time via Vercel API route (Claude→Claude→Qianwen)
     const allDrafts: DraftContent[] = [];
     for (let i = 0; i < limited.length; i++) {
       try {
-        const res = await fetch(`${API_BASE}/api/zhizao/generate`, {
+        const res = await fetch("/api/zhizao/generate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -82,6 +82,7 @@ export default function ZhizaoPage() {
             content_limit: 1,
             content_language: language,
             template_id: template,
+            phrases: [limited[i]],
           }),
         });
         const data = await res.json() as { drafts?: DraftContent[]; success?: boolean; error?: string };
