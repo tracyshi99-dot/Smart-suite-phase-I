@@ -94,8 +94,46 @@ async function callClaude(systemPrompt: string, userPrompt: string, maxTokens = 
   return "";
 }
 
-// --- DeepSeek optimization call ---
+// --- DeepSeek optimization via Bedrock (no separate API key needed) ---
 async function callDeepSeek(systemPrompt: string, userPrompt: string): Promise<string> {
+  const client = new BedrockRuntimeClient({
+    region: "us-east-1",
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID_BEDROCK || "",
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY_BEDROCK || "",
+    },
+  });
+
+  // Try DeepSeek models on Bedrock (newest first)
+  const models = [
+    "deepseek.deepseek-v3-2-v1:0",
+    "deepseek.deepseek-v3-1-v1:0",
+    "deepseek.deepseek-r1-v1:0",
+  ];
+
+  for (const modelId of models) {
+    try {
+      const command = new ConverseCommand({
+        modelId,
+        messages: [{ role: "user", content: [{ text: `${systemPrompt}\n\n${userPrompt}` }] }],
+        inferenceConfig: { maxTokens: 4000, temperature: 0.3 },
+      });
+      const response = await client.send(command);
+      const content = response.output?.message?.content;
+      if (content && content[0] && "text" in content[0] && content[0].text) {
+        return content[0].text;
+      }
+    } catch {
+      continue; // Try next model
+    }
+  }
+
+  // Fallback: call DeepSeek API directly if Bedrock models unavailable
+  return callDeepSeekDirect(systemPrompt, userPrompt);
+}
+
+// Direct DeepSeek API fallback (only if Bedrock DeepSeek not enabled)
+async function callDeepSeekDirect(systemPrompt: string, userPrompt: string): Promise<string> {
   const key = process.env.DEEPSEEK_REAL_API_KEY || process.env.DEEPSEEK_API_KEY || "";
   if (!key) return "";
   try {
