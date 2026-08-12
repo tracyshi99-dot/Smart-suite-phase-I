@@ -417,14 +417,18 @@ export default function ZhicePage() {
 
       {/* CTA to next step */}
       <div className="flex items-center justify-end gap-3 pt-4">
-        {selectedIndices.size > 0 && (
-          <span className="text-xs text-[var(--success)]">
-            {"\u2705"} {selectedIndices.size} {isZh ? "\u6761\u5DF2\u9009\u4E2D" : "selected for content generation"}
-          </span>
-        )}
+        {selectedIndices.size > 0 && (() => {
+          const selectedQueries = [...selectedIndices].map((i) => results[i]?.query).filter(Boolean);
+          const uniquePhrases = [...new Set(selectedQueries)];
+          return (
+            <span className="text-xs text-[var(--success)]">
+              {"\u2705"} {selectedIndices.size} {isZh ? "\u884C\u5DF2\u9009\uFF0C\u5BF9\u5E94" : "rows selected ="} {uniquePhrases.length} {isZh ? "\u7BC7\u5185\u5BB9" : "articles"}
+            </span>
+          );
+        })()}
         <button
           onClick={() => {
-            // Pass selected queries to zhizao via localStorage
+            // Pass unique selected queries to zhizao via localStorage
             const selectedQueries = [...selectedIndices].map((i) => results[i]?.query).filter(Boolean);
             const unique = [...new Set(selectedQueries)];
             localStorage.setItem("zhice_selected_queries", JSON.stringify(unique));
@@ -437,7 +441,10 @@ export default function ZhicePage() {
               : "bg-gray-600 text-gray-400 cursor-not-allowed"
           }`}
         >
-          {isZh ? `\u4E0B\u4E00\u6B65\uFF1A\u751F\u6210\u5185\u5BB9 (${selectedIndices.size}) \u2192` : `Next: Generate Content (${selectedIndices.size}) \u2192`}
+          {isZh
+            ? `\u4E0B\u4E00\u6B65\uFF1A\u751F\u6210\u5185\u5BB9 (${new Set([...selectedIndices].map((i) => results[i]?.query).filter(Boolean)).size} \u7BC7) \u2192`
+            : `Next: Generate Content (${new Set([...selectedIndices].map((i) => results[i]?.query).filter(Boolean)).size} articles) \u2192`
+          }
         </button>
       </div>
     </div>
