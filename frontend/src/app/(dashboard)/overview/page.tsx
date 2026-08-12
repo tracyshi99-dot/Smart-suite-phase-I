@@ -325,6 +325,57 @@ export default function OverviewPage() {
         </div>
       </section>
 
+      {/* Workflow Diagram */}
+      <section className="bg-white border border-[var(--border-card)] rounded-xl p-6 shadow-sm">
+        <h2 className="text-center text-lg font-bold text-[var(--text-primary)] mb-2">
+          {isZh ? "\u5B8C\u6574\u5DE5\u4F5C\u6D41\u7A0B" : "End-to-End Workflow"}
+        </h2>
+        <p className="text-center text-xs text-[var(--text-muted)] mb-6">
+          {isZh ? "\u4ECE\u68C0\u7D22\u77ED\u8BED\u53D1\u73B0\u5230\u6548\u679C\u5F52\u56E0\uFF0C\u5168\u81EA\u52A8\u5316\u95ED\u73AF" : "From query discovery to attribution analytics, fully automated closed-loop"}
+        </p>
+        <div className="overflow-x-auto">
+          <div className="flex items-stretch gap-0 min-w-[900px] justify-center">
+            {[
+              { icon: "\u{1F4DA}", label: isZh ? "\u667A\u5E93" : "Discover", sub: isZh ? "\u68C0\u7D22\u77ED\u8BED\u53D1\u73B0" : "AI Search Phrases", color: "#ffa726" },
+              { icon: "\u{1F50D}", label: isZh ? "\u667A\u6D4B" : "Verify", sub: isZh ? "AI \u641C\u7D22\u9A8C\u8BC1" : "Gap Detection", color: "#00bfa5" },
+              { icon: "\u270D\uFE0F", label: isZh ? "\u667A\u9020" : "Create", sub: isZh ? "GEO \u5185\u5BB9\u751F\u6210" : "Content Generation", color: "#ffcc02" },
+              { icon: "\u{1F527}", label: isZh ? "\u667A\u4F18" : "Optimize", sub: isZh ? "\u8BC4\u5206\u4E0E\u4F18\u5316" : "Score & Rewrite", color: "#e91e63" },
+              { icon: "\u{1F4E6}", label: isZh ? "\u667A\u5E03" : "Publish", sub: isZh ? "CMS JSON \u8F93\u51FA" : "CMS-Ready Output", color: "#29b6f6" },
+              { icon: "\u{1F4E1}", label: isZh ? "\u667A\u4F20" : "Distribute", sub: isZh ? "\u591A\u6E20\u9053\u5206\u53D1" : "Multi-Channel", color: "#26c6da" },
+              { icon: "\u{1F4CA}", label: isZh ? "\u667A\u6790" : "Analyze", sub: isZh ? "\u6548\u679C\u5F52\u56E0" : "Attribution", color: "#ab47bc" },
+            ].map((step, i, arr) => (
+              <div key={i} className="flex items-center">
+                <div className="flex flex-col items-center text-center w-[110px]">
+                  <div
+                    className="w-12 h-12 rounded-full flex items-center justify-center text-xl mb-2"
+                    style={{ background: `${step.color}15`, border: `2px solid ${step.color}` }}
+                  >
+                    {step.icon}
+                  </div>
+                  <span className="text-sm font-semibold" style={{ color: step.color }}>{step.label}</span>
+                  <span className="text-[10px] text-[var(--text-muted)] mt-0.5 leading-tight">{step.sub}</span>
+                </div>
+                {i < arr.length - 1 && (
+                  <div className="flex items-center px-1">
+                    <svg width="28" height="16" viewBox="0 0 28 16" className="text-[var(--text-muted)] opacity-40">
+                      <path d="M0 8 H22 M18 3 L24 8 L18 13" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* Feedback loop */}
+        <div className="flex items-center justify-center mt-4 gap-2">
+          <div className="h-px flex-1 max-w-[200px] bg-gradient-to-r from-transparent to-[var(--text-muted)] opacity-20" />
+          <span className="text-[10px] text-[var(--text-muted)] px-3 py-1 rounded-full border border-[var(--border-card)]">
+            {isZh ? "\u{1F504} \u667A\u4E2D\u67A2\u7F16\u6392 + \u667A\u6790\u53CD\u9988\u95ED\u73AF" : "\u{1F504} Orchestrator + Analytics Feedback Loop"}
+          </span>
+          <div className="h-px flex-1 max-w-[200px] bg-gradient-to-l from-transparent to-[var(--text-muted)] opacity-20" />
+        </div>
+      </section>
+
       {/* Module Sections */}
       {MODULES.map((mod) => (
         <section
