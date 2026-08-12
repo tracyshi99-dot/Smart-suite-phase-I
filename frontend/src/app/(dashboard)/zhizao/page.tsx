@@ -70,30 +70,31 @@ export default function ZhizaoPage() {
       });
     } catch { /* best effort */ }
 
-    // Step 2: Generate one article at a time via Vercel API route (Claude→Claude→Qianwen)
+    // Step 2: Generate articles in parallel via Vercel API route (Claude→Claude→Qianwen)
     const allDrafts: DraftContent[] = [];
-    for (let i = 0; i < limited.length; i++) {
-      try {
-        const res = await fetch("/api/zhizao/generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            batch_id: activeBatch,
-            content_limit: 1,
-            content_language: language,
-            template_id: template,
-            phrases: [limited[i]],
-          }),
-        });
-        const data = await res.json() as { drafts?: DraftContent[]; success?: boolean; error?: string };
-        if (data.drafts && data.drafts.length > 0) {
-          allDrafts.push(...data.drafts);
-          setDrafts([...allDrafts]);
-        }
-      } catch {
-        // Continue with next article
-      }
-    }
+    // Process all phrases in parallel (each article is independent)
+    const promises = limited.map((phrase) =>
+      fetch("/api/zhizao/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          batch_id: activeBatch,
+          content_limit: 1,
+          content_language: language,
+          template_id: template,
+          phrases: [phrase],
+        }),
+      })
+        .then((res) => res.json())
+        .then((data: { drafts?: DraftContent[] }) => {
+          if (data.drafts && data.drafts.length > 0) {
+            allDrafts.push(...data.drafts);
+            setDrafts([...allDrafts]);
+          }
+        })
+        .catch(() => { /* skip failed */ })
+    );
+    await Promise.all(promises);
 
     if (allDrafts.length === 0) {
       setError(isZh ? "\u751F\u6210\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5\uFF08\u53EF\u80FD\u8D85\u65F6\uFF09" : "Generation failed (possible timeout), please retry");
