@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useI18nStore } from "@/stores/i18n-store";
 import { useBatchStore } from "@/stores/batch-store";
@@ -16,10 +16,13 @@ import { truncateText } from "@/lib/utils";
 
 export default function ZhizaoPage() {
   const router = useRouter();
-  const { t } = useI18nStore();
+  const { t, locale } = useI18nStore();
   const { activeBatch } = useBatchStore();
   const { regionConfig } = useAuthStore();
+  const isZh = locale.startsWith("zh");
 
+  // Phrases from zhice
+  const [phrases, setPhrases] = useState<string[]>([]);
   const [contentLimit, setContentLimit] = useState(5);
   const [language, setLanguage] = useState(regionConfig?.content_languages?.[0]?.code ?? "zh-CN");
   const [template, setTemplate] = useState("auto");
@@ -27,6 +30,20 @@ export default function ZhizaoPage() {
   const [drafts, setDrafts] = useState<DraftContent[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
+
+  // Load phrases from zhice (localStorage)
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("zhice_selected_queries");
+      if (saved) {
+        const parsed = JSON.parse(saved) as string[];
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setPhrases(parsed);
+          setContentLimit(parsed.length);
+        }
+      }
+    } catch { /* ignore */ }
+  }, []);
 
   const handleGenerate = async () => {
     setGenerating(true);
@@ -45,10 +62,27 @@ export default function ZhizaoPage() {
       );
       setDrafts(res.drafts ?? []);
     } catch {
-      setError("生成失败，请重试 / Generation failed");
+      setError(isZh ? "\u751F\u6210\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5" : "Generation failed, please retry");
     } finally {
       setGenerating(false);
     }
+  };
+
+  // Handle file upload (existing content / reference materials)
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const lines = text.split("\n").map((l) => l.trim()).filter((l) => l.length > 5);
+      // If CSV, take first column
+      const items = lines.map((l) => l.split(",")[0]?.trim().replace(/^["']|["']$/g, "")).filter(Boolean);
+      if (items.length > 0) {
+        setPhrases((prev) => [...new Set([...prev, ...items])]);
+        setContentLimit((prev) => Math.max(prev, items.length));
+      }
+    } catch { /* ignore */ }
+    e.target.value = "";
   };
 
   return (
@@ -57,6 +91,54 @@ export default function ZhizaoPage() {
         <h1 className="text-xl font-bold">{t("zhizao.title")}</h1>
         <BatchSelector />
       </div>
+
+      {/* Source Phrases from Zhice */}
+      {phrases.length > 0 && (
+        <GlassCard>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-sm font-medium text-[var(--text-secondary)]">
+              {isZh ? `\u2460 \u5F85\u751F\u6210\u77ED\u8BED (${phrases.length} \u7BC7)` : `\u2460 Phrases to Generate (${phrases.length} articles)`}
+            </h2>
+            <button
+              onClick={() => { setPhrases([]); localStorage.removeItem("zhice_selected_queries"); }}
+              className="text-xs text-[var(--text-muted)] hover:text-[var(--error)]"
+            >
+              {isZh ? "\u6E05\u9664" : "Clear"}
+            </button>
+          </div>
+          <div className="max-h-40 overflow-y-auto bg-white/5 rounded-lg p-2 border border-[var(--border-glass)]">
+            {phrases.map((p, i) => (
+              <div key={i} className="flex items-center justify-between py-0.5">
+                <span className="text-xs text-[var(--text-primary)]">{i + 1}. {p}</span>
+                <button
+                  onClick={() => setPhrases((prev) => prev.filter((_, idx) => idx !== i))}
+                  className="text-xs text-[var(--text-muted)] hover:text-[var(--error)] ml-2"
+                >
+                  {"\u2715"}
+                </button>
+              </div>
+            ))}
+          </div>
+        </GlassCard>
+      )}
+
+      {/* Upload / Add Phrases */}
+      <GlassCard>
+        <div className="flex items-center gap-4 flex-wrap">
+          <label className="text-xs text-[var(--text-secondary)]">
+            {isZh ? "\u4E0A\u4F20\u7D20\u6750/\u5DF2\u6709\u5185\u5BB9" : "Upload materials/existing content"}:
+          </label>
+          <input
+            type="file"
+            accept=".csv,.txt,.md"
+            onChange={handleUpload}
+            className="text-xs text-[var(--text-secondary)] file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-[var(--border-glass)] file:text-xs file:bg-white/5 file:text-[var(--text-primary)] hover:file:bg-white/10 file:cursor-pointer"
+          />
+          <span className="text-[10px] text-[var(--text-muted)]">
+            {isZh ? "CSV/TXT/MD\uFF0C\u6BCF\u884C\u4E00\u6761\u77ED\u8BED\u6216\u5185\u5BB9" : "CSV/TXT/MD, one phrase or content per line"}
+          </span>
+        </div>
+      </GlassCard>
 
       {/* Generate Form */}
       <GlassCard>
@@ -79,7 +161,7 @@ export default function ZhizaoPage() {
               onChange={(e) => setLanguage(e.target.value)}
               className="bg-white/5 border border-[var(--border-glass)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
             >
-              {(regionConfig?.content_languages ?? [{ code: "zh-CN", name: "中文" }]).map((l) => (
+              {(regionConfig?.content_languages ?? [{ code: "zh-CN", name: "\u4E2D\u6587" }]).map((l) => (
                 <option key={l.code} value={l.code} className="bg-[var(--bg-secondary)]">{l.name}</option>
               ))}
             </select>
@@ -100,7 +182,7 @@ export default function ZhizaoPage() {
             {t("zhizao.generate")}
           </Button>
         </div>
-        {generating && <ProgressBar percent={45} label="生成中 / Generating..." className="mt-3" />}
+        {generating && <ProgressBar percent={45} label={isZh ? "\u751F\u6210\u4E2D..." : "Generating..."} className="mt-3" />}
         {error && <p className="text-sm text-[var(--error)] mt-2">{error}</p>}
       </GlassCard>
 
@@ -119,7 +201,7 @@ export default function ZhizaoPage() {
                     {draft.ai_query} • {draft.word_count} words
                   </p>
                 </div>
-                <span className="text-[var(--text-muted)]">{expandedIdx === idx ? "▼" : "▶"}</span>
+                <span className="text-[var(--text-muted)]">{expandedIdx === idx ? "\u25BC" : "\u25B6"}</span>
               </div>
               {expandedIdx === idx && (
                 <div className="mt-3 pt-3 border-t border-[var(--border-glass)]">
@@ -136,7 +218,7 @@ export default function ZhizaoPage() {
       {/* CTA */}
       <div className="flex justify-end pt-4">
         <button onClick={() => router.push("/zhiyou")} className="px-4 py-2 rounded-lg text-sm font-medium bg-[var(--accent)] text-black hover:bg-[var(--accent-hover)] transition-colors">
-          {t("zhizao.title") ? "下一步：内容优化 →" : "Next: Optimize →"}
+          {isZh ? "\u4E0B\u4E00\u6B65\uFF1A\u5185\u5BB9\u4F18\u5316 \u2192" : "Next: Optimize \u2192"}
         </button>
       </div>
     </div>
