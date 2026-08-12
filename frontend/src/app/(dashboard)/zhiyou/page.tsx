@@ -101,6 +101,8 @@ export default function ZhiyouPage() {
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
   const [progressPercent, setProgressPercent] = useState(0);
   const [progressLabel, setProgressLabel] = useState("");
+  const [selectedFinal, setSelectedFinal] = useState<Set<number>>(new Set());
+  const [expandedFinalIdx, setExpandedFinalIdx] = useState<number | null>(null);
 
   // Load drafts from localStorage on mount
   useEffect(() => {
@@ -401,9 +403,13 @@ export default function ZhiyouPage() {
           {/* Score Results */}
           {scores.length > 0 && (
             <GlassCard padding="sm">
-              <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-3">
-                {isZh ? "② 评分结果" : "② Scorecard"}
-              </h2>
+              <details>
+                <summary className="text-sm font-medium text-[var(--text-secondary)] mb-3 cursor-pointer">
+                  {isZh ? "③ 评分结果" : "③ Scorecard"}
+                  <span className="ml-2 text-xs text-[var(--text-muted)]">
+                    {isZh ? "平均" : "Avg"}: {Math.round(scores.reduce((a, s) => a + s.overall_score, 0) / scores.length)}
+                  </span>
+                </summary>
               <div className="grid grid-cols-3 md:grid-cols-5 gap-2 mb-3">
                 <div className="text-center p-2 rounded bg-white/5">
                   <p className="text-[10px] text-[var(--text-muted)]">{isZh ? "平均分" : "Avg Score"}</p>
@@ -468,15 +474,18 @@ export default function ZhiyouPage() {
                   </tbody>
                 </table>
               </div>
+              </details>
             </GlassCard>
           )}
 
           {/* Optimize Results */}
           {optimizeResults.length > 0 && (
             <GlassCard padding="sm">
-              <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-3">
-                {isZh ? "③ 优化建议（Step 3.5）" : "③ Optimization Suggestions (Step 3.5)"}
-              </h2>
+              <details>
+                <summary className="text-sm font-medium text-[var(--text-secondary)] mb-3 cursor-pointer">
+                  {isZh ? "③ 优化建议（Step 3.5）" : "③ Optimization Suggestions (Step 3.5)"}
+                  <span className="ml-2 text-xs text-[var(--text-muted)]">{optimizeResults.length} {isZh ? "条" : "items"}</span>
+                </summary>
               <div className="space-y-3">
                 {optimizeResults.map((r, idx) => (
                   <div key={idx} className="p-3 bg-white/5 rounded-lg border border-[var(--border-glass)]">
@@ -496,15 +505,22 @@ export default function ZhiyouPage() {
                   </div>
                 ))}
               </div>
+              </details>
             </GlassCard>
           )}
 
           {/* Compliance Results (Step 3.6) */}
           {complianceResults.length > 0 && (
             <GlassCard padding="sm">
-              <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-3">
-                {isZh ? "④ 合规审查（Step 3.6）" : "④ Compliance Check (Step 3.6)"}
-              </h2>
+              <details>
+                <summary className="text-sm font-medium text-[var(--text-secondary)] mb-3 cursor-pointer">
+                  {isZh ? "④ 合规审查（Step 3.6）" : "④ Compliance Check (Step 3.6)"}
+                  <span className="ml-2 text-xs text-[var(--text-muted)]">
+                    ✅{complianceResults.filter((r) => r.status === "PASS").length}
+                    {" "}🔧{complianceResults.filter((r) => r.status === "FIXED").length}
+                    {" "}❌{complianceResults.filter((r) => r.status === "FAIL").length}
+                  </span>
+                </summary>
               <div className="grid grid-cols-3 gap-2 mb-3">
                 <div className="text-center p-2 rounded bg-white/5">
                   <p className="text-[10px] text-[var(--text-muted)]">PASS</p>
@@ -561,6 +577,161 @@ export default function ZhiyouPage() {
                     )}
                   </div>
                 ))}
+              </div>
+              </details>
+            </GlassCard>
+          )}
+
+          {/* ⑤ Final Content - Full view, editable, selectable, downloadable */}
+          {(scores.length > 0 || complianceResults.length > 0) && drafts.length > 0 && (
+            <GlassCard>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-medium text-[var(--text-secondary)]">
+                  {isZh ? `⑤ 最终内容 (${drafts.length} 篇)` : `⑤ Final Content (${drafts.length} articles)`}
+                </h2>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setSelectedFinal(new Set(drafts.map((_, i) => i)))}
+                    className="text-xs text-[var(--text-secondary)] hover:text-[var(--accent)]"
+                  >{isZh ? "全选" : "Select all"}</button>
+                  <button
+                    onClick={() => setSelectedFinal(new Set())}
+                    className="text-xs text-[var(--text-secondary)] hover:text-[var(--accent)]"
+                  >{isZh ? "取消" : "Clear"}</button>
+                  <button
+                    onClick={() => {
+                      const toRemove = [...selectedFinal].sort((a, b) => b - a);
+                      const remaining = drafts.filter((_, i) => !selectedFinal.has(i));
+                      setDrafts(remaining);
+                      setSelectedFinal(new Set());
+                      localStorage.setItem("zhizao_selected_drafts", JSON.stringify(remaining));
+                    }}
+                    disabled={selectedFinal.size === 0}
+                    className="text-xs text-[var(--error)] hover:text-red-600 disabled:opacity-40"
+                  >{isZh ? "删除选中" : "Delete selected"}</button>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {drafts.map((draft, idx) => (
+                  <div key={idx} className="border border-[var(--border-glass)] rounded-lg overflow-hidden">
+                    {/* Header row: checkbox + title + actions */}
+                    <div className="flex items-center gap-3 p-3 bg-white/5">
+                      <input
+                        type="checkbox"
+                        checked={selectedFinal.has(idx)}
+                        onChange={() => {
+                          setSelectedFinal((prev) => {
+                            const next = new Set(prev);
+                            if (next.has(idx)) next.delete(idx); else next.add(idx);
+                            return next;
+                          });
+                        }}
+                        className="accent-[var(--accent)] shrink-0"
+                      />
+                      <div
+                        className="flex-1 cursor-pointer"
+                        onClick={() => setExpandedFinalIdx(expandedFinalIdx === idx ? null : idx)}
+                      >
+                        <p className="text-sm font-semibold text-[var(--text-primary)]">{draft.title || draft.ai_query}</p>
+                        <p className="text-[10px] text-[var(--text-muted)]">
+                          {draft.ai_query} • {draft.word_count || draft.content_draft.length} {isZh ? "字" : "chars"}
+                          {scores[idx] && ` • ${isZh ? "评分" : "Score"}: ${scores[idx].overall_score}`}
+                        </p>
+                      </div>
+                      <div className="flex gap-1.5 shrink-0">
+                        <button
+                          onClick={() => navigator.clipboard.writeText(draft.content_draft)}
+                          className="text-[10px] px-2 py-1 rounded border border-[var(--border-glass)] text-[var(--text-muted)] hover:text-[var(--accent)]"
+                        >{isZh ? "复制" : "Copy"}</button>
+                        <button
+                          onClick={() => {
+                            const blob = new Blob([`# ${draft.title}\n\n${draft.content_draft}`], { type: "text/markdown;charset=utf-8" });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement("a"); a.href = url;
+                            a.download = `${draft.title.slice(0, 30).replace(/[/\\?%*:|"<>]/g, "")}.md`;
+                            a.click(); URL.revokeObjectURL(url);
+                          }}
+                          className="text-[10px] px-2 py-1 rounded border border-[var(--border-glass)] text-[var(--text-muted)] hover:text-[var(--accent)]"
+                        >⬇</button>
+                      </div>
+                      <span className="text-xs text-[var(--text-muted)] shrink-0 cursor-pointer" onClick={() => setExpandedFinalIdx(expandedFinalIdx === idx ? null : idx)}>
+                        {expandedFinalIdx === idx ? "▼" : "▶"}
+                      </span>
+                    </div>
+
+                    {/* Expanded: full content, editable */}
+                    {expandedFinalIdx === idx && (
+                      <div className="p-3 border-t border-[var(--border-glass)]">
+                        <textarea
+                          value={draft.content_draft}
+                          onChange={(e) => {
+                            const updated = [...drafts];
+                            updated[idx] = { ...updated[idx], content_draft: e.target.value, word_count: e.target.value.length };
+                            setDrafts(updated);
+                            localStorage.setItem("zhizao_selected_drafts", JSON.stringify(updated));
+                          }}
+                          rows={20}
+                          className="w-full bg-white/5 border border-[var(--border-glass)] rounded-lg px-4 py-3 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] resize-y leading-relaxed"
+                        />
+                        <p className="text-[10px] text-[var(--text-muted)] mt-1">
+                          {draft.content_draft.length} {isZh ? "字 | 可直接编辑修改" : "chars | Editable"}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Batch download actions */}
+              <div className="flex gap-3 items-center mt-4 pt-3 border-t border-[var(--border-glass)]">
+                <button
+                  onClick={() => {
+                    const items = selectedFinal.size > 0 ? [...selectedFinal].map((i) => drafts[i]) : drafts;
+                    const content = items.map((d) => `# ${d.title}\n\n${d.content_draft}`).join("\n\n---\n\n");
+                    const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a"); a.href = url;
+                    a.download = `zhiyou_final_${items.length}articles.md`;
+                    a.click(); URL.revokeObjectURL(url);
+                  }}
+                  className="text-xs px-3 py-1.5 rounded-lg border border-[var(--border-glass)] text-[var(--text-secondary)] hover:text-[var(--accent)] hover:border-[var(--accent)] transition-colors"
+                >
+                  ⬇ {isZh ? `下载${selectedFinal.size > 0 ? "选中" : "全部"} (MD)` : `Download ${selectedFinal.size > 0 ? "selected" : "all"} (MD)`}
+                </button>
+                <button
+                  onClick={() => {
+                    const items = selectedFinal.size > 0 ? [...selectedFinal].map((i) => drafts[i]) : drafts;
+                    const header = "ai_query,title,word_count,content_draft\n";
+                    const rows = items.map((d) => `"${d.ai_query.replace(/"/g, '""')}","${d.title.replace(/"/g, '""')}",${d.word_count || d.content_draft.length},"${d.content_draft.replace(/"/g, '""')}"`).join("\n");
+                    const blob = new Blob(["\uFEFF" + header + rows], { type: "text/csv;charset=utf-8" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a"); a.href = url;
+                    a.download = `zhiyou_final_${items.length}articles.csv`;
+                    a.click(); URL.revokeObjectURL(url);
+                  }}
+                  className="text-xs px-3 py-1.5 rounded-lg border border-[var(--border-glass)] text-[var(--text-secondary)] hover:text-[var(--accent)] hover:border-[var(--accent)] transition-colors"
+                >
+                  ⬇ {isZh ? `下载${selectedFinal.size > 0 ? "选中" : "全部"} (CSV)` : `Download ${selectedFinal.size > 0 ? "selected" : "all"} (CSV)`}
+                </button>
+                <button
+                  onClick={() => {
+                    const items = selectedFinal.size > 0 ? [...selectedFinal].map((i) => drafts[i]) : drafts;
+                    items.forEach((d, i) => {
+                      const blob = new Blob([`# ${d.title}\n\n${d.content_draft}`], { type: "text/markdown;charset=utf-8" });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement("a"); a.href = url;
+                      a.download = `${(i + 1).toString().padStart(2, "0")}_${d.title.slice(0, 30).replace(/[/\\?%*:|"<>]/g, "")}.md`;
+                      a.click(); URL.revokeObjectURL(url);
+                    });
+                  }}
+                  className="text-xs px-3 py-1.5 rounded-lg border border-[var(--border-glass)] text-[var(--text-secondary)] hover:text-[var(--accent)] hover:border-[var(--accent)] transition-colors"
+                >
+                  ⬇ {isZh ? "逐篇下载 (MD)" : "Download each (MD)"}
+                </button>
+                <span className="text-[10px] text-[var(--text-muted)]">
+                  {selectedFinal.size > 0 ? `${selectedFinal.size} ${isZh ? "篇已选" : "selected"}` : `${drafts.length} ${isZh ? "篇" : "total"}`}
+                </span>
               </div>
             </GlassCard>
           )}
