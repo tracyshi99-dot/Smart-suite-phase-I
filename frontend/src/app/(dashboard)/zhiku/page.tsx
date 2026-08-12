@@ -70,7 +70,7 @@ export default function ZhikuPage() {
   // Seed expansion state
   const [seed, setSeed] = useState("");
   const [count, setCount] = useState(15);
-  const [language, setLanguage] = useState("zh-CN");
+  const [language, setLanguage] = useState(locale || "zh-CN");
   const [expanding, setExpanding] = useState(false);
   const [expandError, setExpandError] = useState<string | null>(null);
 
@@ -464,9 +464,18 @@ export default function ZhikuPage() {
                 onChange={(e) => setLanguage(e.target.value)}
                 className="w-full bg-white/5 border border-[var(--border-glass)] rounded-lg px-2 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
               >
-                {(regionConfig?.content_languages ?? [{ code: "zh-CN", name: "\u4E2D\u6587" }, { code: "en", name: "English" }]).map((l) => (
-                  <option key={l.code} value={l.code} className="bg-[var(--bg-secondary)]">{l.name}</option>
-                ))}
+                {locale === "en" ? (
+                  <option value="en" className="bg-[var(--bg-secondary)]">English</option>
+                ) : (
+                  <>
+                    <option value={locale} className="bg-[var(--bg-secondary)]">
+                      {locale === "zh-CN" ? "\u4E2D\u6587" : locale === "zh-TW" ? "\u7E41\u9AD4\u4E2D\u6587" : locale === "ko" ? "\uD55C\uAD6D\uC5B4" : locale === "vi" ? "Ti\u1EBFng Vi\u1EC7t" : locale === "ja" ? "\u65E5\u672C\u8A9E" : locale}
+                    </option>
+                    <option value={`${locale}+en`} className="bg-[var(--bg-secondary)]">
+                      {locale === "zh-CN" ? "\u4E2D\u6587+English" : locale === "zh-TW" ? "\u7E41\u9AD4\u4E2D\u6587+English" : locale === "ko" ? "\uD55C\uAD6D\uC5B4+English" : locale === "vi" ? "Ti\u1EBFng Vi\u1EC7t+English" : locale === "ja" ? "\u65E5\u672C\u8A9E+English" : `${locale}+English`}
+                    </option>
+                  </>
+                )}
               </select>
             </div>
             <Button onClick={handleExpand} loading={expanding} disabled={!seed.trim()}>
