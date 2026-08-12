@@ -12,7 +12,6 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { apiPost } from "@/lib/api-client";
 import { ZhizaoRequest, DraftContent } from "@/lib/types";
 import { TEMPLATES, LONG_OP_TIMEOUT_MS } from "@/lib/constants";
-import { truncateText } from "@/lib/utils";
 
 export default function ZhizaoPage() {
   const router = useRouter();
@@ -29,7 +28,6 @@ export default function ZhizaoPage() {
   const [generating, setGenerating] = useState(false);
   const [drafts, setDrafts] = useState<DraftContent[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
 
   // Load phrases from zhice (localStorage)
   useEffect(() => {
@@ -246,30 +244,54 @@ export default function ZhizaoPage() {
         {error && <p className="text-sm text-[var(--error)] mt-2">{error}</p>}
       </GlassCard>
 
-      {/* Drafts List */}
+      {/* Drafts List - Full content, editable */}
       {drafts.length > 0 && (
-        <div className="space-y-2">
+        <div className="space-y-4">
           {drafts.map((draft, idx) => (
-            <GlassCard key={idx} padding="sm">
-              <div
-                className="flex items-center justify-between cursor-pointer"
-                onClick={() => setExpandedIdx(expandedIdx === idx ? null : idx)}
-              >
-                <div className="flex-1">
-                  <p className="text-sm font-medium">{draft.title || draft.ai_query}</p>
+            <GlassCard key={idx}>
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <p className="text-sm font-semibold">{draft.title || draft.ai_query}</p>
                   <p className="text-xs text-[var(--text-muted)]">
-                    {draft.ai_query} • {draft.word_count} words
+                    {draft.ai_query} {"\u2022"} {draft.word_count} {isZh ? "\u5B57" : "chars"}
                   </p>
                 </div>
-                <span className="text-[var(--text-muted)]">{expandedIdx === idx ? "\u25BC" : "\u25B6"}</span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      // Save as template to localStorage
+                      const templates = JSON.parse(localStorage.getItem("zhizao_templates") || "[]") as { title: string; content: string }[];
+                      templates.push({ title: draft.title, content: draft.content_draft });
+                      localStorage.setItem("zhizao_templates", JSON.stringify(templates));
+                      alert(isZh ? "\u5DF2\u4FDD\u5B58\u4E3A\u6A21\u677F" : "Saved as template");
+                    }}
+                    className="text-xs px-2 py-1 rounded border border-[var(--border-glass)] text-[var(--text-secondary)] hover:text-[var(--accent)] hover:border-[var(--accent)]"
+                  >
+                    {isZh ? "\u5B58\u4E3A\u6A21\u677F" : "Save Template"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(draft.content_draft);
+                      alert(isZh ? "\u5DF2\u590D\u5236" : "Copied");
+                    }}
+                    className="text-xs px-2 py-1 rounded border border-[var(--border-glass)] text-[var(--text-secondary)] hover:text-[var(--accent)] hover:border-[var(--accent)]"
+                  >
+                    {isZh ? "\u590D\u5236" : "Copy"}
+                  </button>
+                </div>
               </div>
-              {expandedIdx === idx && (
-                <div className="mt-3 pt-3 border-t border-[var(--border-glass)]">
-                  <p className="text-sm text-[var(--text-secondary)] whitespace-pre-wrap">
-                    {truncateText(draft.content_draft, 500)}
-                  </p>
-                </div>
-              )}
+              <textarea
+                value={draft.content_draft}
+                onChange={(e) => {
+                  setDrafts((prev) => {
+                    const updated = [...prev];
+                    updated[idx] = { ...updated[idx], content_draft: e.target.value, word_count: e.target.value.length };
+                    return updated;
+                  });
+                }}
+                rows={15}
+                className="w-full bg-white/5 border border-[var(--border-glass)] rounded-lg px-4 py-3 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] resize-y font-mono leading-relaxed"
+              />
             </GlassCard>
           ))}
         </div>

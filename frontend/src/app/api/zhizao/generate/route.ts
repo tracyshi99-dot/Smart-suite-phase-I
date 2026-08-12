@@ -132,31 +132,8 @@ async function generateOneArticle(phrase: string, language: string): Promise<Dra
     return { ai_query: phrase, title: phrase, word_count: 0, content_draft: draft || "Empty response" };
   }
 
-  // Step 2: Claude optimizes (check accuracy, add structure)
-  // Step 3: Qianwen polish (language fluency) — COMBINED into one call for speed
-  let finalContent = draft;
-  try {
-    const combinedPrompt = isZh
-      ? `\u8BF7\u5BF9\u4EE5\u4E0B\u6587\u7AE0\u8FDB\u884C\u4E24\u6B65\u5904\u7406\uFF1A
-1\uFF09\u51C6\u786E\u6027\u6821\u9A8C\uFF1A\u786E\u4FDD\u4FE1\u606F100%\u6B63\u786E\uFF0C\u8868\u683C\u5B8C\u6574\uFF0CFAQ\u5B9E\u7528\uFF0C\u65E0\u654F\u611F\u8BCD
-2\uFF09\u4E2D\u6587\u6DA6\u8272\uFF1A\u63D0\u5347\u8868\u8FBE\u6D41\u7545\u5EA6\uFF0C\u4FDD\u6301\u539F\u610F\u548C\u7ED3\u6784\u4E0D\u53D8
-
-\u76F4\u63A5\u8F93\u51FA\u5904\u7406\u540E\u7684\u5B8C\u6574\u6587\u7AE0\uFF1A\n\n${draft}`
-      : `Process this article in two steps:
-1) Accuracy check: ensure 100% factual accuracy, complete tables, useful FAQ, no sensitive words
-2) Polish: improve fluency while keeping meaning and structure unchanged
-
-Output the full processed article:\n\n${draft}`;
-    finalContent = await callQianwen(combinedPrompt);
-    if (!finalContent || finalContent.length < draft.length * 0.5) {
-      finalContent = draft; // If polish fails or truncates, use original draft
-    }
-  } catch {
-    finalContent = draft;
-  }
-
-  // Extract title from first line
-  const lines = finalContent.split("\n");
+  // Extract title from first line (optimization/polish is done in 智优 step)
+  const lines = draft.split("\n");
   const title = lines[0]?.replace(/^#+\s*/, "").trim() || phrase;
   const body = lines.slice(1).join("\n").trim();
 
@@ -164,7 +141,7 @@ Output the full processed article:\n\n${draft}`;
     ai_query: phrase,
     title,
     word_count: body.length,
-    content_draft: body || finalContent,
+    content_draft: body || draft,
   };
 }
 
