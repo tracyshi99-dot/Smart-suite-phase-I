@@ -25,6 +25,27 @@ export function ChatPanel() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  // Persist chat messages in localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("smartsuite_chat_messages");
+      if (saved) {
+        const parsed = JSON.parse(saved) as ChatMessage[];
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setMessages(parsed);
+        }
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      try {
+        localStorage.setItem("smartsuite_chat_messages", JSON.stringify(messages.slice(-MAX_MESSAGES)));
+      } catch { /* ignore */ }
+    }
+  }, [messages]);
+
   // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -152,7 +173,7 @@ export function ChatPanel() {
               </p>
             </div>
             <button
-              onClick={() => setMessages([])}
+              onClick={() => { setMessages([]); localStorage.removeItem("smartsuite_chat_messages"); }}
               className="text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
               aria-label="Clear chat"
             >
