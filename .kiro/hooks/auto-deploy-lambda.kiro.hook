@@ -1,0 +1,19 @@
+{
+  "enabled": true,
+  "name": "Auto Deploy Lambda",
+  "description": "Automatically deploys API code to Lambda when api/main.py or ui/engine.py is saved",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "api/main.py",
+      "ui/engine.py",
+      "api/s3_storage.py"
+    ]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "powershell -ExecutionPolicy Bypass -File \"C:\\Users\\yujiashi\\Desktop\\SmartSuite_Phase1\\deploy_lambda_quick.ps1\"",
+    "timeout": 60
+  }
+}
