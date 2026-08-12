@@ -133,29 +133,30 @@ async function generateOneArticle(phrase: string, language: string): Promise<Dra
   }
 
   // Step 2: Claude optimizes (check accuracy, add structure)
-  let optimized = draft;
+  // Step 3: Qianwen polish (language fluency) — COMBINED into one call for speed
+  let finalContent = draft;
   try {
-    const optPrompt = isZh
-      ? `\u8BF7\u4F18\u5316\u4EE5\u4E0B\u6587\u7AE0\uFF0C\u786E\u4FDD\uFF1A1)\u4FE1\u606F100%\u51C6\u786E 2)\u8868\u683C\u5B8C\u6574 3)FAQ\u5B9E\u7528 4)\u65E0\u654F\u611F\u8BCD\u3002\u76F4\u63A5\u8F93\u51FA\u4F18\u5316\u540E\u5168\u6587\uFF1A\n\n${draft}`
-      : `Optimize this article. Ensure: 1) 100% factual accuracy 2) Complete tables 3) Useful FAQ 4) No sensitive words. Output the full optimized text:\n\n${draft}`;
-    optimized = await callClaude(genSystem, optPrompt);
-  } catch {
-    optimized = draft; // Use draft if optimization fails
-  }
+    const combinedPrompt = isZh
+      ? `\u8BF7\u5BF9\u4EE5\u4E0B\u6587\u7AE0\u8FDB\u884C\u4E24\u6B65\u5904\u7406\uFF1A
+1\uFF09\u51C6\u786E\u6027\u6821\u9A8C\uFF1A\u786E\u4FDD\u4FE1\u606F100%\u6B63\u786E\uFF0C\u8868\u683C\u5B8C\u6574\uFF0CFAQ\u5B9E\u7528\uFF0C\u65E0\u654F\u611F\u8BCD
+2\uFF09\u4E2D\u6587\u6DA6\u8272\uFF1A\u63D0\u5347\u8868\u8FBE\u6D41\u7545\u5EA6\uFF0C\u4FDD\u6301\u539F\u610F\u548C\u7ED3\u6784\u4E0D\u53D8
 
-  // Step 3: Qianwen polish (language fluency)
-  let polished = optimized;
-  try {
-    const polishPrompt = isZh
-      ? `\u8BF7\u6DA6\u8272\u4EE5\u4E0B\u6587\u7AE0\uFF0C\u63D0\u5347\u4E2D\u6587\u8868\u8FBE\u6D41\u7545\u5EA6\uFF0C\u4FDD\u6301\u539F\u610F\u548C\u7ED3\u6784\u4E0D\u53D8\uFF0C\u4E0D\u8981\u6DFB\u52A0\u65B0\u5185\u5BB9\u3002\u76F4\u63A5\u8F93\u51FA\u5168\u6587\uFF1A\n\n${optimized}`
-      : `Polish this article for natural fluency. Keep meaning and structure unchanged, don't add new content. Output full text:\n\n${optimized}`;
-    polished = await callQianwen(polishPrompt);
+\u76F4\u63A5\u8F93\u51FA\u5904\u7406\u540E\u7684\u5B8C\u6574\u6587\u7AE0\uFF1A\n\n${draft}`
+      : `Process this article in two steps:
+1) Accuracy check: ensure 100% factual accuracy, complete tables, useful FAQ, no sensitive words
+2) Polish: improve fluency while keeping meaning and structure unchanged
+
+Output the full processed article:\n\n${draft}`;
+    finalContent = await callQianwen(combinedPrompt);
+    if (!finalContent || finalContent.length < draft.length * 0.5) {
+      finalContent = draft; // If polish fails or truncates, use original draft
+    }
   } catch {
-    polished = optimized;
+    finalContent = draft;
   }
 
   // Extract title from first line
-  const lines = polished.split("\n");
+  const lines = finalContent.split("\n");
   const title = lines[0]?.replace(/^#+\s*/, "").trim() || phrase;
   const body = lines.slice(1).join("\n").trim();
 
@@ -163,7 +164,7 @@ async function generateOneArticle(phrase: string, language: string): Promise<Dra
     ai_query: phrase,
     title,
     word_count: body.length,
-    content_draft: body || polished,
+    content_draft: body || finalContent,
   };
 }
 
