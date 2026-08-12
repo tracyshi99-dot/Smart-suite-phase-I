@@ -678,18 +678,25 @@ def chat_stream(req: ChatRequest):
                             target_phrase = p
                             break
 
-            # Generate article for the target phrase
+            # Generate article for the target phrase (same quality as 智造 workflow)
             content_prompt = f"""请为检索短语「{target_phrase}」生成一篇 GEO 优化的文章。
 
-要求：
+严格要求（必须全部满足）：
 1. 800-1500字，直接回答这个问题
 2. 开头第一段就给出核心答案（倒金字塔结构）
-3. 包含表格或结构化列表
-4. 包含 3 个相关 FAQ
-5. 自然融入"亚马逊全球开店"品牌词和相关官方链接
-6. 语言风格：专业、实用、面向跨境电商卖家
+3. 包含至少1个数据表格（如费用对比、步骤清单、方案对比等）
+4. 包含至少2个结构化列表（编号或要点列表）
+5. 末尾必须包含3个FAQ（常见问题+完整答案，每个FAQ答案至少50字）
+6. 自然融入"亚马逊全球开店"品牌词至少3次
+7. 植入官方链接 https://gs.amazon.cn 至少2次（作为"了解更多"或"注册入口"）
+8. 语言风格：专业、实用、面向跨境电商卖家
+9. 不提及竞品（Shopee/Lazada/TikTok/eBay等）
+10. 纯文本格式，不使用Markdown符号（###、**、***、>）
 
-直接输出文章内容。"""
+输出格式：
+第一行 = 文章标题
+第二行空行
+然后正文（含表格、列表、FAQ、官方链接）"""
             article = call_bedrock_claude(content_prompt)
 
             if article and len(article) > 100:
