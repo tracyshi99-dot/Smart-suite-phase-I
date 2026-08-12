@@ -192,47 +192,113 @@ export default function ZhiyouPage() {
     }, 400);
   };
 
-  // One-click optimize: Score → Optimize → Compliance
+  // One-click optimize: Score → Optimize → Compliance (Claude + DeepSeek pipeline)
   const handleOneClickOptimize = async () => {
     if (drafts.length === 0) return;
     setError(null);
     setScoring(true);
     setProgressPercent(10);
-    setProgressLabel(isZh ? "Step 3: AI 引用评分..." : "Step 3: Scoring...");
+    setProgressLabel(isZh ? "Step 3: Claude 评分校准中..." : "Step 3: Claude scoring...");
 
-    // Step 3: Score
+    try {
+      // Call real API: Claude scores → DeepSeek optimizes → Compliance check
+      const res = await fetch("/api/zhiyou/optimize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ drafts, content_language: locale }),
+      });
+
+      setProgressPercent(60);
+      setProgressLabel(isZh ? "Step 3.5: DeepSeek 优化重写中..." : "Step 3.5: DeepSeek rewriting...");
+
+      const data = await res.json();
+
+      if (data.success && data.results?.length > 0) {
+        // Extract scores
+        const scoreResults: ScoreResult[] = data.results.map((r: { ai_query: string; title: string; original_score: number; compliance_status: string }) => ({
+          ai_query: r.ai_query,
+          title: r.title,
+          intent_match: 0, ai_readability: 0, authority: 0, actionability: 0, differentiation: 0,
+          overall_score: r.original_score,
+          compliance_status: r.compliance_status,
+        }));
+        setScores(scoreResults);
+
+        // Extract optimization results
+        const optResults: OptimizeResult[] = data.results
+          .filter((r: { original_score: number; optimized_score: number }) => r.optimized_score > r.original_score)
+          .map((r: { ai_query: string; original_score: number; optimized_score: number; compliance_status: string; compliance_issues: string[] }) => ({
+            ai_query: r.ai_query,
+            original_score: r.original_score,
+            optimized_score: r.optimized_score,
+            changes: r.compliance_issues.length > 0 ? r.compliance_issues : ["内容已通过 DeepSeek 优化重写"],
+            compliance_status: r.compliance_status,
+          }));
+        setOptimizeResults(optResults);
+
+        // Extract compliance results
+        const compResults: ComplianceResult[] = data.results.map((r: { ai_query: string; title: string; compliance_status: string; compliance_issues: string[]; compliance_fixes: string[] }) => ({
+          ai_query: r.ai_query,
+          title: r.title,
+          status: r.compliance_status,
+          issues: r.compliance_issues || [],
+          fixes_applied: r.compliance_fixes || [],
+        }));
+        setComplianceResults(compResults);
+
+        // Update drafts with optimized content
+        const updatedDrafts = drafts.map((d) => {
+          const optimized = data.results.find((r: { ai_query: string; content_optimized: string; word_count: number }) => r.ai_query === d.ai_query);
+          if (optimized && optimized.content_optimized && optimized.content_optimized !== d.content_draft) {
+            return { ...d, content_draft: optimized.content_optimized, word_count: optimized.word_count };
+          }
+          return d;
+        });
+        setDrafts(updatedDrafts);
+        // Persist updated drafts
+        localStorage.setItem("zhizao_selected_drafts", JSON.stringify(updatedDrafts));
+
+        setProgressPercent(100);
+        setProgressLabel(isZh ? "✅ Claude 评分 + DeepSeek 优化 + 合规审查 完成" : "✅ Claude Score + DeepSeek Optimize + Compliance Done");
+      } else {
+        // API failed, fallback to local
+        await handleOneClickLocal();
+      }
+    } catch {
+      // Fallback to local processing
+      await handleOneClickLocal();
+    } finally {
+      setScoring(false);
+      setOptimizing(false);
+      setComplianceChecking(false);
+      setTimeout(() => { setProgressPercent(0); setProgressLabel(""); }, 3000);
+    }
+  };
+
+  // Local fallback for one-click optimize
+  const handleOneClickLocal = async () => {
+    setProgressPercent(20);
+    setProgressLabel(isZh ? "⚡ 本地评分中..." : "⚡ Local scoring...");
     await new Promise((resolve) => setTimeout(resolve, 300));
     const scoreResults = drafts.map((d) => localScore(d));
     setScores(scoreResults);
-    setProgressPercent(35);
-    setScoring(false);
+    setProgressPercent(50);
 
-    // Step 3.5: Optimize suggestions
-    setOptimizing(true);
-    setProgressLabel(isZh ? "Step 3.5: 生成优化建议..." : "Step 3.5: Generating suggestions...");
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    const needsOptimization = scoreResults.filter((s) => s.compliance_status === "FAIL" || s.overall_score < 70);
-    const suggestions = needsOptimization.map((s) => ({
-      ai_query: s.ai_query,
-      original_score: s.overall_score,
+    setProgressLabel(isZh ? "⚡ 生成优化建议..." : "⚡ Generating suggestions...");
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    const needsOpt = scoreResults.filter((s) => s.compliance_status === "FAIL" || s.overall_score < 70);
+    setOptimizeResults(needsOpt.map((s) => ({
+      ai_query: s.ai_query, original_score: s.overall_score,
       optimized_score: Math.min(100, s.overall_score + 15),
-      changes: generateSuggestions(s),
-      compliance_status: "PASS" as const,
-    }));
-    setOptimizeResults(suggestions);
-    setProgressPercent(65);
-    setOptimizing(false);
+      changes: generateSuggestions(s), compliance_status: "PASS" as const,
+    })));
+    setProgressPercent(75);
 
-    // Step 3.6: Compliance
-    setComplianceChecking(true);
-    setProgressLabel(isZh ? "Step 3.6: 合规审查..." : "Step 3.6: Compliance check...");
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    const compResults = drafts.map((d) => localComplianceCheck(d));
-    setComplianceResults(compResults);
-    setComplianceChecking(false);
+    setProgressLabel(isZh ? "⚡ 合规审查..." : "⚡ Compliance...");
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    setComplianceResults(drafts.map((d) => localComplianceCheck(d)));
     setProgressPercent(100);
-    setProgressLabel(isZh ? "✅ 全部完成" : "✅ All done");
-    setTimeout(() => { setProgressPercent(0); setProgressLabel(""); }, 2000);
+    setProgressLabel(isZh ? "✅ 本地优化完成（API 不可用时降级）" : "✅ Local optimization done (API fallback)");
   };
 
   return (
