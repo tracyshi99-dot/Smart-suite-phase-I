@@ -24,7 +24,7 @@ export default function ZhizaoPage() {
   // Phrases from zhice
   const [phrases, setPhrases] = useState<string[]>([]);
   const [contentLimit, setContentLimit] = useState(5);
-  const [language, setLanguage] = useState(regionConfig?.content_languages?.[0]?.code ?? "zh-CN");
+  const [language, setLanguage] = useState(locale || "zh-CN");
   const [template, setTemplate] = useState("auto");
   const [generating, setGenerating] = useState(false);
   const [drafts, setDrafts] = useState<DraftContent[]>([]);
@@ -180,9 +180,16 @@ export default function ZhizaoPage() {
               onChange={(e) => setLanguage(e.target.value)}
               className="bg-white/5 border border-[var(--border-glass)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
             >
-              {(regionConfig?.content_languages ?? [{ code: "zh-CN", name: "\u4E2D\u6587" }]).map((l) => (
-                <option key={l.code} value={l.code} className="bg-[var(--bg-secondary)]">{l.name}</option>
-              ))}
+              <option value="zh-CN" className="bg-[var(--bg-secondary)]">{"\u7B80\u4F53\u4E2D\u6587"}</option>
+              <option value="en" className="bg-[var(--bg-secondary)]">English</option>
+              <option value="zh-TW" className="bg-[var(--bg-secondary)]">{"\u7E41\u9AD4\u4E2D\u6587"}</option>
+              <option value="ko" className="bg-[var(--bg-secondary)]">{"\uD55C\uAD6D\uC5B4"}</option>
+              <option value="vi" className="bg-[var(--bg-secondary)]">Ti\u1EBFng Vi\u1EC7t</option>
+              <option value="ja" className="bg-[var(--bg-secondary)]">{"\u65E5\u672C\u8A9E"}</option>
+              <option value="de" className="bg-[var(--bg-secondary)]">Deutsch</option>
+              <option value="fr" className="bg-[var(--bg-secondary)]">Fran\u00E7ais</option>
+              <option value="es" className="bg-[var(--bg-secondary)]">Espa\u00F1ol</option>
+              <option value="ar" className="bg-[var(--bg-secondary)]">{"\u0627\u0644\u0639\u0631\u0628\u064A\u0629"}</option>
             </select>
           </div>
           <div>
