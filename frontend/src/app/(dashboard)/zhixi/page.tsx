@@ -6,7 +6,30 @@ import { useAuthStore } from "@/stores/auth-store";
 import { GlassCard } from "@/components/ui/GlassCard";
 
 // ============ DATA ============
-// Weekly data from geo_weekly_data.csv (WK20-WK29)
+// Weekly data from geo_weekly_data.csv (WK1-WK29, full year)
+const WEEKLY_DATA_EARLY = [
+  {Week:"WK1",CN_GEO:15,WW_GEO:11,Total_GEO:26,WW_Direct:738,CN_Direct:0,Total:764,Total_PY:631},
+  {Week:"WK2",CN_GEO:26,WW_GEO:24,Total_GEO:50,WW_Direct:1293,CN_Direct:0,Total:1343,Total_PY:565},
+  {Week:"WK3",CN_GEO:20,WW_GEO:20,Total_GEO:40,WW_Direct:1165,CN_Direct:0,Total:1205,Total_PY:500},
+  {Week:"WK4",CN_GEO:14,WW_GEO:20,Total_GEO:34,WW_Direct:1128,CN_Direct:0,Total:1162,Total_PY:321},
+  {Week:"WK5",CN_GEO:25,WW_GEO:15,Total_GEO:40,WW_Direct:1152,CN_Direct:0,Total:1192,Total_PY:156},
+  {Week:"WK6",CN_GEO:21,WW_GEO:15,Total_GEO:36,WW_Direct:904,CN_Direct:0,Total:940,Total_PY:481},
+  {Week:"WK7",CN_GEO:7,WW_GEO:9,Total_GEO:16,WW_Direct:360,CN_Direct:0,Total:376,Total_PY:725},
+  {Week:"WK8",CN_GEO:2,WW_GEO:7,Total_GEO:9,WW_Direct:202,CN_Direct:0,Total:211,Total_PY:963},
+  {Week:"WK9",CN_GEO:35,WW_GEO:20,Total_GEO:55,WW_Direct:922,CN_Direct:0,Total:977,Total_PY:1070},
+  {Week:"WK10",CN_GEO:36,WW_GEO:20,Total_GEO:56,WW_Direct:1399,CN_Direct:0,Total:1455,Total_PY:1090},
+  {Week:"WK11",CN_GEO:45,WW_GEO:13,Total_GEO:58,WW_Direct:1642,CN_Direct:0,Total:1700,Total_PY:1037},
+  {Week:"WK12",CN_GEO:36,WW_GEO:22,Total_GEO:58,WW_Direct:1752,CN_Direct:0,Total:1810,Total_PY:997},
+  {Week:"WK13",CN_GEO:33,WW_GEO:23,Total_GEO:56,WW_Direct:1806,CN_Direct:0,Total:1862,Total_PY:870},
+  {Week:"WK14",CN_GEO:35,WW_GEO:23,Total_GEO:58,WW_Direct:1634,CN_Direct:0,Total:1692,Total_PY:753},
+  {Week:"WK15",CN_GEO:45,WW_GEO:17,Total_GEO:62,WW_Direct:1581,CN_Direct:1082,Total:2725,Total_PY:2672},
+  {Week:"WK16",CN_GEO:40,WW_GEO:15,Total_GEO:55,WW_Direct:1750,CN_Direct:1327,Total:3132,Total_PY:2970},
+  {Week:"WK17",CN_GEO:32,WW_GEO:15,Total_GEO:47,WW_Direct:1738,CN_Direct:3128,Total:4913,Total_PY:5549},
+  {Week:"WK18",CN_GEO:33,WW_GEO:17,Total_GEO:50,WW_Direct:1330,CN_Direct:2120,Total:3500,Total_PY:3692},
+  {Week:"WK19",CN_GEO:33,WW_GEO:21,Total_GEO:54,WW_Direct:1453,CN_Direct:2072,Total:3579,Total_PY:3964},
+];
+
+// Weekly data (WK20-WK29, recent — main view)
 const WEEKLY_DATA = [
   {Week:"WK20",CN_GEO:41,WW_GEO:31,Total_GEO:72,WW_Direct:1914,CN_Direct:2242,Total:4228,Total_PY:3822},
   {Week:"WK21",CN_GEO:44,WW_GEO:19,Total_GEO:63,WW_Direct:2054,CN_Direct:1929,Total:4046,Total_PY:3872},
@@ -129,8 +152,34 @@ export default function ZhixiPage() {
 
       {/* TAB: Output Metrics */}
       {activeTab === "output" && (
+        <>
         <GlassCard padding="sm">
           <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-3">Weekly Trend — Reg Starts ({WEEKLY_DATA[0].Week}–{latest.Week})</h2>
+
+          {/* Collapsible early weeks WK1-WK19 */}
+          <details className="mb-3">
+            <summary className="text-xs text-[var(--text-muted)] cursor-pointer hover:text-[var(--text-secondary)]">
+              ▶ {isZh ? "展开 WK1–WK19 历史数据" : "Show WK1–WK19 history"} ({WEEKLY_DATA_EARLY.length} weeks)
+            </summary>
+            <div className="overflow-x-auto mt-2 border border-[var(--border-glass)] rounded-lg p-2">
+              <table className="w-full text-[10px]">
+                <thead><tr className="border-b border-[var(--border-glass)]">
+                  <th className="px-1 py-1 text-left text-[var(--text-muted)]">Ch</th>
+                  {WEEKLY_DATA_EARLY.map(w => <th key={w.Week} className="px-1 py-1 text-center text-[var(--text-muted)]">{w.Week.replace("WK","")}</th>)}
+                </tr></thead>
+                <tbody>
+                  {([{name:"CN GEO",key:"CN_GEO" as const},{name:"WW GEO",key:"WW_GEO" as const},{name:"GEO",key:"Total_GEO" as const},{name:"WW Dir",key:"WW_Direct" as const},{name:"Total",key:"Total" as const}]).map(ch => (
+                    <tr key={ch.name} className="border-b border-[var(--border-glass)]/20">
+                      <td className="px-1 py-0.5 text-[var(--text-muted)]">{ch.name}</td>
+                      {WEEKLY_DATA_EARLY.map(w => <td key={w.Week} className="px-1 py-0.5 text-center font-mono">{w[ch.key]||"—"}</td>)}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </details>
+
+          {/* Recent weeks WK20-WK29 (main view) */}
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead><tr className="border-b border-[var(--border-glass)]">
@@ -152,6 +201,7 @@ export default function ZhixiPage() {
             </table>
           </div>
         </GlassCard>
+        </>
       )}
 
       {/* TAB: Monthly + YTD */}
