@@ -87,6 +87,73 @@ export default function ZhixiPage() {
   const isZh = locale.startsWith("zh");
   const [tab, setTab] = useState<"output"|"monthly"|"input"|"citation"|"mau"|"sources"|"phrases">("output");
   const [showEarly, setShowEarly] = useState(false);
+  const [phraseData, setPhraseData] = useState<{category:string;phrase:string;yuanbao:boolean;deepseek:boolean;doubao:boolean;chatgpt:boolean;kimi:boolean;qianwen:boolean;gemini:boolean}[]>([]);
+
+  // Load phrase data from localStorage if previously uploaded
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("zhixi_phrase_data");
+      if (saved) setPhraseData(JSON.parse(saved));
+    } catch { /* ignore */ }
+  }, []);
+
+  // Handle Excel upload for phrase-level data
+  const handlePhraseUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const XLSX = await import("xlsx");
+      const buffer = await file.arrayBuffer();
+      const wb = XLSX.read(buffer, { type: "array" });
+      // Try to find the sheet with phrase data (sheet name containing "3.2" or "detail" or "CN+NA")
+      let ws = null;
+      for (const name of wb.SheetNames) {
+        if (name.includes("3.2") || name.includes("detail") || name.includes("CN") || name.includes("Input")) {
+          ws = wb.Sheets[name];
+          break;
+        }
+      }
+      if (!ws) ws = wb.Sheets[wb.SheetNames[0]]; // fallback to first sheet
+
+      const rows = XLSX.utils.sheet_to_json(ws, { header: 1 }) as unknown[][];
+      // Parse: look for rows with phrase data (category, phrase, link, then platform columns)
+      const parsed: typeof phraseData = [];
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        if (!row || row.length < 5) continue;
+        // Try to identify category (col 1-2) and phrase (col 2-3)
+        const cat = String(row[1] || row[0] || "").trim();
+        const phrase = String(row[2] || row[1] || "").trim();
+        if (!phrase || phrase.length < 4) continue;
+        // Look for 1/0 values in platform columns (typically cols 4+)
+        // The Excel has many date columns; we take the last available month's data
+        const vals = row.slice(3).map(v => v === 1 || v === "1" || v === true);
+        // Map to platforms based on column position patterns
+        // Simplified: if row has enough data, take last 7 values as platform flags
+        const lastVals = vals.slice(-7);
+        parsed.push({
+          category: cat.length > 0 && cat.length < 20 ? cat : "其他",
+          phrase,
+          yuanbao: lastVals[0] || false,
+          deepseek: lastVals[1] || false,
+          doubao: lastVals[2] || false,
+          chatgpt: lastVals[3] || false,
+          kimi: lastVals[4] || false,
+          qianwen: lastVals[5] || false,
+          gemini: lastVals[6] || false,
+        });
+      }
+      if (parsed.length > 0) {
+        setPhraseData(parsed);
+        localStorage.setItem("zhixi_phrase_data", JSON.stringify(parsed));
+      } else {
+        alert("未能解析到短语数据，请确认 Excel 格式正确");
+      }
+    } catch (err) {
+      alert("解析失败: " + String(err));
+    }
+    e.target.value = "";
+  };
 
   const latest = ALL_WEEKLY[ALL_WEEKLY.length - 1];
   const prev = ALL_WEEKLY[ALL_WEEKLY.length - 2];
@@ -322,7 +389,59 @@ export default function ZhixiPage() {
       {/* ===== TAB: PHRASES ===== */}
       {tab === "phrases" && (<>
         <GlassCard padding="sm">
-          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">检索短语提及数 by 类别 × 平台（6月）</h2>
+          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">检索短语逐条验证数据</h2>
+          <p className="text-[10px] text-[var(--text-muted)] mb-3">上传 GEO-SEO Excel 文件（Sheet 3.2）自动解析每条检索短语在各平台的提及情况</p>
+          <div className="flex items-center gap-3 mb-3">
+            <label className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--accent)]/40 bg-[var(--accent)]/5 cursor-pointer hover:bg-[var(--accent)]/10 transition-colors">
+              <span className="text-xs font-medium text-[var(--accent)]">📎 上传 Excel 解析短语数据</span>
+              <input type="file" accept=".xlsx,.xls,.csv" onChange={handlePhraseUpload} className="hidden" />
+            </label>
+            {phraseData.length > 0 && <span className="text-xs text-[var(--success)]">✅ 已加载 {phraseData.length} 条</span>}
+          </div>
+          {phraseData.length > 0 ? (
+            <div className="overflow-x-auto max-h-[500px] overflow-y-auto border border-[var(--border-glass)] rounded-lg">
+              <table className="w-full text-[10px]">
+                <thead className="sticky top-0 bg-[var(--bg-surface)] z-10">
+                  <tr className="border-b border-[var(--border-glass)]">
+                    <th className="px-2 py-1.5 text-left text-[var(--text-muted)] min-w-[40px]">#</th>
+                    <th className="px-2 py-1.5 text-left text-[var(--text-muted)] min-w-[60px]">分类</th>
+                    <th className="px-2 py-1.5 text-left text-[var(--text-muted)] min-w-[200px]">检索短语</th>
+                    <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">元宝</th>
+                    <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">DeepSeek</th>
+                    <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">豆包</th>
+                    <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">ChatGPT</th>
+                    <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">Kimi</th>
+                    <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">千问</th>
+                    <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">Gemini</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {phraseData.map((row, idx) => (
+                    <tr key={idx} className="border-b border-[var(--border-glass)]/20 hover:bg-white/5">
+                      <td className="px-2 py-1 text-[var(--text-muted)]">{idx + 1}</td>
+                      <td className="px-2 py-1"><span className={`text-[9px] px-1 py-0.5 rounded ${row.category === "入口" ? "bg-blue-500/10 text-blue-400" : row.category === "入驻&注册" ? "bg-purple-500/10 text-purple-400" : row.category === "费用" ? "bg-yellow-500/10 text-yellow-400" : "bg-white/10 text-[var(--text-muted)]"}`}>{row.category}</span></td>
+                      <td className="px-2 py-1 text-[var(--text-primary)] max-w-[250px] truncate">{row.phrase}</td>
+                      <td className="px-2 py-1 text-center">{row.yuanbao ? "✅" : "❌"}</td>
+                      <td className="px-2 py-1 text-center">{row.deepseek ? "✅" : "❌"}</td>
+                      <td className="px-2 py-1 text-center">{row.doubao ? "✅" : "❌"}</td>
+                      <td className="px-2 py-1 text-center">{row.chatgpt ? "✅" : "❌"}</td>
+                      <td className="px-2 py-1 text-center">{row.kimi ? "✅" : "❌"}</td>
+                      <td className="px-2 py-1 text-center">{row.qianwen ? "✅" : "❌"}</td>
+                      <td className="px-2 py-1 text-center">{row.gemini ? "✅" : "❌"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-xs text-[var(--text-muted)]">
+              <p>暂无逐条短语数据。请上传 GEO-SEO Excel 文件。</p>
+              <p className="mt-1 text-[10px]">支持格式：Sheet 3.2 的 CN+NA 短语详情表</p>
+            </div>
+          )}
+        </GlassCard>
+        <GlassCard padding="sm">
+          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">检索短语提及数 by 类别 × 平台（6月汇总）</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-xs"><thead><tr className="border-b border-[var(--border-glass)]"><th className="px-2 py-1 text-left">分类</th><th className="px-1 py-1 text-center">总量</th><th className="px-1 py-1 text-center">元宝</th><th className="px-1 py-1 text-center">DeepSeek</th><th className="px-1 py-1 text-center">豆包</th><th className="px-1 py-1 text-center">ChatGPT</th><th className="px-1 py-1 text-center">Kimi</th><th className="px-1 py-1 text-center">千问</th></tr></thead>
             <tbody>{PHRASE_CATEGORIES.map(r=>(<tr key={r.category} className="border-b border-[var(--border-glass)]/30"><td className="px-2 py-1 font-medium">{r.category}</td><td className="px-1 py-1 text-center">{r.total}</td><td className="px-1 py-1 text-center font-mono">{r.jun_元宝}</td><td className="px-1 py-1 text-center font-mono">{r.jun_DeepSeek}</td><td className="px-1 py-1 text-center font-mono">{r.jun_豆包}</td><td className="px-1 py-1 text-center font-mono">{r.jun_ChatGPT}</td><td className="px-1 py-1 text-center font-mono">{r.jun_Kimi}</td><td className="px-1 py-1 text-center font-mono">{r.jun_千问}</td></tr>))}</tbody></table>
