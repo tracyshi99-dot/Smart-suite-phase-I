@@ -38,16 +38,19 @@ const ALL_WEEKLY = [
   {Week:"WK27",CN_GEO:41,WW_GEO:22,Total_GEO:63,WW_Direct:1537,CN_Direct:1874,Direct:3411,Total:3474,Total_PY:1929},
   {Week:"WK28",CN_GEO:41,WW_GEO:22,Total_GEO:63,WW_Direct:1219,CN_Direct:1637,Direct:2856,Total:2919,Total_PY:1795},
   {Week:"WK29",CN_GEO:41,WW_GEO:28,Total_GEO:69,WW_Direct:1400,CN_Direct:1272,Direct:2672,Total:2741,Total_PY:1935},
+  {Week:"WK30",CN_GEO:38,WW_GEO:34,Total_GEO:72,WW_Direct:1499,CN_Direct:1016,Direct:2515,Total:2587,Total_PY:1845},
+  {Week:"WK31",CN_GEO:51,WW_GEO:22,Total_GEO:73,WW_Direct:1725,CN_Direct:963,Direct:2688,Total:2761,Total_PY:1794},
+  {Week:"WK32",CN_GEO:35,WW_GEO:20,Total_GEO:55,WW_Direct:1722,CN_Direct:960,Direct:2682,Total:2737,Total_PY:1723},
 ];
 
 // Monthly data from geo_monthly_data.csv
 const MONTHLY_DATA = [
-  {Channel:"CN GEO",M1:89,M2:65,M3:165,Q1:319,M4:164,M5:163,M6:152,Q2:479,M7:105},
-  {Channel:"WW GEO",M1:83,M2:51,M3:91,Q1:225,M4:70,M5:101,M6:97,Q2:268,M7:63},
-  {Channel:"Total GEO",M1:172,M2:116,M3:256,Q1:544,M4:234,M5:264,M6:249,Q2:747,M7:168},
-  {Channel:"Direct (WW+CN)",M1:9072,M2:3995,M3:11933,Q1:25000,M4:12589,M5:12624,M6:16884,Q2:42097,M7:7628},
-  {Channel:"Total",M1:9244,M2:4111,M3:12189,Q1:25544,M4:12823,M5:12888,M6:17133,Q2:42844,M7:7796},
-  {Channel:"SSR Total",M1:38062,M2:18087,M3:46315,Q1:102464,M4:47286,M5:48846,M6:51466,Q2:147598,M7:0},
+  {Channel:"CN GEO",M1:89,M2:65,M3:165,Q1:319,M4:164,M5:163,M6:152,Q2:479,M7:189},
+  {Channel:"WW GEO",M1:83,M2:51,M3:91,Q1:225,M4:70,M5:101,M6:97,Q2:268,M7:116},
+  {Channel:"Total GEO",M1:172,M2:116,M3:256,Q1:544,M4:234,M5:264,M6:249,Q2:747,M7:305},
+  {Channel:"Direct (WW+CN)",M1:9071,M2:3996,M3:11928,Q1:24995,M4:12592,M5:12626,M6:16885,Q2:42103,M7:12540},
+  {Channel:"Total",M1:9243,M2:4112,M3:12184,Q1:25539,M4:12826,M5:12890,M6:17134,Q2:42850,M7:12845},
+  {Channel:"SSR Total",M1:38062,M2:18084,M3:46314,Q1:102460,M4:47289,M5:48846,M6:51465,Q2:147600,M7:46123},
 ];
 
 // Input Summary from geo_input_summary.csv
@@ -70,14 +73,14 @@ const CITATION_BY_PLATFORM = [
   {month:"M6",元宝:75.4,DeepSeek:66.7,豆包:56.9,ChatGPT:28.5,Kimi:53.4,千问:66.9,Gemini:44.8},
 ];
 
-// YTD data
+// YTD data (H1 = Jan-Jul 2026 vs 2025 H1)
 const YTD_DATA = [
-  {Channel:"CN GEO",Actual:903,PY:174,YoY:"+419%"},
-  {Channel:"WW GEO",Actual:556,PY:196,YoY:"+184%"},
-  {Channel:"Total GEO",Actual:1459,PY:370,YoY:"+294%"},
-  {Channel:"Direct (WW+CN)",Actual:74725,PY:68703,YoY:"+9%"},
-  {Channel:"Total (GEO+Direct)",Actual:76184,PY:69073,YoY:"+10%"},
-  {Channel:"SSR Total (大盘)",Actual:250062,PY:302509,YoY:"-17%"},
+  {Channel:"CN GEO",Actual:798,PY:166,YoY:"+381%"},
+  {Channel:"WW GEO",Actual:493,PY:267,YoY:"+85%"},
+  {Channel:"Total GEO",Actual:1291,PY:433,YoY:"+198%"},
+  {Channel:"Direct (WW+CN)",Actual:67098,PY:63582,YoY:"+6%"},
+  {Channel:"Total (GEO+Direct)",Actual:68389,PY:64015,YoY:"+7%"},
+  {Channel:"SSR Total (大盘)",Actual:250060,PY:302661,YoY:"-17%"},
 ];
 
 function wow(c:number,p:number){if(!p)return"—";const r=((c-p)/p*100);return `${r>0?"+":""}${r.toFixed(1)}%`}
@@ -183,7 +186,7 @@ export default function ZhixiPage() {
         <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">{latest.Week} Total</p><p className="text-lg font-bold text-[var(--accent)]">{latest.Total.toLocaleString()}</p><p className="text-[10px]">WoW {wow(latest.Total,prev.Total)}</p></GlassCard>
         <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">GEO Total</p><p className="text-lg font-bold text-blue-400">{latest.Total_GEO}</p><p className="text-[10px]">WoW {wow(latest.Total_GEO,prev.Total_GEO)}</p></GlassCard>
         <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">WW Direct</p><p className="text-lg font-bold text-purple-400">{latest.WW_Direct.toLocaleString()}</p></GlassCard>
-        <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">YTD Total</p><p className="text-lg font-bold">76,184</p><p className="text-[10px] text-[var(--success)]">YoY +10%</p></GlassCard>
+        <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">YTD Total</p><p className="text-lg font-bold">68,389</p><p className="text-[10px] text-[var(--success)]">YoY +7%</p></GlassCard>
         <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">{isZh?"链接提及率":"Link Rate"}</p><p className="text-lg font-bold">51.6%</p><p className="text-[10px] text-[var(--success)]">M6</p></GlassCard>
         <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">{isZh?"内容总量":"Content"}</p><p className="text-lg font-bold">646</p><p className="text-[10px]">{isZh?"检索短语":"phrases"}</p></GlassCard>
       </div>
@@ -338,15 +341,15 @@ export default function ZhixiPage() {
         <GlassCard padding="sm">
           <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">Clean Launch (Monthly)</h2>
           <div className="overflow-x-auto">
-            <table className="w-full text-xs"><thead><tr className="border-b border-[var(--border-glass)]"><th className="px-2 py-1 text-left">Channel</th><th className="px-1 py-1 text-center">Jan</th><th className="px-1 py-1 text-center">Feb</th><th className="px-1 py-1 text-center">Mar</th><th className="px-1 py-1 text-center">Apr</th><th className="px-1 py-1 text-center">May</th><th className="px-1 py-1 text-center">Jun</th><th className="px-1 py-1 text-center font-bold">YTD</th></tr></thead>
-            <tbody>{GEO_OUTPUT.cleanLaunch.map(r=>(<tr key={r.metric} className={`border-b border-[var(--border-glass)]/30 ${!r.metric.startsWith(" ")?"font-semibold":""}`}><td className="px-2 py-1">{r.metric}</td><td className="px-1 py-1 text-center font-mono">{r.Jan.toLocaleString()}</td><td className="px-1 py-1 text-center font-mono">{r.Feb.toLocaleString()}</td><td className="px-1 py-1 text-center font-mono">{r.Mar.toLocaleString()}</td><td className="px-1 py-1 text-center font-mono">{r.Apr.toLocaleString()}</td><td className="px-1 py-1 text-center font-mono">{r.May.toLocaleString()}</td><td className="px-1 py-1 text-center font-mono">{r.Jun.toLocaleString()}</td><td className="px-1 py-1 text-center font-mono font-bold">{r.YTD.toLocaleString()}</td></tr>))}</tbody></table>
+            <table className="w-full text-xs"><thead><tr className="border-b border-[var(--border-glass)]"><th className="px-2 py-1 text-left">Channel</th><th className="px-1 py-1 text-center">Jan</th><th className="px-1 py-1 text-center">Feb</th><th className="px-1 py-1 text-center">Mar</th><th className="px-1 py-1 text-center">Apr</th><th className="px-1 py-1 text-center">May</th><th className="px-1 py-1 text-center">Jun</th><th className="px-1 py-1 text-center">Jul</th><th className="px-1 py-1 text-center font-bold">YTD</th></tr></thead>
+            <tbody>{GEO_OUTPUT.cleanLaunch.map(r=>(<tr key={r.metric} className={`border-b border-[var(--border-glass)]/30 ${!r.metric.startsWith(" ")?"font-semibold":""}`}><td className="px-2 py-1">{r.metric}</td><td className="px-1 py-1 text-center font-mono">{r.Jan.toLocaleString()}</td><td className="px-1 py-1 text-center font-mono">{r.Feb.toLocaleString()}</td><td className="px-1 py-1 text-center font-mono">{r.Mar.toLocaleString()}</td><td className="px-1 py-1 text-center font-mono">{r.Apr.toLocaleString()}</td><td className="px-1 py-1 text-center font-mono">{r.May.toLocaleString()}</td><td className="px-1 py-1 text-center font-mono">{r.Jun.toLocaleString()}</td><td className="px-1 py-1 text-center font-mono">{r.Jul.toLocaleString()}</td><td className="px-1 py-1 text-center font-mono font-bold">{r.YTD.toLocaleString()}</td></tr>))}</tbody></table>
           </div>
         </GlassCard>
         <GlassCard padding="sm">
           <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">Reg Start → Clean Launch 转化率 (T2R%)</h2>
           <div className="overflow-x-auto">
-            <table className="w-full text-xs"><thead><tr className="border-b border-[var(--border-glass)]"><th className="px-2 py-1 text-left">Channel</th><th className="px-1 py-1 text-center">Jan</th><th className="px-1 py-1 text-center">Feb</th><th className="px-1 py-1 text-center">Mar</th><th className="px-1 py-1 text-center">Apr</th><th className="px-1 py-1 text-center">May</th><th className="px-1 py-1 text-center">Jun</th><th className="px-1 py-1 text-center font-bold">YTD</th></tr></thead>
-            <tbody>{GEO_OUTPUT.conversion.map(r=>(<tr key={r.metric} className="border-b border-[var(--border-glass)]/30 font-semibold"><td className="px-2 py-1">{r.metric}</td><td className="px-1 py-1 text-center font-mono">{r.Jan}</td><td className="px-1 py-1 text-center font-mono">{r.Feb}</td><td className="px-1 py-1 text-center font-mono">{r.Mar}</td><td className="px-1 py-1 text-center font-mono">{r.Apr}</td><td className="px-1 py-1 text-center font-mono">{r.May}</td><td className="px-1 py-1 text-center font-mono">{r.Jun}</td><td className="px-1 py-1 text-center font-mono font-bold">{r.YTD}</td></tr>))}</tbody></table>
+            <table className="w-full text-xs"><thead><tr className="border-b border-[var(--border-glass)]"><th className="px-2 py-1 text-left">Channel</th><th className="px-1 py-1 text-center">Jan</th><th className="px-1 py-1 text-center">Feb</th><th className="px-1 py-1 text-center">Mar</th><th className="px-1 py-1 text-center">Apr</th><th className="px-1 py-1 text-center">May</th><th className="px-1 py-1 text-center">Jun</th><th className="px-1 py-1 text-center">Jul</th><th className="px-1 py-1 text-center font-bold">YTD</th></tr></thead>
+            <tbody>{GEO_OUTPUT.conversion.map(r=>(<tr key={r.metric} className="border-b border-[var(--border-glass)]/30 font-semibold"><td className="px-2 py-1">{r.metric}</td><td className="px-1 py-1 text-center font-mono">{r.Jan}</td><td className="px-1 py-1 text-center font-mono">{r.Feb}</td><td className="px-1 py-1 text-center font-mono">{r.Mar}</td><td className="px-1 py-1 text-center font-mono">{r.Apr}</td><td className="px-1 py-1 text-center font-mono">{r.May}</td><td className="px-1 py-1 text-center font-mono">{r.Jun}</td><td className="px-1 py-1 text-center font-mono">{r.Jul}</td><td className="px-1 py-1 text-center font-mono font-bold">{r.YTD}</td></tr>))}</tbody></table>
           </div>
         </GlassCard>
       </>)}
