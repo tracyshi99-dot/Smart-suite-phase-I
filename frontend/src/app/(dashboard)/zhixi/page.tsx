@@ -245,8 +245,62 @@ export default function ZhixiPage() {
 
       {/* ===== TAB: MONTHLY ===== */}
       {tab === "monthly" && (<>
+        {/* Monthly Trend Chart */}
         <GlassCard padding="sm">
-          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">Monthly Trend</h2>
+          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">Monthly Reg Start Trend</h2>
+          <ResponsiveContainer width="100%" height={240}>
+            <LineChart data={[
+              {month:"M1",Total_GEO:172,Direct:9071,Total:9243,SSR_Total:38062},
+              {month:"M2",Total_GEO:116,Direct:3996,Total:4112,SSR_Total:18084},
+              {month:"M3",Total_GEO:256,Direct:11928,Total:12184,SSR_Total:46314},
+              {month:"M4",Total_GEO:234,Direct:12592,Total:12826,SSR_Total:47289},
+              {month:"M5",Total_GEO:264,Direct:12626,Total:12890,SSR_Total:48846},
+              {month:"M6",Total_GEO:249,Direct:16885,Total:17134,SSR_Total:51465},
+              {month:"M7",Total_GEO:305,Direct:12540,Total:12845,SSR_Total:46123},
+            ]} margin={{top:5,right:10,left:0,bottom:5}}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+              <XAxis dataKey="month" tick={{fontSize:10,fill:"#8892b0"}} />
+              <YAxis yAxisId="left" tick={{fontSize:10,fill:"#8892b0"}} />
+              <YAxis yAxisId="right" orientation="right" tick={{fontSize:10,fill:"#8892b0"}} />
+              <Tooltip contentStyle={{background:"#1a1d2e",border:"1px solid #2a2f4a",borderRadius:8,fontSize:11}} />
+              <Legend wrapperStyle={{fontSize:11}} />
+              <Line yAxisId="right" type="monotone" dataKey="SSR_Total" stroke="#5a6380" strokeWidth={1} strokeDasharray="4 4" dot={false} name="SSR Total (大盘)" />
+              <Line yAxisId="left" type="monotone" dataKey="Total" stroke="#00bcd4" strokeWidth={2} dot={{r:3}} name="GEO+Direct Total" />
+              <Line yAxisId="left" type="monotone" dataKey="Direct" stroke="#ab47bc" strokeWidth={1.5} dot={{r:2}} name="Direct" />
+              <Line yAxisId="left" type="monotone" dataKey="Total_GEO" stroke="#2196f3" strokeWidth={1.5} dot={{r:2}} name="GEO" />
+            </LineChart>
+          </ResponsiveContainer>
+        </GlassCard>
+
+        {/* Monthly CL_RS% Trend Chart */}
+        <GlassCard padding="sm">
+          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">Monthly CL_RS% (Clean Launch / Reg Start)</h2>
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={[
+              {month:"M1",GEO:7.0,Direct:17.8,GEO_Direct:17.6,SSR:21.0},
+              {month:"M2",GEO:6.0,Direct:21.1,GEO_Direct:20.7,SSR:24.2},
+              {month:"M3",GEO:10.2,Direct:23.5,GEO_Direct:23.2,SSR:26.0},
+              {month:"M4",GEO:9.8,Direct:21.1,GEO_Direct:20.9,SSR:25.8},
+              {month:"M5",GEO:12.1,Direct:24.3,GEO_Direct:24.1,SSR:28.0},
+              {month:"M6",GEO:6.8,Direct:32.7,GEO_Direct:32.3,SSR:34.1},
+              {month:"M7",GEO:3.6,Direct:23.3,GEO_Direct:22.9,SSR:23.4},
+            ]} margin={{top:5,right:10,left:0,bottom:5}}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+              <XAxis dataKey="month" tick={{fontSize:10,fill:"#8892b0"}} />
+              <YAxis tick={{fontSize:10,fill:"#8892b0"}} domain={[0,40]} unit="%" />
+              <Tooltip contentStyle={{background:"#1a1d2e",border:"1px solid #2a2f4a",borderRadius:8,fontSize:11}} formatter={(v)=>`${v}%`} />
+              <Legend wrapperStyle={{fontSize:11}} />
+              <Line type="monotone" dataKey="SSR" stroke="#5a6380" strokeWidth={1} strokeDasharray="4 4" dot={false} name="SSR Total CL_RS%" />
+              <Line type="monotone" dataKey="GEO_Direct" stroke="#00bcd4" strokeWidth={2} dot={{r:3}} name="GEO+Direct CL_RS%" />
+              <Line type="monotone" dataKey="Direct" stroke="#ab47bc" strokeWidth={1.5} dot={{r:2}} name="WW Direct CL_RS%" />
+              <Line type="monotone" dataKey="GEO" stroke="#2196f3" strokeWidth={1.5} dot={{r:2}} name="GEO CL_RS%" />
+            </LineChart>
+          </ResponsiveContainer>
+        </GlassCard>
+
+        {/* Monthly Table */}
+        <GlassCard padding="sm">
+          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">Monthly Data Table</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-xs"><thead><tr className="border-b border-[var(--border-glass)]"><th className="px-2 py-1 text-left text-[var(--text-muted)]">Channel</th><th className="px-2 py-1 text-center">M1</th><th className="px-2 py-1 text-center">M2</th><th className="px-2 py-1 text-center">M3</th><th className="px-2 py-1 text-center font-bold">Q1</th><th className="px-2 py-1 text-center">M4</th><th className="px-2 py-1 text-center">M5</th><th className="px-2 py-1 text-center">M6</th><th className="px-2 py-1 text-center font-bold">Q2</th><th className="px-2 py-1 text-center">M7</th></tr></thead>
             <tbody>{MONTHLY_DATA.map(r=>(<tr key={r.Channel} className={`border-b border-[var(--border-glass)]/30 ${r.Channel==="Total"||r.Channel==="SSR Total"?"font-bold":""}`}><td className="px-2 py-1">{r.Channel}</td><td className="px-2 py-1 text-center font-mono">{r.M1.toLocaleString()}</td><td className="px-2 py-1 text-center font-mono">{r.M2.toLocaleString()}</td><td className="px-2 py-1 text-center font-mono">{r.M3.toLocaleString()}</td><td className="px-2 py-1 text-center font-mono font-bold">{r.Q1.toLocaleString()}</td><td className="px-2 py-1 text-center font-mono">{r.M4.toLocaleString()}</td><td className="px-2 py-1 text-center font-mono">{r.M5.toLocaleString()}</td><td className="px-2 py-1 text-center font-mono">{r.M6.toLocaleString()}</td><td className="px-2 py-1 text-center font-mono font-bold">{r.Q2.toLocaleString()}</td><td className="px-2 py-1 text-center font-mono">{r.M7||"—"}</td></tr>))}</tbody></table>
@@ -346,7 +400,7 @@ export default function ZhixiPage() {
           </div>
         </GlassCard>
         <GlassCard padding="sm">
-          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">Reg Start → Clean Launch 转化率 (T2R%)</h2>
+          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">Reg Start → Clean Launch 转化率 (CL_RS%)</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-xs"><thead><tr className="border-b border-[var(--border-glass)]"><th className="px-2 py-1 text-left">Channel</th><th className="px-1 py-1 text-center">Jan</th><th className="px-1 py-1 text-center">Feb</th><th className="px-1 py-1 text-center">Mar</th><th className="px-1 py-1 text-center">Apr</th><th className="px-1 py-1 text-center">May</th><th className="px-1 py-1 text-center">Jun</th><th className="px-1 py-1 text-center">Jul</th><th className="px-1 py-1 text-center font-bold">YTD</th></tr></thead>
             <tbody>{GEO_OUTPUT.conversion.map(r=>(<tr key={r.metric} className="border-b border-[var(--border-glass)]/30 font-semibold"><td className="px-2 py-1">{r.metric}</td><td className="px-1 py-1 text-center font-mono">{r.Jan}</td><td className="px-1 py-1 text-center font-mono">{r.Feb}</td><td className="px-1 py-1 text-center font-mono">{r.Mar}</td><td className="px-1 py-1 text-center font-mono">{r.Apr}</td><td className="px-1 py-1 text-center font-mono">{r.May}</td><td className="px-1 py-1 text-center font-mono">{r.Jun}</td><td className="px-1 py-1 text-center font-mono">{r.Jul}</td><td className="px-1 py-1 text-center font-mono font-bold">{r.YTD}</td></tr>))}</tbody></table>

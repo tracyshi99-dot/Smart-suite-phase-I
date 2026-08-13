@@ -121,10 +121,10 @@ export const GEO_OUTPUT = {
     { metric: "SSR Total (大盘)", Jan: 7988, Feb: 4373, Mar: 12032, Apr: 12209, May: 13694, Jun: 17558, Jul: 10785, YTD: 78639 },
   ],
   conversion: [
-    { metric: "Total GEO T2R%", Jan: "7.0%", Feb: "6.0%", Mar: "10.2%", Apr: "9.8%", May: "12.1%", Jun: "6.8%", Jul: "3.6%", YTD: "9.9%" },
-    { metric: "WW Direct T2R%", Jan: "17.8%", Feb: "21.1%", Mar: "23.5%", Apr: "21.1%", May: "24.3%", Jun: "32.7%", Jul: "23.3%", YTD: "24.6%" },
-    { metric: "GEO+Direct T2R%", Jan: "17.6%", Feb: "20.7%", Mar: "23.2%", Apr: "20.9%", May: "24.1%", Jun: "32.3%", Jul: "22.9%", YTD: "24.3%" },
-    { metric: "SSR Total T2R%", Jan: "21.0%", Feb: "24.2%", Mar: "26.0%", Apr: "25.8%", May: "28.0%", Jun: "34.1%", Jul: "23.4%", YTD: "27.1%" },
+    { metric: "Total GEO CL_RS%", Jan: "7.0%", Feb: "6.0%", Mar: "10.2%", Apr: "9.8%", May: "12.1%", Jun: "6.8%", Jul: "3.6%", YTD: "9.9%" },
+    { metric: "WW Direct CL_RS%", Jan: "17.8%", Feb: "21.1%", Mar: "23.5%", Apr: "21.1%", May: "24.3%", Jun: "32.7%", Jul: "23.3%", YTD: "24.6%" },
+    { metric: "GEO+Direct CL_RS%", Jan: "17.6%", Feb: "20.7%", Mar: "23.2%", Apr: "20.9%", May: "24.1%", Jun: "32.3%", Jul: "22.9%", YTD: "24.3%" },
+    { metric: "SSR Total CL_RS%", Jan: "21.0%", Feb: "24.2%", Mar: "26.0%", Apr: "25.8%", May: "28.0%", Jun: "34.1%", Jul: "23.4%", YTD: "27.1%" },
   ],
 };
 
