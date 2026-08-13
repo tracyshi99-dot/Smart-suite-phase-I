@@ -4,10 +4,10 @@ import { useState, useEffect } from "react";
 import { useI18nStore } from "@/stores/i18n-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { GlassCard } from "@/components/ui/GlassCard";
+import { LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid } from "recharts";
 
-// ============ DATA ============
-// Weekly data from geo_weekly_data.csv (WK1-WK29, full year)
-const WEEKLY_DATA_EARLY = [
+// ============ FULL DATA from geo_weekly_data.csv (WK1-WK29) ============
+const ALL_WEEKLY = [
   {Week:"WK1",CN_GEO:15,WW_GEO:11,Total_GEO:26,WW_Direct:738,CN_Direct:0,Total:764,Total_PY:631},
   {Week:"WK2",CN_GEO:26,WW_GEO:24,Total_GEO:50,WW_Direct:1293,CN_Direct:0,Total:1343,Total_PY:565},
   {Week:"WK3",CN_GEO:20,WW_GEO:20,Total_GEO:40,WW_Direct:1165,CN_Direct:0,Total:1205,Total_PY:500},
@@ -27,10 +27,6 @@ const WEEKLY_DATA_EARLY = [
   {Week:"WK17",CN_GEO:32,WW_GEO:15,Total_GEO:47,WW_Direct:1738,CN_Direct:3128,Total:4913,Total_PY:5549},
   {Week:"WK18",CN_GEO:33,WW_GEO:17,Total_GEO:50,WW_Direct:1330,CN_Direct:2120,Total:3500,Total_PY:3692},
   {Week:"WK19",CN_GEO:33,WW_GEO:21,Total_GEO:54,WW_Direct:1453,CN_Direct:2072,Total:3579,Total_PY:3964},
-];
-
-// Weekly data (WK20-WK29, recent — main view)
-const WEEKLY_DATA = [
   {Week:"WK20",CN_GEO:41,WW_GEO:31,Total_GEO:72,WW_Direct:1914,CN_Direct:2242,Total:4228,Total_PY:3822},
   {Week:"WK21",CN_GEO:44,WW_GEO:19,Total_GEO:63,WW_Direct:2054,CN_Direct:1929,Total:4046,Total_PY:3872},
   {Week:"WK22",CN_GEO:38,WW_GEO:22,Total_GEO:60,WW_Direct:2143,CN_Direct:2271,Total:4474,Total_PY:3349},
@@ -51,6 +47,27 @@ const MONTHLY_DATA = [
   {Channel:"WW Direct",M1:4966,M2:2388,M3:7269,Q1:14623,M4:7204,M5:8136,M6:9726,Q2:25066,M7:3527},
   {Channel:"CN Direct",M1:4106,M2:1607,M3:4664,Q1:10377,M4:5385,M5:4488,M6:7158,Q2:17031,M7:4101},
   {Channel:"Total",M1:9244,M2:4111,M3:12189,Q1:25544,M4:12823,M5:12888,M6:17133,Q2:42844,M7:7796},
+  {Channel:"SSR Total",M1:38062,M2:18087,M3:46315,Q1:102464,M4:47286,M5:48846,M6:51466,Q2:147598,M7:0},
+];
+
+// Input Summary from geo_input_summary.csv
+const INPUT_DATA = [
+  {metric:"提示词#",Dec:152,M1:210,M2:297,M3:297,M4:397,M5:564,M6:646},
+  {metric:"品牌词链接提及率",Dec:"18.1%",M1:"49.0%",M2:"53.5%",M3:"60.5%",M4:"53.7%",M5:"54.8%",M6:"56.9%"},
+  {metric:"新建内容#",Dec:106,M1:98,M2:43,M3:118,M4:123,M5:135,M6:131},
+  {metric:"旧内容优化#",Dec:67,M1:26,M2:12,M3:0,M4:1,M5:0,M6:0},
+  {metric:"官网链接提及率",Dec:"18.1%",M1:"44.3%",M2:"35.3%",M3:"44.7%",M4:"37.7%",M5:"48.3%",M6:"51.6%"},
+  {metric:"官网链接提及总量",Dec:220,M1:745,M2:839,M3:1063,M4:1197,M5:2498,M6:2666},
+];
+
+// Citation by platform (from brand_link_mentions_monthly.csv)
+const CITATION_BY_PLATFORM = [
+  {month:"M1",元宝:48.5,DeepSeek:50.8,豆包:61.6,ChatGPT:35.0},
+  {month:"M2",元宝:52.5,DeepSeek:55.9,豆包:63.0,ChatGPT:42.4},
+  {month:"M3",元宝:66.0,DeepSeek:62.6,豆包:69.4,ChatGPT:44.1},
+  {month:"M4",元宝:61.2,DeepSeek:50.4,豆包:63.2,ChatGPT:39.8},
+  {month:"M5",元宝:74.0,DeepSeek:66.5,豆包:48.6,ChatGPT:30.1,Kimi:59.1,千问:66.9,Gemini:46.9},
+  {month:"M6",元宝:75.4,DeepSeek:66.7,豆包:56.9,ChatGPT:28.5,Kimi:53.4,千问:66.9,Gemini:44.8},
 ];
 
 // YTD data
@@ -59,336 +76,186 @@ const YTD_DATA = [
   {Channel:"WW GEO",Actual:556,PY:196,YoY:"+184%"},
   {Channel:"Total GEO",Actual:1459,PY:370,YoY:"+294%"},
   {Channel:"WW Direct",Actual:43216,PY:26938,YoY:"+60%"},
-  {Channel:"CN Direct",Actual:31509,PY:41765,YoY:"-25%"},
   {Channel:"Total (GEO+Direct)",Actual:76184,PY:69073,YoY:"+10%"},
   {Channel:"SSR Total (大盘)",Actual:250062,PY:302509,YoY:"-17%"},
 ];
 
-function wow(curr: number, prev: number): string {
-  if (!prev) return "—";
-  const pct = ((curr - prev) / prev * 100);
-  return `${pct > 0 ? "+" : ""}${pct.toFixed(1)}%`;
-}
-
-function trendIcon(curr: number, prev: number): string {
-  if (!prev) return "→";
-  const pct = (curr - prev) / prev * 100;
-  if (pct > 15) return "↑";
-  if (pct < -15) return "⚠️↓";
-  return "→";
-}
+function wow(c:number,p:number){if(!p)return"—";const r=((c-p)/p*100);return `${r>0?"+":""}${r.toFixed(1)}%`}
 
 export default function ZhixiPage() {
   const { t, locale } = useI18nStore();
-  const { user } = useAuthStore();
   const isZh = locale.startsWith("zh");
+  const [tab, setTab] = useState<"output"|"monthly"|"input"|"citation">("output");
+  const [showEarly, setShowEarly] = useState(false);
 
-  // Citation data from localStorage (from zhice results)
-  const [citationData, setCitationData] = useState<{query:string;platform:string;brand:boolean;link:boolean}[]>([]);
-  const [activeTab, setActiveTab] = useState<"output"|"monthly"|"input"|"citation">("output");
+  const latest = ALL_WEEKLY[ALL_WEEKLY.length - 1];
+  const prev = ALL_WEEKLY[ALL_WEEKLY.length - 2];
+  const recentWeeks = ALL_WEEKLY.slice(-10);
+  const earlyWeeks = ALL_WEEKLY.slice(0, -10);
 
-  useEffect(() => {
-    // Load citation data from zhice sessions
-    try {
-      const sessions = JSON.parse(localStorage.getItem("zhice_sessions") || "[]");
-      const citations: {query:string;platform:string;brand:boolean;link:boolean}[] = [];
-      for (const s of sessions) {
-        for (const r of (s.results || [])) {
-          citations.push({ query: r.query, platform: r.platform, brand: !!r.has_brand_mention, link: !!r.has_official_link });
-        }
-      }
-      setCitationData(citations);
-    } catch { /* ignore */ }
-  }, []);
-
-  const latest = WEEKLY_DATA[WEEKLY_DATA.length - 1];
-  const prev = WEEKLY_DATA[WEEKLY_DATA.length - 2];
-  const totalWoW = prev.Total ? ((latest.Total - prev.Total) / prev.Total * 100) : 0;
-  const totalYoY = latest.Total_PY ? ((latest.Total - latest.Total_PY) / latest.Total_PY * 100) : 0;
-  const judgment = totalYoY > 20 ? "🟢 POSITIVE" : totalYoY < -10 ? "🔴 NEGATIVE" : "🟡 MIXED";
-
-  // Citation stats
-  const totalCitations = citationData.length;
-  const brandCount = citationData.filter(c => c.brand).length;
-  const linkCount = citationData.filter(c => c.link).length;
-  const brandRate = totalCitations > 0 ? Math.round(brandCount / totalCitations * 100) : 0;
-  const linkRate = totalCitations > 0 ? Math.round(linkCount / totalCitations * 100) : 0;
-
-  // File upload handler
-  const handleUploadData = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // File upload
+  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    // Store uploaded file reference for future use
-    alert(isZh ? `✅ 已上传: ${file.name} (${(file.size/1024).toFixed(1)}KB)\n数据将在下次刷新后生效` : `✅ Uploaded: ${file.name}`);
+    alert(isZh ? `✅ 已上传: ${file.name}\n后续版本将自动解析并更新数据` : `✅ Uploaded: ${file.name}`);
     e.target.value = "";
   };
 
   return (
-    <div className="space-y-6 max-w-[1400px]">
-      <h1 className="text-xl font-bold">{t("zhixi.title")}</h1>
+    <div className="space-y-5 max-w-[1400px]">
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-bold">{t("zhixi.title")}</h1>
+        <label className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[var(--border-glass)] bg-white/5 cursor-pointer hover:border-[var(--accent)]/30 text-xs">
+          📤 {isZh ? "上传数据" : "Upload Data"}
+          <input type="file" accept=".csv,.xlsx,.xls" onChange={handleUpload} className="hidden" />
+        </label>
+      </div>
 
-      {/* Executive Summary */}
-      <GlassCard>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-medium text-[var(--text-secondary)]">Executive Summary — {latest.Week}</h2>
-          <span className={`text-sm font-bold ${judgment.includes("POSITIVE") ? "text-[var(--success)]" : judgment.includes("NEGATIVE") ? "text-[var(--error)]" : "text-yellow-400"}`}>{judgment}</span>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
-          <div className="text-center p-2 rounded bg-white/5"><p className="text-[10px] text-[var(--text-muted)]">{isZh?"本周 Total":"This Week"}</p><p className="text-lg font-bold text-[var(--accent)]">{latest.Total.toLocaleString()}</p><p className="text-[10px]">WoW {wow(latest.Total,prev.Total)}</p></div>
-          <div className="text-center p-2 rounded bg-white/5"><p className="text-[10px] text-[var(--text-muted)]">GEO Total</p><p className="text-lg font-bold text-blue-400">{latest.Total_GEO}</p><p className="text-[10px]">WoW {wow(latest.Total_GEO,prev.Total_GEO)}</p></div>
-          <div className="text-center p-2 rounded bg-white/5"><p className="text-[10px] text-[var(--text-muted)]">WW Direct</p><p className="text-lg font-bold text-purple-400">{latest.WW_Direct.toLocaleString()}</p><p className="text-[10px]">WoW {wow(latest.WW_Direct,prev.WW_Direct)}</p></div>
-          <div className="text-center p-2 rounded bg-white/5"><p className="text-[10px] text-[var(--text-muted)]">YoY</p><p className={`text-lg font-bold ${totalYoY>0?"text-[var(--success)]":"text-[var(--error)]"}`}>{totalYoY>0?"+":""}{totalYoY.toFixed(0)}%</p></div>
-          <div className="text-center p-2 rounded bg-white/5"><p className="text-[10px] text-[var(--text-muted)]">{isZh?"品牌提及率":"Brand Rate"}</p><p className="text-lg font-bold">{brandRate}%</p><p className="text-[10px]">{brandCount}/{totalCitations}</p></div>
-          <div className="text-center p-2 rounded bg-white/5"><p className="text-[10px] text-[var(--text-muted)]">{isZh?"官方链接率":"Link Rate"}</p><p className="text-lg font-bold">{linkRate}%</p><p className="text-[10px]">{linkCount}/{totalCitations}</p></div>
-        </div>
-      </GlassCard>
+      {/* KPI Summary */}
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
+        <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">{latest.Week} Total</p><p className="text-lg font-bold text-[var(--accent)]">{latest.Total.toLocaleString()}</p><p className="text-[10px]">WoW {wow(latest.Total,prev.Total)}</p></GlassCard>
+        <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">GEO Total</p><p className="text-lg font-bold text-blue-400">{latest.Total_GEO}</p><p className="text-[10px]">WoW {wow(latest.Total_GEO,prev.Total_GEO)}</p></GlassCard>
+        <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">WW Direct</p><p className="text-lg font-bold text-purple-400">{latest.WW_Direct.toLocaleString()}</p></GlassCard>
+        <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">YTD Total</p><p className="text-lg font-bold">76,184</p><p className="text-[10px] text-[var(--success)]">YoY +10%</p></GlassCard>
+        <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">{isZh?"链接提及率":"Link Rate"}</p><p className="text-lg font-bold">51.6%</p><p className="text-[10px] text-[var(--success)]">M6</p></GlassCard>
+        <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">{isZh?"内容总量":"Content"}</p><p className="text-lg font-bold">646</p><p className="text-[10px]">{isZh?"检索短语":"phrases"}</p></GlassCard>
+      </div>
 
-      {/* Tab Navigation */}
+      {/* Tabs */}
       <div className="flex gap-1 border-b border-[var(--border-glass)]">
-        {([["output",isZh?"📊 Output Metrics":"📊 Output"],["monthly",isZh?"📅 Monthly/YTD":"📅 Monthly"],["input",isZh?"📝 Input Activities":"📝 Input"],["citation",isZh?"🔍 AI Citation":"🔍 Citation"]] as [string,string][]).map(([key,label]) => (
-          <button key={key} onClick={() => setActiveTab(key as typeof activeTab)} className={`px-3 py-2 text-xs font-medium transition-colors border-b-2 ${activeTab===key ? "border-[var(--accent)] text-[var(--accent)]" : "border-transparent text-[var(--text-muted)] hover:text-[var(--text-secondary)]"}`}>{label}</button>
+        {([["output","📊 Output"],["monthly","📅 Monthly/YTD"],["input","📝 Input"],["citation","🔍 Citation"]] as [string,string][]).map(([k,l])=>(
+          <button key={k} onClick={()=>setTab(k as typeof tab)} className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors ${tab===k?"border-[var(--accent)] text-[var(--accent)]":"border-transparent text-[var(--text-muted)]"}`}>{l}</button>
         ))}
       </div>
 
-      {/* TAB: Output Metrics */}
-      {activeTab === "output" && (
-        <>
+      {/* ===== TAB: OUTPUT ===== */}
+      {tab === "output" && (<>
+        {/* Trend Chart */}
         <GlassCard padding="sm">
-          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-3">Weekly Trend — Reg Starts ({WEEKLY_DATA[0].Week}–{latest.Week})</h2>
-
-          {/* Collapsible early weeks WK1-WK19 */}
-          <details className="mb-3">
-            <summary className="text-xs text-[var(--text-muted)] cursor-pointer hover:text-[var(--text-secondary)]">
-              ▶ {isZh ? "展开 WK1–WK19 历史数据" : "Show WK1–WK19 history"} ({WEEKLY_DATA_EARLY.length} weeks)
-            </summary>
-            <div className="overflow-x-auto mt-2 border border-[var(--border-glass)] rounded-lg p-2">
-              <table className="w-full text-[10px]">
-                <thead><tr className="border-b border-[var(--border-glass)]">
-                  <th className="px-1 py-1 text-left text-[var(--text-muted)]">Ch</th>
-                  {WEEKLY_DATA_EARLY.map(w => <th key={w.Week} className="px-1 py-1 text-center text-[var(--text-muted)]">{w.Week.replace("WK","")}</th>)}
-                </tr></thead>
-                <tbody>
-                  {([{name:"CN GEO",key:"CN_GEO" as const},{name:"WW GEO",key:"WW_GEO" as const},{name:"GEO",key:"Total_GEO" as const},{name:"WW Dir",key:"WW_Direct" as const},{name:"Total",key:"Total" as const}]).map(ch => (
-                    <tr key={ch.name} className="border-b border-[var(--border-glass)]/20">
-                      <td className="px-1 py-0.5 text-[var(--text-muted)]">{ch.name}</td>
-                      {WEEKLY_DATA_EARLY.map(w => <td key={w.Week} className="px-1 py-0.5 text-center font-mono">{w[ch.key]||"—"}</td>)}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </details>
-
-          {/* Recent weeks WK20-WK29 (main view) */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead><tr className="border-b border-[var(--border-glass)]">
-                <th className="px-2 py-1.5 text-left text-[var(--text-muted)]">Channel</th>
-                {WEEKLY_DATA.map(w => <th key={w.Week} className="px-1.5 py-1.5 text-center text-[var(--text-muted)]">{w.Week.replace("WK","")}</th>)}
-                <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">WoW</th>
-                <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">T</th>
-              </tr></thead>
-              <tbody>
-                {([{name:"CN GEO",key:"CN_GEO" as const,color:"text-blue-400"},{name:"WW GEO",key:"WW_GEO" as const,color:"text-cyan-400"},{name:"GEO Total",key:"Total_GEO" as const,color:"text-blue-300 font-semibold"},{name:"WW Direct",key:"WW_Direct" as const,color:"text-purple-400"},{name:"CN Direct",key:"CN_Direct" as const,color:"text-gray-400"},{name:"Total",key:"Total" as const,color:"text-[var(--accent)] font-bold"}]).map(ch => (
-                  <tr key={ch.name} className="border-b border-[var(--border-glass)]/30">
-                    <td className={`px-2 py-1 ${ch.color} whitespace-nowrap`}>{ch.name}</td>
-                    {WEEKLY_DATA.map(w => <td key={w.Week} className="px-1.5 py-1 text-center font-mono">{w[ch.key]>999?(w[ch.key]/1000).toFixed(1)+"k":w[ch.key]}</td>)}
-                    <td className="px-2 py-1 text-center font-mono">{wow(WEEKLY_DATA[WEEKLY_DATA.length-1][ch.key],WEEKLY_DATA[WEEKLY_DATA.length-2][ch.key])}</td>
-                    <td className="px-2 py-1 text-center">{trendIcon(WEEKLY_DATA[WEEKLY_DATA.length-1][ch.key],WEEKLY_DATA[WEEKLY_DATA.length-2][ch.key])}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">Weekly Performance Trend</h2>
+          <ResponsiveContainer width="100%" height={220}>
+            <LineChart data={ALL_WEEKLY.slice(-15)} margin={{top:5,right:10,left:0,bottom:5}}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+              <XAxis dataKey="Week" tick={{fontSize:10,fill:"#8892b0"}} tickFormatter={(v:string)=>v.replace("WK","")} />
+              <YAxis tick={{fontSize:10,fill:"#8892b0"}} />
+              <Tooltip contentStyle={{background:"#1a1d2e",border:"1px solid #2a2f4a",borderRadius:8,fontSize:11}} />
+              <Legend wrapperStyle={{fontSize:11}} />
+              <Line type="monotone" dataKey="Total" stroke="#00bcd4" strokeWidth={2} dot={false} name="Total" />
+              <Line type="monotone" dataKey="Total_PY" stroke="#5a6380" strokeWidth={1} strokeDasharray="4 4" dot={false} name="PY" />
+              <Line type="monotone" dataKey="WW_Direct" stroke="#ab47bc" strokeWidth={1.5} dot={false} name="WW Direct" />
+              <Line type="monotone" dataKey="Total_GEO" stroke="#2196f3" strokeWidth={1.5} dot={false} name="GEO" />
+            </LineChart>
+          </ResponsiveContainer>
         </GlassCard>
-        </>
-      )}
 
-      {/* TAB: Monthly + YTD */}
-      {activeTab === "monthly" && (
-        <>
-          <GlassCard padding="sm">
-            <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-3">Monthly Trend — Reg Starts</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead><tr className="border-b border-[var(--border-glass)]">
-                  <th className="px-2 py-1.5 text-left text-[var(--text-muted)]">Channel</th>
-                  <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">M1</th>
-                  <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">M2</th>
-                  <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">M3</th>
-                  <th className="px-2 py-1.5 text-center text-[var(--text-muted)] font-bold">Q1</th>
-                  <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">M4</th>
-                  <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">M5</th>
-                  <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">M6</th>
-                  <th className="px-2 py-1.5 text-center text-[var(--text-muted)] font-bold">Q2</th>
-                  <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">M7 MTD</th>
-                </tr></thead>
-                <tbody>
-                  {MONTHLY_DATA.map(row => (
-                    <tr key={row.Channel} className={`border-b border-[var(--border-glass)]/30 ${row.Channel==="Total"?"font-bold":""}`}>
-                      <td className="px-2 py-1 whitespace-nowrap">{row.Channel}</td>
-                      <td className="px-2 py-1 text-center font-mono">{row.M1.toLocaleString()}</td>
-                      <td className="px-2 py-1 text-center font-mono">{row.M2.toLocaleString()}</td>
-                      <td className="px-2 py-1 text-center font-mono">{row.M3.toLocaleString()}</td>
-                      <td className="px-2 py-1 text-center font-mono font-bold">{row.Q1.toLocaleString()}</td>
-                      <td className="px-2 py-1 text-center font-mono">{row.M4.toLocaleString()}</td>
-                      <td className="px-2 py-1 text-center font-mono">{row.M5.toLocaleString()}</td>
-                      <td className="px-2 py-1 text-center font-mono">{row.M6.toLocaleString()}</td>
-                      <td className="px-2 py-1 text-center font-mono font-bold">{row.Q2.toLocaleString()}</td>
-                      <td className="px-2 py-1 text-center font-mono">{row.M7.toLocaleString()}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </GlassCard>
-          <GlassCard padding="sm">
-            <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-3">YTD Summary — vs SSR Benchmark</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead><tr className="border-b border-[var(--border-glass)]">
-                  <th className="px-2 py-1.5 text-left text-[var(--text-muted)]">Channel</th>
-                  <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">YTD Actual</th>
-                  <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">YTD PY</th>
-                  <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">YoY</th>
-                  <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">vs 大盘</th>
-                </tr></thead>
-                <tbody>
-                  {YTD_DATA.map(row => {
-                    const isPositive = row.YoY.startsWith("+");
-                    const benchmark = row.Channel.includes("SSR") ? "—" : (isPositive ? `跑赢 ${parseInt(row.YoY)+17} ppts` : `落后`);
-                    return (
-                      <tr key={row.Channel} className={`border-b border-[var(--border-glass)]/30 ${row.Channel.includes("Total (GEO")?"font-bold":""}`}>
-                        <td className="px-2 py-1">{row.Channel}</td>
-                        <td className="px-2 py-1 text-center font-mono font-bold">{row.Actual.toLocaleString()}</td>
-                        <td className="px-2 py-1 text-center font-mono text-[var(--text-muted)]">{row.PY.toLocaleString()}</td>
-                        <td className={`px-2 py-1 text-center font-mono font-bold ${isPositive?"text-[var(--success)]":"text-[var(--error)]"}`}>{row.YoY}</td>
-                        <td className="px-2 py-1 text-center text-xs">{benchmark}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </GlassCard>
-        </>
-      )}
-
-      {/* TAB: Input Activities */}
-      {activeTab === "input" && (
-        <GlassCard>
-          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-3">{isZh?"Input Activities 追踪":"Input Activities Tracking"}</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead><tr className="border-b border-[var(--border-glass)]">
-                <th className="px-3 py-2 text-left text-[var(--text-muted)]">{isZh?"指标":"Metric"}</th>
-                <th className="px-3 py-2 text-center text-[var(--text-muted)]">{isZh?"本周":"This Week"}</th>
-                <th className="px-3 py-2 text-center text-[var(--text-muted)]">YTD</th>
-                <th className="px-3 py-2 text-center text-[var(--text-muted)]">{isZh?"状态":"Status"}</th>
-              </tr></thead>
-              <tbody>
-                {[
-                  {metric:isZh?"检索短语总数":"Total Phrases",week:"—",ytd:"—",status:"⚠️"},
-                  {metric:isZh?"内容产出篇数":"Articles Produced",week:"—",ytd:"—",status:"⚠️"},
-                  {metric:isZh?"内容发布篇数":"Articles Published",week:"—",ytd:"—",status:"⚠️"},
-                  {metric:isZh?"覆盖 AI 引擎数":"AI Engines Covered",week:"9",ytd:"9",status:"✅"},
-                  {metric:isZh?"智测验证次数":"Verifications Run",week:String(citationData.length>0?1:0),ytd:String(Math.ceil(citationData.length/5)),status:citationData.length>0?"✅":"⚠️"},
-                  {metric:isZh?"品牌提及率":"Brand Mention Rate",week:`${brandRate}%`,ytd:`${brandRate}%`,status:brandRate>50?"✅":"⚠️"},
-                  {metric:isZh?"官方链接率":"Official Link Rate",week:`${linkRate}%`,ytd:`${linkRate}%`,status:linkRate>30?"✅":"⚠️"},
-                ].map((row,i) => (
-                  <tr key={i} className="border-b border-[var(--border-glass)]/30">
-                    <td className="px-3 py-2">{row.metric}</td>
-                    <td className="px-3 py-2 text-center font-mono">{row.week}</td>
-                    <td className="px-3 py-2 text-center font-mono">{row.ytd}</td>
-                    <td className="px-3 py-2 text-center">{row.status}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {/* Weekly Table (recent) */}
+        <GlassCard padding="sm">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-sm font-medium text-[var(--text-secondary)]">Weekly Reg Starts</h2>
+            <button onClick={()=>setShowEarly(!showEarly)} className="text-[10px] text-[var(--text-muted)] hover:text-[var(--accent)]">
+              {showEarly ? "▲ 收起 WK1-19" : "▶ 展开 WK1-19"}
+            </button>
           </div>
-          <p className="text-[10px] text-[var(--text-muted)] mt-2">{isZh?"⚠️ 标记的指标需要通过上传数据或运行智测来补充":"⚠️ Marked metrics need data upload or running verification"}</p>
-        </GlassCard>
-      )}
-
-      {/* TAB: AI Citation Performance */}
-      {activeTab === "citation" && (
-        <GlassCard>
-          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-3">{isZh?"AI Citation Performance（来自智测验证结果）":"AI Citation Performance (from Zhice results)"}</h2>
-          {citationData.length === 0 ? (
-            <p className="text-xs text-[var(--text-muted)] py-4 text-center">{isZh?"暂无验证数据。请先在「智测」中运行测试。":"No verification data. Run tests in Zhice first."}</p>
-          ) : (
-            <>
-              <div className="grid grid-cols-4 gap-2 mb-4">
-                <div className="text-center p-2 rounded bg-white/5"><p className="text-[10px] text-[var(--text-muted)]">{isZh?"总验证数":"Total"}</p><p className="text-lg font-bold">{totalCitations}</p></div>
-                <div className="text-center p-2 rounded bg-white/5"><p className="text-[10px] text-[var(--text-muted)]">{isZh?"品牌提及":"Brand"}</p><p className="text-lg font-bold text-[var(--success)]">{brandCount} ({brandRate}%)</p></div>
-                <div className="text-center p-2 rounded bg-white/5"><p className="text-[10px] text-[var(--text-muted)]">{isZh?"官方链接":"Link"}</p><p className="text-lg font-bold text-[var(--accent)]">{linkCount} ({linkRate}%)</p></div>
-                <div className="text-center p-2 rounded bg-white/5"><p className="text-[10px] text-[var(--text-muted)]">{isZh?"完全缺口":"Full Gap"}</p><p className="text-lg font-bold text-[var(--error)]">{citationData.filter(c=>!c.brand&&!c.link).length}</p></div>
-              </div>
-              <div className="overflow-x-auto max-h-64 overflow-y-auto">
-                <table className="w-full text-xs">
-                  <thead className="sticky top-0 bg-[var(--bg-surface)]"><tr className="border-b border-[var(--border-glass)]">
-                    <th className="px-2 py-1.5 text-left text-[var(--text-muted)]">{isZh?"检索短语":"Query"}</th>
-                    <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">{isZh?"平台":"Platform"}</th>
-                    <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">{isZh?"品牌":"Brand"}</th>
-                    <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">{isZh?"链接":"Link"}</th>
-                    <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">Gap</th>
-                  </tr></thead>
-                  <tbody>
-                    {citationData.slice(0, 50).map((c, i) => (
-                      <tr key={i} className="border-b border-[var(--border-glass)]/30">
-                        <td className="px-2 py-1 max-w-[200px] truncate">{c.query}</td>
-                        <td className="px-2 py-1 text-center">{c.platform}</td>
-                        <td className="px-2 py-1 text-center">{c.brand?"✅":"❌"}</td>
-                        <td className="px-2 py-1 text-center">{c.link?"✅":"❌"}</td>
-                        <td className="px-2 py-1 text-center"><span className={`text-[10px] px-1.5 py-0.5 rounded ${!c.brand&&!c.link?"bg-red-500/10 text-red-400":!c.link?"bg-yellow-500/10 text-yellow-400":"bg-green-500/10 text-green-400"}`}>{!c.brand&&!c.link?"Full":!c.link?"Partial":"OK"}</span></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
+          {showEarly && (
+            <div className="overflow-x-auto mb-3 border border-[var(--border-glass)] rounded p-1">
+              <table className="w-full text-[10px]"><thead><tr className="border-b border-[var(--border-glass)]"><th className="px-1 py-0.5 text-left">Ch</th>{earlyWeeks.map(w=><th key={w.Week} className="px-1 py-0.5 text-center">{w.Week.replace("WK","")}</th>)}</tr></thead>
+              <tbody>{([{n:"GEO",k:"Total_GEO" as const},{n:"Dir",k:"WW_Direct" as const},{n:"Tot",k:"Total" as const}]).map(c=>(
+                <tr key={c.n} className="border-b border-[var(--border-glass)]/20"><td className="px-1 py-0.5">{c.n}</td>{earlyWeeks.map(w=><td key={w.Week} className="px-1 py-0.5 text-center font-mono">{w[c.k]||"—"}</td>)}</tr>
+              ))}</tbody></table>
+            </div>
           )}
-        </GlassCard>
-      )}
-
-      {/* Data Upload Section */}
-      <GlassCard>
-        <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-3">{isZh?"📤 上传数据":"📤 Upload Data"}</h2>
-        <p className="text-xs text-[var(--text-muted)] mb-3">{isZh?"上传 SSR Funnel Metrics CSV 或 Excel 文件更新 GEO 数据":"Upload SSR Funnel Metrics CSV or Excel to update GEO data"}</p>
-        <div className="flex flex-wrap gap-3">
-          <label className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--border-glass)] bg-white/5 cursor-pointer hover:border-[var(--accent)]/30">
-            <span className="text-xs">{isZh?"📊 上传 GEO 周度数据":"📊 Upload Weekly Data"}</span>
-            <span className="text-[10px] text-[var(--text-muted)]">(CSV/Excel)</span>
-            <input type="file" accept=".csv,.xlsx,.xls" onChange={handleUploadData} className="hidden" />
-          </label>
-          <label className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--border-glass)] bg-white/5 cursor-pointer hover:border-[var(--accent)]/30">
-            <span className="text-xs">{isZh?"📅 上传月度数据":"📅 Upload Monthly Data"}</span>
-            <input type="file" accept=".csv,.xlsx,.xls" onChange={handleUploadData} className="hidden" />
-          </label>
-          <label className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--border-glass)] bg-white/5 cursor-pointer hover:border-[var(--accent)]/30">
-            <span className="text-xs">{isZh?"🔍 上传 Citation 验证结果":"🔍 Upload Citation Results"}</span>
-            <input type="file" accept=".csv,.xlsx,.xls" onChange={handleUploadData} className="hidden" />
-          </label>
-        </div>
-      </GlassCard>
-
-      {/* Attribution & Insights (collapsible) */}
-      <GlassCard>
-        <details open>
-          <summary className="text-sm font-medium text-[var(--text-secondary)] cursor-pointer">{isZh?"💡 归因分析 & Opportunities":"💡 Attribution & Opportunities"}</summary>
-          <div className="mt-3 space-y-2 text-xs text-[var(--text-secondary)]">
-            <p>• CN GEO {latest.CN_GEO} — {isZh?"AI search referrer 持续增长，GEO 策略验证有效":"AI search referrer growing, GEO strategy validated"}</p>
-            <p>• WW Direct {latest.WW_Direct.toLocaleString()} — {isZh?"2-3 周内容发布滞后效应":"2-3 week content publish lag effect"}</p>
-            <p>• {isZh?"YTD GEO+Direct 跑赢大盘 ~27 ppts":"YTD GEO+Direct outperform benchmark by ~27 ppts"}</p>
-            <div className="mt-2 pt-2 border-t border-[var(--border-glass)]">
-              <p className="font-medium text-[var(--text-primary)]">{isZh?"🚀 Opportunities:":"🚀 Opportunities:"}</p>
-              <p>• {isZh?"扩大 EU/JP 覆盖（GEO 绝对值低但 YoY 增速快）":"Expand EU/JP coverage (low absolute but high YoY)"}</p>
-              <p>• {isZh?"建立 Input→Output 周度追踪完善归因":"Establish weekly Input→Output tracking"}</p>
-              <p>• {isZh?"JP Direct +113% YoY — AI search 渗透最快市场":"JP Direct +113% YoY — fastest AI penetration"}</p>
-            </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs"><thead><tr className="border-b border-[var(--border-glass)]"><th className="px-2 py-1 text-left text-[var(--text-muted)]">Channel</th>{recentWeeks.map(w=><th key={w.Week} className="px-1 py-1 text-center text-[var(--text-muted)]">{w.Week.replace("WK","")}</th>)}<th className="px-2 py-1 text-center text-[var(--text-muted)]">WoW</th></tr></thead>
+            <tbody>{([{n:"CN GEO",k:"CN_GEO" as const,c:"text-blue-400"},{n:"WW GEO",k:"WW_GEO" as const,c:"text-cyan-400"},{n:"GEO Total",k:"Total_GEO" as const,c:"text-blue-300 font-semibold"},{n:"WW Direct",k:"WW_Direct" as const,c:"text-purple-400"},{n:"CN Direct",k:"CN_Direct" as const,c:"text-gray-400"},{n:"Total",k:"Total" as const,c:"text-[var(--accent)] font-bold"}]).map(ch=>(
+              <tr key={ch.n} className="border-b border-[var(--border-glass)]/30"><td className={`px-2 py-1 ${ch.c} whitespace-nowrap`}>{ch.n}</td>{recentWeeks.map(w=><td key={w.Week} className="px-1 py-1 text-center font-mono">{w[ch.k]>999?`${(w[ch.k]/1000).toFixed(1)}k`:w[ch.k]}</td>)}<td className="px-2 py-1 text-center font-mono">{wow(recentWeeks[recentWeeks.length-1][ch.k],recentWeeks[recentWeeks.length-2][ch.k])}</td></tr>
+            ))}</tbody></table>
           </div>
-        </details>
-      </GlassCard>
+        </GlassCard>
+      </>)}
+
+      {/* ===== TAB: MONTHLY ===== */}
+      {tab === "monthly" && (<>
+        <GlassCard padding="sm">
+          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">Monthly Trend</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs"><thead><tr className="border-b border-[var(--border-glass)]"><th className="px-2 py-1 text-left text-[var(--text-muted)]">Channel</th><th className="px-2 py-1 text-center">M1</th><th className="px-2 py-1 text-center">M2</th><th className="px-2 py-1 text-center">M3</th><th className="px-2 py-1 text-center font-bold">Q1</th><th className="px-2 py-1 text-center">M4</th><th className="px-2 py-1 text-center">M5</th><th className="px-2 py-1 text-center">M6</th><th className="px-2 py-1 text-center font-bold">Q2</th><th className="px-2 py-1 text-center">M7</th></tr></thead>
+            <tbody>{MONTHLY_DATA.map(r=>(<tr key={r.Channel} className={`border-b border-[var(--border-glass)]/30 ${r.Channel==="Total"||r.Channel==="SSR Total"?"font-bold":""}`}><td className="px-2 py-1">{r.Channel}</td><td className="px-2 py-1 text-center font-mono">{r.M1.toLocaleString()}</td><td className="px-2 py-1 text-center font-mono">{r.M2.toLocaleString()}</td><td className="px-2 py-1 text-center font-mono">{r.M3.toLocaleString()}</td><td className="px-2 py-1 text-center font-mono font-bold">{r.Q1.toLocaleString()}</td><td className="px-2 py-1 text-center font-mono">{r.M4.toLocaleString()}</td><td className="px-2 py-1 text-center font-mono">{r.M5.toLocaleString()}</td><td className="px-2 py-1 text-center font-mono">{r.M6.toLocaleString()}</td><td className="px-2 py-1 text-center font-mono font-bold">{r.Q2.toLocaleString()}</td><td className="px-2 py-1 text-center font-mono">{r.M7||"—"}</td></tr>))}</tbody></table>
+          </div>
+        </GlassCard>
+        <GlassCard padding="sm">
+          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">YTD vs SSR Benchmark</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs"><thead><tr className="border-b border-[var(--border-glass)]"><th className="px-2 py-1 text-left">Channel</th><th className="px-2 py-1 text-center">YTD</th><th className="px-2 py-1 text-center">PY</th><th className="px-2 py-1 text-center">YoY</th><th className="px-2 py-1 text-center">vs 大盘</th></tr></thead>
+            <tbody>{YTD_DATA.map(r=>{const pos=r.YoY.startsWith("+");return(<tr key={r.Channel} className="border-b border-[var(--border-glass)]/30"><td className="px-2 py-1">{r.Channel}</td><td className="px-2 py-1 text-center font-mono font-bold">{r.Actual.toLocaleString()}</td><td className="px-2 py-1 text-center font-mono text-[var(--text-muted)]">{r.PY.toLocaleString()}</td><td className={`px-2 py-1 text-center font-mono font-bold ${pos?"text-[var(--success)]":"text-[var(--error)]"}`}>{r.YoY}</td><td className="px-2 py-1 text-center text-[10px]">{r.Channel.includes("SSR")?"Benchmark":(pos?`跑赢 ${parseInt(r.YoY)+17}ppts`:"落后")}</td></tr>)})}</tbody></table>
+          </div>
+        </GlassCard>
+      </>)}
+
+      {/* ===== TAB: INPUT ===== */}
+      {tab === "input" && (<>
+        <GlassCard padding="sm">
+          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">{isZh?"Input Activities Summary（来自 geo_input_summary）":"Input Activities"}</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs"><thead><tr className="border-b border-[var(--border-glass)]"><th className="px-2 py-1 text-left text-[var(--text-muted)]">{isZh?"指标":"Metric"}</th><th className="px-2 py-1 text-center">Dec</th><th className="px-2 py-1 text-center">M1</th><th className="px-2 py-1 text-center">M2</th><th className="px-2 py-1 text-center">M3</th><th className="px-2 py-1 text-center">M4</th><th className="px-2 py-1 text-center">M5</th><th className="px-2 py-1 text-center">M6</th></tr></thead>
+            <tbody>{INPUT_DATA.map((r,i)=>(<tr key={i} className="border-b border-[var(--border-glass)]/30"><td className="px-2 py-1 whitespace-nowrap">{r.metric}</td><td className="px-2 py-1 text-center font-mono">{r.Dec}</td><td className="px-2 py-1 text-center font-mono">{r.M1}</td><td className="px-2 py-1 text-center font-mono">{r.M2}</td><td className="px-2 py-1 text-center font-mono">{r.M3}</td><td className="px-2 py-1 text-center font-mono">{r.M4}</td><td className="px-2 py-1 text-center font-mono">{r.M5}</td><td className="px-2 py-1 text-center font-mono">{r.M6}</td></tr>))}</tbody></table>
+          </div>
+        </GlassCard>
+        {/* Link Rate Trend Chart */}
+        <GlassCard padding="sm">
+          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">{isZh?"官网链接提及率趋势":"Official Link Mention Rate Trend"}</h2>
+          <ResponsiveContainer width="100%" height={180}>
+            <LineChart data={[{m:"Dec",rate:18.1},{m:"M1",rate:44.3},{m:"M2",rate:35.3},{m:"M3",rate:44.7},{m:"M4",rate:37.7},{m:"M5",rate:48.3},{m:"M6",rate:51.6}]} margin={{top:5,right:10,left:0,bottom:5}}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+              <XAxis dataKey="m" tick={{fontSize:10,fill:"#8892b0"}} />
+              <YAxis tick={{fontSize:10,fill:"#8892b0"}} domain={[0,70]} unit="%" />
+              <Tooltip contentStyle={{background:"#1a1d2e",border:"1px solid #2a2f4a",borderRadius:8,fontSize:11}} />
+              <Line type="monotone" dataKey="rate" stroke="#00bcd4" strokeWidth={2} name="Link Rate %" />
+            </LineChart>
+          </ResponsiveContainer>
+        </GlassCard>
+      </>)}
+
+      {/* ===== TAB: CITATION ===== */}
+      {tab === "citation" && (<>
+        <GlassCard padding="sm">
+          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">{isZh?"官网链接提及率 by Platform（月度）":"Link Rate by Platform (Monthly)"}</h2>
+          <ResponsiveContainer width="100%" height={220}>
+            <LineChart data={CITATION_BY_PLATFORM} margin={{top:5,right:10,left:0,bottom:5}}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+              <XAxis dataKey="month" tick={{fontSize:10,fill:"#8892b0"}} />
+              <YAxis tick={{fontSize:10,fill:"#8892b0"}} domain={[20,80]} unit="%" />
+              <Tooltip contentStyle={{background:"#1a1d2e",border:"1px solid #2a2f4a",borderRadius:8,fontSize:11}} />
+              <Legend wrapperStyle={{fontSize:10}} />
+              <Line type="monotone" dataKey="元宝" stroke="#ff6b35" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="DeepSeek" stroke="#2196f3" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="豆包" stroke="#4caf50" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="ChatGPT" stroke="#9c27b0" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="千问" stroke="#00bcd4" strokeWidth={1.5} dot={false} />
+              <Line type="monotone" dataKey="Kimi" stroke="#ffeb3b" strokeWidth={1.5} dot={false} />
+              <Line type="monotone" dataKey="Gemini" stroke="#e91e63" strokeWidth={1.5} dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        </GlassCard>
+        <GlassCard padding="sm">
+          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">{isZh?"检索短语验证详情":"Phrase Verification Detail"}</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs"><thead><tr className="border-b border-[var(--border-glass)]"><th className="px-2 py-1 text-left text-[var(--text-muted)]">Month</th><th className="px-2 py-1 text-center">元宝</th><th className="px-2 py-1 text-center">DeepSeek</th><th className="px-2 py-1 text-center">豆包</th><th className="px-2 py-1 text-center">ChatGPT</th><th className="px-2 py-1 text-center">Kimi</th><th className="px-2 py-1 text-center">千问</th><th className="px-2 py-1 text-center">Gemini</th></tr></thead>
+            <tbody>{CITATION_BY_PLATFORM.map(r=>(<tr key={r.month} className="border-b border-[var(--border-glass)]/30"><td className="px-2 py-1 font-medium">{r.month}</td><td className="px-2 py-1 text-center font-mono">{r.元宝}%</td><td className="px-2 py-1 text-center font-mono">{r.DeepSeek}%</td><td className="px-2 py-1 text-center font-mono">{r.豆包}%</td><td className="px-2 py-1 text-center font-mono">{r.ChatGPT}%</td><td className="px-2 py-1 text-center font-mono">{r.Kimi||"—"}</td><td className="px-2 py-1 text-center font-mono">{r.千问||"—"}</td><td className="px-2 py-1 text-center font-mono">{r.Gemini||"—"}</td></tr>))}</tbody></table>
+          </div>
+        </GlassCard>
+      </>)}
+
+      {/* Attribution */}
+      <GlassCard><details><summary className="text-sm font-medium text-[var(--text-secondary)] cursor-pointer">💡 {isZh?"归因 & Opportunities":"Attribution & Opportunities"}</summary><div className="mt-3 text-xs text-[var(--text-secondary)] space-y-1">
+        <p>• CN GEO YTD +419% — GEO 策略持续有效，AI referrer 稳步增长</p>
+        <p>• WW Direct YTD +60% vs SSR -17% — 跑赢大盘 77 ppts</p>
+        <p>• 官网链接提及率从 18.1%→51.6%（Dec→M6），持续提升</p>
+        <p>• 元宝最高 75.4%，ChatGPT 最低 28.5% — 国内平台效果优于海外</p>
+        <p className="font-medium mt-2">🚀 Next Actions:</p>
+        <p>• 扩大 EU/JP keyword 覆盖 | JP +113% YoY 增速最快</p>
+        <p>• 提升 ChatGPT/Gemini 链接率（目前最低）</p>
+        <p>• 建立 WK30+ 自动数据刷新机制</p>
+      </div></details></GlassCard>
     </div>
   );
 }
