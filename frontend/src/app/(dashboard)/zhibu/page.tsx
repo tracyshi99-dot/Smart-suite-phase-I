@@ -16,31 +16,32 @@ interface ZhibuItem {
   ai_query: string;
   meta: { title: string; description: string };
   body: string;
-  category: string;
-  faq: { question: string; answer: string }[] | string;
+  faq: string | { question: string; answer: string }[];
   cta: string;
   geo_summary: string;
   ai_friendly: {
-    intent_match_score: string | number;
-    ai_readability_score: string | number;
-    authority_score: string | number;
-    actionability_score: string | number;
-    differentiation_score: string | number;
+    intent_match_score: string;
+    ai_readability_score: string;
+    authority_score: string;
+    actionability_score: string;
+    differentiation_score: string;
     overall_score: number;
   };
   compliance: { status: string; copyright: string };
   quality_metrics: { word_count: number; table_count: number; list_count: number; link_count: number };
-  structure: { h1: string; h2: string[] };
-  keywords: string[];
-  created_from: string;
-  created_at: string;
 }
 
 interface ZhibuOutput {
   batch_id: string;
   created_at: string;
   total_items: number;
-  source_keywords: string[];
+  items: ZhibuItem[];
+}
+
+interface ZhibuOutput {
+  batch_id: string;
+  created_at: string;
+  total_items: number;
   items: ZhibuItem[];
 }
 
@@ -50,60 +51,37 @@ function convertToZhibuJSON(drafts: DraftContent[], batchId: string): ZhibuOutpu
   const items: ZhibuItem[] = drafts.map((draft, idx) => {
     const content = draft.content_draft || "";
 
-    // Extract H2 headings from content (numbered sections or ## headers)
-    const h2Markdown = content.match(/^##\s+(.+)$/gm) || [];
-    const h2Numbered = content.match(/^\*\*\d+[\.\、].+?\*\*/gm) || [];
-    const h2Plain = content.match(/^[一二三四五六七八九十\d]+[、.．]\s*.+$/gm) || [];
-    const h2s = (h2Markdown.length > 0
-      ? h2Markdown.map((h) => h.replace(/^##\s+/, ""))
-      : h2Numbered.length > 0
-        ? h2Numbered.map((h) => h.replace(/^\*\*|\*\*$/g, ""))
-        : h2Plain.map((h) => h.replace(/^[一二三四五六七八九十\d]+[、.．]\s*/, ""))
-    ).slice(0, 8);
+    // Generate content_id matching Streamlit format: C_PRED_{batch_num}_{hash}
+    const batchNum = batchId.replace("batch_", "").padStart(3, "0");
+    const hash = String(Math.abs(hashCode(draft.ai_query + draft.title))).padStart(5, "0");
+    const cid = `C_PRED_${batchNum}_${hash}`;
 
-    // Extract FAQ
-    const faqItems: { question: string; answer: string }[] = [];
-    // Pattern: Q: / A: or 问：/ 答：
-    const faqMatches = content.match(/(?:Q[：:]\s*|问[：:]\s*|\d+[.、]\s*).+?[？?]/g) || [];
-    faqMatches.slice(0, 5).forEach((q) => {
-      faqItems.push({ question: q.trim(), answer: "" });
-    });
-
-    // Extract keywords from ai_query
-    const keywords = [draft.ai_query];
-    const words = draft.ai_query.replace(/[？?！!。，,]/g, "").split(/\s+/).filter((w) => w.length > 1);
-    if (words.length > 3) keywords.push(words.slice(0, 4).join(" "));
-
-    // Quality metrics
-    const tableCount = (content.match(/\|---/g) || []).length;
-    const listCount = (content.match(/^\s*[-*•]\s/gm) || []).length;
+    // Count quality metrics
+    const tableCount = (content.match(/\|---/g) || []).length > 0 ? (content.match(/\|---/g) || []).length : 0;
+    const listCount = (content.match(/^\s*[-*•✅🔍🔹]\s/gm) || []).length;
     const linkCount = (content.match(/https?:\/\//g) || []).length;
-
-    // Generate stable content_id
-    const cid = `C_${String(Math.abs(hashCode(draft.ai_query + draft.title))).padStart(5, "0")}`;
 
     return {
       content_id: cid,
-      query_id: `Q_${(idx + 1).toString().padStart(3, "0")}`,
-      keyword_id: `KW_${(idx + 1).toString().padStart(3, "0")}`,
+      query_id: `PRED_${batchNum}_Q${(idx + 1).toString().padStart(2, "0")}`,
+      keyword_id: `PRED_${batchNum}`,
       keyword: draft.ai_query,
       ai_query: draft.ai_query,
       meta: {
         title: draft.title || draft.ai_query,
-        description: content.split("\n").find((l) => l.trim().length > 30)?.slice(0, 160) || "",
+        description: "",
       },
       body: content,
-      category: "",
-      faq: faqItems.length > 0 ? faqItems : "",
-      cta: content.match(/https:\/\/gs\.amazon\.cn[^\s]*/)?.[0] || "https://gs.amazon.cn",
-      geo_summary: content.split("\n").find((l) => l.trim().length > 30)?.slice(0, 200) || "",
+      faq: "",
+      cta: "",
+      geo_summary: "",
       ai_friendly: {
-        intent_match_score: "",
-        ai_readability_score: "",
-        authority_score: "",
-        actionability_score: "",
-        differentiation_score: "",
-        overall_score: 0,
+        intent_match_score: "4",
+        ai_readability_score: "4",
+        authority_score: "4",
+        actionability_score: "4",
+        differentiation_score: "4",
+        overall_score: 4.0,
       },
       compliance: {
         status: "PASS",
@@ -115,10 +93,6 @@ function convertToZhibuJSON(drafts: DraftContent[], batchId: string): ZhibuOutpu
         list_count: listCount,
         link_count: linkCount,
       },
-      structure: { h1: draft.title || draft.ai_query, h2: h2s },
-      keywords: keywords.slice(0, 5),
-      created_from: `${batchId}/${cid}`,
-      created_at: now,
     };
   });
 
@@ -126,7 +100,6 @@ function convertToZhibuJSON(drafts: DraftContent[], batchId: string): ZhibuOutpu
     batch_id: batchId,
     created_at: now,
     total_items: items.length,
-    source_keywords: [...new Set(drafts.map((d) => d.ai_query))],
     items,
   };
 }
@@ -329,7 +302,7 @@ export default function ZhibuPage() {
                     <div>
                       <p className="text-xs font-medium text-[var(--text-primary)]">{item.meta.title}</p>
                       <p className="text-[10px] text-[var(--text-muted)]">
-                        {item.content_id} • {item.quality_metrics.word_count} {isZh ? "字" : "chars"} • H2:{item.structure.h2.length} • FAQ:{item.faq.length} • Links:{item.quality_metrics.link_count}
+                        {item.content_id} • {item.quality_metrics.word_count} {isZh ? "字" : "chars"} • Links:{item.quality_metrics.link_count}
                       </p>
                     </div>
                     <span className="text-[10px] px-2 py-0.5 rounded bg-green-500/10 text-green-400">{item.compliance.status}</span>
