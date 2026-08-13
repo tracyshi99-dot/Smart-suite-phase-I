@@ -740,15 +740,24 @@ export default function ZhiyouPage() {
       {/* CTA */}
       <div className="flex justify-end pt-4">
         <button
-          onClick={() => router.push("/zhibu")}
-          disabled={scores.length === 0 || failedArticles.length === scores.length}
+          onClick={() => {
+            // Pass selected final drafts to zhibu
+            const selected = selectedFinal.size > 0
+              ? [...selectedFinal].map((i) => drafts[i]).filter(Boolean)
+              : drafts;
+            localStorage.setItem("zhiyou_final_drafts", JSON.stringify(selected));
+            router.push("/zhibu");
+          }}
+          disabled={drafts.length === 0}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            scores.length > 0 && failedArticles.length < scores.length
+            drafts.length > 0
               ? "bg-[var(--accent)] text-black hover:bg-[var(--accent-hover)]"
               : "bg-gray-600 text-gray-400 cursor-not-allowed"
           }`}
         >
-          {isZh ? "下一步：内容发布 →" : "Next: Publish →"}
+          {isZh
+            ? `下一步：内容发布 (${selectedFinal.size > 0 ? selectedFinal.size : drafts.length} 篇) →`
+            : `Next: Publish (${selectedFinal.size > 0 ? selectedFinal.size : drafts.length}) →`}
         </button>
       </div>
     </div>
