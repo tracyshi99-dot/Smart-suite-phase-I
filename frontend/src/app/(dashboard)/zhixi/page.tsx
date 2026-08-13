@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { useI18nStore } from "@/stores/i18n-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid } from "recharts";
+import { LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid, BarChart, Bar } from "recharts";
+import { GEO_MAU, SOURCE_ANALYSIS, INPUT_LINK_RATE, INPUT_SUMMARY, GEO_OUTPUT, PHRASE_CATEGORIES, SEMANTIC_COVERAGE } from "@/lib/zhixi-geo-data";
 
 // ============ FULL DATA from geo_weekly_data.csv (WK1-WK29) ============
 const ALL_WEEKLY = [
@@ -85,7 +86,7 @@ function wow(c:number,p:number){if(!p)return"—";const r=((c-p)/p*100);return `
 export default function ZhixiPage() {
   const { t, locale } = useI18nStore();
   const isZh = locale.startsWith("zh");
-  const [tab, setTab] = useState<"output"|"monthly"|"input"|"citation">("output");
+  const [tab, setTab] = useState<"output"|"monthly"|"input"|"citation"|"mau"|"sources"|"phrases">("output");
   const [showEarly, setShowEarly] = useState(false);
 
   const latest = ALL_WEEKLY[ALL_WEEKLY.length - 1];
@@ -122,9 +123,9 @@ export default function ZhixiPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-[var(--border-glass)]">
-        {([["output","📊 Output"],["monthly","📅 Monthly/YTD"],["input","📝 Input"],["citation","🔍 Citation"]] as [string,string][]).map(([k,l])=>(
-          <button key={k} onClick={()=>setTab(k as typeof tab)} className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors ${tab===k?"border-[var(--accent)] text-[var(--accent)]":"border-transparent text-[var(--text-muted)]"}`}>{l}</button>
+      <div className="flex gap-1 border-b border-[var(--border-glass)] overflow-x-auto">
+        {([["output","📊 Output"],["monthly","📅 Monthly"],["input","📝 Input"],["citation","🔍 Citation"],["mau","🌐 MAU"],["sources","📡 信源"],["phrases","🔎 短语详情"]] as [string,string][]).map(([k,l])=>(
+          <button key={k} onClick={()=>setTab(k as typeof tab)} className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors whitespace-nowrap ${tab===k?"border-[var(--accent)] text-[var(--accent)]":"border-transparent text-[var(--text-muted)]"}`}>{l}</button>
         ))}
       </div>
 
@@ -241,6 +242,91 @@ export default function ZhixiPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-xs"><thead><tr className="border-b border-[var(--border-glass)]"><th className="px-2 py-1 text-left text-[var(--text-muted)]">Month</th><th className="px-2 py-1 text-center">元宝</th><th className="px-2 py-1 text-center">DeepSeek</th><th className="px-2 py-1 text-center">豆包</th><th className="px-2 py-1 text-center">ChatGPT</th><th className="px-2 py-1 text-center">Kimi</th><th className="px-2 py-1 text-center">千问</th><th className="px-2 py-1 text-center">Gemini</th></tr></thead>
             <tbody>{CITATION_BY_PLATFORM.map(r=>(<tr key={r.month} className="border-b border-[var(--border-glass)]/30"><td className="px-2 py-1 font-medium">{r.month}</td><td className="px-2 py-1 text-center font-mono">{r.元宝}%</td><td className="px-2 py-1 text-center font-mono">{r.DeepSeek}%</td><td className="px-2 py-1 text-center font-mono">{r.豆包}%</td><td className="px-2 py-1 text-center font-mono">{r.ChatGPT}%</td><td className="px-2 py-1 text-center font-mono">{r.Kimi||"—"}</td><td className="px-2 py-1 text-center font-mono">{r.千问||"—"}</td><td className="px-2 py-1 text-center font-mono">{r.Gemini||"—"}</td></tr>))}</tbody></table>
+          </div>
+        </GlassCard>
+      </>)}
+
+      {/* ===== TAB: GEO MAU ===== */}
+      {tab === "mau" && (<>
+        <GlassCard padding="sm">
+          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">AI Platform MAU — 国内 (万)</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs"><thead><tr className="border-b border-[var(--border-glass)]"><th className="px-2 py-1 text-left">Platform</th><th className="px-2 py-1 text-center">Jan</th><th className="px-2 py-1 text-center">Feb</th><th className="px-2 py-1 text-center">Mar</th><th className="px-2 py-1 text-center">Apr</th><th className="px-2 py-1 text-center">May</th><th className="px-2 py-1 text-center">Jun</th><th className="px-2 py-1 text-left text-[var(--text-muted)]">说明</th></tr></thead>
+            <tbody>{GEO_MAU.CN.map(r=>(<tr key={r.platform} className="border-b border-[var(--border-glass)]/30"><td className="px-2 py-1 font-medium">{r.platform}</td><td className="px-2 py-1 text-center font-mono">{(r.Jan/10000).toFixed(1)}万</td><td className="px-2 py-1 text-center font-mono">{(r.Feb/10000).toFixed(1)}万</td><td className="px-2 py-1 text-center font-mono">{(r.Mar/10000).toFixed(1)}万</td><td className="px-2 py-1 text-center font-mono">{(r.Apr/10000).toFixed(1)}万</td><td className="px-2 py-1 text-center font-mono">{(r.May/10000).toFixed(1)}万</td><td className="px-2 py-1 text-center font-mono">{(r.Jun/10000).toFixed(1)}万</td><td className="px-2 py-1 text-[10px] text-[var(--text-muted)] max-w-[150px] truncate">{r.desc}</td></tr>))}</tbody></table>
+          </div>
+        </GlassCard>
+        <GlassCard padding="sm">
+          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">AI Platform MAU — 海外</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs"><thead><tr className="border-b border-[var(--border-glass)]"><th className="px-2 py-1 text-left">Platform</th><th className="px-2 py-1 text-center">Apr</th><th className="px-2 py-1 text-center">May</th><th className="px-2 py-1 text-center">Jun</th><th className="px-2 py-1 text-left text-[var(--text-muted)]">说明</th></tr></thead>
+            <tbody>{GEO_MAU.WW.map(r=>(<tr key={r.platform} className="border-b border-[var(--border-glass)]/30"><td className="px-2 py-1 font-medium">{r.platform}</td><td className="px-2 py-1 text-center font-mono">{r.Apr>0?(r.Apr/10000).toFixed(1)+"万":"—"}</td><td className="px-2 py-1 text-center font-mono">{r.May>0?(r.May/10000).toFixed(1)+"万":"—"}</td><td className="px-2 py-1 text-center font-mono">{r.Jun>0?(r.Jun/10000).toFixed(1)+"万":"—"}</td><td className="px-2 py-1 text-[10px] text-[var(--text-muted)]">{r.desc}</td></tr>))}</tbody></table>
+          </div>
+        </GlassCard>
+        <GlassCard padding="sm">
+          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">GEO Output by Platform — Reg Start (FY26)</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs"><thead><tr className="border-b border-[var(--border-glass)]"><th className="px-2 py-1 text-left">Metric</th><th className="px-1 py-1 text-center">Jan</th><th className="px-1 py-1 text-center">Feb</th><th className="px-1 py-1 text-center">Mar</th><th className="px-1 py-1 text-center">Apr</th><th className="px-1 py-1 text-center">May</th><th className="px-1 py-1 text-center">Jun</th><th className="px-1 py-1 text-center">Jul</th><th className="px-1 py-1 text-center font-bold">YTD</th></tr></thead>
+            <tbody>{GEO_OUTPUT.regStart.map(r=>(<tr key={r.metric} className={`border-b border-[var(--border-glass)]/30 ${!r.metric.startsWith(" ")?"font-semibold":""}`}><td className="px-2 py-1">{r.metric}</td><td className="px-1 py-1 text-center font-mono">{r.Jan}</td><td className="px-1 py-1 text-center font-mono">{r.Feb}</td><td className="px-1 py-1 text-center font-mono">{r.Mar}</td><td className="px-1 py-1 text-center font-mono">{r.Apr}</td><td className="px-1 py-1 text-center font-mono">{r.May}</td><td className="px-1 py-1 text-center font-mono">{r.Jun}</td><td className="px-1 py-1 text-center font-mono">{r.Jul}</td><td className="px-1 py-1 text-center font-mono font-bold">{r.YTD}</td></tr>))}</tbody></table>
+          </div>
+        </GlassCard>
+      </>)}
+
+      {/* ===== TAB: SOURCES ===== */}
+      {tab === "sources" && (<>
+        <GlassCard padding="sm">
+          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">信源分析 — 各平台 TOP5 引用来源（6月）</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {SOURCE_ANALYSIS.map(p=>(
+              <div key={p.platform} className="border border-[var(--border-glass)] rounded-lg p-3">
+                <p className="text-xs font-bold mb-2 text-[var(--accent)]">{p.platform}</p>
+                {p.sources.map((s,i)=>(
+                  <div key={i} className="flex items-center justify-between py-0.5">
+                    <span className="text-[10px] text-[var(--text-primary)]">{s.name}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-[var(--text-muted)]">{s.url}</span>
+                      <span className="text-[10px] font-mono font-bold text-[var(--accent)]">{s.pct}%</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </GlassCard>
+        <GlassCard padding="sm">
+          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">gs.amazon.cn 官网信源占比对比</h2>
+          <ResponsiveContainer width="100%" height={180}>
+            <BarChart data={SOURCE_ANALYSIS.map(p=>({platform:p.platform,gs_pct:p.sources[0].pct}))} margin={{top:5,right:10,left:0,bottom:5}}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+              <XAxis dataKey="platform" tick={{fontSize:10,fill:"#8892b0"}} />
+              <YAxis tick={{fontSize:10,fill:"#8892b0"}} domain={[0,50]} unit="%" />
+              <Tooltip contentStyle={{background:"#1a1d2e",border:"1px solid #2a2f4a",borderRadius:8,fontSize:11}} />
+              <Bar dataKey="gs_pct" fill="#00bcd4" name="gs.amazon.cn %" radius={[4,4,0,0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </GlassCard>
+      </>)}
+
+      {/* ===== TAB: PHRASES ===== */}
+      {tab === "phrases" && (<>
+        <GlassCard padding="sm">
+          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">检索短语提及数 by 类别 × 平台（6月）</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs"><thead><tr className="border-b border-[var(--border-glass)]"><th className="px-2 py-1 text-left">分类</th><th className="px-1 py-1 text-center">总量</th><th className="px-1 py-1 text-center">元宝</th><th className="px-1 py-1 text-center">DeepSeek</th><th className="px-1 py-1 text-center">豆包</th><th className="px-1 py-1 text-center">ChatGPT</th><th className="px-1 py-1 text-center">Kimi</th><th className="px-1 py-1 text-center">千问</th></tr></thead>
+            <tbody>{PHRASE_CATEGORIES.map(r=>(<tr key={r.category} className="border-b border-[var(--border-glass)]/30"><td className="px-2 py-1 font-medium">{r.category}</td><td className="px-1 py-1 text-center">{r.total}</td><td className="px-1 py-1 text-center font-mono">{r.jun_元宝}</td><td className="px-1 py-1 text-center font-mono">{r.jun_DeepSeek}</td><td className="px-1 py-1 text-center font-mono">{r.jun_豆包}</td><td className="px-1 py-1 text-center font-mono">{r.jun_ChatGPT}</td><td className="px-1 py-1 text-center font-mono">{r.jun_Kimi}</td><td className="px-1 py-1 text-center font-mono">{r.jun_千问}</td></tr>))}</tbody></table>
+          </div>
+        </GlassCard>
+        <GlassCard padding="sm">
+          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">语义范围覆盖率（6月）</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs"><thead><tr className="border-b border-[var(--border-glass)]"><th className="px-2 py-1 text-left">语义分类</th><th className="px-1 py-1 text-center">Total</th><th className="px-1 py-1 text-center">元宝</th><th className="px-1 py-1 text-center">DeepSeek</th><th className="px-1 py-1 text-center">豆包</th><th className="px-1 py-1 text-center">ChatGPT</th><th className="px-1 py-1 text-center">Kimi</th><th className="px-1 py-1 text-center">千问</th></tr></thead>
+            <tbody>{SEMANTIC_COVERAGE.map(r=>(<tr key={r.category} className="border-b border-[var(--border-glass)]/30"><td className="px-2 py-1">{r.category}</td><td className="px-1 py-1 text-center">{r.total}</td><td className="px-1 py-1 text-center font-mono">{r.rate_元宝}</td><td className="px-1 py-1 text-center font-mono">{r.rate_DeepSeek}</td><td className="px-1 py-1 text-center font-mono">{r.rate_豆包}</td><td className="px-1 py-1 text-center font-mono">{r.rate_ChatGPT}</td><td className="px-1 py-1 text-center font-mono">{r.rate_Kimi}</td><td className="px-1 py-1 text-center font-mono">{r.rate_千问}</td></tr>))}</tbody></table>
+          </div>
+        </GlassCard>
+        <GlassCard padding="sm">
+          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">Input Summary — 月度汇总</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs"><thead><tr className="border-b border-[var(--border-glass)]">{INPUT_SUMMARY.headers.map(h=>(<th key={h} className="px-2 py-1 text-center">{h}</th>))}</tr></thead>
+            <tbody>{INPUT_SUMMARY.rows.map((r,i)=>(<tr key={i} className="border-b border-[var(--border-glass)]/30">{r.map((c,j)=>(<td key={j} className={`px-2 py-1 text-center font-mono ${j===0?"text-left font-medium":""}`}>{c}</td>))}</tr>))}</tbody></table>
           </div>
         </GlassCard>
       </>)}
