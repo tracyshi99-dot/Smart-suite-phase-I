@@ -7,6 +7,7 @@ import { useBatchStore } from "@/stores/batch-store";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/Button";
 import { DraftContent } from "@/lib/types";
+import { convertArticleToLegoPage } from "@/lib/lego-converter";
 
 interface ZhibuItem {
   content_id: string;
@@ -174,7 +175,6 @@ export default function ZhibuPage() {
         batch_id: jsonOutput.batch_id,
         created_at: jsonOutput.created_at,
         total_items: 1,
-        source_keywords: [item.meta.title],
         items: [item],
       };
       const blob = new Blob([JSON.stringify(singleOutput, null, 2)], { type: "application/json;charset=utf-8" });
@@ -183,6 +183,22 @@ export default function ZhibuPage() {
       a.href = url;
       const safeName = item.meta.title.slice(0, 30).replace(/[/\\?%*:|"<>]/g, "");
       a.download = `${(idx + 1).toString().padStart(2, "0")}_${safeName}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  };
+
+  // Download each article as LEGO Sell Design JSON (CMS page builder format)
+  const handleDownloadLego = () => {
+    if (!jsonOutput) return;
+    jsonOutput.items.forEach((item, idx) => {
+      const legoPage = convertArticleToLegoPage(item.meta.title, item.body);
+      const blob = new Blob([JSON.stringify(legoPage, null, 2)], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const safeName = item.meta.title.slice(0, 30).replace(/[/\\?%*:|"<>]/g, "");
+      a.download = `${(idx + 1).toString().padStart(2, "0")}_LEGO_${safeName}.json`;
       a.click();
       URL.revokeObjectURL(url);
     });
@@ -262,6 +278,9 @@ export default function ZhibuPage() {
                   </button>
                   <button onClick={handleDownloadEach} className="text-xs px-3 py-1.5 rounded-lg border border-[var(--border-glass)] text-[var(--accent)] hover:bg-[var(--accent)]/10">
                     ⬇ {isZh ? "逐篇下载 JSON" : "Download Each JSON"}
+                  </button>
+                  <button onClick={handleDownloadLego} className="text-xs px-3 py-1.5 rounded-lg border border-[var(--accent)]/40 text-[var(--accent)] hover:bg-[var(--accent)]/10 font-medium">
+                    ⬇ {isZh ? "下载 LEGO CMS 格式" : "Download LEGO CMS"}
                   </button>
                   <button onClick={handleDownload} className="text-xs px-3 py-1.5 rounded-lg border border-[var(--border-glass)] text-[var(--text-secondary)] hover:text-[var(--accent)]">
                     ⬇ {isZh ? "下载合集" : "Download All"}
