@@ -160,17 +160,55 @@ export default function ZhicePage() {
   // Unified phrase pool (from all sources)
   const [phrasePool, setPhrasePool] = useState<{ text: string; source: string; selected: boolean }[]>([]);
 
+  // Semantic dedup: normalize phrase to core keywords for comparison
+  function normalizePhrase(text: string): string {
+    return text
+      .toLowerCase()
+      .replace(/[？?！!。，,、：:；;（）()【】\[\]""''\"\']/g, "")
+      .replace(/\s+/g, "")
+      // Remove common filler words that don't change intent
+      .replace(/(怎么样|怎样|如何|怎么|什么|哪些|哪个|吗|呢|啊|吧|的|了|是|在|有|和|与|或|到|从|为|对|把|被|让|给)/g, "")
+      .trim();
+  }
+
+  // Check if two phrases are semantically duplicate (same core + intent)
+  function isDuplicate(newText: string, existingTexts: string[]): string | null {
+    const normNew = normalizePhrase(newText);
+    if (normNew.length < 2) return null;
+    for (const existing of existingTexts) {
+      const normExisting = normalizePhrase(existing);
+      // Exact match after normalization
+      if (normNew === normExisting) return existing;
+      // One contains the other (core meaning identical)
+      if (normNew.length > 3 && normExisting.length > 3) {
+        if (normNew.includes(normExisting) || normExisting.includes(normNew)) {
+          // Only flag if overlap is >70% of the shorter one
+          const shorter = Math.min(normNew.length, normExisting.length);
+          const longer = Math.max(normNew.length, normExisting.length);
+          if (shorter / longer > 0.7) return existing;
+        }
+      }
+    }
+    return null;
+  }
+
   // Sync zhiku phrases into pool
   useEffect(() => {
     if (zhikuPhrases.length > 0) {
       setPhrasePool((prev) => {
-        const existing = new Set(prev.map((p) => p.text));
-        const newItems = zhikuPhrases
-          .filter((p) => !existing.has(p))
-          .map((p) => ({ text: p, source: "智库", selected: true }));
+        const existingTexts = prev.map((p) => p.text);
+        const newItems: { text: string; source: string; selected: boolean }[] = [];
+        for (const p of zhikuPhrases) {
+          const dup = isDuplicate(p, existingTexts);
+          if (!dup) {
+            newItems.push({ text: p, source: "智库", selected: true });
+            existingTexts.push(p);
+          }
+        }
         return [...prev, ...newItems];
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [zhikuPhrases]);
 
   // Handle file upload (Excel/CSV/TXT)
@@ -203,10 +241,22 @@ export default function ZhicePage() {
 
       if (items.length > 0) {
         setPhrasePool((prev) => {
-          const existing = new Set(prev.map((p) => p.text));
-          const newItems = items
-            .filter((p) => !existing.has(p))
-            .map((p) => ({ text: p, source: `上传:${file.name}`, selected: true }));
+          const existingTexts = prev.map((p) => p.text);
+          const newItems: { text: string; source: string; selected: boolean }[] = [];
+          let dedupCount = 0;
+          for (const p of items) {
+            const dup = isDuplicate(p, existingTexts);
+            if (!dup) {
+              newItems.push({ text: p, source: `上传:${file.name}`, selected: true });
+              existingTexts.push(p);
+            } else {
+              dedupCount++;
+            }
+          }
+          if (dedupCount > 0) {
+            setError(`${dedupCount} ${isZh ? "条重复短语已自动去重" : "duplicates removed"}`);
+            setTimeout(() => setError(null), 3000);
+          }
           return [...prev, ...newItems];
         });
       }
@@ -219,10 +269,22 @@ export default function ZhicePage() {
     const lines = manualPhrases.split("\n").map((l) => l.trim()).filter((l) => l.length > 3);
     if (lines.length === 0) return;
     setPhrasePool((prev) => {
-      const existing = new Set(prev.map((p) => p.text));
-      const newItems = lines
-        .filter((p) => !existing.has(p))
-        .map((p) => ({ text: p, source: "手动", selected: true }));
+      const existingTexts = prev.map((p) => p.text);
+      const newItems: { text: string; source: string; selected: boolean }[] = [];
+      let dedupCount = 0;
+      for (const p of lines) {
+        const dup = isDuplicate(p, existingTexts);
+        if (!dup) {
+          newItems.push({ text: p, source: "手动", selected: true });
+          existingTexts.push(p);
+        } else {
+          dedupCount++;
+        }
+      }
+      if (dedupCount > 0) {
+        setError(`${dedupCount} ${isZh ? "条与已有短语意图重复，已跳过" : "duplicates skipped (same intent)"}`);
+        setTimeout(() => setError(null), 3000);
+      }
       return [...prev, ...newItems];
     });
     setManualPhrases("");
