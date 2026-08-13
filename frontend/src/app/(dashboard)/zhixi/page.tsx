@@ -182,13 +182,15 @@ export default function ZhixiPage() {
       </div>
 
       {/* KPI Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
-        <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">{latest.Week} Total</p><p className="text-lg font-bold text-[var(--accent)]">{latest.Total.toLocaleString()}</p><p className="text-[10px]">WoW {wow(latest.Total,prev.Total)}</p></GlassCard>
-        <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">GEO Total</p><p className="text-lg font-bold text-blue-400">{latest.Total_GEO}</p><p className="text-[10px]">WoW {wow(latest.Total_GEO,prev.Total_GEO)}</p></GlassCard>
-        <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">WW Direct</p><p className="text-lg font-bold text-purple-400">{latest.WW_Direct.toLocaleString()}</p></GlassCard>
-        <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">YTD Total</p><p className="text-lg font-bold">68,389</p><p className="text-[10px] text-[var(--success)]">YoY +7%</p></GlassCard>
-        <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">{isZh?"链接提及率":"Link Rate"}</p><p className="text-lg font-bold">51.6%</p><p className="text-[10px] text-[var(--success)]">M6</p></GlassCard>
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
+        <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">YTD GEO Total</p><p className="text-lg font-bold text-blue-400">1,291</p><p className="text-[10px] text-[var(--success)]">YoY +198%</p></GlassCard>
+        <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">YTD Direct Total</p><p className="text-lg font-bold text-purple-400">67,098</p><p className="text-[10px] text-[var(--success)]">YoY +6%</p></GlassCard>
+        <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">YTD GEO+Direct</p><p className="text-lg font-bold text-[var(--accent)]">68,389</p><p className="text-[10px] text-[var(--success)]">YoY +7%</p></GlassCard>
+        <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">{isZh?"跑赢大盘":"vs Benchmark"}</p><p className="text-lg font-bold text-[var(--success)]">+24 ppts</p><p className="text-[10px] text-[var(--text-muted)]">{isZh?"大盘 YoY -17%":"SSR -17%"}</p></GlassCard>
+        <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">{isZh?"链接提及率 YTD":"Link Rate YTD"}</p><p className="text-lg font-bold">56.9%</p><p className="text-[10px] text-[var(--text-muted)]">M6 Latest</p></GlassCard>
         <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">{isZh?"内容总量":"Content"}</p><p className="text-lg font-bold">646</p><p className="text-[10px]">{isZh?"检索短语":"phrases"}</p></GlassCard>
+        <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">{latest.Week} Total</p><p className="text-lg font-bold">{latest.Total.toLocaleString()}</p><p className="text-[10px]">WoW {wow(latest.Total,prev.Total)}</p></GlassCard>
+        <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">H1 CL_RS%</p><p className="text-lg font-bold">24.3%</p><p className="text-[10px] text-[var(--text-muted)]">{isZh?"大盘 27.1%":"SSR 27.1%"}</p></GlassCard>
       </div>
 
       {/* Tabs */}
