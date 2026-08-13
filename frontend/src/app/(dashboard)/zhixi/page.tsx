@@ -447,8 +447,99 @@ export default function ZhixiPage() {
 
       {/* ===== TAB: PHRASES ===== */}
       {tab === "phrases" && (<>
+        {/* Overall Phrase KPI */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">{isZh?"品牌短语":"Brand Phrases"}</p><p className="text-lg font-bold text-[var(--accent)]">646</p><p className="text-[10px]">{isZh?"总量":"total"}</p></GlassCard>
+          <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">{isZh?"行业短语":"Industry"}</p><p className="text-lg font-bold text-purple-400">159</p><p className="text-[10px]">{isZh?"总量":"total"}</p></GlassCard>
+          <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">{isZh?"品牌提及":"Brand Mention"}</p><p className="text-lg font-bold text-blue-400">462 (71%)</p><p className="text-[10px]">M6 avg</p></GlassCard>
+          <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">{isZh?"行业提及":"Industry Mention"}</p><p className="text-lg font-bold text-cyan-400">59 (37%)</p><p className="text-[10px]">M6 avg</p></GlassCard>
+        </div>
+
+        {/* Category × Platform Table + Bar Chart */}
         <GlassCard padding="sm">
-          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">检索短语逐条验证数据</h2>
+          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">📊 Category × Platform Mention Count</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs"><thead><tr className="border-b border-[var(--border-glass)]"><th className="px-2 py-1 text-left">分类</th><th className="px-1 py-1 text-center">总量</th><th className="px-1 py-1 text-center">元宝</th><th className="px-1 py-1 text-center">DeepSeek</th><th className="px-1 py-1 text-center">豆包</th><th className="px-1 py-1 text-center">ChatGPT</th><th className="px-1 py-1 text-center">Kimi</th><th className="px-1 py-1 text-center">千问</th></tr></thead>
+              <tbody>{PHRASE_CATEGORIES.map(r=>(<tr key={r.category} className="border-b border-[var(--border-glass)]/30"><td className="px-2 py-1 font-medium">{r.category}</td><td className="px-1 py-1 text-center font-bold">{r.total}</td><td className="px-1 py-1 text-center font-mono">{r.jun_元宝}</td><td className="px-1 py-1 text-center font-mono">{r.jun_DeepSeek}</td><td className="px-1 py-1 text-center font-mono">{r.jun_豆包}</td><td className="px-1 py-1 text-center font-mono">{r.jun_ChatGPT}</td><td className="px-1 py-1 text-center font-mono">{r.jun_Kimi}</td><td className="px-1 py-1 text-center font-mono">{r.jun_千问}</td></tr>))}</tbody></table>
+            </div>
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={PHRASE_CATEGORIES} layout="vertical" margin={{top:5,right:10,left:60,bottom:5}}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                <XAxis type="number" tick={{fontSize:9,fill:"#8892b0"}} />
+                <YAxis type="category" dataKey="category" tick={{fontSize:9,fill:"#8892b0"}} width={55} />
+                <Tooltip contentStyle={{background:"#1a1d2e",border:"1px solid #2a2f4a",borderRadius:8,fontSize:11}} />
+                <Legend wrapperStyle={{fontSize:9}} />
+                <Bar dataKey="jun_元宝" fill="#ff6b35" name="元宝" stackId="a" />
+                <Bar dataKey="jun_DeepSeek" fill="#2196f3" name="DeepSeek" stackId="a" />
+                <Bar dataKey="jun_豆包" fill="#4caf50" name="豆包" stackId="a" />
+                <Bar dataKey="jun_ChatGPT" fill="#9c27b0" name="ChatGPT" stackId="a" />
+                <Bar dataKey="jun_Kimi" fill="#ffeb3b" name="Kimi" stackId="a" />
+                <Bar dataKey="jun_千问" fill="#00bcd4" name="千问" stackId="a" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </GlassCard>
+
+        {/* Semantic Coverage + Bar Chart */}
+        <GlassCard padding="sm">
+          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">📊 Semantic Coverage by Category</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs"><thead><tr className="border-b border-[var(--border-glass)]"><th className="px-2 py-1 text-left">语义分类</th><th className="px-1 py-1 text-center">Total</th><th className="px-1 py-1 text-center">元宝</th><th className="px-1 py-1 text-center">DeepSeek</th><th className="px-1 py-1 text-center">豆包</th><th className="px-1 py-1 text-center">ChatGPT</th><th className="px-1 py-1 text-center">Kimi</th><th className="px-1 py-1 text-center">千问</th></tr></thead>
+              <tbody>{SEMANTIC_COVERAGE.map(r=>(<tr key={r.category} className="border-b border-[var(--border-glass)]/30"><td className="px-2 py-1">{r.category}</td><td className="px-1 py-1 text-center font-bold">{r.total}</td><td className="px-1 py-1 text-center font-mono">{r.rate_元宝}</td><td className="px-1 py-1 text-center font-mono">{r.rate_DeepSeek}</td><td className="px-1 py-1 text-center font-mono">{r.rate_豆包}</td><td className="px-1 py-1 text-center font-mono">{r.rate_ChatGPT}</td><td className="px-1 py-1 text-center font-mono">{r.rate_Kimi}</td><td className="px-1 py-1 text-center font-mono">{r.rate_千问}</td></tr>))}</tbody></table>
+            </div>
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={SEMANTIC_COVERAGE.map(r=>({category:r.category,元宝:parseFloat(r.rate_元宝),DeepSeek:parseFloat(r.rate_DeepSeek),豆包:parseFloat(r.rate_豆包),ChatGPT:parseFloat(r.rate_ChatGPT),Kimi:parseFloat(r.rate_Kimi),千问:parseFloat(r.rate_千问)}))} layout="vertical" margin={{top:5,right:10,left:80,bottom:5}}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                <XAxis type="number" tick={{fontSize:9,fill:"#8892b0"}} domain={[0,100]} unit="%" />
+                <YAxis type="category" dataKey="category" tick={{fontSize:9,fill:"#8892b0"}} width={75} />
+                <Tooltip contentStyle={{background:"#1a1d2e",border:"1px solid #2a2f4a",borderRadius:8,fontSize:11}} />
+                <Legend wrapperStyle={{fontSize:9}} />
+                <Bar dataKey="元宝" fill="#ff6b35" name="元宝" />
+                <Bar dataKey="DeepSeek" fill="#2196f3" name="DeepSeek" />
+                <Bar dataKey="豆包" fill="#4caf50" name="豆包" />
+                <Bar dataKey="ChatGPT" fill="#9c27b0" name="ChatGPT" />
+                <Bar dataKey="Kimi" fill="#ffeb3b" name="Kimi" />
+                <Bar dataKey="千问" fill="#00bcd4" name="千问" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </GlassCard>
+
+        {/* Link Rate by Platform Monthly */}
+        <GlassCard padding="sm">
+          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">品牌词链接提及率 — 按平台月度趋势</h2>
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={CITATION_BY_PLATFORM} margin={{top:5,right:10,left:0,bottom:5}}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+              <XAxis dataKey="month" tick={{fontSize:10,fill:"#8892b0"}} />
+              <YAxis tick={{fontSize:10,fill:"#8892b0"}} domain={[20,80]} unit="%" />
+              <Tooltip contentStyle={{background:"#1a1d2e",border:"1px solid #2a2f4a",borderRadius:8,fontSize:11}} />
+              <Legend wrapperStyle={{fontSize:10}} />
+              <Line type="monotone" dataKey="元宝" stroke="#ff6b35" strokeWidth={2} dot={{r:2}} />
+              <Line type="monotone" dataKey="DeepSeek" stroke="#2196f3" strokeWidth={2} dot={{r:2}} />
+              <Line type="monotone" dataKey="豆包" stroke="#4caf50" strokeWidth={2} dot={{r:2}} />
+              <Line type="monotone" dataKey="ChatGPT" stroke="#9c27b0" strokeWidth={2} dot={{r:2}} />
+              <Line type="monotone" dataKey="千问" stroke="#00bcd4" strokeWidth={1.5} dot={{r:2}} />
+              <Line type="monotone" dataKey="Kimi" stroke="#ffeb3b" strokeWidth={1.5} dot={{r:2}} />
+              <Line type="monotone" dataKey="Gemini" stroke="#e91e63" strokeWidth={1.5} dot={{r:2}} />
+            </LineChart>
+          </ResponsiveContainer>
+        </GlassCard>
+
+        {/* Input Summary Table */}
+        <GlassCard padding="sm">
+          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">Input Summary — 月度汇总</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs"><thead><tr className="border-b border-[var(--border-glass)]">{INPUT_SUMMARY.headers.map(h=>(<th key={h} className="px-2 py-1 text-center">{h}</th>))}</tr></thead>
+            <tbody>{INPUT_SUMMARY.rows.map((r,i)=>(<tr key={i} className="border-b border-[var(--border-glass)]/30">{r.map((c,j)=>(<td key={j} className={`px-2 py-1 text-center font-mono ${j===0?"text-left font-medium":""}`}>{c}</td>))}</tr>))}</tbody></table>
+          </div>
+        </GlassCard>
+
+        {/* Per-phrase upload & detail */}
+        <GlassCard padding="sm">
+          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">🔎 逐条短语验证详情</h2>
           <p className="text-[10px] text-[var(--text-muted)] mb-3">上传 GEO-SEO Excel 文件（Sheet 3.2）自动解析每条检索短语在各平台的提及情况</p>
           <div className="flex items-center gap-3 mb-3">
             <label className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--accent)]/40 bg-[var(--accent)]/5 cursor-pointer hover:bg-[var(--accent)]/10 transition-colors">
@@ -498,27 +589,6 @@ export default function ZhixiPage() {
               <p className="mt-1 text-[10px]">支持格式：Sheet 3.2 的 CN+NA 短语详情表</p>
             </div>
           )}
-        </GlassCard>
-        <GlassCard padding="sm">
-          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">检索短语提及数 by 类别 × 平台（6月汇总）</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs"><thead><tr className="border-b border-[var(--border-glass)]"><th className="px-2 py-1 text-left">分类</th><th className="px-1 py-1 text-center">总量</th><th className="px-1 py-1 text-center">元宝</th><th className="px-1 py-1 text-center">DeepSeek</th><th className="px-1 py-1 text-center">豆包</th><th className="px-1 py-1 text-center">ChatGPT</th><th className="px-1 py-1 text-center">Kimi</th><th className="px-1 py-1 text-center">千问</th></tr></thead>
-            <tbody>{PHRASE_CATEGORIES.map(r=>(<tr key={r.category} className="border-b border-[var(--border-glass)]/30"><td className="px-2 py-1 font-medium">{r.category}</td><td className="px-1 py-1 text-center">{r.total}</td><td className="px-1 py-1 text-center font-mono">{r.jun_元宝}</td><td className="px-1 py-1 text-center font-mono">{r.jun_DeepSeek}</td><td className="px-1 py-1 text-center font-mono">{r.jun_豆包}</td><td className="px-1 py-1 text-center font-mono">{r.jun_ChatGPT}</td><td className="px-1 py-1 text-center font-mono">{r.jun_Kimi}</td><td className="px-1 py-1 text-center font-mono">{r.jun_千问}</td></tr>))}</tbody></table>
-          </div>
-        </GlassCard>
-        <GlassCard padding="sm">
-          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">语义范围覆盖率（6月）</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs"><thead><tr className="border-b border-[var(--border-glass)]"><th className="px-2 py-1 text-left">语义分类</th><th className="px-1 py-1 text-center">Total</th><th className="px-1 py-1 text-center">元宝</th><th className="px-1 py-1 text-center">DeepSeek</th><th className="px-1 py-1 text-center">豆包</th><th className="px-1 py-1 text-center">ChatGPT</th><th className="px-1 py-1 text-center">Kimi</th><th className="px-1 py-1 text-center">千问</th></tr></thead>
-            <tbody>{SEMANTIC_COVERAGE.map(r=>(<tr key={r.category} className="border-b border-[var(--border-glass)]/30"><td className="px-2 py-1">{r.category}</td><td className="px-1 py-1 text-center">{r.total}</td><td className="px-1 py-1 text-center font-mono">{r.rate_元宝}</td><td className="px-1 py-1 text-center font-mono">{r.rate_DeepSeek}</td><td className="px-1 py-1 text-center font-mono">{r.rate_豆包}</td><td className="px-1 py-1 text-center font-mono">{r.rate_ChatGPT}</td><td className="px-1 py-1 text-center font-mono">{r.rate_Kimi}</td><td className="px-1 py-1 text-center font-mono">{r.rate_千问}</td></tr>))}</tbody></table>
-          </div>
-        </GlassCard>
-        <GlassCard padding="sm">
-          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">Input Summary — 月度汇总</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs"><thead><tr className="border-b border-[var(--border-glass)]">{INPUT_SUMMARY.headers.map(h=>(<th key={h} className="px-2 py-1 text-center">{h}</th>))}</tr></thead>
-            <tbody>{INPUT_SUMMARY.rows.map((r,i)=>(<tr key={i} className="border-b border-[var(--border-glass)]/30">{r.map((c,j)=>(<td key={j} className={`px-2 py-1 text-center font-mono ${j===0?"text-left font-medium":""}`}>{c}</td>))}</tr>))}</tbody></table>
-          </div>
         </GlassCard>
       </>)}
 
