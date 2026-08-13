@@ -152,7 +152,7 @@ export default function ZhibuPage() {
     setJsonOutput(output);
   };
 
-  // Download JSON
+  // Download JSON (all in one file)
   const handleDownload = () => {
     if (!jsonOutput) return;
     const blob = new Blob([JSON.stringify(jsonOutput, null, 2)], { type: "application/json;charset=utf-8" });
@@ -162,6 +162,28 @@ export default function ZhibuPage() {
     a.download = `zhibu_output_${activeBatch}_${jsonOutput.total_items}items.json`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  // Download each article as separate JSON file
+  const handleDownloadEach = () => {
+    if (!jsonOutput) return;
+    jsonOutput.items.forEach((item, idx) => {
+      const singleOutput = {
+        batch_id: jsonOutput.batch_id,
+        created_at: jsonOutput.created_at,
+        total_items: 1,
+        source_keywords: [item.meta.title],
+        items: [item],
+      };
+      const blob = new Blob([JSON.stringify(singleOutput, null, 2)], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const safeName = item.meta.title.slice(0, 30).replace(/[/\\?%*:|"<>]/g, "");
+      a.download = `${(idx + 1).toString().padStart(2, "0")}_${safeName}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
   };
 
   // Copy JSON to clipboard
@@ -236,8 +258,11 @@ export default function ZhibuPage() {
                   <button onClick={handleCopy} className="text-xs px-3 py-1.5 rounded-lg border border-[var(--border-glass)] text-[var(--text-secondary)] hover:text-[var(--accent)]">
                     {isZh ? "📋 复制" : "📋 Copy"}
                   </button>
+                  <button onClick={handleDownloadEach} className="text-xs px-3 py-1.5 rounded-lg border border-[var(--border-glass)] text-[var(--accent)] hover:bg-[var(--accent)]/10">
+                    ⬇ {isZh ? "逐篇下载 JSON" : "Download Each JSON"}
+                  </button>
                   <button onClick={handleDownload} className="text-xs px-3 py-1.5 rounded-lg border border-[var(--border-glass)] text-[var(--text-secondary)] hover:text-[var(--accent)]">
-                    ⬇ {isZh ? "下载 JSON" : "Download JSON"}
+                    ⬇ {isZh ? "下载合集" : "Download All"}
                   </button>
                   <button
                     onClick={() => setShowPreview(!showPreview)}
