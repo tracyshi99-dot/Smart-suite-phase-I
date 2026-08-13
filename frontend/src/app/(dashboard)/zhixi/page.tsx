@@ -269,6 +269,20 @@ export default function ZhixiPage() {
             <tbody>{GEO_OUTPUT.regStart.map(r=>(<tr key={r.metric} className={`border-b border-[var(--border-glass)]/30 ${!r.metric.startsWith(" ")?"font-semibold":""}`}><td className="px-2 py-1">{r.metric}</td><td className="px-1 py-1 text-center font-mono">{r.Jan}</td><td className="px-1 py-1 text-center font-mono">{r.Feb}</td><td className="px-1 py-1 text-center font-mono">{r.Mar}</td><td className="px-1 py-1 text-center font-mono">{r.Apr}</td><td className="px-1 py-1 text-center font-mono">{r.May}</td><td className="px-1 py-1 text-center font-mono">{r.Jun}</td><td className="px-1 py-1 text-center font-mono">{r.Jul}</td><td className="px-1 py-1 text-center font-mono font-bold">{r.YTD}</td></tr>))}</tbody></table>
           </div>
         </GlassCard>
+        <GlassCard padding="sm">
+          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">Clean Launch (Monthly)</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs"><thead><tr className="border-b border-[var(--border-glass)]"><th className="px-2 py-1 text-left">Channel</th><th className="px-1 py-1 text-center">Jan</th><th className="px-1 py-1 text-center">Feb</th><th className="px-1 py-1 text-center">Mar</th><th className="px-1 py-1 text-center">Apr</th><th className="px-1 py-1 text-center">May</th><th className="px-1 py-1 text-center">Jun</th><th className="px-1 py-1 text-center font-bold">YTD</th></tr></thead>
+            <tbody>{GEO_OUTPUT.cleanLaunch.map(r=>(<tr key={r.metric} className={`border-b border-[var(--border-glass)]/30 ${!r.metric.startsWith(" ")?"font-semibold":""}`}><td className="px-2 py-1">{r.metric}</td><td className="px-1 py-1 text-center font-mono">{r.Jan.toLocaleString()}</td><td className="px-1 py-1 text-center font-mono">{r.Feb.toLocaleString()}</td><td className="px-1 py-1 text-center font-mono">{r.Mar.toLocaleString()}</td><td className="px-1 py-1 text-center font-mono">{r.Apr.toLocaleString()}</td><td className="px-1 py-1 text-center font-mono">{r.May.toLocaleString()}</td><td className="px-1 py-1 text-center font-mono">{r.Jun.toLocaleString()}</td><td className="px-1 py-1 text-center font-mono font-bold">{r.YTD.toLocaleString()}</td></tr>))}</tbody></table>
+          </div>
+        </GlassCard>
+        <GlassCard padding="sm">
+          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">Reg Start → Clean Launch 转化率 (T2R%)</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs"><thead><tr className="border-b border-[var(--border-glass)]"><th className="px-2 py-1 text-left">Channel</th><th className="px-1 py-1 text-center">Jan</th><th className="px-1 py-1 text-center">Feb</th><th className="px-1 py-1 text-center">Mar</th><th className="px-1 py-1 text-center">Apr</th><th className="px-1 py-1 text-center">May</th><th className="px-1 py-1 text-center">Jun</th><th className="px-1 py-1 text-center font-bold">YTD</th></tr></thead>
+            <tbody>{GEO_OUTPUT.conversion.map(r=>(<tr key={r.metric} className="border-b border-[var(--border-glass)]/30 font-semibold"><td className="px-2 py-1">{r.metric}</td><td className="px-1 py-1 text-center font-mono">{r.Jan}</td><td className="px-1 py-1 text-center font-mono">{r.Feb}</td><td className="px-1 py-1 text-center font-mono">{r.Mar}</td><td className="px-1 py-1 text-center font-mono">{r.Apr}</td><td className="px-1 py-1 text-center font-mono">{r.May}</td><td className="px-1 py-1 text-center font-mono">{r.Jun}</td><td className="px-1 py-1 text-center font-mono font-bold">{r.YTD}</td></tr>))}</tbody></table>
+          </div>
+        </GlassCard>
       </>)}
 
       {/* ===== TAB: SOURCES ===== */}

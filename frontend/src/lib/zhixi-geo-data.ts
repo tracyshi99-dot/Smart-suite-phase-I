@@ -112,6 +112,20 @@ export const GEO_OUTPUT = {
     { metric: "  Gemini", Jan: 10, Feb: 2, Mar: 9, Apr: 10, May: 10, Jun: 9, Jul: 3, YTD: 53 },
     { metric: "CN2NA Website", Jan: 74, Feb: 42, Mar: 80, Apr: 64, May: 93, Jun: 91, Jul: 32, YTD: 476 },
   ],
+  cleanLaunch: [
+    { metric: "Total GEO", Jan: 12, Feb: 7, Mar: 26, Apr: 21, May: 19, Jun: 1, YTD: 86 },
+    { metric: "  CN GEO", Jan: 9, Feb: 6, Mar: 19, Apr: 18, May: 13, Jun: 0, YTD: 65 },
+    { metric: "  WW GEO", Jan: 3, Feb: 1, Mar: 7, Apr: 3, May: 6, Jun: 1, YTD: 21 },
+    { metric: "WW Direct", Jan: 892, Feb: 459, Mar: 1697, Apr: 1549, May: 1872, Jun: 777, YTD: 7246 },
+    { metric: "GEO+Direct Total", Jan: 904, Feb: 466, Mar: 1723, Apr: 1570, May: 1891, Jun: 778, YTD: 7332 },
+    { metric: "SSR Total (大盘)", Jan: 8506, Feb: 4512, Mar: 12666, Apr: 12301, May: 12114, Jun: 2858, YTD: 52957 },
+  ],
+  conversion: [
+    { metric: "Total GEO T2R%", Jan: "7.0%", Feb: "6.0%", Mar: "10.2%", Apr: "9.0%", May: "7.2%", Jun: "0.6%", YTD: "7.2%" },
+    { metric: "WW Direct T2R%", Jan: "18.0%", Feb: "19.2%", Mar: "23.3%", Apr: "21.5%", May: "23.0%", Jun: "10.4%", YTD: "19.4%" },
+    { metric: "GEO+Direct T2R%", Jan: "17.6%", Feb: "18.6%", Mar: "22.9%", Apr: "21.1%", May: "22.5%", Jun: "10.2%", YTD: "19.0%" },
+    { metric: "SSR Total T2R%", Jan: "22.3%", Feb: "25.0%", Mar: "27.3%", Apr: "26.0%", May: "24.8%", Jun: "8.3%", YTD: "22.7%" },
+  ],
 };
 
 // Sheet 3.2: Phrase-level verification summary (aggregated by category)
