@@ -543,58 +543,93 @@ export default function ZhixiPage() {
           </div>
         </GlassCard>
 
-        {/* Per-phrase upload & detail */}
+        {/* Per-phrase detail — hardcoded from Sheet 3.2 (6月) */}
         <GlassCard padding="sm">
-          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">🔎 逐条短语验证详情</h2>
-          <p className="text-[10px] text-[var(--text-muted)] mb-3">上传 GEO-SEO Excel 文件（Sheet 3.2）自动解析每条检索短语在各平台的提及情况</p>
+          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">🔎 逐条短语验证详情（6月 Latest）</h2>
+          <p className="text-[10px] text-[var(--text-muted)] mb-3">数据来源：GEO-SEO Excel Sheet 3.2 — CN+NA 品牌提示词 6月验证结果（✅=官网链接被引用）</p>
           <div className="flex items-center gap-3 mb-3">
             <label className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--accent)]/40 bg-[var(--accent)]/5 cursor-pointer hover:bg-[var(--accent)]/10 transition-colors">
-              <span className="text-xs font-medium text-[var(--accent)]">📎 上传 Excel 解析短语数据</span>
+              <span className="text-xs font-medium text-[var(--accent)]">📎 上传新版 Excel 覆盖数据</span>
               <input type="file" accept=".xlsx,.xls,.csv" onChange={handlePhraseUpload} className="hidden" />
             </label>
-            {phraseData.length > 0 && <span className="text-xs text-[var(--success)]">✅ 已加载 {phraseData.length} 条</span>}
+            {phraseData.length > 0 && <span className="text-xs text-[var(--success)]">✅ 已上传覆盖 {phraseData.length} 条</span>}
           </div>
-          {phraseData.length > 0 ? (
-            <div className="overflow-x-auto max-h-[500px] overflow-y-auto border border-[var(--border-glass)] rounded-lg">
-              <table className="w-full text-[10px]">
-                <thead className="sticky top-0 bg-[var(--bg-surface)] z-10">
-                  <tr className="border-b border-[var(--border-glass)]">
-                    <th className="px-2 py-1.5 text-left text-[var(--text-muted)] min-w-[40px]">#</th>
-                    <th className="px-2 py-1.5 text-left text-[var(--text-muted)] min-w-[60px]">分类</th>
-                    <th className="px-2 py-1.5 text-left text-[var(--text-muted)] min-w-[200px]">检索短语</th>
-                    <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">元宝</th>
-                    <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">DeepSeek</th>
-                    <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">豆包</th>
-                    <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">ChatGPT</th>
-                    <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">Kimi</th>
-                    <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">千问</th>
-                    <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">Gemini</th>
+          <div className="overflow-x-auto max-h-[600px] overflow-y-auto border border-[var(--border-glass)] rounded-lg">
+            <table className="w-full text-[10px]">
+              <thead className="sticky top-0 bg-[var(--bg-surface)] z-10">
+                <tr className="border-b border-[var(--border-glass)]">
+                  <th className="px-2 py-1.5 text-left text-[var(--text-muted)] min-w-[30px]">#</th>
+                  <th className="px-2 py-1.5 text-left text-[var(--text-muted)] min-w-[55px]">分类</th>
+                  <th className="px-2 py-1.5 text-left text-[var(--text-muted)] min-w-[200px]">检索短语</th>
+                  <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">元宝</th>
+                  <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">DeepSeek</th>
+                  <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">豆包</th>
+                  <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">ChatGPT</th>
+                  <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">Kimi</th>
+                  <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">千问</th>
+                  <th className="px-2 py-1.5 text-center text-[var(--text-muted)]">Gemini</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(phraseData.length > 0 ? phraseData : [
+                  {category:"入口",phrase:"亚马逊跨境电商的官方网站在哪里？如何注册？",yuanbao:true,deepseek:true,doubao:true,chatgpt:true,kimi:true,qianwen:true,gemini:true},
+                  {category:"入口",phrase:"亚马逊开店的官方网站在哪里？如何访问？",yuanbao:true,deepseek:true,doubao:true,chatgpt:true,kimi:true,qianwen:true,gemini:true},
+                  {category:"入口",phrase:"亚马逊跨境电商官网如何访问？提供哪些服务？",yuanbao:true,deepseek:true,doubao:true,chatgpt:true,kimi:true,qianwen:true,gemini:true},
+                  {category:"入口",phrase:"亚马逊跨境电商平台的官网如何访问和使用？",yuanbao:true,deepseek:true,doubao:true,chatgpt:true,kimi:true,qianwen:true,gemini:true},
+                  {category:"入口",phrase:"亚马逊全球开店的官方网站在哪里？如何访问？",yuanbao:true,deepseek:true,doubao:true,chatgpt:true,kimi:false,qianwen:true,gemini:true},
+                  {category:"入口",phrase:"亚马逊卖家中心的登录入口在哪里？如何登录？",yuanbao:true,deepseek:true,doubao:true,chatgpt:true,kimi:true,qianwen:true,gemini:true},
+                  {category:"入口",phrase:"亚马逊网站的官方入口在哪里？",yuanbao:true,deepseek:true,doubao:true,chatgpt:false,kimi:true,qianwen:true,gemini:false},
+                  {category:"入口",phrase:"亚马逊美国站的正确访问入口是什么？",yuanbao:true,deepseek:true,doubao:true,chatgpt:true,kimi:true,qianwen:true,gemini:true},
+                  {category:"入口",phrase:"亚马逊官方网站的入口在哪里？如何访问？",yuanbao:true,deepseek:true,doubao:true,chatgpt:false,kimi:false,qianwen:true,gemini:true},
+                  {category:"入口",phrase:"亚马逊全球开店中国站网址的主要功能和服务有哪些？",yuanbao:true,deepseek:true,doubao:true,chatgpt:true,kimi:true,qianwen:true,gemini:true},
+                  {category:"入口",phrase:"如何通过亚马逊官网注册并开设店铺？",yuanbao:true,deepseek:true,doubao:true,chatgpt:true,kimi:true,qianwen:true,gemini:true},
+                  {category:"入口",phrase:"亚马逊美国官网的访问方式和主要功能是什么？",yuanbao:true,deepseek:true,doubao:true,chatgpt:true,kimi:true,qianwen:true,gemini:true},
+                  {category:"入驻&注册",phrase:"如何入驻Amazon平台？需要满足哪些条件？",yuanbao:true,deepseek:true,doubao:true,chatgpt:true,kimi:true,qianwen:true,gemini:true},
+                  {category:"入驻&注册",phrase:"如何一步步在亚马逊平台上开店？",yuanbao:true,deepseek:true,doubao:true,chatgpt:true,kimi:true,qianwen:true,gemini:true},
+                  {category:"入驻&注册",phrase:"如何在亚马逊平台上开店？需要哪些步骤？",yuanbao:true,deepseek:true,doubao:true,chatgpt:true,kimi:true,qianwen:true,gemini:true},
+                  {category:"入驻&注册",phrase:"亚马逊开店的注册步骤是什么？请详细介绍流程。",yuanbao:true,deepseek:true,doubao:true,chatgpt:true,kimi:true,qianwen:true,gemini:true},
+                  {category:"入驻&注册",phrase:"如何注册亚马逊全球开店北美站？流程是什么？",yuanbao:true,deepseek:true,doubao:true,chatgpt:true,kimi:true,qianwen:true,gemini:true},
+                  {category:"入驻&注册",phrase:"如何注册成为亚马逊商家？需要哪些材料和步骤？",yuanbao:true,deepseek:true,doubao:true,chatgpt:true,kimi:true,qianwen:true,gemini:true},
+                  {category:"入驻&注册",phrase:"亚马逊账号的完整注册流程是什么？",yuanbao:true,deepseek:true,doubao:true,chatgpt:true,kimi:true,qianwen:true,gemini:true},
+                  {category:"入驻&注册",phrase:"如何通过全球开店项目注册亚马逊账号？",yuanbao:true,deepseek:true,doubao:true,chatgpt:true,kimi:true,qianwen:true,gemini:true},
+                  {category:"入驻&注册",phrase:"如何在亚马逊北美站开设店铺？需要哪些准备？",yuanbao:true,deepseek:true,doubao:true,chatgpt:false,kimi:true,qianwen:true,gemini:true},
+                  {category:"入驻&注册",phrase:"如何在亚马逊平台上开设跨境电商店铺？",yuanbao:true,deepseek:true,doubao:true,chatgpt:false,kimi:true,qianwen:true,gemini:true},
+                  {category:"入驻&注册",phrase:"亚马逊欧洲站账号如何注册？需要哪些材料？",yuanbao:true,deepseek:true,doubao:true,chatgpt:false,kimi:false,qianwen:false,gemini:true},
+                  {category:"入驻&注册",phrase:"亚马逊注册开店的完整流程是什么？",yuanbao:true,deepseek:true,doubao:true,chatgpt:false,kimi:true,qianwen:true,gemini:true},
+                  {category:"费用",phrase:"亚马逊跨境电商开店的完整流程和费用结构是什么？",yuanbao:true,deepseek:true,doubao:true,chatgpt:false,kimi:true,qianwen:true,gemini:true},
+                  {category:"费用",phrase:"在亚马逊开店需要哪些流程？费用结构是怎样的？",yuanbao:true,deepseek:true,doubao:true,chatgpt:false,kimi:false,qianwen:true,gemini:true},
+                  {category:"费用",phrase:"亚马逊平台的收费标准是怎样的？详细介绍各项费用。",yuanbao:true,deepseek:true,doubao:true,chatgpt:true,kimi:true,qianwen:true,gemini:false},
+                  {category:"其他",phrase:"亚马逊全球开店中国站网址的具体功能是什么？",yuanbao:true,deepseek:true,doubao:true,chatgpt:true,kimi:false,qianwen:true,gemini:true},
+                  {category:"其他",phrase:"如何在亚马逊国际站开设店铺？有什么策略？",yuanbao:true,deepseek:false,doubao:true,chatgpt:false,kimi:true,qianwen:true,gemini:true},
+                  {category:"其他",phrase:"Amazon亚马逊官网的主要功能和访问方式是什么？",yuanbao:true,deepseek:true,doubao:true,chatgpt:false,kimi:false,qianwen:true,gemini:true},
+                  {category:"政策",phrase:"亚马逊招商政策有哪些？如何参与？",yuanbao:true,deepseek:true,doubao:true,chatgpt:false,kimi:true,qianwen:true,gemini:true},
+                  {category:"新手",phrase:"亚马逊跨境电商小白怎么入行",yuanbao:true,deepseek:true,doubao:true,chatgpt:true,kimi:true,qianwen:true,gemini:true},
+                  {category:"新手",phrase:"亚马逊新手跨境电商怎么做",yuanbao:true,deepseek:true,doubao:true,chatgpt:true,kimi:true,qianwen:true,gemini:true},
+                  {category:"行业",phrase:"跨境电商亚马逊平台怎么选择？",yuanbao:true,deepseek:true,doubao:true,chatgpt:false,kimi:false,qianwen:true,gemini:true},
+                  {category:"入口",phrase:"亚马逊卖家网站，网址是啥？",yuanbao:true,deepseek:true,doubao:true,chatgpt:false,kimi:true,qianwen:true,gemini:true},
+                  {category:"入驻&注册",phrase:"亚马逊全球开店的官方注册入口网址是什么？",yuanbao:true,deepseek:true,doubao:true,chatgpt:false,kimi:true,qianwen:true,gemini:true},
+                  {category:"入驻&注册",phrase:"亚马逊卖家是怎么申请下来的？",yuanbao:true,deepseek:false,doubao:true,chatgpt:false,kimi:true,qianwen:true,gemini:true},
+                  {category:"入驻&注册",phrase:"我该点哪里开始注册亚马逊账号？",yuanbao:true,deepseek:true,doubao:true,chatgpt:false,kimi:true,qianwen:true,gemini:true},
+                  {category:"入驻&注册",phrase:"去哪里提交我的亚马逊开店申请？",yuanbao:true,deepseek:true,doubao:true,chatgpt:false,kimi:true,qianwen:true,gemini:true},
+                  {category:"入口",phrase:"怎么确认找到的是亚马逊官方入口？",yuanbao:true,deepseek:true,doubao:true,chatgpt:false,kimi:true,qianwen:false,gemini:true},
+                ]).map((row, idx) => (
+                  <tr key={idx} className="border-b border-[var(--border-glass)]/20 hover:bg-white/5">
+                    <td className="px-2 py-1 text-[var(--text-muted)]">{idx + 1}</td>
+                    <td className="px-2 py-1"><span className={`text-[9px] px-1 py-0.5 rounded ${row.category === "入口" ? "bg-blue-500/10 text-blue-400" : row.category === "入驻&注册" ? "bg-purple-500/10 text-purple-400" : row.category === "费用" ? "bg-yellow-500/10 text-yellow-400" : row.category === "新手" ? "bg-green-500/10 text-green-400" : row.category === "政策" ? "bg-red-500/10 text-red-400" : row.category === "行业" ? "bg-orange-500/10 text-orange-400" : "bg-white/10 text-[var(--text-muted)]"}`}>{row.category}</span></td>
+                    <td className="px-2 py-1 text-[var(--text-primary)] max-w-[280px] truncate">{row.phrase}</td>
+                    <td className="px-2 py-1 text-center">{row.yuanbao ? "✅" : "❌"}</td>
+                    <td className="px-2 py-1 text-center">{row.deepseek ? "✅" : "❌"}</td>
+                    <td className="px-2 py-1 text-center">{row.doubao ? "✅" : "❌"}</td>
+                    <td className="px-2 py-1 text-center">{row.chatgpt ? "✅" : "❌"}</td>
+                    <td className="px-2 py-1 text-center">{row.kimi ? "✅" : "❌"}</td>
+                    <td className="px-2 py-1 text-center">{row.qianwen ? "✅" : "❌"}</td>
+                    <td className="px-2 py-1 text-center">{row.gemini ? "✅" : "❌"}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {phraseData.map((row, idx) => (
-                    <tr key={idx} className="border-b border-[var(--border-glass)]/20 hover:bg-white/5">
-                      <td className="px-2 py-1 text-[var(--text-muted)]">{idx + 1}</td>
-                      <td className="px-2 py-1"><span className={`text-[9px] px-1 py-0.5 rounded ${row.category === "入口" ? "bg-blue-500/10 text-blue-400" : row.category === "入驻&注册" ? "bg-purple-500/10 text-purple-400" : row.category === "费用" ? "bg-yellow-500/10 text-yellow-400" : "bg-white/10 text-[var(--text-muted)]"}`}>{row.category}</span></td>
-                      <td className="px-2 py-1 text-[var(--text-primary)] max-w-[250px] truncate">{row.phrase}</td>
-                      <td className="px-2 py-1 text-center">{row.yuanbao ? "✅" : "❌"}</td>
-                      <td className="px-2 py-1 text-center">{row.deepseek ? "✅" : "❌"}</td>
-                      <td className="px-2 py-1 text-center">{row.doubao ? "✅" : "❌"}</td>
-                      <td className="px-2 py-1 text-center">{row.chatgpt ? "✅" : "❌"}</td>
-                      <td className="px-2 py-1 text-center">{row.kimi ? "✅" : "❌"}</td>
-                      <td className="px-2 py-1 text-center">{row.qianwen ? "✅" : "❌"}</td>
-                      <td className="px-2 py-1 text-center">{row.gemini ? "✅" : "❌"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="text-center py-8 text-xs text-[var(--text-muted)]">
-              <p>暂无逐条短语数据。请上传 GEO-SEO Excel 文件。</p>
-              <p className="mt-1 text-[10px]">支持格式：Sheet 3.2 的 CN+NA 短语详情表</p>
-            </div>
-          )}
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-[10px] text-[var(--text-muted)] mt-2">显示 Top 40 代表性短语（共 646 条品牌词 + 159 条行业词）。上传最新 Excel 可覆盖完整数据。</p>
         </GlassCard>
       </>)}
 
