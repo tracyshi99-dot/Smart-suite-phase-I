@@ -25,7 +25,6 @@ export default function ZhibuPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold">{t("zhibu.title")}</h1>
         <div className="flex items-center gap-3">
-          <BatchSelector />
           <Button onClick={handleExport} variant="secondary" size="sm">
             {t("common.export")}
           </Button>

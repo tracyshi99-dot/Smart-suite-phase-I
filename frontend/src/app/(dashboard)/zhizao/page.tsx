@@ -249,7 +249,6 @@ export default function ZhizaoPage() {
     <div className="space-y-6 max-w-[1400px]">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold">{t("zhizao.title")}</h1>
-        <BatchSelector />
       </div>
 
       {/* Source Phrases from Zhice */}

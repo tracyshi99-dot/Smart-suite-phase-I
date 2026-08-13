@@ -61,7 +61,6 @@ export default function ZhongshuPage() {
     <div className="space-y-6 max-w-[1400px]">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold">{t("zhongshu.title")}</h1>
-        <BatchSelector />
       </div>
 
       {/* Tabs */}

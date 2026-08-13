@@ -413,7 +413,6 @@ export default function ZhicePage() {
     <div className="space-y-6 max-w-[1400px]">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold">{t("zhice.title")}</h1>
-        <BatchSelector />
       </div>
 
       {/* Source Selection */}
