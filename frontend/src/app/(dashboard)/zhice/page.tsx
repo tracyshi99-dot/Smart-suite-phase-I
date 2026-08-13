@@ -58,7 +58,6 @@ export default function ZhicePage() {
 
   // Manual input
   const [manualPhrases, setManualPhrases] = useState("");
-  const [inputMode, setInputMode] = useState<"zhiku" | "manual">("zhiku");
 
   // Platform selection
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(
@@ -158,9 +157,80 @@ export default function ZhicePage() {
     );
   };
 
+  // Unified phrase pool (from all sources)
+  const [phrasePool, setPhrasePool] = useState<{ text: string; source: string; selected: boolean }[]>([]);
+
+  // Sync zhiku phrases into pool
+  useEffect(() => {
+    if (zhikuPhrases.length > 0) {
+      setPhrasePool((prev) => {
+        const existing = new Set(prev.map((p) => p.text));
+        const newItems = zhikuPhrases
+          .filter((p) => !existing.has(p))
+          .map((p) => ({ text: p, source: "智库", selected: true }));
+        return [...prev, ...newItems];
+      });
+    }
+  }, [zhikuPhrases]);
+
+  // Handle file upload (Excel/CSV/TXT)
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      let items: string[] = [];
+      const ext = file.name.split(".").pop()?.toLowerCase();
+
+      if (ext === "xlsx" || ext === "xls") {
+        const XLSX = await import("xlsx");
+        const buffer = await file.arrayBuffer();
+        const wb = XLSX.read(buffer, { type: "array" });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(ws, { header: 1 }) as unknown[][];
+        // Skip header if it looks like one
+        const startIdx = rows.length > 0 && typeof rows[0]?.[0] === "string" &&
+          ((rows[0][0] as string).includes("query") || (rows[0][0] as string).includes("短语") || (rows[0][0] as string).includes("检索")) ? 1 : 0;
+        items = rows.slice(startIdx)
+          .map((row) => String(row[0] ?? "").trim())
+          .filter((s) => s.length > 3);
+      } else {
+        // CSV / TXT / MD
+        const text = await file.text();
+        items = text.split("\n")
+          .map((l) => l.split(",")[0]?.trim().replace(/^["']|["']$/g, ""))
+          .filter((s) => s.length > 3);
+      }
+
+      if (items.length > 0) {
+        setPhrasePool((prev) => {
+          const existing = new Set(prev.map((p) => p.text));
+          const newItems = items
+            .filter((p) => !existing.has(p))
+            .map((p) => ({ text: p, source: `上传:${file.name}`, selected: true }));
+          return [...prev, ...newItems];
+        });
+      }
+    } catch { /* ignore */ }
+    e.target.value = "";
+  };
+
+  // Add manual phrases to pool
+  const handleAddManualToPool = () => {
+    const lines = manualPhrases.split("\n").map((l) => l.trim()).filter((l) => l.length > 3);
+    if (lines.length === 0) return;
+    setPhrasePool((prev) => {
+      const existing = new Set(prev.map((p) => p.text));
+      const newItems = lines
+        .filter((p) => !existing.has(p))
+        .map((p) => ({ text: p, source: "手动", selected: true }));
+      return [...prev, ...newItems];
+    });
+    setManualPhrases("");
+  };
+
+  // Get selected phrases from pool for testing
   const getPhrasesToTest = (): string[] => {
-    if (inputMode === "zhiku") return zhikuPhrases;
-    return manualPhrases.split("\n").map((l) => l.trim()).filter((l) => l.length > 3);
+    return phrasePool.filter((p) => p.selected).map((p) => p.text);
   };
 
   const handleRunTest = async () => {
@@ -248,10 +318,15 @@ export default function ZhicePage() {
     setResults(restored.results);
   };
 
-  // Reuse phrases from a history entry (load into input for re-testing)
+  // Reuse phrases from a history entry (load into pool for re-testing)
   const handleReusePhrasesFromHistory = (entry: ZhiceHistoryEntry) => {
-    setManualPhrases(entry.phrases.join("\n"));
-    setInputMode("manual");
+    setPhrasePool((prev) => {
+      const existing = new Set(prev.map((p) => p.text));
+      const newItems = entry.phrases
+        .filter((p) => !existing.has(p))
+        .map((p) => ({ text: p, source: "历史复用", selected: true }));
+      return [...prev, ...newItems];
+    });
     setSelectedPlatforms(entry.platforms);
     setShowHistory(false);
   };
@@ -284,58 +359,114 @@ export default function ZhicePage() {
         <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-3">
           ① {isZh ? "待验证短语" : "Phrases to Verify"}
         </h2>
-        <div className="flex gap-2 mb-3">
-          <button
-            onClick={() => setInputMode("zhiku")}
-            className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
-              inputMode === "zhiku"
-                ? "bg-[var(--accent)]/10 text-[var(--accent)] border-[var(--accent)]/30"
-                : "text-[var(--text-secondary)] border-[var(--border-glass)] hover:bg-white/5"
-            }`}
-          >
-            {isZh ? `从智库 (${zhikuPhrases.length} 条已选)` : `From Knowledge Base (${zhikuPhrases.length} selected)`}
-          </button>
-          <button
-            onClick={() => setInputMode("manual")}
-            className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
-              inputMode === "manual"
-                ? "bg-[var(--accent)]/10 text-[var(--accent)] border-[var(--accent)]/30"
-                : "text-[var(--text-secondary)] border-[var(--border-glass)] hover:bg-white/5"
-            }`}
-          >
-            {isZh ? "手动输入" : "Manual Input"}
-          </button>
+
+        {/* Input sources row */}
+        <div className="flex flex-wrap gap-3 mb-4">
+          {/* 智库 */}
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--border-glass)] bg-white/5">
+            <span className="text-xs text-[var(--text-secondary)]">{isZh ? "智库" : "Zhiku"}:</span>
+            <span className="text-xs font-medium text-[var(--accent)]">{zhikuPhrases.length} {isZh ? "条" : ""}</span>
+            {loadingPhrases && <span className="text-[10px] text-[var(--text-muted)]">...</span>}
+          </div>
+
+          {/* 手动输入 */}
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={manualPhrases}
+              onChange={(e) => setManualPhrases(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddManualToPool(); } }}
+              placeholder={isZh ? "输入短语，按 Enter 添加（多条用换行分隔）" : "Type phrase, press Enter to add"}
+              className="w-64 bg-white/5 border border-[var(--border-glass)] rounded-lg px-3 py-2 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)]"
+            />
+            <button
+              onClick={handleAddManualToPool}
+              disabled={!manualPhrases.trim()}
+              className="text-xs px-3 py-2 rounded-lg border border-[var(--border-glass)] text-[var(--accent)] hover:bg-[var(--accent)]/10 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              + {isZh ? "添加" : "Add"}
+            </button>
+          </div>
+
+          {/* 文件上传 */}
+          <label className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--border-glass)] bg-white/5 cursor-pointer hover:border-[var(--accent)]/30 transition-colors">
+            <span className="text-xs text-[var(--text-secondary)]">📎 {isZh ? "上传文件" : "Upload"}</span>
+            <span className="text-[10px] text-[var(--text-muted)]">(Excel/CSV/TXT)</span>
+            <input
+              type="file"
+              accept=".csv,.txt,.xlsx,.xls,.md"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+          </label>
         </div>
 
-        {inputMode === "zhiku" && (
+        {/* Unified phrase table */}
+        {phrasePool.length > 0 ? (
           <div>
-            {loadingPhrases ? (
-              <p className="text-xs text-[var(--text-muted)]">{t("common.loading")}</p>
-            ) : zhikuPhrases.length === 0 ? (
-              <p className="text-xs text-[var(--text-muted)]">
-                {isZh ? "暂无选中短语，请先到智库选择" : "No selected phrases. Go to Knowledge Base first."}
-              </p>
-            ) : (
-              <div className="max-h-40 overflow-y-auto bg-white/5 rounded-lg p-2 border border-[var(--border-glass)]">
-                {zhikuPhrases.slice(0, 30).map((p, i) => (
-                  <p key={i} className="text-xs text-[var(--text-primary)] py-0.5">{p}</p>
-                ))}
-                {zhikuPhrases.length > 30 && (
-                  <p className="text-xs text-[var(--text-muted)]">...+{zhikuPhrases.length - 30} more</p>
-                )}
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-[var(--text-muted)]">
+                {phrasePool.filter((p) => p.selected).length}/{phrasePool.length} {isZh ? "条已选中" : "selected"}
+              </span>
+              <div className="flex gap-2">
+                <button onClick={() => setPhrasePool((prev) => prev.map((p) => ({ ...p, selected: true })))} className="text-[10px] text-[var(--text-secondary)] hover:text-[var(--accent)]">{isZh ? "全选" : "All"}</button>
+                <button onClick={() => setPhrasePool((prev) => prev.map((p) => ({ ...p, selected: false })))} className="text-[10px] text-[var(--text-secondary)] hover:text-[var(--accent)]">{isZh ? "全不选" : "None"}</button>
+                <button onClick={() => setPhrasePool([])} className="text-[10px] text-[var(--error)] hover:text-red-600">{isZh ? "清空" : "Clear"}</button>
               </div>
-            )}
+            </div>
+            <div className="max-h-56 overflow-y-auto border border-[var(--border-glass)] rounded-lg">
+              <table className="w-full text-sm">
+                <thead className="sticky top-0 bg-[var(--bg-surface)]">
+                  <tr className="border-b border-[var(--border-glass)]">
+                    <th className="w-8 px-2 py-1.5 text-center text-[10px] text-[var(--text-muted)]">✓</th>
+                    <th className="px-2 py-1.5 text-left text-[10px] text-[var(--text-muted)]">#</th>
+                    <th className="px-2 py-1.5 text-left text-[10px] text-[var(--text-muted)]">{isZh ? "检索短语" : "Phrase"}</th>
+                    <th className="px-2 py-1.5 text-left text-[10px] text-[var(--text-muted)]">{isZh ? "来源" : "Source"}</th>
+                    <th className="w-8 px-2 py-1.5"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {phrasePool.map((p, idx) => (
+                    <tr key={idx} className="border-b border-[var(--border-glass)]/30 hover:bg-white/5">
+                      <td className="px-2 py-1 text-center">
+                        <input
+                          type="checkbox"
+                          checked={p.selected}
+                          onChange={() => {
+                            setPhrasePool((prev) => {
+                              const updated = [...prev];
+                              updated[idx] = { ...updated[idx], selected: !updated[idx].selected };
+                              return updated;
+                            });
+                          }}
+                          className="accent-[var(--accent)]"
+                        />
+                      </td>
+                      <td className="px-2 py-1 text-[10px] text-[var(--text-muted)]">{idx + 1}</td>
+                      <td className="px-2 py-1 text-xs text-[var(--text-primary)]">{p.text}</td>
+                      <td className="px-2 py-1">
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                          p.source === "智库" ? "bg-blue-500/10 text-blue-400"
+                            : p.source === "手动" ? "bg-purple-500/10 text-purple-400"
+                            : "bg-green-500/10 text-green-400"
+                        }`}>{p.source}</span>
+                      </td>
+                      <td className="px-2 py-1 text-center">
+                        <button
+                          onClick={() => setPhrasePool((prev) => prev.filter((_, i) => i !== idx))}
+                          className="text-[10px] text-[var(--text-muted)] hover:text-[var(--error)]"
+                        >✕</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        )}
-
-        {inputMode === "manual" && (
-          <textarea
-            value={manualPhrases}
-            onChange={(e) => setManualPhrases(e.target.value)}
-            placeholder={isZh ? "每行一条检索短语..." : "One phrase per line..."}
-            rows={5}
-            className="w-full bg-white/5 border border-[var(--border-glass)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] resize-y"
-          />
+        ) : (
+          <p className="text-xs text-[var(--text-muted)] py-4 text-center">
+            {isZh ? "暂无短语。通过智库传入、手动输入或上传文件添加待测短语。" : "No phrases yet. Add via Knowledge Base, manual input, or file upload."}
+          </p>
         )}
       </GlassCard>
 
