@@ -182,15 +182,13 @@ export default function ZhixiPage() {
       </div>
 
       {/* KPI Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
         <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">YTD GEO Total</p><p className="text-lg font-bold text-blue-400">1,291</p><p className="text-[10px] text-[var(--success)]">YoY +198%</p></GlassCard>
         <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">YTD Direct Total</p><p className="text-lg font-bold text-purple-400">67,098</p><p className="text-[10px] text-[var(--success)]">YoY +6%</p></GlassCard>
         <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">YTD GEO+Direct</p><p className="text-lg font-bold text-[var(--accent)]">68,389</p><p className="text-[10px] text-[var(--success)]">YoY +7%</p></GlassCard>
         <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">{isZh?"跑赢大盘":"vs Benchmark"}</p><p className="text-lg font-bold text-[var(--success)]">+24 ppts</p><p className="text-[10px] text-[var(--text-muted)]">{isZh?"大盘 YoY -17%":"SSR -17%"}</p></GlassCard>
         <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">{isZh?"链接提及率 YTD":"Link Rate YTD"}</p><p className="text-lg font-bold">56.9%</p><p className="text-[10px] text-[var(--text-muted)]">M6 Latest</p></GlassCard>
         <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">{isZh?"内容总量":"Content"}</p><p className="text-lg font-bold">646</p><p className="text-[10px]">{isZh?"检索短语":"phrases"}</p></GlassCard>
-        <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">{latest.Week} Total</p><p className="text-lg font-bold">{latest.Total.toLocaleString()}</p><p className="text-[10px]">WoW {wow(latest.Total,prev.Total)}</p></GlassCard>
-        <GlassCard padding="sm" className="text-center"><p className="text-[10px] text-[var(--text-muted)]">H1 CL_RS%</p><p className="text-lg font-bold">24.3%</p><p className="text-[10px] text-[var(--text-muted)]">{isZh?"大盘 27.1%":"SSR 27.1%"}</p></GlassCard>
       </div>
 
       {/* Tabs */}
@@ -199,6 +197,14 @@ export default function ZhixiPage() {
           <button key={k} onClick={()=>setTab(k as typeof tab)} className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors whitespace-nowrap ${tab===k?"border-[var(--accent)] text-[var(--accent)]":"border-transparent text-[var(--text-muted)]"}`}>{l}</button>
         ))}
       </div>
+
+      {/* Section Labels */}
+      {(tab === "output" || tab === "monthly" || tab === "mau") && (
+        <div className="flex items-center gap-2 mt-1"><span className="text-[10px] px-2 py-0.5 rounded bg-[var(--accent)]/10 text-[var(--accent)] font-medium">OUTPUT</span><span className="text-[10px] text-[var(--text-muted)]">{isZh?"流量 & 注册结果":"Traffic & Registration Results"}</span></div>
+      )}
+      {(tab === "input" || tab === "citation" || tab === "sources" || tab === "phrases") && (
+        <div className="flex items-center gap-2 mt-1"><span className="text-[10px] px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 font-medium">INPUT</span><span className="text-[10px] text-[var(--text-muted)]">{isZh?"内容 & 优化活动":"Content & Optimization Activities"}</span></div>
+      )}
 
       {/* ===== TAB: OUTPUT ===== */}
       {tab === "output" && (<>
