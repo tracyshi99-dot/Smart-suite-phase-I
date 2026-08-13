@@ -436,10 +436,27 @@ export default function ZhizaoPage() {
                     className="text-xs px-2 py-1 rounded border border-[var(--border-glass)] text-[var(--error)] hover:text-red-600"
                   >{isZh ? "\u5220\u9664" : "Del"}</button>
                 </div>
-                <span className="text-[var(--text-muted)] text-sm shrink-0">{expandedIdx === idx ? "\u25BC" : "\u25B6"}</span>
+                <button
+                  onClick={() => setExpandedIdx(expandedIdx === idx ? null : idx)}
+                  className="text-[var(--text-muted)] text-sm shrink-0 px-2 py-1 hover:text-[var(--accent)] transition-colors"
+                  title={expandedIdx === idx ? (isZh ? "收起" : "Collapse") : (isZh ? "展开" : "Expand")}
+                >
+                  {expandedIdx === idx ? "\u25BC" : "\u25B6"}
+                </button>
               </div>
               {expandedIdx === idx && (
                 <div className="mt-3 pt-3 border-t border-[var(--border-glass)]">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[10px] text-[var(--text-muted)]">
+                      {draft.content_draft.length} {isZh ? "字 | 可直接编辑" : "chars | Editable"}
+                    </p>
+                    <button
+                      onClick={() => setExpandedIdx(null)}
+                      className="text-xs px-2 py-1 rounded border border-[var(--border-glass)] text-[var(--text-muted)] hover:text-[var(--accent)]"
+                    >
+                      {isZh ? "▲ 收起" : "▲ Collapse"}
+                    </button>
+                  </div>
                   <textarea
                     value={draft.content_draft}
                     onChange={(e) => {
