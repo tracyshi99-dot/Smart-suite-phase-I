@@ -301,6 +301,32 @@ export default function ZhixiPage() {
           </ResponsiveContainer>
         </GlassCard>
 
+        {/* YoY% + vs Benchmark ppts Trend */}
+        <GlassCard padding="sm">
+          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">Monthly YoY% & 跑赢大盘 (ppts)</h2>
+          <ResponsiveContainer width="100%" height={220}>
+            <LineChart data={[
+              {month:"M1",GEO_Direct_YoY:180,SSR_YoY:22,ppts:158},
+              {month:"M2",GEO_Direct_YoY:-19,SSR_YoY:-57,ppts:38},
+              {month:"M3",GEO_Direct_YoY:78,SSR_YoY:-27,ppts:105},
+              {month:"M4",GEO_Direct_YoY:29,SSR_YoY:-25,ppts:54},
+              {month:"M5",GEO_Direct_YoY:29,SSR_YoY:-18,ppts:47},
+              {month:"M6",GEO_Direct_YoY:80,SSR_YoY:-7,ppts:87},
+              {month:"M7",GEO_Direct_YoY:-6,SSR_YoY:-23,ppts:17},
+            ]} margin={{top:5,right:10,left:0,bottom:5}}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+              <XAxis dataKey="month" tick={{fontSize:10,fill:"#8892b0"}} />
+              <YAxis yAxisId="left" tick={{fontSize:10,fill:"#8892b0"}} unit="%" />
+              <YAxis yAxisId="right" orientation="right" tick={{fontSize:10,fill:"#8892b0"}} unit="pp" />
+              <Tooltip contentStyle={{background:"#1a1d2e",border:"1px solid #2a2f4a",borderRadius:8,fontSize:11}} formatter={(v)=>`${v}%`} />
+              <Legend wrapperStyle={{fontSize:11}} />
+              <Line yAxisId="left" type="monotone" dataKey="GEO_Direct_YoY" stroke="#00bcd4" strokeWidth={2} dot={{r:3}} name="GEO+Direct YoY%" />
+              <Line yAxisId="left" type="monotone" dataKey="SSR_YoY" stroke="#5a6380" strokeWidth={1.5} strokeDasharray="4 4" dot={{r:2}} name="SSR Total YoY%" />
+              <Line yAxisId="right" type="monotone" dataKey="ppts" stroke="#4caf50" strokeWidth={2} dot={{r:3}} name="跑赢大盘 (ppts)" />
+            </LineChart>
+          </ResponsiveContainer>
+        </GlassCard>
+
         {/* Monthly CL_RS% Trend Chart */}
         <GlassCard padding="sm">
           <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">Monthly CL_RS% (Clean Launch / Reg Start)</h2>
