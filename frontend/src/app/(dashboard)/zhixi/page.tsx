@@ -9,35 +9,35 @@ import { GEO_MAU, SOURCE_ANALYSIS, INPUT_LINK_RATE, INPUT_SUMMARY, GEO_OUTPUT, P
 
 // ============ FULL DATA from geo_weekly_data.csv (WK1-WK29) ============
 const ALL_WEEKLY = [
-  {Week:"WK1",CN_GEO:15,WW_GEO:11,Total_GEO:26,WW_Direct:738,CN_Direct:0,Total:764,Total_PY:631},
-  {Week:"WK2",CN_GEO:26,WW_GEO:24,Total_GEO:50,WW_Direct:1293,CN_Direct:0,Total:1343,Total_PY:565},
-  {Week:"WK3",CN_GEO:20,WW_GEO:20,Total_GEO:40,WW_Direct:1165,CN_Direct:0,Total:1205,Total_PY:500},
-  {Week:"WK4",CN_GEO:14,WW_GEO:20,Total_GEO:34,WW_Direct:1128,CN_Direct:0,Total:1162,Total_PY:321},
-  {Week:"WK5",CN_GEO:25,WW_GEO:15,Total_GEO:40,WW_Direct:1152,CN_Direct:0,Total:1192,Total_PY:156},
-  {Week:"WK6",CN_GEO:21,WW_GEO:15,Total_GEO:36,WW_Direct:904,CN_Direct:0,Total:940,Total_PY:481},
-  {Week:"WK7",CN_GEO:7,WW_GEO:9,Total_GEO:16,WW_Direct:360,CN_Direct:0,Total:376,Total_PY:725},
-  {Week:"WK8",CN_GEO:2,WW_GEO:7,Total_GEO:9,WW_Direct:202,CN_Direct:0,Total:211,Total_PY:963},
-  {Week:"WK9",CN_GEO:35,WW_GEO:20,Total_GEO:55,WW_Direct:922,CN_Direct:0,Total:977,Total_PY:1070},
-  {Week:"WK10",CN_GEO:36,WW_GEO:20,Total_GEO:56,WW_Direct:1399,CN_Direct:0,Total:1455,Total_PY:1090},
-  {Week:"WK11",CN_GEO:45,WW_GEO:13,Total_GEO:58,WW_Direct:1642,CN_Direct:0,Total:1700,Total_PY:1037},
-  {Week:"WK12",CN_GEO:36,WW_GEO:22,Total_GEO:58,WW_Direct:1752,CN_Direct:0,Total:1810,Total_PY:997},
-  {Week:"WK13",CN_GEO:33,WW_GEO:23,Total_GEO:56,WW_Direct:1806,CN_Direct:0,Total:1862,Total_PY:870},
-  {Week:"WK14",CN_GEO:35,WW_GEO:23,Total_GEO:58,WW_Direct:1634,CN_Direct:0,Total:1692,Total_PY:753},
-  {Week:"WK15",CN_GEO:45,WW_GEO:17,Total_GEO:62,WW_Direct:1581,CN_Direct:1082,Total:2725,Total_PY:2672},
-  {Week:"WK16",CN_GEO:40,WW_GEO:15,Total_GEO:55,WW_Direct:1750,CN_Direct:1327,Total:3132,Total_PY:2970},
-  {Week:"WK17",CN_GEO:32,WW_GEO:15,Total_GEO:47,WW_Direct:1738,CN_Direct:3128,Total:4913,Total_PY:5549},
-  {Week:"WK18",CN_GEO:33,WW_GEO:17,Total_GEO:50,WW_Direct:1330,CN_Direct:2120,Total:3500,Total_PY:3692},
-  {Week:"WK19",CN_GEO:33,WW_GEO:21,Total_GEO:54,WW_Direct:1453,CN_Direct:2072,Total:3579,Total_PY:3964},
-  {Week:"WK20",CN_GEO:41,WW_GEO:31,Total_GEO:72,WW_Direct:1914,CN_Direct:2242,Total:4228,Total_PY:3822},
-  {Week:"WK21",CN_GEO:44,WW_GEO:19,Total_GEO:63,WW_Direct:2054,CN_Direct:1929,Total:4046,Total_PY:3872},
-  {Week:"WK22",CN_GEO:38,WW_GEO:22,Total_GEO:60,WW_Direct:2143,CN_Direct:2271,Total:4474,Total_PY:3349},
-  {Week:"WK23",CN_GEO:25,WW_GEO:24,Total_GEO:49,WW_Direct:4060,CN_Direct:2904,Total:7013,Total_PY:3446},
-  {Week:"WK24",CN_GEO:41,WW_GEO:23,Total_GEO:64,WW_Direct:2252,CN_Direct:3140,Total:5456,Total_PY:3436},
-  {Week:"WK25",CN_GEO:31,WW_GEO:15,Total_GEO:46,WW_Direct:1579,CN_Direct:1538,Total:3163,Total_PY:3718},
-  {Week:"WK26",CN_GEO:38,WW_GEO:30,Total_GEO:68,WW_Direct:1619,CN_Direct:1938,Total:3625,Total_PY:2156},
-  {Week:"WK27",CN_GEO:41,WW_GEO:22,Total_GEO:63,WW_Direct:1537,CN_Direct:1874,Total:3474,Total_PY:1929},
-  {Week:"WK28",CN_GEO:41,WW_GEO:22,Total_GEO:63,WW_Direct:1219,CN_Direct:1637,Total:2919,Total_PY:1795},
-  {Week:"WK29",CN_GEO:41,WW_GEO:28,Total_GEO:69,WW_Direct:1400,CN_Direct:1272,Total:2741,Total_PY:1935},
+  {Week:"WK1",CN_GEO:15,WW_GEO:11,Total_GEO:26,WW_Direct:738,CN_Direct:0,Direct:738,Total:764,Total_PY:631},
+  {Week:"WK2",CN_GEO:26,WW_GEO:24,Total_GEO:50,WW_Direct:1293,CN_Direct:0,Direct:1293,Total:1343,Total_PY:565},
+  {Week:"WK3",CN_GEO:20,WW_GEO:20,Total_GEO:40,WW_Direct:1165,CN_Direct:0,Direct:1165,Total:1205,Total_PY:500},
+  {Week:"WK4",CN_GEO:14,WW_GEO:20,Total_GEO:34,WW_Direct:1128,CN_Direct:0,Direct:1128,Total:1162,Total_PY:321},
+  {Week:"WK5",CN_GEO:25,WW_GEO:15,Total_GEO:40,WW_Direct:1152,CN_Direct:0,Direct:1152,Total:1192,Total_PY:156},
+  {Week:"WK6",CN_GEO:21,WW_GEO:15,Total_GEO:36,WW_Direct:904,CN_Direct:0,Direct:904,Total:940,Total_PY:481},
+  {Week:"WK7",CN_GEO:7,WW_GEO:9,Total_GEO:16,WW_Direct:360,CN_Direct:0,Direct:360,Total:376,Total_PY:725},
+  {Week:"WK8",CN_GEO:2,WW_GEO:7,Total_GEO:9,WW_Direct:202,CN_Direct:0,Direct:202,Total:211,Total_PY:963},
+  {Week:"WK9",CN_GEO:35,WW_GEO:20,Total_GEO:55,WW_Direct:922,CN_Direct:0,Direct:922,Total:977,Total_PY:1070},
+  {Week:"WK10",CN_GEO:36,WW_GEO:20,Total_GEO:56,WW_Direct:1399,CN_Direct:0,Direct:1399,Total:1455,Total_PY:1090},
+  {Week:"WK11",CN_GEO:45,WW_GEO:13,Total_GEO:58,WW_Direct:1642,CN_Direct:0,Direct:1642,Total:1700,Total_PY:1037},
+  {Week:"WK12",CN_GEO:36,WW_GEO:22,Total_GEO:58,WW_Direct:1752,CN_Direct:0,Direct:1752,Total:1810,Total_PY:997},
+  {Week:"WK13",CN_GEO:33,WW_GEO:23,Total_GEO:56,WW_Direct:1806,CN_Direct:0,Direct:1806,Total:1862,Total_PY:870},
+  {Week:"WK14",CN_GEO:35,WW_GEO:23,Total_GEO:58,WW_Direct:1634,CN_Direct:0,Direct:1634,Total:1692,Total_PY:753},
+  {Week:"WK15",CN_GEO:45,WW_GEO:17,Total_GEO:62,WW_Direct:1581,CN_Direct:1082,Direct:2663,Total:2725,Total_PY:2672},
+  {Week:"WK16",CN_GEO:40,WW_GEO:15,Total_GEO:55,WW_Direct:1750,CN_Direct:1327,Direct:3077,Total:3132,Total_PY:2970},
+  {Week:"WK17",CN_GEO:32,WW_GEO:15,Total_GEO:47,WW_Direct:1738,CN_Direct:3128,Direct:4866,Total:4913,Total_PY:5549},
+  {Week:"WK18",CN_GEO:33,WW_GEO:17,Total_GEO:50,WW_Direct:1330,CN_Direct:2120,Direct:3450,Total:3500,Total_PY:3692},
+  {Week:"WK19",CN_GEO:33,WW_GEO:21,Total_GEO:54,WW_Direct:1453,CN_Direct:2072,Direct:3525,Total:3579,Total_PY:3964},
+  {Week:"WK20",CN_GEO:41,WW_GEO:31,Total_GEO:72,WW_Direct:1914,CN_Direct:2242,Direct:4156,Total:4228,Total_PY:3822},
+  {Week:"WK21",CN_GEO:44,WW_GEO:19,Total_GEO:63,WW_Direct:2054,CN_Direct:1929,Direct:3983,Total:4046,Total_PY:3872},
+  {Week:"WK22",CN_GEO:38,WW_GEO:22,Total_GEO:60,WW_Direct:2143,CN_Direct:2271,Direct:4414,Total:4474,Total_PY:3349},
+  {Week:"WK23",CN_GEO:25,WW_GEO:24,Total_GEO:49,WW_Direct:4060,CN_Direct:2904,Direct:6964,Total:7013,Total_PY:3446},
+  {Week:"WK24",CN_GEO:41,WW_GEO:23,Total_GEO:64,WW_Direct:2252,CN_Direct:3140,Direct:5392,Total:5456,Total_PY:3436},
+  {Week:"WK25",CN_GEO:31,WW_GEO:15,Total_GEO:46,WW_Direct:1579,CN_Direct:1538,Direct:3117,Total:3163,Total_PY:3718},
+  {Week:"WK26",CN_GEO:38,WW_GEO:30,Total_GEO:68,WW_Direct:1619,CN_Direct:1938,Direct:3557,Total:3625,Total_PY:2156},
+  {Week:"WK27",CN_GEO:41,WW_GEO:22,Total_GEO:63,WW_Direct:1537,CN_Direct:1874,Direct:3411,Total:3474,Total_PY:1929},
+  {Week:"WK28",CN_GEO:41,WW_GEO:22,Total_GEO:63,WW_Direct:1219,CN_Direct:1637,Direct:2856,Total:2919,Total_PY:1795},
+  {Week:"WK29",CN_GEO:41,WW_GEO:28,Total_GEO:69,WW_Direct:1400,CN_Direct:1272,Direct:2672,Total:2741,Total_PY:1935},
 ];
 
 // Monthly data from geo_monthly_data.csv
@@ -143,7 +143,7 @@ export default function ZhixiPage() {
               <Legend wrapperStyle={{fontSize:11}} />
               <Line type="monotone" dataKey="Total" stroke="#00bcd4" strokeWidth={2} dot={false} name="Total" />
               <Line type="monotone" dataKey="Total_PY" stroke="#5a6380" strokeWidth={1} strokeDasharray="4 4" dot={false} name="PY" />
-              <Line type="monotone" dataKey="WW_Direct" stroke="#ab47bc" strokeWidth={1.5} dot={false} name="WW Direct" />
+              <Line type="monotone" dataKey="Direct" stroke="#ab47bc" strokeWidth={1.5} dot={false} name="Direct" />
               <Line type="monotone" dataKey="Total_GEO" stroke="#2196f3" strokeWidth={1.5} dot={false} name="GEO" />
             </LineChart>
           </ResponsiveContainer>
@@ -167,7 +167,7 @@ export default function ZhixiPage() {
           )}
           <div className="overflow-x-auto">
             <table className="w-full text-xs"><thead><tr className="border-b border-[var(--border-glass)]"><th className="px-2 py-1 text-left text-[var(--text-muted)]">Channel</th>{recentWeeks.map(w=><th key={w.Week} className="px-1 py-1 text-center text-[var(--text-muted)]">{w.Week.replace("WK","")}</th>)}<th className="px-2 py-1 text-center text-[var(--text-muted)]">WoW</th></tr></thead>
-            <tbody>{([{n:"CN GEO",k:"CN_GEO" as const,c:"text-blue-400"},{n:"WW GEO",k:"WW_GEO" as const,c:"text-cyan-400"},{n:"GEO Total",k:"Total_GEO" as const,c:"text-blue-300 font-semibold"},{n:"WW Direct",k:"WW_Direct" as const,c:"text-purple-400"},{n:"CN Direct",k:"CN_Direct" as const,c:"text-gray-400"},{n:"Total",k:"Total" as const,c:"text-[var(--accent)] font-bold"}]).map(ch=>(
+            <tbody>{([{n:"CN GEO",k:"CN_GEO" as const,c:"text-blue-400"},{n:"WW GEO",k:"WW_GEO" as const,c:"text-cyan-400"},{n:"GEO Total",k:"Total_GEO" as const,c:"text-blue-300 font-semibold"},{n:"Direct (WW+CN)",k:"Direct" as const,c:"text-purple-400"},{n:"Total",k:"Total" as const,c:"text-[var(--accent)] font-bold"}]).map(ch=>(
               <tr key={ch.n} className="border-b border-[var(--border-glass)]/30"><td className={`px-2 py-1 ${ch.c} whitespace-nowrap`}>{ch.n}</td>{recentWeeks.map(w=><td key={w.Week} className="px-1 py-1 text-center font-mono">{w[ch.k]>999?`${(w[ch.k]/1000).toFixed(1)}k`:w[ch.k]}</td>)}<td className="px-2 py-1 text-center font-mono">{wow(recentWeeks[recentWeeks.length-1][ch.k],recentWeeks[recentWeeks.length-2][ch.k])}</td></tr>
             ))}</tbody></table>
           </div>
