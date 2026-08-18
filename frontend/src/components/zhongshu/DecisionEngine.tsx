@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { GlassCard } from "@/components/ui/GlassCard";
 
 interface Task {
@@ -14,8 +14,12 @@ interface Task {
   result?: string;
 }
 
-// Auto-generated tasks based on current ZhiXi data (Jun WK25)
-const INITIAL_TASKS: Task[] = [
+const MODULES = ["智库", "智造", "智优", "智布", "智测", "智析", "智预"];
+const PRIORITIES: Task["priority"][] = ["HIGH", "MEDIUM", "LOW"];
+const STORAGE_KEY = "smartsuite_decision_tasks";
+
+// Default tasks - used when no saved data exists
+const DEFAULT_TASKS: Task[] = [
   { id: "t1", module: "智库", description: "新增入口/注册类高意图短语 ×50（7月重点）", priority: "HIGH", rule: "Rule 1", enabled: true, status: "pending" },
   { id: "t2", module: "智库", description: "扩展行业词 ×30（当前159→目标190）", priority: "HIGH", rule: "Rule 4", enabled: true, status: "pending" },
   { id: "t3", module: "智造", description: "生产入口注册类内容 ×10 篇", priority: "HIGH", rule: "Rule 1", enabled: true, status: "pending" },
@@ -28,19 +32,52 @@ const INITIAL_TASKS: Task[] = [
   { id: "t10", module: "智预", description: "推演 Q3 旺季（Prime Day）相关检索需求", priority: "MEDIUM", rule: "Rule 4", enabled: false, status: "pending" },
 ];
 
+function loadTasks(): Task[] {
+  if (typeof window === "undefined") return DEFAULT_TASKS;
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) return JSON.parse(saved);
+  } catch { /* ignore */ }
+  return DEFAULT_TASKS;
+}
+
+function saveTasks(tasks: Task[]) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+  } catch { /* ignore */ }
+}
+
 export function DecisionEngine({ isZh }: { isZh: boolean }) {
-  const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
+  const [tasks, setTasks] = useState<Task[]>(DEFAULT_TASKS);
   const [runningAll, setRunningAll] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<Partial<Task>>({});
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newTask, setNewTask] = useState<Partial<Task>>({ module: "智库", priority: "MEDIUM", rule: "—", description: "" });
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    setTasks(loadTasks());
+  }, []);
+
+  // Persist changes
+  const updateTasks = useCallback((updater: (prev: Task[]) => Task[]) => {
+    setTasks(prev => {
+      const next = updater(prev);
+      saveTasks(next);
+      return next;
+    });
+  }, []);
 
   const toggleTask = (id: string) => {
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, enabled: !t.enabled } : t));
+    updateTasks(prev => prev.map(t => t.id === id ? { ...t, enabled: !t.enabled } : t));
   };
 
   const runTask = async (id: string) => {
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, status: "running" } : t));
-    // Simulate execution
+    updateTasks(prev => prev.map(t => t.id === id ? { ...t, status: "running" } : t));
     await new Promise(r => setTimeout(r, 1500 + Math.random() * 1000));
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, status: "done", result: isZh ? "✓ 已完成" : "✓ Done" } : t));
+    updateTasks(prev => prev.map(t => t.id === id ? { ...t, status: "done", result: isZh ? "✓ 已完成" : "✓ Done" } : t));
   };
 
   const runAll = async () => {
@@ -53,7 +90,60 @@ export function DecisionEngine({ isZh }: { isZh: boolean }) {
   };
 
   const resetAll = () => {
-    setTasks(INITIAL_TASKS);
+    updateTasks(() => DEFAULT_TASKS);
+  };
+
+  // --- Edit task ---
+  const startEdit = (task: Task) => {
+    setEditingId(task.id);
+    setEditForm({ module: task.module, description: task.description, priority: task.priority, rule: task.rule });
+  };
+
+  const saveEdit = (id: string) => {
+    updateTasks(prev => prev.map(t => t.id === id ? { ...t, ...editForm } : t));
+    setEditingId(null);
+    setEditForm({});
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditForm({});
+  };
+
+  // --- Delete task ---
+  const deleteTask = (id: string) => {
+    updateTasks(prev => prev.filter(t => t.id !== id));
+  };
+
+  // --- Add task ---
+  const addTask = () => {
+    if (!newTask.description?.trim()) return;
+    const id = `t_${Date.now()}`;
+    const task: Task = {
+      id,
+      module: newTask.module || "智库",
+      description: newTask.description!.trim(),
+      priority: (newTask.priority as Task["priority"]) || "MEDIUM",
+      rule: newTask.rule || "—",
+      enabled: true,
+      status: "pending",
+    };
+    updateTasks(prev => [...prev, task]);
+    setNewTask({ module: "智库", priority: "MEDIUM", rule: "—", description: "" });
+    setShowAddForm(false);
+  };
+
+  // --- Reorder (move up/down) ---
+  const moveTask = (id: string, direction: "up" | "down") => {
+    updateTasks(prev => {
+      const idx = prev.findIndex(t => t.id === id);
+      if (idx < 0) return prev;
+      const newIdx = direction === "up" ? idx - 1 : idx + 1;
+      if (newIdx < 0 || newIdx >= prev.length) return prev;
+      const copy = [...prev];
+      [copy[idx], copy[newIdx]] = [copy[newIdx], copy[idx]];
+      return copy;
+    });
   };
 
   const enabledCount = tasks.filter(t => t.enabled).length;
@@ -96,13 +186,16 @@ export function DecisionEngine({ isZh }: { isZh: boolean }) {
         </div>
       </GlassCard>
 
-      {/* Task List - Selectable & Executable */}
+      {/* Task List - Editable, Selectable & Executable */}
       <GlassCard>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-medium text-[var(--text-secondary)]">
             {isZh ? "📋 执行任务清单" : "📋 Execution Task List"} ({doneCount}/{enabledCount})
           </h2>
           <div className="flex gap-2">
+            <button onClick={() => setShowAddForm(true)} className="px-2 py-1 text-xs rounded border border-green-500/30 text-green-400 hover:bg-green-500/10">
+              {isZh ? "+ 新增" : "+ Add"}
+            </button>
             <button onClick={resetAll} className="px-2 py-1 text-xs rounded border border-[var(--border-glass)] text-[var(--text-muted)] hover:text-[var(--text-primary)]">
               {isZh ? "重置" : "Reset"}
             </button>
@@ -111,24 +204,84 @@ export function DecisionEngine({ isZh }: { isZh: boolean }) {
             </button>
           </div>
         </div>
+
+        {/* Add Task Form */}
+        {showAddForm && (
+          <div className="mb-4 p-3 rounded-lg border border-green-500/30 bg-green-500/5">
+            <p className="text-xs font-medium text-green-400 mb-2">{isZh ? "新增任务" : "Add Task"}</p>
+            <div className="grid grid-cols-[auto_auto_1fr_auto] gap-2 items-center">
+              <select value={newTask.module} onChange={e => setNewTask(p => ({ ...p, module: e.target.value }))} className="text-xs px-2 py-1 rounded bg-black/30 border border-[var(--border-glass)] text-[var(--text-primary)]">
+                {MODULES.map(m => <option key={m} value={m}>{m}</option>)}
+              </select>
+              <select value={newTask.priority} onChange={e => setNewTask(p => ({ ...p, priority: e.target.value as Task["priority"] }))} className="text-xs px-2 py-1 rounded bg-black/30 border border-[var(--border-glass)] text-[var(--text-primary)]">
+                {PRIORITIES.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+              <input type="text" value={newTask.description || ""} onChange={e => setNewTask(p => ({ ...p, description: e.target.value }))} placeholder={isZh ? "任务描述..." : "Task description..."} className="text-xs px-2 py-1 rounded bg-black/30 border border-[var(--border-glass)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]" />
+              <input type="text" value={newTask.rule || ""} onChange={e => setNewTask(p => ({ ...p, rule: e.target.value }))} placeholder="Rule" className="text-xs px-2 py-1 rounded bg-black/30 border border-[var(--border-glass)] text-[var(--text-primary)] w-20 placeholder:text-[var(--text-muted)]" />
+            </div>
+            <div className="flex gap-2 mt-2">
+              <button onClick={addTask} className="px-3 py-1 text-xs rounded bg-green-600 text-white font-medium hover:bg-green-500">{isZh ? "确认添加" : "Add"}</button>
+              <button onClick={() => setShowAddForm(false)} className="px-3 py-1 text-xs rounded border border-[var(--border-glass)] text-[var(--text-muted)] hover:text-[var(--text-primary)]">{isZh ? "取消" : "Cancel"}</button>
+            </div>
+          </div>
+        )}
+
         <div className="space-y-2">
-          {tasks.map((task) => (
-            <div key={task.id} className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${task.status === "done" ? "bg-green-500/5 border-green-500/20" : task.status === "running" ? "bg-[var(--accent)]/5 border-[var(--accent)]/30 animate-pulse" : "bg-white/5 border-[var(--border-glass)]/30"}`}>
+          {tasks.map((task, idx) => (
+            <div key={task.id} className={`group flex items-center gap-3 p-3 rounded-lg border transition-all ${task.status === "done" ? "bg-green-500/5 border-green-500/20" : task.status === "running" ? "bg-[var(--accent)]/5 border-[var(--accent)]/30 animate-pulse" : "bg-white/5 border-[var(--border-glass)]/30"}`}>
               <input type="checkbox" checked={task.enabled} onChange={() => toggleTask(task.id)} className="w-4 h-4 rounded accent-[var(--accent)]" disabled={task.status !== "pending"} />
               <span className="text-sm">{statusIcon(task.status)}</span>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--accent)]/10 text-[var(--accent)] font-medium">{task.module}</span>
-                  <span className={`text-[10px] font-medium ${priorityColor(task.priority)}`}>{task.priority}</span>
-                  <span className="text-[10px] text-[var(--text-muted)]">{task.rule}</span>
+
+              {editingId === task.id ? (
+                /* ---- Inline Edit Mode ---- */
+                <div className="flex-1 min-w-0 space-y-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <select value={editForm.module || task.module} onChange={e => setEditForm(f => ({ ...f, module: e.target.value }))} className="text-xs px-1.5 py-0.5 rounded bg-black/30 border border-[var(--accent)]/50 text-[var(--accent)]">
+                      {MODULES.map(m => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                    <select value={editForm.priority || task.priority} onChange={e => setEditForm(f => ({ ...f, priority: e.target.value as Task["priority"] }))} className="text-xs px-1.5 py-0.5 rounded bg-black/30 border border-[var(--border-glass)] text-[var(--text-primary)]">
+                      {PRIORITIES.map(p => <option key={p} value={p}>{p}</option>)}
+                    </select>
+                    <input type="text" value={editForm.rule ?? task.rule} onChange={e => setEditForm(f => ({ ...f, rule: e.target.value }))} className="text-xs px-1.5 py-0.5 rounded bg-black/30 border border-[var(--border-glass)] text-[var(--text-muted)] w-20" />
+                  </div>
+                  <input type="text" value={editForm.description ?? task.description} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} className="w-full text-xs px-2 py-1 rounded bg-black/30 border border-[var(--border-glass)] text-[var(--text-primary)]" />
+                  <div className="flex gap-2">
+                    <button onClick={() => saveEdit(task.id)} className="px-2 py-0.5 text-[10px] rounded bg-[var(--accent)] text-white">{isZh ? "保存" : "Save"}</button>
+                    <button onClick={cancelEdit} className="px-2 py-0.5 text-[10px] rounded border border-[var(--border-glass)] text-[var(--text-muted)]">{isZh ? "取消" : "Cancel"}</button>
+                  </div>
                 </div>
-                <p className="text-xs text-[var(--text-primary)] mt-1">{task.description}</p>
-                {task.result && <p className="text-[10px] text-green-400 mt-0.5">{task.result}</p>}
-              </div>
-              {task.enabled && task.status === "pending" && (
-                <button onClick={() => runTask(task.id)} className="px-2 py-1 text-[10px] rounded border border-[var(--accent)]/30 text-[var(--accent)] hover:bg-[var(--accent)]/10">
-                  {isZh ? "执行" : "Run"}
-                </button>
+              ) : (
+                /* ---- Display Mode ---- */
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--accent)]/10 text-[var(--accent)] font-medium">{task.module}</span>
+                    <span className={`text-[10px] font-medium ${priorityColor(task.priority)}`}>{task.priority}</span>
+                    <span className="text-[10px] text-[var(--text-muted)]">{task.rule}</span>
+                  </div>
+                  <p className="text-xs text-[var(--text-primary)] mt-1">{task.description}</p>
+                  {task.result && <p className="text-[10px] text-green-400 mt-0.5">{task.result}</p>}
+                </div>
+              )}
+
+              {/* Action buttons */}
+              {editingId !== task.id && (
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {/* Reorder */}
+                  <button onClick={() => moveTask(task.id, "up")} disabled={idx === 0} className="p-1 text-[10px] text-[var(--text-muted)] hover:text-[var(--text-primary)] disabled:opacity-20" title={isZh ? "上移" : "Move up"}>↑</button>
+                  <button onClick={() => moveTask(task.id, "down")} disabled={idx === tasks.length - 1} className="p-1 text-[10px] text-[var(--text-muted)] hover:text-[var(--text-primary)] disabled:opacity-20" title={isZh ? "下移" : "Move down"}>↓</button>
+                  {/* Edit */}
+                  {task.status === "pending" && (
+                    <button onClick={() => startEdit(task)} className="p-1 text-[10px] text-blue-400 hover:text-blue-300" title={isZh ? "编辑" : "Edit"}>✏️</button>
+                  )}
+                  {/* Delete */}
+                  <button onClick={() => deleteTask(task.id)} className="p-1 text-[10px] text-red-400 hover:text-red-300" title={isZh ? "删除" : "Delete"}>🗑️</button>
+                  {/* Run */}
+                  {task.enabled && task.status === "pending" && (
+                    <button onClick={() => runTask(task.id)} className="px-2 py-1 text-[10px] rounded border border-[var(--accent)]/30 text-[var(--accent)] hover:bg-[var(--accent)]/10">
+                      {isZh ? "执行" : "Run"}
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           ))}
