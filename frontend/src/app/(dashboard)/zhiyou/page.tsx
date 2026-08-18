@@ -738,6 +738,11 @@ export default function ZhiyouPage() {
       )}
 
       {/* CTA */}
+      {/* ⑥ Legal Review — via QuickSight Amazon Q Legal Chatbot (半自动) */}
+      {drafts.length > 0 && (scores.length > 0 || complianceResults.length > 0) && (
+        <LegalReviewSection drafts={drafts} selectedFinal={selectedFinal} isZh={isZh} />
+      )}
+
       <div className="flex justify-end pt-4">
         <button
           onClick={() => {
@@ -850,4 +855,179 @@ function localComplianceCheck(draft: DraftContent): ComplianceResult {
     issues,
     fixes_applied: fixes,
   };
+}
+
+// ============ Legal Review Section (半自动对接 QuickSight Amazon Q) ============
+const LEGAL_CHATBOT_URL = "https://us-east-1.quicksight.aws.amazon.com/sn/account/amazonbi/spaces/125b87c5-60e2-477a-b5ff-bdac0e609c55";
+
+function LegalReviewSection({ drafts, selectedFinal, isZh }: { drafts: DraftContent[]; selectedFinal: Set<number>; isZh: boolean }) {
+  const [legalStatus, setLegalStatus] = useState<"idle"|"pending"|"pass"|"revise"|"reject">("idle");
+  const [legalFeedback, setLegalFeedback] = useState("");
+  const [pastedResponse, setPastedResponse] = useState("");
+  const [reviewingIdx, setReviewingIdx] = useState(0);
+
+  const targetDrafts = selectedFinal.size > 0 ? [...selectedFinal].map(i => drafts[i]) : drafts;
+  const currentDraft = targetDrafts[reviewingIdx];
+
+  // Generate the prompt to copy to clipboard
+  const generateLegalPrompt = (draft: DraftContent) => {
+    return `请对以下营销内容进行合规审核，检查是否存在法律风险、虚假承诺、未标注来源的数据、敏感用语或品牌合规问题。如果有问题请给出具体修改建议，如果没有问题请回复"PASS - 内容合规"。
+
+---
+标题：${draft.title}
+检索短语：${draft.ai_query}
+
+内容正文：
+${draft.content_draft}
+---`;
+  };
+
+  // Copy prompt to clipboard and open Legal Chatbot
+  const handleSendToLegal = () => {
+    if (!currentDraft) return;
+    const prompt = generateLegalPrompt(currentDraft);
+    navigator.clipboard.writeText(prompt).then(() => {
+      setLegalStatus("pending");
+      // Open Legal Chatbot in new tab
+      window.open(LEGAL_CHATBOT_URL, "_blank");
+    });
+  };
+
+  // Parse the pasted response from Legal Chatbot
+  const handleParseLegalResponse = () => {
+    if (!pastedResponse.trim()) return;
+    const lower = pastedResponse.toLowerCase();
+    
+    if (lower.includes("pass") || lower.includes("合规") || lower.includes("没有问题") || lower.includes("无风险")) {
+      setLegalStatus("pass");
+      setLegalFeedback("✅ Legal 审核通过：内容合规，可发布。");
+    } else if (lower.includes("reject") || lower.includes("拒绝") || lower.includes("严重违规") || lower.includes("不得发布")) {
+      setLegalStatus("reject");
+      setLegalFeedback(pastedResponse);
+    } else {
+      // Has suggestions/modifications
+      setLegalStatus("revise");
+      setLegalFeedback(pastedResponse);
+    }
+  };
+
+  // Reset for next article
+  const handleNext = () => {
+    if (reviewingIdx < targetDrafts.length - 1) {
+      setReviewingIdx(reviewingIdx + 1);
+      setLegalStatus("idle");
+      setLegalFeedback("");
+      setPastedResponse("");
+    }
+  };
+
+  return (
+    <GlassCard>
+      <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-3">
+        {isZh ? "⑥ Legal 审核（Amazon Q Legal Chatbot）" : "⑥ Legal Review (Amazon Q Legal Chatbot)"}
+      </h2>
+      <p className="text-[10px] text-[var(--text-muted)] mb-4">
+        {isZh
+          ? "点击「发送审核」→ 自动复制审核 prompt 到剪贴板并打开 Legal Chatbot → 粘贴到 Chatbot → 将回复粘贴回来"
+          : "Click 'Send for Review' → copies prompt to clipboard & opens Legal Chatbot → paste in Chatbot → paste response back"}
+      </p>
+
+      {/* Current article being reviewed */}
+      {currentDraft && (
+        <div className="mb-4 p-3 rounded-lg bg-white/5 border border-[var(--border-glass)]">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm font-medium text-[var(--text-primary)]">
+              {isZh ? "审核中" : "Reviewing"}: {currentDraft.title || currentDraft.ai_query}
+            </p>
+            <span className="text-[10px] text-[var(--text-muted)]">
+              {reviewingIdx + 1} / {targetDrafts.length}
+            </span>
+          </div>
+
+          {/* Status indicator */}
+          <div className="flex items-center gap-2 mb-3">
+            <span className={`text-xs px-2 py-0.5 rounded font-medium ${
+              legalStatus === "idle" ? "bg-gray-500/20 text-gray-400" :
+              legalStatus === "pending" ? "bg-yellow-500/20 text-yellow-400" :
+              legalStatus === "pass" ? "bg-green-500/20 text-green-400" :
+              legalStatus === "revise" ? "bg-orange-500/20 text-orange-400" :
+              "bg-red-500/20 text-red-400"
+            }`}>
+              {legalStatus === "idle" ? (isZh ? "待审核" : "Pending") :
+               legalStatus === "pending" ? (isZh ? "已发送，等待回复" : "Sent, waiting") :
+               legalStatus === "pass" ? (isZh ? "✅ 通过" : "✅ PASS") :
+               legalStatus === "revise" ? (isZh ? "⚠️ 需修改" : "⚠️ REVISE") :
+               (isZh ? "❌ 拒绝" : "❌ REJECT")}
+            </span>
+          </div>
+
+          {/* Step 1: Send to Legal */}
+          {legalStatus === "idle" && (
+            <button
+              onClick={handleSendToLegal}
+              className="px-4 py-2 rounded-lg bg-[var(--accent)] text-black text-sm font-medium hover:bg-[var(--accent-hover)] transition-colors"
+            >
+              {isZh ? "🔒 发送 Legal 审核（复制 prompt + 打开 Chatbot）" : "🔒 Send for Legal Review (copy + open Chatbot)"}
+            </button>
+          )}
+
+          {/* Step 2: Paste response */}
+          {legalStatus === "pending" && (
+            <div className="space-y-3">
+              <p className="text-xs text-yellow-400">
+                {isZh
+                  ? "✅ 审核 prompt 已复制到剪贴板！请在打开的 Legal Chatbot 中粘贴，然后将回复粘贴到下方："
+                  : "✅ Prompt copied! Paste in Legal Chatbot, then paste the response below:"}
+              </p>
+              <textarea
+                value={pastedResponse}
+                onChange={(e) => setPastedResponse(e.target.value)}
+                placeholder={isZh ? "将 Legal Chatbot 的回复粘贴到这里..." : "Paste Legal Chatbot response here..."}
+                rows={6}
+                className="w-full bg-white/5 border border-[var(--border-glass)] rounded-lg px-4 py-3 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] resize-y"
+              />
+              <button
+                onClick={handleParseLegalResponse}
+                disabled={!pastedResponse.trim()}
+                className="px-4 py-2 rounded-lg bg-[var(--accent)] text-black text-sm font-medium hover:bg-[var(--accent-hover)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                {isZh ? "📋 解析审核结果" : "📋 Parse Review Result"}
+              </button>
+            </div>
+          )}
+
+          {/* Step 3: Show result */}
+          {(legalStatus === "pass" || legalStatus === "revise" || legalStatus === "reject") && (
+            <div className={`p-3 rounded-lg border ${
+              legalStatus === "pass" ? "bg-green-500/5 border-green-500/20" :
+              legalStatus === "revise" ? "bg-orange-500/5 border-orange-500/20" :
+              "bg-red-500/5 border-red-500/20"
+            }`}>
+              <p className="text-xs font-medium mb-2">
+                {legalStatus === "pass" ? (isZh ? "✅ Legal 审核结果：通过" : "✅ Legal Review: PASS") :
+                 legalStatus === "revise" ? (isZh ? "⚠️ Legal 审核结果：需修改" : "⚠️ Legal Review: REVISE") :
+                 (isZh ? "❌ Legal 审核结果：拒绝" : "❌ Legal Review: REJECT")}
+              </p>
+              <pre className="text-xs text-[var(--text-secondary)] whitespace-pre-wrap leading-relaxed max-h-40 overflow-y-auto">
+                {legalFeedback}
+              </pre>
+              {legalStatus !== "reject" && reviewingIdx < targetDrafts.length - 1 && (
+                <button
+                  onClick={handleNext}
+                  className="mt-3 text-xs px-3 py-1.5 rounded border border-[var(--border-glass)] text-[var(--text-secondary)] hover:text-[var(--accent)]"
+                >
+                  {isZh ? "→ 审核下一篇" : "→ Review next"}
+                </button>
+              )}
+              {legalStatus === "pass" && reviewingIdx === targetDrafts.length - 1 && (
+                <p className="mt-3 text-xs text-[var(--success)] font-medium">
+                  {isZh ? "🎉 全部内容已通过 Legal 审核！可以进入发布流程。" : "🎉 All content passed Legal review! Ready to publish."}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </GlassCard>
+  );
 }
