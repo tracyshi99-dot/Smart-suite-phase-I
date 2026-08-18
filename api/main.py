@@ -636,76 +636,204 @@ class ChatRequest(BaseModel):
 
 @app.post("/api/chat/stream")
 def chat_stream(req: ChatRequest):
-    """Chat endpoint - detects action intent and executes operations."""
+    """Chat endpoint - detects action intent and executes Smart Suite operations."""
     try:
         from engine import call_bedrock_claude
         import re
 
         message_lower = req.message.lower()
 
-        # Detect action intent: content generation takes priority over phrase expansion
-        expand_keywords = ["检索短语", "裂变", "生成短语", "expand phrases", "搜索词", "热度高的"]
-        content_keywords = ["创建内容", "生成内容", "写文章", "创建文章", "generate content", "write article", "create content", "对应内容", "文章内容", "创建一篇", "帮忙创建", "对应的内容"]
+        # === INTENT DETECTION ===
+        # Priority order: compliance > scoring > content > phrases > decision > general
 
-        wants_phrases = any(kw in message_lower for kw in expand_keywords)
+        compliance_keywords = ["合规", "审核", "compliance", "legal check", "走合规", "合规检查", "pre-legal"]
+        scoring_keywords = ["评分", "打分", "智优评分", "score", "rate this", "这篇怎么样", "质量"]
+        content_keywords = ["创建内容", "生成内容", "写文章", "创建文章", "generate content", "write article", "create content", "对应内容", "文章内容", "创建一篇", "帮忙创建", "对应的内容", "执行智造", "智造"]
+        expand_keywords = ["检索短语", "裂变", "生成短语", "expand phrases", "搜索词", "热度高的", "智库", "扩词"]
+        decision_keywords = ["本周计划", "该做什么", "智中枢", "决策", "weekly plan", "周计划"]
+        zhice_keywords = ["智测", "覆盖检测", "验证", "跑一轮", "coverage", "verify"]
+
+        wants_compliance = any(kw in message_lower for kw in compliance_keywords)
+        wants_scoring = any(kw in message_lower for kw in scoring_keywords)
         wants_content = any(kw in message_lower for kw in content_keywords)
+        wants_phrases = any(kw in message_lower for kw in expand_keywords)
+        wants_decision = any(kw in message_lower for kw in decision_keywords)
+        wants_zhice = any(kw in message_lower for kw in zhice_keywords)
 
-        # Content generation takes priority if both detected
+        # === 1. COMPLIANCE CHECK ===
+        if wants_compliance:
+            # Use the last content from history or ask for it
+            content_to_check = ""
+            if req.history:
+                for msg in reversed(req.history):
+                    if msg.get("role") == "assistant" and len(msg.get("content", "")) > 200:
+                        content_to_check = msg["content"]
+                        break
+            if not content_to_check and len(req.message) > 100:
+                content_to_check = req.message
+
+            if not content_to_check:
+                return {"content": "请提供需要审核的内容，或者先让我生成一篇内容再执行合规检查。", "role": "assistant"}
+
+            compliance_prompt = f"""你是亚马逊全球开店内容合规审核专家。请对以下内容执行 Pre-Legal Self-Check。
+
+检查项（逐一核对）：
+1. 禁用词：市场→站点、平台→网站/站点（卖家平台除外）、生态→服务、最好/最佳→优选/之一、保证/确保→有助于/帮助、合作伙伴→第三方服务提供商、招商→卖家拓展
+2. 第三方服务商：不得点名推荐（如 Jungle Scout/连连支付/PingPong），泛化为"第三方工具"
+3. 品牌使用：gs.amazon.cn=全球开店页面（非卖家平台）、Seller Central=卖家平台、境外产品主体=亚马逊（非全球开店）、审核主体=亚马逊（非我们）
+4. 数据规范：费率需标来源+时效、佣金给范围非单一数字、效果声明无来源百分比禁用
+5. 绝对化表述：禁止"确保/保证/一定/显著提升"
+6. 注册引导：必须"通过亚马逊卖家平台注册"，禁止"前往全球开店官网注册"
+7. Copyright 格式：Copyright © 2026 Amazon.com, Inc. or its affiliates. All rights reserved.
+8. 免责声明：文末必须包含 disclaimer
+
+对每个问题标注：✅ PASS / ⚠️ WARNING（需确认）/ 🔴 BLOCKED（必须修改）
+对 BLOCKED 项给出具体修改建议。
+
+待审核内容：
+{content_to_check[:3000]}"""
+
+            result = call_bedrock_claude(compliance_prompt)
+            return {"content": f"📋 合规审核结果：\n\n{result}", "role": "assistant"}
+
+        # === 2. SCORING ===
+        if wants_scoring:
+            content_to_score = ""
+            if req.history:
+                for msg in reversed(req.history):
+                    if msg.get("role") == "assistant" and len(msg.get("content", "")) > 200:
+                        content_to_score = msg["content"]
+                        break
+
+            if not content_to_score:
+                return {"content": "请先生成一篇内容，然后我来为它打分。", "role": "assistant"}
+
+            scoring_prompt = f"""你是 AI 内容评估专家，模拟 ChatGPT/DeepSeek/Gemini 选择和引用内容的逻辑。
+
+评分维度（每项 1-5 分）：
+1. Intent Match 意图匹配 (30%): 是否直接回答查询？首段是否给出明确答案？
+2. AI Readability AI可读性 (20%): 结构清晰？短段落+列表+表格？AI容易提取？
+3. Authority 权威性 (20%): 包含具体可靠信息？平台特定知识？避免泛泛而谈？
+4. Actionability 可操作性 (20%): 提供清晰下一步？用户能否立即执行？
+5. Differentiation 差异化 (10%): 区别于通用内容？有独特结构或洞察？
+
+输出格式：
+各维度分数 + 加权总分 + 是否通过（≥4.5且各项≥4）+ 3条具体优化建议
+
+待评分内容：
+{content_to_score[:3000]}"""
+
+            result = call_bedrock_claude(scoring_prompt)
+            return {"content": f"📊 智优评分结果：\n\n{result}", "role": "assistant"}
+
+        # === 3. CONTENT GENERATION (aligned with 智造 steering) ===
         if wants_content:
-            # First, try to find the phrase from the user's library
             from s3_storage import read_csv as _s3_read
-            df_lib = _s3_read(req.batch_id, "01_zhiku", "zhiku_ai_queries.csv")
 
-            # Extract what phrase/topic user refers to
+            # Extract target phrase
             topic_prompt = f"从用户消息中提取他想要创建内容的核心检索短语或主题（只输出短语本身，不要解释）: '{req.message}'"
             topic = call_bedrock_claude(topic_prompt).strip().strip('"').strip("'")
 
             # Try to find matching phrase in library
             target_phrase = topic
-            if not df_lib.empty and "ai_query" in df_lib.columns:
-                # Find best match from library
-                phrases_list = df_lib["ai_query"].tolist()
-                # Check if user refers to "top 1" or specific number
-                num_match = re.search(r"top\s*(\d+)|第(\d+)", req.message)
-                if num_match:
-                    idx = int(num_match.group(1) or num_match.group(2)) - 1
-                    if 0 <= idx < len(phrases_list):
-                        target_phrase = phrases_list[idx]
-                else:
-                    # Try fuzzy match
-                    for p in phrases_list:
-                        if topic.lower() in p.lower() or any(w in p for w in topic.split() if len(w) > 2):
-                            target_phrase = p
-                            break
+            try:
+                df_lib = _s3_read(req.batch_id, "01_zhiku", "zhiku_ai_queries.csv")
+                if not df_lib.empty and "ai_query" in df_lib.columns:
+                    phrases_list = df_lib["ai_query"].tolist()
+                    num_match = re.search(r"top\s*(\d+)|第(\d+)", req.message)
+                    if num_match:
+                        idx = int(num_match.group(1) or num_match.group(2)) - 1
+                        if 0 <= idx < len(phrases_list):
+                            target_phrase = phrases_list[idx]
+                    else:
+                        for p in phrases_list:
+                            if topic.lower() in p.lower() or any(w in p for w in topic.split() if len(w) > 2):
+                                target_phrase = p
+                                break
+            except Exception:
+                pass
 
-            # Generate article for the target phrase (same quality as 智造 workflow)
-            content_prompt = f"""请为检索短语「{target_phrase}」生成一篇 GEO 优化的文章。
+            # Generate content following FULL 智造 steering rules
+            content_prompt = f"""你是精通跨境电商的内容营销专家，专注于亚马逊全球开店（Amazon Global Selling）。
 
-严格要求（必须全部满足）：
-1. 800-1500字，直接回答这个问题
-2. 开头第一段就给出核心答案（倒金字塔结构）
-3. 包含至少1个数据表格（如费用对比、步骤清单、方案对比等）
-4. 包含至少2个结构化列表（编号或要点列表）
-5. 末尾必须包含3个FAQ（常见问题+完整答案，每个FAQ答案至少50字）
-6. 自然融入"亚马逊全球开店"品牌词至少3次
-7. 植入官方链接 https://gs.amazon.cn 至少2次（作为"了解更多"或"注册入口"）
-8. 语言风格：专业、实用、面向跨境电商卖家
-9. 不提及竞品（Shopee/Lazada/TikTok/eBay等）
-10. 纯文本格式，不使用Markdown符号（###、**、***、>）
+请为检索短语「{target_phrase}」生成一篇完整文章。
 
-输出格式：
-第一行 = 文章标题
-第二行空行
-然后正文（含表格、列表、FAQ、官方链接）"""
+## 必须遵守的规则：
+
+### 结构要求：
+1. 首段（前100字）：直接回答问题的核心结论（金字塔原理），植入关键词
+2. 正文：用 H2 标题分3-5个板块，每个 H2 下先给一句话结论再展开
+3. 必须包含至少1个数据表格（费用对比/步骤清单/方案对比）
+4. 必须包含至少2个结构化列表
+5. 末尾3个FAQ（完整问答，每答案50字以上）
+6. 结语含CTA引导访问 https://gs.amazon.cn
+7. 字数800-1500字
+
+### 合规红线（违反则内容作废）：
+- 禁用：市场（→站点）、平台（→网站/站点，卖家平台除外）、最佳（→优选/之一）
+- 禁用：保证/确保/显著提升（→有助于/帮助）
+- 禁止提及竞品：Shopee/Lazada/TikTok/速卖通/eBay
+- 禁止点名推荐第三方服务商
+- 注册引导："通过亚马逊卖家平台注册"（非"前往全球开店官网注册"）
+- 费率数据必须标来源+时效声明
+- 审核主体="亚马逊"（非"我们"）
+
+### GEO优化：
+- 每个H2下的第一段可被AI引擎独立引用
+- 信息密度高、逻辑严密
+- 包含具体步骤、数字、时间线
+- 自然植入 https://gs.amazon.cn 至少2次
+
+### 文末必须包含：
+- 免责声明："本文仅供参考，不构成商业承诺。实际费率和政策以亚马逊卖家平台最新公告为准。"
+- 版权：Copyright © 2026 Amazon.com, Inc. or its affiliates. All rights reserved.
+
+请直接输出完整文章（纯文本，标题用"标题："开头，H2用"## "标记）："""
+
             article = call_bedrock_claude(content_prompt)
 
-            if article and len(article) > 100:
-                result_text = f"已为短语「{target_phrase}」生成内容：\n\n{article}"
+            if article and len(article) > 200:
+                result_text = f"✅ 已为短语「{target_phrase}」按智造标准生成内容：\n\n{article}\n\n---\n💡 你可以说"评分"让我打分，或说"合规检查"让我审核。"
                 return {"content": result_text, "role": "assistant"}
             else:
                 return {"content": f"内容生成失败，请重试。目标短语：{target_phrase}", "role": "assistant"}
 
-        # If user wants phrases
+        # === 4. DECISION (智中枢) ===
+        if wants_decision:
+            decision_prompt = """基于以下最新智析数据（Jun WK25），按7条决策规则生成本周执行计划：
+
+当前数据快照：
+- GEO+Direct YTD: 28,741 (+55% YoY)，跑赢SSR大盘(-23%) 78 ppts
+- CN GEO: WK20=41, WoW +24%, YoY +452%
+- WW GEO: WK20=31, WoW +41%, YoY +94%
+- WW Direct EST: WK20=1,914, WoW +32%, YoY +62%
+- JP Direct YoY +103%
+- 品牌链接提及率: 56.9%（5月46.6%→6月56.9%回升）
+- 行业词提及率: 37.2%（5月7.4%→6月37.2%大幅上升但仍低）
+- ChatGPT链接率仅28.5%（7平台最低）
+- 总短语: 646条（品牌487+行业159）
+- 新建内容 YTD: 648篇
+
+7条规则检查：
+Rule 1 增长加速: WoW>+30% 连续2周? → CN GEO ✓
+Rule 2 下降预警: WoW<-20%? → 无
+Rule 3 低量高增: weekly<50 且 YoY>+50%? → WW GEO (31, +94%) ✓
+Rule 4 高增站点: YoY>+100%? → JP +103%, CN GEO +452% ✓
+Rule 5 内容缺口: 有流量无内容2周? → 无
+Rule 6 大盘对标: Our<SSR? → +7800 BPS ✅ 远超大盘
+Rule 7 投入产出滞后: 发布2-3周无提升? → ChatGPT 28.5%链接率需排查 ✓
+
+请输出标准格式周计划：
+🟢 ACCELERATE + 🟡 MONITOR + 🔴 INVESTIGATE + 📝 执行任务列表 + KPI目标"""
+
+            result = call_bedrock_claude(decision_prompt)
+            return {"content": f"📋 智中枢周度决策：\n\n{result}", "role": "assistant"}
+
+        # === 5. ZHICE (Coverage Test) ===
+        if wants_zhice:
+            return {"content": "智测功能需要实际调用 AI 平台 API 进行搜索验证。请前往智测页面执行，或提供具体短语我帮你分析该如何测试。\n\n💡 你也可以说"执行智造 [短语]"先生成内容，再到智测页面验证覆盖。", "role": "assistant"}
+
+        # === 6. PHRASE GENERATION (智库) ===
         if wants_phrases:
             # Extract the core topic (not "检索短语" itself)
             topic_prompt = f"从用户请求中提取核心主题词（只输出1-3个词，不要包含'检索短语''搜索词'等元描述词）: '{req.message}'"
@@ -786,19 +914,21 @@ def chat_stream(req: ChatRequest):
                 content = msg.get("content", "")
                 history_text += f"\n{role}: {content}"
 
-        prompt = f"""You are Smart Suite Agent (智系列智能助手). You help users operate the Smart Suite platform.
+        prompt = f"""你是 Smart Suite 智能助手。帮助用户操作智系列模块完成 GEO 内容生产全流程。
 
-Modules: 智库(phrases) → 智测(verify) → 智造(generate) → 智优(optimize) → 智布(publish) → 智析(analytics)
+你能做的事：
+- "生成内容 [短语]" → 按智造标准生产内容
+- "评分" → 对上一篇内容进行5维AI引用概率评分
+- "合规检查" → 对内容执行合规审核（禁用词/品牌/数据/注册引导等）
+- "生成短语 [主题]" → 扩展AI检索短语并保存到智库
+- "本周计划" → 基于智析数据生成智中枢决策计划
+- "智测" → 覆盖检测指引
 
-Rules:
-- Answer about Smart Suite, GEO, cross-border e-commerce ONLY
-- Be concise and actionable
-- Use same language as user
-- If user wants to generate/expand phrases, tell them to type specific requests like "帮我生成关于FBA的10条检索短语"
+请用和用户相同的语言回答。简洁、专业、可操作。
 
-{f"History:{history_text}" if history_text else ""}
+{f"对话历史:{history_text}" if history_text else ""}
 
-User: {req.message}"""
+用户: {req.message}"""
 
         response = call_bedrock_claude(prompt)
         return {"content": response, "role": "assistant"}
