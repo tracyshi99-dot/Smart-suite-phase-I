@@ -1881,6 +1881,17 @@ def run_pre_legal_check(batch_id: str, progress_callback=None) -> dict:
             "context_check": "third_party_generic",
             "min_criticality": 4,
         },
+        "A6_brand_in_example": {
+            "name": "举例中提及知名品牌",
+            "patterns": [r'(?:如|例如|比如).*(?:Apple|Nike|Samsung|Adidas|Sony|Louis\s*Vuitton|Gucci)',
+                         r'(?:Apple|Nike|Samsung|Adidas).*(?:品牌词|商标|侵权)',
+                         r'避免.*(?:使用|包含).*(?:Apple|Nike|Samsung)'],
+            "level": "WARNING",
+            "priority": "P2",
+            "desc": "举例中直接提及第三方品牌名，建议改为'某知名XX品牌'",
+            "context_check": None,
+            "min_criticality": 4,
+        },
         # Layer 3C: PR Specific
         "C1_sensitive_region": {
             "name": "敏感地区表述",
