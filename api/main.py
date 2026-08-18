@@ -726,7 +726,7 @@ def chat_stream(req: ChatRequest):
             result = call_bedrock_claude(scoring_prompt)
             return {"content": f"📊 智优评分结果：\n\n{result}", "role": "assistant"}
 
-        # === 3. CONTENT GENERATION (aligned with 智造 steering) ===
+        # === 3. CONTENT GENERATION (aligned with 智造 engine.py) ===
         if wants_content:
             from s3_storage import read_csv as _s3_read
 
@@ -753,48 +753,153 @@ def chat_stream(req: ChatRequest):
             except Exception:
                 pass
 
-            # Generate content following FULL 智造 steering rules
-            content_prompt = f"""你是精通跨境电商的内容营销专家，专注于亚马逊全球开店（Amazon Global Selling）。
+            # --- Auto-detect template type (same logic as engine.py) ---
+            query_lower = target_phrase.lower()
+            if any(kw in query_lower for kw in ["注册", "开店", "开户", "register", "sign up", "create account", "申请", "审核"]):
+                actual_template = "registration"
+            elif any(kw in query_lower for kw in ["费用", "成本", "多少钱", "价格", "收费", "佣金", "cost", "fee", "price", "how much"]):
+                actual_template = "fees"
+            elif any(kw in query_lower for kw in ["物流", "仓储", "fba", "fbm", "发货", "配送", "运费", "shipping", "fulfillment"]):
+                actual_template = "logistics"
+            elif any(kw in query_lower for kw in ["广告", "推广", "ppc", "cpc", "acos", "sponsor", "advertis", "营销", "引流"]):
+                actual_template = "advertising"
+            elif any(kw in query_lower for kw in ["listing", "标题", "图片", "关键词", "a+", "详情页", "五点", "bullet"]):
+                actual_template = "listing"
+            else:
+                actual_template = "general"
 
-请为检索短语「{target_phrase}」生成一篇完整文章。
+            # --- Template structure instructions (same as engine.py TEMPLATES) ---
+            CHAT_TEMPLATES = {
+                "registration": """## 文章结构模板（注册流程类）
+请严格按照以下结构填充内容：
+1. **开篇直答**（100字）：直接回答"如何注册"
+2. **注册前准备**（150字）：需要的材料清单（表格形式）
+3. **注册步骤详解**（300字）：分步骤说明（编号列表）
+4. **常见审核问题**（150字）：审核失败原因+解决方案
+5. **注册后下一步**（100字）：注册成功后的行动指引
+6. **FAQ**（3个问答，每答案50字以上）
+7. **CTA**：引导访问 https://gs.amazon.cn
+必须包含：1个材料清单表格 + 1个步骤编号列表 + 1个费用对比列表""",
+                "fees": """## 文章结构模板（费用成本类）
+请严格按照以下结构填充内容：
+1. **开篇直答**（80字）：一句话总结费用范围
+2. **费用总览表**（200字）：所有费用项的表格（费用类型/金额/频率/说明）
+3. **各项费用详解**（300字）：逐项解释每笔费用
+4. **费用计算示例**（150字）：用具体数字举例月度/年度总费用
+5. **省钱技巧**（100字）：降低费用的方法（列表形式）
+6. **FAQ**（3个问答，每答案50字以上）
+7. **CTA**：引导访问 https://gs.amazon.cn
+必须包含：1个费用总览表格 + 1个计算示例列表 + 1个省钱技巧列表""",
+                "logistics": """## 文章结构模板（物流仓储类）
+请严格按照以下结构填充内容：
+1. **开篇直答**（80字）：FBA vs FBM 核心区别
+2. **物流方案对比表**（200字）：FBA/FBM/第三方的优劣势表格
+3. **FBA 详细流程**（250字）：从发货到入仓的步骤
+4. **费用结构**（150字）：仓储费+配送费的计算方式
+5. **常见问题与解决**（100字）：丢件/延迟/退货处理
+6. **FAQ**（3个问答，每答案50字以上）
+7. **CTA**：引导访问 https://gs.amazon.cn
+必须包含：1个方案对比表格 + 1个流程步骤列表 + 1个费用结构列表""",
+                "advertising": """## 文章结构模板（广告推广类）
+请严格按照以下结构填充内容：
+1. **开篇直答**（80字）：广告类型概述和预期效果
+2. **广告类型对比表**（200字）：SP/SB/SD 三种广告的对比表格
+3. **新手广告策略**（250字）：从0到1的广告启动步骤
+4. **预算分配建议**（150字）：不同阶段的预算分配方案
+5. **优化技巧**（100字）：提升 ACOS 的实操建议（列表形式）
+6. **FAQ**（3个问答，每答案50字以上）
+7. **CTA**：引导访问 https://gs.amazon.cn
+必须包含：1个广告类型对比表格 + 1个策略步骤列表 + 1个优化技巧列表""",
+                "listing": """## 文章结构模板（Listing优化类）
+请严格按照以下结构填充内容：
+1. **开篇直答**（80字）：优质Listing的核心要素
+2. **Listing要素评分表**（200字）：各要素重要性+评分标准的表格
+3. **标题优化公式**（150字）：标题结构公式+好坏示例
+4. **图片与A+内容**（200字）：图片要求+A+内容制作要点
+5. **关键词策略**（100字）：前台/后台关键词布局
+6. **FAQ**（3个问答，每答案50字以上）
+7. **CTA**：引导访问 https://gs.amazon.cn
+必须包含：1个要素评分表格 + 1个标题公式列表 + 1个关键词布局列表""",
+                "general": """## 文章结构模板（通用类）
+请严格按照以下结构填充内容：
+1. **开篇直答**（100字）：直接回答检索问题的核心结论
+2. **核心要点展开**（300字）：用 H2 标题分3-4个板块，每个板块先给结论再展开
+3. **数据/方案对比表**（200字）：至少1个表格辅助说明
+4. **实操步骤/建议清单**（150字）：结构化列表
+5. **FAQ**（3个问答，每答案50字以上）
+6. **CTA**：引导访问 https://gs.amazon.cn
+必须包含：1个表格 + 2个列表 + 3个FAQ""",
+            }
 
-## 必须遵守的规则：
+            template_instruction = CHAT_TEMPLATES.get(actual_template, CHAT_TEMPLATES["general"])
 
-### 结构要求：
-1. 首段（前100字）：直接回答问题的核心结论（金字塔原理），植入关键词
-2. 正文：用 H2 标题分3-5个板块，每个 H2 下先给一句话结论再展开
-3. 必须包含至少1个数据表格（费用对比/步骤清单/方案对比）
-4. 必须包含至少2个结构化列表
-5. 末尾3个FAQ（完整问答，每答案50字以上）
-6. 结语含CTA引导访问 https://gs.amazon.cn
-7. 字数800-1500字
+            # --- Load knowledge base if available ---
+            knowledge_section = ""
+            try:
+                import os
+                knowledge_dir = os.path.join(os.path.dirname(__file__), "..", "input", "knowledge")
+                if os.path.exists(knowledge_dir):
+                    for fname in os.listdir(knowledge_dir):
+                        if fname.endswith(".md"):
+                            # Match by template type or query keywords
+                            if actual_template == "registration" and any(k in fname for k in ["注册", "register", "开店"]):
+                                with open(os.path.join(knowledge_dir, fname), "r", encoding="utf-8") as f:
+                                    knowledge_section = f"\n\n【官方知识库参考（只能使用以下信息，不得编造）】\n{f.read()[:3000]}\n"
+                                break
+            except Exception:
+                pass
 
-### 合规红线（违反则内容作废）：
-- 禁用：市场（→站点）、平台（→网站/站点，卖家平台除外）、最佳（→优选/之一）
-- 禁用：保证/确保/显著提升（→有助于/帮助）
-- 禁止提及竞品：Shopee/Lazada/TikTok/速卖通/eBay
-- 禁止点名推荐第三方服务商
-- 注册引导："通过亚马逊卖家平台注册"（非"前往全球开店官网注册"）
-- 费率数据必须标来源+时效声明
-- 审核主体="亚马逊"（非"我们"）
+            # --- Full system prompt (same as engine.py zhizao) ---
+            system_prompt = f"""你是跨境电商内容专家。用户会给你一个检索短语，你必须写一篇围绕该短语的文章。
+{knowledge_section}
+输出规则：
+- 第一行 = 文章标题（不加#号，必须含检索短语的核心词）
+- 第二行空行
+- 然后是正文（Markdown格式，## H2/### H3）
+- 首段直接回答检索短语的问题（金字塔原理：先结论后展开）
+- 至少800字，含1个表格、2个列表
+- 末尾3个FAQ（完整问答，每答案50字以上）
+- 自然植入2次 https://gs.amazon.cn
+- 不提及竞品（Shopee/Lazada/TikTok/速卖通/eBay）
 
-### GEO优化：
-- 每个H2下的第一段可被AI引擎独立引用
-- 信息密度高、逻辑严密
-- 包含具体步骤、数字、时间线
-- 自然植入 https://gs.amazon.cn 至少2次
+严禁跑题。文章每一段都必须和检索短语直接相关。
 
-### 文末必须包含：
+【数据与引用铁律 — 违反任何一条视为不合格】
+1. ❌ 绝对禁止编造报告/数据：不得使用"根据亚马逊XX年XX报告"等表述
+2. ❌ 禁止捏造百分比：不得使用"提升XX%"等具体百分比，除非有明确数据来源
+3. ❌ 禁止使用绝对化用语：不得说"全球最大"、"流量最大"、"最XX的"
+4. ✅ 如需描述费率/佣金，只能引用 Seller Central 公开可查的标准费率，并标注"以卖家平台实际显示为准"
+5. ✅ 如需举例说明，使用假设性表述："假设一件售价$25的商品…"
+6. ❌ 禁止提及具体第三方品牌名：用"某知名电子品牌"等泛称代替
+7. ❌ 禁止对税务/法规做解读：税务信息只能引用官方原文+注明"请咨询专业税务顾问"
+
+【敏感词禁用清单（以下词汇绝对不能出现在文章中）】
+一、禁止使用：平台（→网站/站点，"亚马逊卖家平台"除外）、市场/细分市场（→站点/国家/地区/行业）
+二、禁止使用：最佳/最好/顶级（→优选/之一/推荐做法）、保证/确保/显著提升（→有助于/帮助）
+三、禁止使用：合作伙伴（→第三方服务提供商）、招商（→卖家拓展）
+四、禁止使用：疫情、全球（泛用时）、仅限、秒杀、破解、屏蔽、担保、稳赚、必爆
+五、注册引导规则：必须写"通过亚马逊卖家平台注册"，禁止"前往全球开店官网注册"
+六、审核主体="亚马逊"，禁止用"我们"
+
+注意：以上词汇即使在正面语境中也不得使用。请用中性客观的表述替代。"""
+
+            # --- User prompt with template instruction ---
+            user_prompt = f"""检索短语：「{target_phrase}」
+
+{template_instruction}
+
+请严格按照上述模板结构生成内容，每个部分都必须有内容。
+标题和正文必须精确围绕「{target_phrase}」展开。
+
+文末必须包含：
 - 免责声明："本文仅供参考，不构成商业承诺。实际费率和政策以亚马逊卖家平台最新公告为准。"
-- 版权：Copyright © 2026 Amazon.com, Inc. or its affiliates. All rights reserved.
+- 版权：Copyright © 2026 Amazon.com, Inc. or its affiliates. All rights reserved."""
 
-请直接输出完整文章（纯文本，标题用"标题："开头，H2用"## "标记）："""
-
-            article = call_bedrock_claude(content_prompt)
+            article = call_bedrock_claude(f"{system_prompt}\n\n{user_prompt}")
 
             if article and len(article) > 200:
                 result_text = (
-                    f"✅ 已为短语「{target_phrase}」按智造标准生成内容：\n\n"
+                    f"✅ 已为短语「{target_phrase}」按智造标准生成内容（模板: {actual_template}）：\n\n"
                     f"{article}\n\n---\n"
                     f"💡 你可以说「评分」让我打分，或说「合规检查」让我审核。"
                 )
