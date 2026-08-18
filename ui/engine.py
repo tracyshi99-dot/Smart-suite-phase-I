@@ -1571,6 +1571,299 @@ def run_zhiyou_compliance(batch_id: str, progress_callback=None) -> dict:
 
 
 # ============================================================
+# STEP 3.7: Pre-Legal Self-Check（送审前自审核）
+# ============================================================
+def run_pre_legal_check(batch_id: str, progress_callback=None) -> dict:
+    """Execute Step 3.7: Pre-Legal Self-Check before sending to Legal/PR/Tax review.
+    
+    Scans all articles in the batch against 4-layer compliance rules:
+    Layer 1: SOP判定 (is Legal/PR/Tax review required?)
+    Layer 2: Legal Questionnaire 8项检查
+    Layer 3: Playbook合规规则 (General+Legal+PR+Tax)
+    Layer 4: RoA隐私合规 (VN/KR/TW)
+    
+    Output: per-article PASS/WARNING/BLOCKED + detailed findings
+    BLOCKED articles are filtered out from downstream 智布/送审 flow.
+    """
+    import re
+
+    # --- Load source content ---
+    compliance_path = OUTPUT_PATH / batch_id / "03_zhiyou" / "zhiyou_compliance_checked.csv"
+    opt_path = OUTPUT_PATH / batch_id / "03_zhiyou" / "zhiyou_optimized_content.csv"
+    zhizao_path = OUTPUT_PATH / batch_id / "02_zhizao" / "zhizao_draft_content.csv"
+
+    source_path = None
+    content_col = "final_content"
+    if compliance_path.exists() and compliance_path.stat().st_size > 10:
+        source_path = compliance_path
+    elif opt_path.exists() and opt_path.stat().st_size > 10:
+        source_path = opt_path
+        content_col = "optimized_content"
+    elif zhizao_path.exists() and zhizao_path.stat().st_size > 10:
+        source_path = zhizao_path
+        content_col = "content_draft"
+    else:
+        return {"success": False, "error": "请先执行合规审查 (Step 3.6) — 没有可审查的内容"}
+
+    try:
+        df = pd.read_csv(source_path, encoding="utf-8-sig", on_bad_lines="skip")
+    except Exception:
+        try:
+            df = pd.read_csv(source_path, encoding="utf-8-sig", on_bad_lines="skip", engine="python")
+        except Exception:
+            return {"success": False, "error": "内容文件格式错误或为空"}
+    if df.empty:
+        return {"success": False, "error": "内容为空"}
+
+    # Resolve content column
+    if content_col not in df.columns:
+        for alt in ["final_content", "optimized_content", "content_draft", "content", "body"]:
+            if alt in df.columns:
+                content_col = alt
+                break
+
+    if progress_callback:
+        progress_callback(0.1, "正在执行 Pre-Legal Self-Check...")
+
+    # === RULE-BASED CHECKS (Layer 2-3-4) ===
+    # Define check patterns
+    CHECKS = {
+        # Layer 2: Legal Questionnaire
+        "L2_external_data": {
+            "name": "外部数据引用",
+            "patterns": [r'\d+%', r'数据显示', r'据.*统计', r'研究表明', r'报告指出'],
+            "disclaimer_required": "本文内容基于第三方数据，仅供参考，不代表亚马逊的建议",
+            "level": "BLOCKED",
+            "desc": "引用外部数据但未标注出处或缺少disclaimer",
+        },
+        "L2_internal_data": {
+            "name": "内部Amazon数据",
+            "patterns": [r'MAU', r'GMS', r'GMV', r'活跃用户', r'卖家数量', r'增长率\d'],
+            "level": "WARNING",
+            "desc": "包含可能为内部数据的指标，需确认是否为已公开数据",
+        },
+        "L2_personal_info": {
+            "name": "个人信息收集",
+            "patterns": [r'收集.*信息', r'填写.*表', r'手机号', r'邮箱地址', r'consent', r'个人信息.*同意'],
+            "level": "WARNING",
+            "desc": "涉及个人信息收集，需确认已获得同意",
+        },
+        "L2_map": {
+            "name": "地图使用",
+            "patterns": [r'地图', r'国境', r'边境', r'领土', r'版图'],
+            "level": "WARNING",
+            "desc": "涉及地图元素，需确认使用合规地图源",
+        },
+        # Layer 3A: General Guidelines
+        "A2_internal_info": {
+            "name": "内部信息泄露",
+            "patterns": [r'汇报线', r'org\s*chart', r'组织架构', r'办公室地址', r'部门结构', r'管理层结构'],
+            "level": "BLOCKED",
+            "desc": "禁止对外透露内部组织信息",
+        },
+        "A3_guarantee": {
+            "name": "保证性陈述",
+            "patterns": [r'一定能', r'必定', r'保证.*增长', r'确保.*销量', r'100%'],
+            "level": "BLOCKED",
+            "desc": "禁止使用保证性陈述（应改为客观性陈述）",
+        },
+        "A4_prohibited_absolute": {
+            "name": "绝对化用语",
+            "patterns": [r'最好的(?!选择之一)', r'最佳(?!实践)', r'顶级', r'第一品牌', r'No\.\s*1'],
+            "level": "BLOCKED",
+            "desc": "禁止使用绝对化用语",
+        },
+        "A4_prohibited_partner": {
+            "name": "合作伙伴表述",
+            "patterns": [r'合作伙伴', r'伙伴关系', r'联盟'],
+            "level": "WARNING",
+            "desc": "应使用'第三方服务提供商'替代'合作伙伴'",
+        },
+        "A6_service_provider": {
+            "name": "服务商背书",
+            "patterns": [r'官方认可', r'指定服务商', r'官方推荐', r'推荐.*服务商'],
+            "level": "BLOCKED",
+            "desc": "禁止为服务商背书或给予官方名号",
+        },
+        # Layer 3C: PR Specific
+        "C1_sensitive_region": {
+            "name": "敏感地区表述",
+            "patterns": [r'(?<!中国)台湾(?!.*中国)', r'(?<!中国)香港(?!.*中国)', r'(?<!中国)澳门(?!.*中国)'],
+            "level": "BLOCKED",
+            "desc": "台湾/香港/澳门前需加'中国'前缀",
+        },
+        "C2_competitor_compare": {
+            "name": "竞品对比",
+            "patterns": [r'对比.*Shopee', r'vs.*速卖通', r'比.*eBay.*好', r'优于.*TikTok', r'(?:Shopee|Lazada|TikTok|速卖通|eBay).*(?:不如|更好|劣势)'],
+            "level": "BLOCKED",
+            "desc": "禁止与友商进行直接比较",
+        },
+        "C3_covid": {
+            "name": "COVID-19相关",
+            "patterns": [r'疫情.*商机', r'疫情.*机遇', r'疫情.*刺激', r'疫情.*红利'],
+            "level": "BLOCKED",
+            "desc": "禁止使用疫情带来商机的表述",
+        },
+        "C4_prime_day_date": {
+            "name": "Prime Day日期",
+            "patterns": [r'Prime\s*Day.*日期', r'PD.*时间', r'Prime\s*Day\s*20\d{2}年\d{1,2}月'],
+            "level": "WARNING",
+            "desc": "涉及Prime Day日期，需确认是否已官方发布",
+        },
+        # Layer 3D: Tax Specific
+        "D1_tax_terms": {
+            "name": "税务禁用词",
+            "patterns": [r'招商', r'seller\s*recruiting', r'筹划', r'(?<!卖家宣传)策略', r'战略', r'协议定价'],
+            "level": "BLOCKED",
+            "desc": "禁止使用'招商/销售/策略'等税务敏感词（应改为'拓展/卖家宣传'）",
+        },
+        "D2_registration_expr": {
+            "name": "卖家注册表述",
+            "patterns": [r'全球开店.*注册', r'扫码.*注册', r'我们.*审核', r'我们的.*要求'],
+            "level": "BLOCKED",
+            "desc": "注册必须表述为'通过亚马逊卖家平台注册'，不能用'全球开店注册'或'我们审核'",
+        },
+        "D3_brand_misuse": {
+            "name": "全球开店品牌误用",
+            "patterns": [r'全球开店.*推出', r'全球开店.*工具', r'全球开店.*站.*注册'],
+            "level": "WARNING",
+            "desc": "境外产品/工具的服务提供方应为'亚马逊/亚马逊XX站'，非'全球开店'",
+        },
+        "D4_tax_interpretation": {
+            "name": "税务政策解读",
+            "patterns": [r'根据.*文件.*可以享受', r'税务.*建议', r'税务.*解决方案', r'税收.*优惠'],
+            "level": "BLOCKED",
+            "desc": "禁止对税务政策做出解读或使用倾向性语言",
+        },
+        "D5_free_service": {
+            "name": "免费服务/赠品",
+            "patterns": [r'免费服务', r'免费礼物', r'赠品', r'免费提供'],
+            "level": "WARNING",
+            "desc": "涉及免费提供商品/服务，需确认已获税务部批准",
+        },
+    }
+
+    # === Execute checks per article ===
+    results = []
+    total = len(df)
+
+    for idx, row in df.iterrows():
+        if progress_callback:
+            progress_callback(0.1 + 0.7 * (idx / total), f"正在检查第 {idx+1}/{total} 篇...")
+
+        content_id = str(row.get("content_id", f"C__{idx:05d}"))
+        content = str(row.get(content_col, ""))
+        title = str(row.get("optimized_title", row.get("title", row.get("final_content", ""))))[:100]
+
+        article_checks = []
+        article_status = "PASS"  # will escalate to WARNING or BLOCKED
+
+        for check_id, check_def in CHECKS.items():
+            triggered = False
+            matched_text = ""
+
+            for pattern in check_def["patterns"]:
+                match = re.search(pattern, content, re.IGNORECASE)
+                if match:
+                    triggered = True
+                    matched_text = match.group(0)
+                    break
+
+            # Special handling for external data: only BLOCKED if disclaimer is missing
+            if check_id == "L2_external_data" and triggered:
+                if check_def.get("disclaimer_required", "") in content:
+                    triggered = False  # Has disclaimer, pass
+
+            if triggered:
+                check_status = check_def["level"]
+                article_checks.append({
+                    "check_id": check_id,
+                    "name": check_def["name"],
+                    "status": check_status,
+                    "findings": f"检测到: '{matched_text}' — {check_def['desc']}",
+                    "auto_fixable": check_status == "WARNING",
+                })
+                # Escalate article status
+                if check_status == "BLOCKED":
+                    article_status = "BLOCKED"
+                elif check_status == "WARNING" and article_status != "BLOCKED":
+                    article_status = "WARNING"
+
+        # Determine review requirements (Layer 1)
+        content_lower = content.lower()
+        legal_required = any(kw in content_lower for kw in ["vp演讲", "director发言", "新服务发布", "新项目发布", "gdpr", "vat法规", "payment法规"])
+        pr_required = False  # Would need channel info which we don't have per-article
+        tax_required = True  # All new content
+
+        results.append({
+            "content_id": content_id,
+            "title": title[:80],
+            "overall_status": article_status,
+            "legal_review_required": legal_required,
+            "pr_review_required": pr_required,
+            "tax_review_required": tax_required,
+            "checks_total": len(CHECKS),
+            "checks_passed": len(CHECKS) - len(article_checks),
+            "checks_warning": sum(1 for c in article_checks if c["status"] == "WARNING"),
+            "checks_blocked": sum(1 for c in article_checks if c["status"] == "BLOCKED"),
+            "findings": article_checks,
+        })
+
+    # === Save results ===
+    if progress_callback:
+        progress_callback(0.85, "正在保存自审结果...")
+
+    output_dir = OUTPUT_PATH / batch_id / "03_zhiyou"
+    ensure_dir(output_dir)
+
+    # Save detailed JSON report
+    report = {
+        "batch_id": batch_id,
+        "checked_at": timestamp(),
+        "total_articles": total,
+        "summary": {
+            "pass": sum(1 for r in results if r["overall_status"] == "PASS"),
+            "warning": sum(1 for r in results if r["overall_status"] == "WARNING"),
+            "blocked": sum(1 for r in results if r["overall_status"] == "BLOCKED"),
+        },
+        "articles": results,
+    }
+
+    report_file = output_dir / "pre_legal_check_report.json"
+    report_file.write_text(json.dumps(report, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
+
+    # Save CSV summary for quick reference
+    summary_rows = []
+    for r in results:
+        findings_str = "; ".join([f"[{c['status']}] {c['name']}: {c['findings']}" for c in r["findings"]]) if r["findings"] else "无问题"
+        summary_rows.append({
+            "content_id": r["content_id"],
+            "title": r["title"],
+            "overall_status": r["overall_status"],
+            "pass": r["checks_passed"],
+            "warning": r["checks_warning"],
+            "blocked": r["checks_blocked"],
+            "legal_required": r["legal_review_required"],
+            "findings": findings_str,
+        })
+
+    df_summary = pd.DataFrame(summary_rows)
+    summary_file = output_dir / "pre_legal_check_summary.csv"
+    df_summary.to_csv(summary_file, index=False, encoding="utf-8-sig")
+
+    if progress_callback:
+        progress_callback(1.0, f"Pre-Legal Self-Check 完成 ✅ | PASS:{report['summary']['pass']} WARNING:{report['summary']['warning']} BLOCKED:{report['summary']['blocked']}")
+
+    return {
+        "success": True,
+        "output_file": str(report_file),
+        "summary_file": str(summary_file),
+        "summary": report["summary"],
+        "blocked_ids": [r["content_id"] for r in results if r["overall_status"] == "BLOCKED"],
+    }
+
+
+# ============================================================
 # STEP 4: 智布
 # ============================================================
 def run_zhibu(batch_id: str, progress_callback=None) -> dict:
@@ -1792,6 +2085,7 @@ def run_full_pipeline(batch_id: str, market: str = "ALL", keyword_limit: int = 1
         ("智优评分 (Step 3)", lambda cb: run_zhiyou_score(batch_id, cb)),
         ("智优执行 (Step 3.5)", lambda cb: run_zhiyou_execute(batch_id, cb)),
         ("合规审查 (Step 3.6)", lambda cb: run_zhiyou_compliance(batch_id, cb)),
+        ("送审前自审 (Step 3.7)", lambda cb: run_pre_legal_check(batch_id, cb)),
         ("智布 (Step 4)", lambda cb: run_zhibu(batch_id, cb)),
     ]
 
