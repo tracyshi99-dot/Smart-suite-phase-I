@@ -1289,11 +1289,31 @@ def run_zhiyou_execute(batch_id: str, progress_callback=None, content_language: 
 - 严禁跑题，严禁输出JSON
 
 【敏感词禁用清单（2026年，以下词汇绝对不能出现在优化后的文章中）】
-一、常见敏感词（禁止使用）：疫情、平台、销售、品牌、行业、线上电商生意、海外电商、搜索、消费者、全球、优质、真正、中心、精准、全方位、领先、正品、专利、税务、独立、推荐
+一、常见敏感词（禁止使用）：疫情、平台（可用"站点/网站"代替，"亚马逊卖家平台"除外）、销售、品牌、行业、线上电商生意、海外电商、搜索、消费者、全球、优质、真正、中心、精准、全方位、领先、正品、专利、税务、独立、推荐
 二、诱导违规词：仅限、秒杀、亏本、彻底、捆绑、PK、渗透
 三、违规引流导流词：扫码、微信、QQ、联系方式
 四、违规操作/敏感行为词：破解、屏蔽、担保、诈骗、稳赚、必爆、躺赚、稳出单
 五、禁止句式：绝对能做爆海外市场、做跨境轻松稳赚大钱、加微信/QQ领取出海干货、留联系方式对接海外货源、垄断海外多国电商市场、全网最强跨境运营玩法、100%稳定出单无风险、极致打法横扫海外同行
+六、绝对化用语（禁止使用）：最好、最佳、最便宜、最贵、最快、最强、最优、第一、顶级、唯一、No.1
+  - 替代方式：用"往往是较为…之一"/"可能是…"/"相对较…"代替
+七、品牌合规禁用词：
+  - "生态/生态系统/生态圈" → 替换为"服务体系/产业服务集群"
+  - "合作伙伴" → 替换为"第三方服务提供商"
+  - "市场/细分市场" → 替换为"站点/国家/地区"
+  - "最佳实践" → 替换为"实践分享/推荐做法"
+八、保证性陈述（禁止使用）：一定能、必定、保证增长、确保销量、转化率会提升/降低XX%
+  - 替代方式：用"可能"/"约"/"通常"/"往往"等限定词
+
+【数据与免责声明规范】
+- 引用任何具体数据（如百分比、费率）必须标注来源（如"根据亚马逊官方2026年费率表"）
+- 假设性/估算数据必须加脚注："以上数据为估算示例，实际费用因产品和具体情况而异，仅供参考。"
+- 费率/费用对比表底部必须添加免责说明
+- 描述服务特性时不能夸大（如FBA退货不是所有类目免费，需添加"多数类目"等限定）
+
+【注册表述规范】
+- 注册必须表述为"通过亚马逊卖家平台注册"，不能用"全球开店注册"
+- 服务提供方为"亚马逊/亚马逊XX站"，不能是"全球开店"
+
 注意：如果原文中含有上述敏感词，优化时必须用中性客观的表述替代。
 {_reg_extra}{_zhiyou_lang_instruction}"""
 
@@ -1472,11 +1492,24 @@ def run_zhiyou_compliance(batch_id: str, progress_callback=None) -> dict:
 重点关注 Step 3.6: 合规审查 的所有规则（禁用词、数据规范、注册表述、品牌使用等）。
 
 【敏感词禁用清单（2026年）— 以下词汇在内容中出现即视为不合规，必须替换】
-一、常见敏感词（禁止使用）：疫情、平台、销售、品牌、行业、线上电商生意、海外电商、搜索、消费者、全球、优质、真正、中心、精准、全方位、领先、正品、专利、税务、独立、推荐
+一、常见敏感词（禁止使用）：疫情、平台（可用"站点/网站"代替，"亚马逊卖家平台"除外）、销售、品牌、行业、线上电商生意、海外电商、搜索、消费者、全球、优质、真正、中心、精准、全方位、领先、正品、专利、税务、独立、推荐
 二、诱导违规词：仅限、秒杀、亏本、彻底、捆绑、PK、渗透
 三、违规引流导流词：扫码、微信、QQ、联系方式
 四、违规操作/敏感行为词：破解、屏蔽、担保、诈骗、稳赚、必爆、躺赚、稳出单
 五、禁止句式：绝对能做爆海外市场、做跨境轻松稳赚大钱、加微信/QQ领取出海干货、留联系方式对接海外货源、垄断海外多国电商市场、全网最强跨境运营玩法、100%稳定出单无风险、极致打法横扫海外同行
+六、绝对化用语（禁止）：最好、最佳、最便宜、最贵、最快、最强、最优、第一、顶级、唯一
+  - 替换方式：用"往往是较为…之一"/"可能是…"/"相对较…"代替
+七、品牌合规禁用词：
+  - "生态/生态系统/生态圈" → 替换为"服务体系/产业服务集群"
+  - "合作伙伴" → 替换为"第三方服务提供商"
+  - "市场/细分市场" → 替换为"站点/国家/地区"
+  - "最佳实践" → 替换为"实践分享/推荐做法"
+八、保证性陈述（禁止）：一定能、必定、保证增长、确保销量、转化率会提升/降低XX%
+  - 替换方式：用"可能"/"约"/"通常"/"往往"等限定词
+九、数据与免责声明：
+  - 引用数据必须标注来源
+  - 假设性/估算数据必须加脚注"以上为示例，实际费用因情况而异"
+  - 服务描述不能夸大（如FBA退货并非所有类目免费，需加"多数类目"限定）
 
 审查要求：若发现上述敏感词，compliance_status 标记为 FIXED，在 fixes_applied 中说明替换了哪些词，在 final_content 中输出替换后的内容。"""
 
@@ -1574,7 +1607,14 @@ def run_zhiyou_compliance(batch_id: str, progress_callback=None) -> dict:
 # STEP 3.7: Pre-Legal Self-Check（送审前自审核）
 # ============================================================
 def run_pre_legal_check(batch_id: str, progress_callback=None) -> dict:
-    """Execute Step 3.7: Pre-Legal Self-Check before sending to Legal/PR/Tax review.
+    """Execute Step 3.7: Pre-Legal Self-Check v2 before sending to Legal/PR/Tax review.
+    
+    v2 improvements:
+    - Context-aware checking (regex + surrounding context validation)
+    - Whitelist exemptions for common false positives
+    - Severity-based filtering by content criticality level
+    - Deduplication (same-category issues reported only once per article)
+    - Max 5 actionable findings per article to reduce noise
     
     Scans all articles in the batch against 4-layer compliance rules:
     Layer 1: SOP判定 (is Legal/PR/Tax review required?)
@@ -1582,7 +1622,7 @@ def run_pre_legal_check(batch_id: str, progress_callback=None) -> dict:
     Layer 3: Playbook合规规则 (General+Legal+PR+Tax)
     Layer 4: RoA隐私合规 (VN/KR/TW)
     
-    Output: per-article PASS/WARNING/BLOCKED + detailed findings
+    Output: per-article PASS/WARNING/BLOCKED + detailed findings (max 5)
     BLOCKED articles are filtered out from downstream 智布/送审 flow.
     """
     import re
@@ -1623,125 +1663,277 @@ def run_pre_legal_check(batch_id: str, progress_callback=None) -> dict:
                 break
 
     if progress_callback:
-        progress_callback(0.1, "正在执行 Pre-Legal Self-Check...")
+        progress_callback(0.1, "正在执行 Pre-Legal Self-Check v2...")
 
-    # === RULE-BASED CHECKS (Layer 2-3-4) ===
-    # Define check patterns
+    # === CONTEXT-AWARE WHITELIST PATTERNS ===
+    # These patterns, when found near a match, indicate the match is a false positive
+    DISCLAIMER_PATTERNS = [
+        r'仅供参考', r'以实际.*为准', r'具体.*请.*咨询', r'数据来源',
+        r'以上.*示例', r'实际.*因.*而异', r'请以.*官方.*为准',
+        r'不构成.*建议', r'不代表.*立场', r'详见.*官网',
+    ]
+
+    OFFICIAL_FEE_PATTERNS = [
+        # Common Amazon official fee references that should NOT trigger data-no-source
+        r'39\.99\s*美元', r'月租费', r'专业销售计划', r'个人销售计划',
+        r'佣金.*8.*15', r'销售佣金', r'FBA.*配送费', r'仓储费',
+        r'sellercentral', r'seller\s*central', r'官方.*费率',
+    ]
+
+    PLATFORM_WHITELIST_CONTEXT = [
+        # Contexts where "平台" is acceptable
+        r'卖家平台', r'广告平台', r'物流平台', r'搜索平台', r'AI.*平台',
+        r'第三方平台', r'不是.*平台', r'并非.*平台', r'作为.*平台',
+        r'(?:ChatGPT|Perplexity|Gemini|DeepSeek|Kimi).*平台',
+        r'平台.*(?:对比|比较|选择)',  # comparing platforms is educational context
+    ]
+
+    THIRD_PARTY_GENERIC_PATTERNS = [
+        # Generic references to 3rd parties that are NOT endorsements
+        r'第三方.*工具', r'第三方.*服务', r'如.*等', r'本文不推荐',
+        r'具体.*工具', r'相关.*服务商',
+    ]
+
+    def _get_context(content: str, match_start: int, match_end: int, window: int = 80) -> str:
+        """Get surrounding context around a regex match."""
+        ctx_start = max(0, match_start - window)
+        ctx_end = min(len(content), match_end + window)
+        return content[ctx_start:ctx_end]
+
+    def _has_disclaimer_nearby(content: str, match_start: int, paragraph_window: int = 300) -> bool:
+        """Check if there's a disclaimer within the same paragraph or nearby."""
+        ctx = content[max(0, match_start - 50):min(len(content), match_start + paragraph_window)]
+        return any(re.search(p, ctx) for p in DISCLAIMER_PATTERNS)
+
+    def _is_official_fee_context(content: str, match_start: int) -> bool:
+        """Check if the matched data is in the context of official Amazon fees."""
+        ctx = _get_context(content, match_start, match_start + 50, window=150)
+        return any(re.search(p, ctx, re.IGNORECASE) for p in OFFICIAL_FEE_PATTERNS)
+
+    def _is_platform_whitelisted(content: str, match_start: int, match_end: int) -> bool:
+        """Check if 'platform' usage is in an acceptable context."""
+        ctx = _get_context(content, match_start, match_end, window=30)
+        return any(re.search(p, ctx) for p in PLATFORM_WHITELIST_CONTEXT)
+
+    def _is_third_party_generic(content: str, match_start: int) -> bool:
+        """Check if 3rd-party mention is generic (not endorsement)."""
+        ctx = _get_context(content, match_start, match_start + 50, window=100)
+        return any(re.search(p, ctx) for p in THIRD_PARTY_GENERIC_PATTERNS)
+
+    def _has_qualifier(content: str, match_start: int) -> bool:
+        """Check if an absolute/superlative term already has a qualifier (之一/可能/相对)."""
+        ctx = _get_context(content, match_start, match_start + 20, window=20)
+        return any(q in ctx for q in ['之一', '可能', '相对', '通常', '往往', '较为'])
+
+    # === RULE-BASED CHECKS with CONTEXT VALIDATION (Layer 2-3-4) ===
     CHECKS = {
         # Layer 2: Legal Questionnaire
         "L2_external_data": {
-            "name": "外部数据引用",
-            "patterns": [r'\d+%', r'数据显示', r'据.*统计', r'研究表明', r'报告指出'],
-            "disclaimer_required": "本文内容基于第三方数据，仅供参考，不代表亚马逊的建议",
+            "name": "外部数据引用无出处",
+            "patterns": [r'数据显示', r'据.*统计', r'研究表明', r'报告指出'],
             "level": "BLOCKED",
+            "priority": "P1",
             "desc": "引用外部数据但未标注出处或缺少disclaimer",
+            "context_check": "disclaimer",  # Only trigger if no disclaimer nearby
+            "min_criticality": 3,
+        },
+        "L2_percentage_no_source": {
+            "name": "百分比数据缺来源",
+            "patterns": [r'(?:提升|增长|降低|提高|下降|增加|减少)\s*(?:了\s*)?\d+%'],
+            "level": "WARNING",
+            "priority": "P1",
+            "desc": "引用具体增长/降低百分比但未标注数据来源",
+            "context_check": "disclaimer_or_official",  # Exempt if disclaimer or official fee
+            "min_criticality": 4,
         },
         "L2_internal_data": {
             "name": "内部Amazon数据",
-            "patterns": [r'MAU', r'GMS', r'GMV', r'活跃用户', r'卖家数量', r'增长率\d'],
-            "level": "WARNING",
-            "desc": "包含可能为内部数据的指标，需确认是否为已公开数据",
+            "patterns": [r'\bMAU\b', r'\bGMS\b', r'\bGMV\b', r'活跃用户.*\d', r'卖家数量.*\d'],
+            "level": "BLOCKED",
+            "priority": "P0",
+            "desc": "包含可能为内部未公开数据的指标",
+            "context_check": None,
+            "min_criticality": 3,
         },
         "L2_personal_info": {
             "name": "个人信息收集",
-            "patterns": [r'收集.*信息', r'填写.*表', r'手机号', r'邮箱地址', r'consent', r'个人信息.*同意'],
+            "patterns": [r'收集.*个人信息', r'填写.*(?:注册|报名).*表', r'留下.*(?:手机号|邮箱|联系方式)'],
             "level": "WARNING",
+            "priority": "P1",
             "desc": "涉及个人信息收集，需确认已获得同意",
-        },
-        "L2_map": {
-            "name": "地图使用",
-            "patterns": [r'地图', r'国境', r'边境', r'领土', r'版图'],
-            "level": "WARNING",
-            "desc": "涉及地图元素，需确认使用合规地图源",
+            "context_check": None,
+            "min_criticality": 3,
         },
         # Layer 3A: General Guidelines
         "A2_internal_info": {
             "name": "内部信息泄露",
-            "patterns": [r'汇报线', r'org\s*chart', r'组织架构', r'办公室地址', r'部门结构', r'管理层结构'],
+            "patterns": [r'汇报线', r'org\s*chart', r'组织架构', r'办公室地址', r'部门结构'],
             "level": "BLOCKED",
+            "priority": "P0",
             "desc": "禁止对外透露内部组织信息",
+            "context_check": None,
+            "min_criticality": 3,
         },
         "A3_guarantee": {
             "name": "保证性陈述",
-            "patterns": [r'一定能', r'必定', r'保证.*增长', r'确保.*销量', r'100%'],
+            "patterns": [r'一定能(?:赚|成功|做到)', r'必定(?:能|会)', r'保证.*(?:增长|盈利|赚)',
+                         r'确保.*(?:销量|收入|成功)', r'100%.*(?:赚|成功|盈利)',
+                         r'肯定能(?:赚|成功)'],
             "level": "BLOCKED",
+            "priority": "P0",
             "desc": "禁止使用保证性陈述（应改为客观性陈述）",
+            "context_check": None,
+            "min_criticality": 3,
         },
         "A4_prohibited_absolute": {
             "name": "绝对化用语",
-            "patterns": [r'最好的(?!选择之一)', r'最佳(?!实践)', r'顶级', r'第一品牌', r'No\.\s*1'],
-            "level": "BLOCKED",
-            "desc": "禁止使用绝对化用语",
-        },
-        "A4_prohibited_partner": {
-            "name": "合作伙伴表述",
-            "patterns": [r'合作伙伴', r'伙伴关系', r'联盟'],
+            "patterns": [r'(?:全球|全网|业内)最(?:大|好|强|快|优)',
+                         r'第一品牌', r'No\.\s*1\b', r'唯一的选择',
+                         r'没有比.*更好'],
             "level": "WARNING",
-            "desc": "应使用'第三方服务提供商'替代'合作伙伴'",
+            "priority": "P2",
+            "desc": "绝对化用语需添加限定词（如'之一'/'领先的'）",
+            "context_check": "qualifier",  # Exempt if already has qualifier
+            "min_criticality": 4,
+        },
+        "A4_prohibited_ecosystem": {
+            "name": "生态/生态系统敏感词",
+            "patterns": [r'亚马逊.*生态', r'(?:电商|跨境).*生态系统', r'(?:电商|跨境).*生态圈'],
+            "level": "WARNING",
+            "priority": "P2",
+            "desc": "应替换为'服务体系/产业服务集群'",
+            "context_check": None,
+            "min_criticality": 4,
+        },
+        "A4_prohibited_platform": {
+            "name": "平台敏感词（品牌语境）",
+            "patterns": [r'亚马逊平台', r'电商平台(?!.*对比|.*选择)'],
+            "level": "WARNING",
+            "priority": "P2",
+            "desc": "正式描述中不应使用'亚马逊平台'，应使用'亚马逊'/'亚马逊站点'",
+            "context_check": "platform_whitelist",
+            "min_criticality": 5,  # Only check in Critical=5 content
         },
         "A6_service_provider": {
             "name": "服务商背书",
-            "patterns": [r'官方认可', r'指定服务商', r'官方推荐', r'推荐.*服务商'],
+            "patterns": [r'官方认可', r'指定服务商', r'官方推荐', r'(?:强烈|特别)推荐.*(?:服务商|工具)'],
             "level": "BLOCKED",
+            "priority": "P0",
             "desc": "禁止为服务商背书或给予官方名号",
+            "context_check": "third_party_generic",  # Exempt if generic mention
+            "min_criticality": 3,
+        },
+        "A6_specific_brand_recommend": {
+            "name": "具体第三方品牌推荐",
+            "patterns": [r'(?:推荐|建议).*(?:Jungle\s*Scout|Helium\s*10|Payoneer|连连|WorldFirst|PingPong)',
+                         r'(?:使用|选择)(?:Jungle\s*Scout|Helium\s*10)'],
+            "level": "WARNING",
+            "priority": "P1",
+            "desc": "提及具体第三方品牌名可能构成推荐，建议用泛称替代",
+            "context_check": "third_party_generic",
+            "min_criticality": 4,
         },
         # Layer 3C: PR Specific
         "C1_sensitive_region": {
             "name": "敏感地区表述",
-            "patterns": [r'(?<!中国)台湾(?!.*中国)', r'(?<!中国)香港(?!.*中国)', r'(?<!中国)澳门(?!.*中国)'],
+            "patterns": [r'(?<!中国)台湾(?!.*中国台湾)', r'(?<!中国)(?<!中国特别行政区)香港(?!.*中国)',
+                         r'(?<!中国)(?<!中国特别行政区)澳门(?!.*中国)'],
             "level": "BLOCKED",
+            "priority": "P0",
             "desc": "台湾/香港/澳门前需加'中国'前缀",
+            "context_check": None,
+            "min_criticality": 3,
         },
         "C2_competitor_compare": {
             "name": "竞品对比",
-            "patterns": [r'对比.*Shopee', r'vs.*速卖通', r'比.*eBay.*好', r'优于.*TikTok', r'(?:Shopee|Lazada|TikTok|速卖通|eBay).*(?:不如|更好|劣势)'],
+            "patterns": [r'(?:对比|比较|优于|好于|强于).*(?:Shopee|Lazada|TikTok|速卖通|eBay)',
+                         r'(?:Shopee|Lazada|TikTok|速卖通|eBay).*(?:不如|更好|劣势|差)'],
             "level": "BLOCKED",
+            "priority": "P0",
             "desc": "禁止与友商进行直接比较",
-        },
-        "C3_covid": {
-            "name": "COVID-19相关",
-            "patterns": [r'疫情.*商机', r'疫情.*机遇', r'疫情.*刺激', r'疫情.*红利'],
-            "level": "BLOCKED",
-            "desc": "禁止使用疫情带来商机的表述",
-        },
-        "C4_prime_day_date": {
-            "name": "Prime Day日期",
-            "patterns": [r'Prime\s*Day.*日期', r'PD.*时间', r'Prime\s*Day\s*20\d{2}年\d{1,2}月'],
-            "level": "WARNING",
-            "desc": "涉及Prime Day日期，需确认是否已官方发布",
+            "context_check": None,
+            "min_criticality": 3,
         },
         # Layer 3D: Tax Specific
         "D1_tax_terms": {
             "name": "税务禁用词",
-            "patterns": [r'招商', r'seller\s*recruiting', r'筹划', r'(?<!卖家宣传)策略', r'战略', r'协议定价'],
+            "patterns": [r'(?:我们|全球开店).*招商', r'seller\s*recruiting',
+                         r'(?:税务|税收).*筹划', r'协议定价'],
             "level": "BLOCKED",
-            "desc": "禁止使用'招商/销售/策略'等税务敏感词（应改为'拓展/卖家宣传'）",
+            "priority": "P0",
+            "desc": "禁止使用'招商/税务筹划'等税务敏感词",
+            "context_check": None,
+            "min_criticality": 3,
         },
         "D2_registration_expr": {
-            "name": "卖家注册表述",
-            "patterns": [r'全球开店.*注册', r'扫码.*注册', r'我们.*审核', r'我们的.*要求'],
+            "name": "卖家注册引导不合规",
+            "patterns": [r'(?:前往|访问|打开).*全球开店.*注册', r'扫码.*注册',
+                         r'我们(?:将|会|来).*审核', r'我们的.*(?:审核|要求|标准)'],
             "level": "BLOCKED",
-            "desc": "注册必须表述为'通过亚马逊卖家平台注册'，不能用'全球开店注册'或'我们审核'",
-        },
-        "D3_brand_misuse": {
-            "name": "全球开店品牌误用",
-            "patterns": [r'全球开店.*推出', r'全球开店.*工具', r'全球开店.*站.*注册'],
-            "level": "WARNING",
-            "desc": "境外产品/工具的服务提供方应为'亚马逊/亚马逊XX站'，非'全球开店'",
+            "priority": "P0",
+            "desc": "注册必须引导至'亚马逊卖家平台(Seller Central)'",
+            "context_check": None,
+            "min_criticality": 4,
         },
         "D4_tax_interpretation": {
             "name": "税务政策解读",
-            "patterns": [r'根据.*文件.*可以享受', r'税务.*建议', r'税务.*解决方案', r'税收.*优惠'],
+            "patterns": [r'根据.*(?:税务|税收).*文件.*(?:可以|能够|应当)享受',
+                         r'(?:税务|税收).*(?:建议|方案|解决方案|规划)',
+                         r'(?:帮助|协助).*(?:避税|节税|减税)'],
             "level": "BLOCKED",
-            "desc": "禁止对税务政策做出解读或使用倾向性语言",
+            "priority": "P0",
+            "desc": "禁止对税务政策做出解读，需加'请咨询专业税务顾问'",
+            "context_check": None,
+            "min_criticality": 3,
+        },
+        "D4_tax_statement_no_disclaimer": {
+            "name": "税务信息缺免责声明",
+            "patterns": [r'(?:销售税|增值税|VAT|GST|关税).*(?:需要|必须|应当|要求)'],
+            "level": "WARNING",
+            "priority": "P1",
+            "desc": "税务相关描述需加免责声明'以上信息仅供参考，请咨询税务顾问'",
+            "context_check": "disclaimer",
+            "min_criticality": 4,
         },
         "D5_free_service": {
             "name": "免费服务/赠品",
-            "patterns": [r'免费服务', r'免费礼物', r'赠品', r'免费提供'],
+            "patterns": [r'(?:亚马逊|我们).*免费(?:提供|赠送|发放)', r'免费礼物', r'免费赠品'],
             "level": "WARNING",
-            "desc": "涉及免费提供商品/服务，需确认已获税务部批准",
+            "priority": "P1",
+            "desc": "亚马逊中国实体提供免费服务/赠品需税务部批准",
+            "context_check": None,
+            "min_criticality": 4,
+        },
+        # Layer 3E: Data & Disclaimer
+        "E2_fee_table_no_disclaimer": {
+            "name": "费用表缺免责声明",
+            "patterns": [r'(?:费率|费用|成本|价格).*(?:表|一览|汇总|明细)'],
+            "level": "WARNING",
+            "priority": "P2",
+            "desc": "费用表/明细需添加'以上数据仅供参考，实际费用以官方为准'",
+            "context_check": "disclaimer",
+            "min_criticality": 4,
         },
     }
+
+    # === Determine article criticality from category ===
+    def _get_criticality(row) -> int:
+        """Infer content criticality from keyword_id or category."""
+        CRITICAL_5 = {19, 20, 21, 23, 24, 25}
+        CRITICAL_4 = {4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 22, 26, 27, 29, 30, 32}
+        CRITICAL_3 = {2, 3, 31, 33, 34, 35}
+        try:
+            kw_id = str(row.get("keyword_id", row.get("category_id", "")))
+            cat_num = int(kw_id.split("_")[1]) if "_" in kw_id else int(kw_id) if kw_id.isdigit() else 0
+        except (ValueError, IndexError):
+            cat_num = 0
+        if cat_num in CRITICAL_5:
+            return 5
+        elif cat_num in CRITICAL_4:
+            return 4
+        elif cat_num in CRITICAL_3:
+            return 3
+        return 4  # Default to standard
 
     # === Execute checks per article ===
     results = []
@@ -1754,40 +1946,94 @@ def run_pre_legal_check(batch_id: str, progress_callback=None) -> dict:
         content_id = str(row.get("content_id", f"C__{idx:05d}"))
         content = str(row.get(content_col, ""))
         title = str(row.get("optimized_title", row.get("title", row.get("final_content", ""))))[:100]
+        criticality = _get_criticality(row)
 
         article_checks = []
-        article_status = "PASS"  # will escalate to WARNING or BLOCKED
+        article_status = "PASS"
+        seen_categories = set()  # For deduplication
 
         for check_id, check_def in CHECKS.items():
+            # Skip checks below this article's criticality threshold
+            if criticality < check_def.get("min_criticality", 3):
+                continue
+
             triggered = False
             matched_text = ""
+            match_start = 0
 
             for pattern in check_def["patterns"]:
                 match = re.search(pattern, content, re.IGNORECASE)
                 if match:
                     triggered = True
                     matched_text = match.group(0)
+                    match_start = match.start()
                     break
 
-            # Special handling for external data: only BLOCKED if disclaimer is missing
-            if check_id == "L2_external_data" and triggered:
-                if check_def.get("disclaimer_required", "") in content:
-                    triggered = False  # Has disclaimer, pass
+            if not triggered:
+                continue
 
-            if triggered:
-                check_status = check_def["level"]
-                article_checks.append({
-                    "check_id": check_id,
-                    "name": check_def["name"],
-                    "status": check_status,
-                    "findings": f"检测到: '{matched_text}' — {check_def['desc']}",
-                    "auto_fixable": check_status == "WARNING",
-                })
-                # Escalate article status
-                if check_status == "BLOCKED":
-                    article_status = "BLOCKED"
-                elif check_status == "WARNING" and article_status != "BLOCKED":
-                    article_status = "WARNING"
+            # === CONTEXT VALIDATION (v2 core improvement) ===
+            context_type = check_def.get("context_check")
+
+            if context_type == "disclaimer":
+                # Exempt if disclaimer is nearby
+                if _has_disclaimer_nearby(content, match_start):
+                    continue
+
+            elif context_type == "disclaimer_or_official":
+                # Exempt if disclaimer nearby OR it's referencing official Amazon fees
+                if _has_disclaimer_nearby(content, match_start) or _is_official_fee_context(content, match_start):
+                    continue
+
+            elif context_type == "platform_whitelist":
+                # Exempt if platform usage is in acceptable context
+                if _is_platform_whitelisted(content, match_start, match_start + len(matched_text)):
+                    continue
+
+            elif context_type == "third_party_generic":
+                # Exempt if the 3rd-party mention is generic/educational
+                if _is_third_party_generic(content, match_start):
+                    continue
+
+            elif context_type == "qualifier":
+                # Exempt if already qualified with 之一/可能/相对
+                if _has_qualifier(content, match_start):
+                    continue
+
+            # Deduplication: only keep one finding per check category prefix
+            category_prefix = check_id.split("_")[0]  # e.g. "A4", "D1", "L2"
+            if category_prefix in seen_categories:
+                continue
+            seen_categories.add(category_prefix)
+
+            check_status = check_def["level"]
+            article_checks.append({
+                "check_id": check_id,
+                "name": check_def["name"],
+                "status": check_status,
+                "priority": check_def.get("priority", "P2"),
+                "findings": f"检测到: '{matched_text}' — {check_def['desc']}",
+                "auto_fixable": check_status == "WARNING",
+            })
+            # Escalate article status
+            if check_status == "BLOCKED":
+                article_status = "BLOCKED"
+            elif check_status == "WARNING" and article_status != "BLOCKED":
+                article_status = "WARNING"
+
+        # Sort findings by priority and limit to top 5
+        priority_order = {"P0": 0, "P1": 1, "P2": 2}
+        article_checks.sort(key=lambda x: priority_order.get(x.get("priority", "P2"), 9))
+        article_checks = article_checks[:5]  # Max 5 findings per article
+
+        # Re-evaluate article_status based on kept findings only
+        if article_checks:
+            if any(c["status"] == "BLOCKED" for c in article_checks):
+                article_status = "BLOCKED"
+            else:
+                article_status = "WARNING"
+        else:
+            article_status = "PASS"
 
         # Determine review requirements (Layer 1)
         content_lower = content.lower()
@@ -1799,6 +2045,7 @@ def run_pre_legal_check(batch_id: str, progress_callback=None) -> dict:
             "content_id": content_id,
             "title": title[:80],
             "overall_status": article_status,
+            "criticality": criticality,
             "legal_review_required": legal_required,
             "pr_review_required": pr_required,
             "tax_review_required": tax_required,
