@@ -793,7 +793,11 @@ def chat_stream(req: ChatRequest):
             article = call_bedrock_claude(content_prompt)
 
             if article and len(article) > 200:
-                result_text = f"✅ 已为短语「{target_phrase}」按智造标准生成内容：\n\n{article}\n\n---\n💡 你可以说"评分"让我打分，或说"合规检查"让我审核。"
+                result_text = (
+                    f"✅ 已为短语「{target_phrase}」按智造标准生成内容：\n\n"
+                    f"{article}\n\n---\n"
+                    f"💡 你可以说「评分」让我打分，或说「合规检查」让我审核。"
+                )
                 return {"content": result_text, "role": "assistant"}
             else:
                 return {"content": f"内容生成失败，请重试。目标短语：{target_phrase}", "role": "assistant"}
