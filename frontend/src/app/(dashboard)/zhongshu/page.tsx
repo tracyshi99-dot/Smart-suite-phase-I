@@ -95,44 +95,118 @@ export default function ZhongshuPage() {
             <PipelineFlow steps={steps} />
           </GlassCard>
 
-          {/* Batch Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {steps.map((step) => (
-              <GlassCard key={step.id} padding="sm" glow={step.status === "active"}>
-                <p className="text-xs text-[var(--text-secondary)]">{step.label}</p>
-                <p className="text-lg font-bold mt-1">
-                  {step.status === "complete" ? (
-                    <span className="text-[var(--success)]">✓</span>
-                  ) : step.status === "active" ? (
-                    <span className="text-[var(--accent)]">●</span>
-                  ) : (
-                    <span className="text-[var(--text-muted)]">○</span>
-                  )}
-                </p>
-                {step.fileCount !== undefined && (
-                  <p className="text-xs text-[var(--text-muted)] mt-1">{step.fileCount} files</p>
-                )}
-              </GlassCard>
-            ))}
-          </div>
-
-          {/* Batch Summary */}
+          {/* Input Summary - from Excel 3.1.GEO Input table */}
           <GlassCard>
             <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-3">
-              {isZh ? "批次概览" : "Batch Summary"} — {activeBatch}
+              {isZh ? "GEO Input 总览 (YTD Jun)" : "GEO Input Summary (YTD Jun)"}
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+              <div>
+                <p className="text-xs text-[var(--text-muted)]">{isZh ? "提示词总数" : "Total Phrases"}</p>
+                <p className="text-xl font-bold text-[var(--accent)]">646</p>
+                <p className="text-[10px] text-[var(--text-muted)]">{isZh ? "品牌487 + 行业159" : "Brand 487 + Industry 159"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-[var(--text-muted)]">{isZh ? "品牌提及数" : "Brand Mentions"}</p>
+                <p className="text-xl font-bold text-[var(--success)]">1,948</p>
+                <p className="text-[10px] text-[var(--text-muted)]">{isZh ? "7平台×487词" : "7 platforms × 487 phrases"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-[var(--text-muted)]">{isZh ? "链接提及数" : "Link Mentions"}</p>
+                <p className="text-xl font-bold text-[var(--warning)]">1,108</p>
+                <p className="text-[10px] text-[var(--text-muted)]">{isZh ? "提及率 56.88%" : "Rate 56.88%"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-[var(--text-muted)]">{isZh ? "新建内容" : "New Content"}</p>
+                <p className="text-xl font-bold">648</p>
+                <p className="text-[10px] text-[var(--text-muted)]">YTD</p>
+              </div>
+            </div>
+          </GlassCard>
+
+          {/* Monthly Input Trend */}
+          <GlassCard>
+            <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-3">
+              {isZh ? "月度 Input 进度" : "Monthly Input Progress"}
+            </h2>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-[var(--border-glass)]">
+                    <th className="px-2 py-1 text-left">{isZh ? "指标" : "Metric"}</th>
+                    <th className="px-2 py-1 text-center">Jan</th>
+                    <th className="px-2 py-1 text-center">Feb</th>
+                    <th className="px-2 py-1 text-center">Mar</th>
+                    <th className="px-2 py-1 text-center">Apr</th>
+                    <th className="px-2 py-1 text-center">May</th>
+                    <th className="px-2 py-1 text-center">Jun</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { metric: isZh ? "提示词#" : "Phrases#", vals: [297, 297, 297, 397, 564, 646] },
+                    { metric: isZh ? "品牌提及#" : "Brand Mentions#", vals: [1188, 1188, 1188, 1588, 1860, 1948] },
+                    { metric: isZh ? "链接提及#" : "Link Mentions#", vals: [582, 635, 719, 852, 1019, 1108] },
+                    { metric: isZh ? "链接提及率" : "Link Rate", vals: ["49.0%", "53.5%", "60.5%", "53.7%", "54.8%", "56.9%"] },
+                    { metric: isZh ? "新建内容#" : "New Content#", vals: [98, 43, 118, 123, 135, 131] },
+                    { metric: isZh ? "旧内容优化#" : "Optimized#", vals: [26, 12, 0, 1, 0, "—"] },
+                  ].map((row) => (
+                    <tr key={row.metric} className="border-b border-[var(--border-glass)]/30">
+                      <td className="px-2 py-1 font-medium">{row.metric}</td>
+                      {row.vals.map((v, i) => (
+                        <td key={i} className="px-2 py-1 text-center font-mono">{v}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </GlassCard>
+
+          {/* Platform Link Rate Breakdown */}
+          <GlassCard>
+            <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-3">
+              {isZh ? "各平台链接提及率 (Jun)" : "Platform Link Rate (Jun)"}
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {[
+                { name: isZh ? "元宝" : "Yuanbao", rate: "75.4%", count: 367 },
+                { name: "DeepSeek", rate: "66.7%", count: 325 },
+                { name: isZh ? "千问" : "Qianwen", rate: "66.9%", count: 326 },
+                { name: isZh ? "豆包" : "Doubao", rate: "56.9%", count: 277 },
+                { name: "Kimi", rate: "53.4%", count: 260 },
+                { name: "Gemini", rate: "44.8%", count: 218 },
+                { name: "ChatGPT", rate: "28.5%", count: 139 },
+              ].map((p) => (
+                <div key={p.name} className="p-2 rounded-lg bg-white/5 border border-[var(--border-glass)]/30 text-center">
+                  <p className="text-xs font-medium text-[var(--text-primary)]">{p.name}</p>
+                  <p className="text-sm font-bold text-[var(--accent)] mt-1">{p.rate}</p>
+                  <p className="text-[10px] text-[var(--text-muted)]">{p.count} {isZh ? "条" : "links"}</p>
+                </div>
+              ))}
+            </div>
+          </GlassCard>
+
+          {/* Industry Keywords Status */}
+          <GlassCard>
+            <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-3">
+              {isZh ? "行业词进展 (May→Jun)" : "Industry Keywords (May→Jun)"}
             </h2>
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
-                <p className="text-xs text-[var(--text-muted)]">{isZh ? "总短语" : "Total Phrases"}</p>
-                <p className="text-xl font-bold text-[var(--accent)]">{batchStats.phrases}</p>
+                <p className="text-xs text-[var(--text-muted)]">{isZh ? "行业提示词" : "Industry Phrases"}</p>
+                <p className="text-xl font-bold text-[var(--accent)]">159</p>
+                <p className="text-[10px] text-[var(--text-muted)]">May: 98 → Jun: 159</p>
               </div>
               <div>
-                <p className="text-xs text-[var(--text-muted)]">{isZh ? "已选中" : "Selected"}</p>
-                <p className="text-xl font-bold text-[var(--success)]">{batchStats.selected}</p>
+                <p className="text-xs text-[var(--text-muted)]">{isZh ? "行业词提及#" : "Industry Mentions"}</p>
+                <p className="text-xl font-bold text-[var(--success)]">414</p>
+                <p className="text-[10px] text-[var(--text-muted)]">May: 51 → Jun: 414</p>
               </div>
               <div>
-                <p className="text-xs text-[var(--text-muted)]">{isZh ? "已生成内容" : "Articles"}</p>
-                <p className="text-xl font-bold">{batchStats.articles}</p>
+                <p className="text-xs text-[var(--text-muted)]">{isZh ? "行业词提及率" : "Industry Rate"}</p>
+                <p className="text-xl font-bold text-[var(--warning)]">37.2%</p>
+                <p className="text-[10px] text-[var(--text-muted)]">May: 7.4% → Jun: 37.2%</p>
               </div>
             </div>
           </GlassCard>
