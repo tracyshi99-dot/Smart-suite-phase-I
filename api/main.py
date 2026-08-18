@@ -835,7 +835,7 @@ Rule 7 投入产出滞后: 发布2-3周无提升? → ChatGPT 28.5%链接率需�
 
         # === 5. ZHICE (Coverage Test) ===
         if wants_zhice:
-            return {"content": "智测功能需要实际调用 AI 平台 API 进行搜索验证。请前往智测页面执行，或提供具体短语我帮你分析该如何测试。\n\n💡 你也可以说"执行智造 [短语]"先生成内容，再到智测页面验证覆盖。", "role": "assistant"}
+            return {"content": "智测功能需要实际调用 AI 平台 API 进行搜索验证。请前往智测页面执行，或提供具体短语我帮你分析该如何测试。\n\n💡 你也可以说「执行智造 [短语]」先生成内容，再到智测页面验证覆盖。", "role": "assistant"}
 
         # === 6. PHRASE GENERATION (智库) ===
         if wants_phrases:
