@@ -3,20 +3,38 @@
  * Source: -GEOSEO- (1).xlsx
  */
 
-// Sheet 1: GEO MAU — AI Platform Monthly Active Users (万)
+// Sheet 1: AI Platform Visits — 月访问量 (万), split by Total / Mobile(APP) / PC(Website)
 export const GEO_MAU = {
   CN: [
     { platform: "DeepSeek", Jan: 29900, Feb: 61500, Mar: 72261, Apr: 49400, May: 60358, Jun: 51795, desc: "国产算力，低成本API，20-35岁男性为主" },
+    { platform: "  Mobile", Jan: 0, Feb: 0, Mar: 19361, Apr: 0, May: 16858, Jun: 16295, desc: "" },
+    { platform: "  PC", Jan: 29900, Feb: 61500, Mar: 52900, Apr: 49400, May: 43500, Jun: 35500, desc: "" },
     { platform: "豆包", Jan: 11629, Feb: 4400, Mar: 16897, Apr: 5406, May: 18755, Jun: 19652, desc: "字节旗下，高互动娱乐学习，APP为主" },
+    { platform: "  Mobile", Jan: 8209, Feb: 0, Mar: 11597, Apr: 0, May: 13089, Jun: 14052, desc: "" },
+    { platform: "  PC", Jan: 3420, Feb: 4400, Mar: 5300, Apr: 5406, May: 5666, Jun: 5600, desc: "" },
     { platform: "元宝", Jan: 432, Feb: 1352, Mar: 8019, Apr: 2901, May: 4527, Jun: 4680, desc: "腾讯AI助手，微信生态，公众号优先" },
+    { platform: "  Mobile", Jan: 275, Feb: 0, Mar: 4164, Apr: 0, May: 2256, Jun: 2480, desc: "" },
+    { platform: "  PC", Jan: 157, Feb: 1352, Mar: 3855, Apr: 2901, May: 2271, Jun: 2200, desc: "" },
     { platform: "Kimi", Jan: 3268, Feb: 4280, Mar: 6030, Apr: 3306, May: 3255, Jun: 306, desc: "长文本处理，PC网页端，22-40岁高学历" },
+    { platform: "  Mobile", Jan: 0, Feb: 0, Mar: 1830, Apr: 0, May: 1408, Jun: 0, desc: "" },
+    { platform: "  PC", Jan: 3268, Feb: 4280, Mar: 4200, Apr: 3306, May: 1847, Jun: 306, desc: "" },
     { platform: "文小言", Jan: 1413, Feb: 1414, Mar: 2109, Apr: 1088, May: 824, Jun: 1218, desc: "百度AI，高时效性，政策更新" },
+    { platform: "  Mobile", Jan: 0, Feb: 0, Mar: 887, Apr: 0, May: 0, Jun: 594, desc: "" },
+    { platform: "  PC", Jan: 1413, Feb: 1185, Mar: 1222, Apr: 1088, May: 824, Jun: 624, desc: "" },
     { platform: "千问", Jan: 816, Feb: 937, Mar: 1000, Apr: 585, May: 83, Jun: 355, desc: "阿里开源，技术文档，FAQ结构化" },
+    { platform: "  Mobile", Jan: 0, Feb: 0, Mar: 0, Apr: 0, May: 0, Jun: 284, desc: "" },
+    { platform: "  PC", Jan: 816, Feb: 937, Mar: 1000, Apr: 585, May: 83, Jun: 71, desc: "" },
   ],
   WW: [
     { platform: "ChatGPT", Jan: 0, Feb: 0, Mar: 0, Apr: 549300, May: 498800, Jun: 572000, desc: "全球最大AI，高质量结构化内容" },
+    { platform: "  Mobile", Jan: 0, Feb: 0, Mar: 0, Apr: 0, May: 0, Jun: 99549, desc: "" },
+    { platform: "  PC", Jan: 0, Feb: 0, Mar: 0, Apr: 0, May: 0, Jun: 556000, desc: "" },
     { platform: "Gemini", Jan: 0, Feb: 0, Mar: 0, Apr: 1319, May: 70000, Jun: 70400, desc: "Google生态，多模态，Android深度集成" },
+    { platform: "  Mobile", Jan: 0, Feb: 0, Mar: 0, Apr: 0, May: 0, Jun: 16274, desc: "" },
+    { platform: "  PC", Jan: 0, Feb: 0, Mar: 0, Apr: 0, May: 0, Jun: 295000, desc: "" },
     { platform: "Grok", Jan: 0, Feb: 0, Mar: 0, Apr: 0, May: 0, Jun: 0, desc: "X/Twitter旗下，实时热搜解读" },
+    { platform: "  Mobile", Jan: 0, Feb: 0, Mar: 0, Apr: 0, May: 0, Jun: 6788, desc: "" },
+    { platform: "  PC", Jan: 0, Feb: 0, Mar: 0, Apr: 0, May: 0, Jun: 22078, desc: "" },
   ],
 };
 

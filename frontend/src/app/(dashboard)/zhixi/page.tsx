@@ -214,7 +214,7 @@ export default function ZhixiPage() {
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-[var(--border-glass)] overflow-x-auto">
-        {([["output","📊 Output"],["monthly","📅 Monthly"],["input","📝 Input"],["citation","🔍 Citation"],["mau","🌐 MAU"],["sources","📡 信源"],["phrases","🔎 短语详情"]] as [string,string][]).map(([k,l])=>(
+        {([["output","📊 Output"],["monthly","📅 Monthly"],["input","📝 Input"],["citation","🔍 Citation"],["mau","🌐 Visits"],["sources","📡 信源"],["phrases","🔎 短语详情"]] as [string,string][]).map(([k,l])=>(
           <button key={k} onClick={()=>setTab(k as typeof tab)} className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors whitespace-nowrap ${tab===k?"border-[var(--accent)] text-[var(--accent)]":"border-transparent text-[var(--text-muted)]"}`}>{l}</button>
         ))}
       </div>
@@ -427,17 +427,17 @@ export default function ZhixiPage() {
       {/* ===== TAB: GEO MAU ===== */}
       {tab === "mau" && (<>
         <GlassCard padding="sm">
-          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">AI Platform MAU — 国内 (万)</h2>
+          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">AI Platform Visits — 国内 月访问量 (万)</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-xs"><thead><tr className="border-b border-[var(--border-glass)]"><th className="px-2 py-1 text-left">Platform</th><th className="px-2 py-1 text-center">Jan</th><th className="px-2 py-1 text-center">Feb</th><th className="px-2 py-1 text-center">Mar</th><th className="px-2 py-1 text-center">Apr</th><th className="px-2 py-1 text-center">May</th><th className="px-2 py-1 text-center">Jun</th><th className="px-2 py-1 text-left text-[var(--text-muted)]">说明</th></tr></thead>
-            <tbody>{GEO_MAU.CN.map(r=>(<tr key={r.platform} className="border-b border-[var(--border-glass)]/30"><td className="px-2 py-1 font-medium">{r.platform}</td><td className="px-2 py-1 text-center font-mono">{(r.Jan/10000).toFixed(1)}万</td><td className="px-2 py-1 text-center font-mono">{(r.Feb/10000).toFixed(1)}万</td><td className="px-2 py-1 text-center font-mono">{(r.Mar/10000).toFixed(1)}万</td><td className="px-2 py-1 text-center font-mono">{(r.Apr/10000).toFixed(1)}万</td><td className="px-2 py-1 text-center font-mono">{(r.May/10000).toFixed(1)}万</td><td className="px-2 py-1 text-center font-mono">{(r.Jun/10000).toFixed(1)}万</td><td className="px-2 py-1 text-[10px] text-[var(--text-muted)] max-w-[150px] truncate">{r.desc}</td></tr>))}</tbody></table>
+            <tbody>{GEO_MAU.CN.map((r,i)=>{const isSub=r.platform.startsWith("  ");return(<tr key={`cn-${i}`} className={`border-b border-[var(--border-glass)]/30 ${isSub?"text-[var(--text-muted)]":""}`}><td className={`px-2 py-1 ${isSub?"pl-5 text-[11px]":"font-medium"}`}>{r.platform}</td><td className="px-2 py-1 text-center font-mono">{r.Jan>0?(r.Jan/10000).toFixed(1)+"万":"—"}</td><td className="px-2 py-1 text-center font-mono">{r.Feb>0?(r.Feb/10000).toFixed(1)+"万":"—"}</td><td className="px-2 py-1 text-center font-mono">{r.Mar>0?(r.Mar/10000).toFixed(1)+"万":"—"}</td><td className="px-2 py-1 text-center font-mono">{r.Apr>0?(r.Apr/10000).toFixed(1)+"万":"—"}</td><td className="px-2 py-1 text-center font-mono">{r.May>0?(r.May/10000).toFixed(1)+"万":"—"}</td><td className="px-2 py-1 text-center font-mono">{r.Jun>0?(r.Jun/10000).toFixed(1)+"万":"—"}</td><td className="px-2 py-1 text-[10px] text-[var(--text-muted)] max-w-[150px] truncate">{r.desc}</td></tr>)})}</tbody></table>
           </div>
         </GlassCard>
         <GlassCard padding="sm">
-          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">AI Platform MAU — 海外</h2>
+          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-2">AI Platform Visits — 海外 月访问量 (万)</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-xs"><thead><tr className="border-b border-[var(--border-glass)]"><th className="px-2 py-1 text-left">Platform</th><th className="px-2 py-1 text-center">Apr</th><th className="px-2 py-1 text-center">May</th><th className="px-2 py-1 text-center">Jun</th><th className="px-2 py-1 text-left text-[var(--text-muted)]">说明</th></tr></thead>
-            <tbody>{GEO_MAU.WW.map(r=>(<tr key={r.platform} className="border-b border-[var(--border-glass)]/30"><td className="px-2 py-1 font-medium">{r.platform}</td><td className="px-2 py-1 text-center font-mono">{r.Apr>0?(r.Apr/10000).toFixed(1)+"万":"—"}</td><td className="px-2 py-1 text-center font-mono">{r.May>0?(r.May/10000).toFixed(1)+"万":"—"}</td><td className="px-2 py-1 text-center font-mono">{r.Jun>0?(r.Jun/10000).toFixed(1)+"万":"—"}</td><td className="px-2 py-1 text-[10px] text-[var(--text-muted)]">{r.desc}</td></tr>))}</tbody></table>
+            <tbody>{GEO_MAU.WW.map((r,i)=>{const isSub=r.platform.startsWith("  ");return(<tr key={`ww-${i}`} className={`border-b border-[var(--border-glass)]/30 ${isSub?"text-[var(--text-muted)]":""}`}><td className={`px-2 py-1 ${isSub?"pl-5 text-[11px]":"font-medium"}`}>{r.platform}</td><td className="px-2 py-1 text-center font-mono">{r.Apr>0?(r.Apr/10000).toFixed(1)+"万":"—"}</td><td className="px-2 py-1 text-center font-mono">{r.May>0?(r.May/10000).toFixed(1)+"万":"—"}</td><td className="px-2 py-1 text-center font-mono">{r.Jun>0?(r.Jun/10000).toFixed(1)+"万":"—"}</td><td className="px-2 py-1 text-[10px] text-[var(--text-muted)]">{r.desc}</td></tr>)})}</tbody></table>
           </div>
         </GlassCard>
         <GlassCard padding="sm">
