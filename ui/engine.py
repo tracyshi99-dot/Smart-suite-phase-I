@@ -800,6 +800,15 @@ Output rules:
 
 Stay strictly on topic. Every paragraph must relate directly to the search query.
 
+DATA & CITATION RULES (violating any = content rejected):
+1. ❌ NEVER fabricate reports/data: Do NOT use "according to Amazon's 20XX report" or "statistics show" unless the report is explicitly provided in the [Official Data Reference] section above
+2. ❌ NEVER invent percentages: Do NOT claim "increases by XX%" or "reduces XX%" without a verifiable source
+3. ❌ NEVER use absolute superlatives: Do NOT say "the largest", "the best", "the most" — even with "one of" you need data to back it up
+4. ✅ When describing fees/commissions, only cite publicly available Seller Central rates, and note "actual fees may vary per Seller Central"
+5. ✅ When giving examples, use hypothetical framing: "For example, if a product is priced at $25..." NOT "According to reports, average costs are..."
+6. ❌ NEVER name specific third-party brands: Do NOT write Apple/Nike/Samsung — use "a well-known electronics brand" etc.
+7. ❌ NEVER interpret tax/legal regulations: Only quote official text + add "please consult a professional tax advisor"
+
 PROHIBITED WORDS AND PHRASES (must NEVER appear in your output):
 - Misleading/exaggerated terms: guaranteed profit, easy money, zero risk, 100% stable orders, monopolize market, strongest strategy, crush competitors
 - Inducing violations: flash kill only, loss sale, bundled, penetrate, PK
@@ -822,6 +831,15 @@ PROHIBITED WORDS AND PHRASES (must NEVER appear in your output):
 - 不提及竞品（Shopee/Lazada/TikTok）
 
 严禁跑题。文章每一段都必须和检索短语直接相关。
+
+【数据与引用铁律 — 违反任何一条视为不合格】
+1. ❌ 绝对禁止编造报告/数据：不得使用"根据亚马逊XX年XX报告"、"据XX统计"等表述，除非该报告在【官方数据参考】中明确提供
+2. ❌ 禁止捏造百分比：不得使用"提升XX%"、"降低XX%"、"避开XX%的坑"等具体百分比，除非有明确数据来源
+3. ❌ 禁止使用绝对化用语：不得说"全球最大"、"流量最大"、"力度最大"、"最XX的"，即使加了"之一"也需有数据支撑
+4. ✅ 如需描述费率/佣金，只能引用 Seller Central 公开可查的标准费率，并标注"以卖家平台实际显示为准"
+5. ✅ 如需举例说明，使用假设性表述："假设一件售价$25的商品…"而非"根据报告，平均费用为…"
+6. ❌ 禁止提及具体第三方品牌名：不得直接写 Apple/Nike/Samsung 等品牌名，用"某知名电子品牌"等泛称代替
+7. ❌ 禁止对税务/法规做解读：税务信息只能引用官方原文+注明"请咨询专业税务顾问"
 
 【敏感词禁用清单（2026年，以下词汇绝对不能出现在文章中）】
 一、常见敏感词（禁止使用）：疫情、平台、销售、品牌、行业、线上电商生意、海外电商、搜索、消费者、全球、优质、真正、中心、精准、全方位、领先、正品、专利、税务、独立、推荐
