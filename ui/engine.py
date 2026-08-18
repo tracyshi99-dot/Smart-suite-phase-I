@@ -1509,6 +1509,19 @@ def run_zhiyou_compliance(batch_id: str, progress_callback=None) -> dict:
 
 重点关注 Step 3.6: 合规审查 的所有规则（禁用词、数据规范、注册表述、品牌使用等）。
 
+【最高优先级：虚假数据/报告检测 — 发现即 FIXED】
+❗ AI 生成的内容极易编造不存在的报告和数据。请重点排查以下模式并自动修正：
+1. "根据亚马逊XX年XX报告/白皮书/数据" — 除非引用的是 Seller Central 公开费率页面，否则该报告大概率不存在 → 删除整句或改为"根据亚马逊卖家平台公开信息"
+2. "据统计/研究表明/报告指出 + 具体数字%" — 无法验证的统计数据 → 删除具体数字，改为定性描述（如"显著提升"）
+3. "平均占售价的XX%至XX%" — 除非是已知的标准佣金费率（如8%-15%），否则视为编造 → 改为"具体费率因品类而异，详见卖家平台费率页面"
+4. "超过X万个/X千个卖家/账号因XXX被关闭/封号" — 内部执法数据不可对外引用 → 删除整句或改为"违规卖家可能面临账号限制"
+5. "根据XX机构XX年数据，罚款平均为X万美元" — 改为"可能面临相关法规的处罚"
+6. "避开/解决/降低XX%的常见问题/风险/坑" — 无根据的百分比 → 删除百分比，改为"有效避免多数常见问题"
+7. "全球最大/流量最大/力度最大/增速最快" — 绝对化表述 → 改为"领先的/较大的/主要的"
+8. 具体第三方品牌名(Apple/Nike/Samsung等)在举例语境 → 改为"某知名XX品牌"
+
+每检测到一条，在 fixes_applied 中标注修正了什么。
+
 【敏感词禁用清单（2026年）— 以下词汇在内容中出现即视为不合规，必须替换】
 一、常见敏感词（禁止使用）：疫情、平台（可用"站点/网站"代替，"亚马逊卖家平台"除外）、销售、品牌、行业、线上电商生意、海外电商、搜索、消费者、全球、优质、真正、中心、精准、全方位、领先、正品、专利、税务、独立、推荐
 二、诱导违规词：仅限、秒杀、亏本、彻底、捆绑、PK、渗透
@@ -1748,20 +1761,34 @@ def run_pre_legal_check(batch_id: str, progress_callback=None) -> dict:
         # Layer 2: Legal Questionnaire
         "L2_external_data": {
             "name": "外部数据引用无出处",
-            "patterns": [r'数据显示', r'据.*统计', r'研究表明', r'报告指出'],
+            "patterns": [r'数据显示', r'据.*统计', r'研究表明', r'报告指出',
+                         r'根据.*\d{4}年.*(?:报告|白皮书|数据|调查)',
+                         r'根据.*(?:绩效报告|物流费用报告|合规报告|执法数据)',
+                         r'据.*(?:机构|委员会|协会).*数据'],
             "level": "BLOCKED",
-            "priority": "P1",
-            "desc": "引用外部数据但未标注出处或缺少disclaimer",
+            "priority": "P0",
+            "desc": "引用可能不存在的报告/数据（AI hallucination高风险）",
             "context_check": "disclaimer",  # Only trigger if no disclaimer nearby
             "min_criticality": 3,
         },
+        "L2_fabricated_percentage": {
+            "name": "无根据百分比声明",
+            "patterns": [r'(?:避开|解决|降低|避免)\s*\d+%\s*(?:的|常见|风险|问题|坑)',
+                         r'(?:提升|增长|提高|增加)\s*(?:了\s*)?\d+%(?!.*(?:来源|数据|参考|Seller Central))',
+                         r'平均(?:占|为|达到?).*\d+%\s*(?:至|到|-)\s*\d+%'],
+            "level": "WARNING",
+            "priority": "P1",
+            "desc": "使用了无法验证的百分比数据，需标注来源或改为定性描述",
+            "context_check": "disclaimer_or_official",
+            "min_criticality": 3,
+        },
         "L2_percentage_no_source": {
-            "name": "百分比数据缺来源",
-            "patterns": [r'(?:提升|增长|降低|提高|下降|增加|减少)\s*(?:了\s*)?\d+%'],
+            "name": "增长/降低数据缺来源",
+            "patterns": [r'(?:同比|环比|年均).*(?:增长|下降|提升|降低)\s*\d+%'],
             "level": "WARNING",
             "priority": "P1",
             "desc": "引用具体增长/降低百分比但未标注数据来源",
-            "context_check": "disclaimer_or_official",  # Exempt if disclaimer or official fee
+            "context_check": "disclaimer_or_official",
             "min_criticality": 4,
         },
         "L2_internal_data": {
@@ -1807,12 +1834,15 @@ def run_pre_legal_check(batch_id: str, progress_callback=None) -> dict:
             "name": "绝对化用语",
             "patterns": [r'(?:全球|全网|业内)最(?:大|好|强|快|优)',
                          r'第一品牌', r'No\.\s*1\b', r'唯一的选择',
-                         r'没有比.*更好'],
+                         r'没有比.*更好',
+                         r'流量最(?:大|高|多)',
+                         r'(?:打击|执行|监管)力度(?:全球|业内)?最(?:大|强)',
+                         r'(?:增速|增长|发展)最(?:快|猛)'],
             "level": "WARNING",
-            "priority": "P2",
-            "desc": "绝对化用语需添加限定词（如'之一'/'领先的'）",
+            "priority": "P1",
+            "desc": "绝对化用语需删除或改为'领先的/主要的/较大的'",
             "context_check": "qualifier",  # Exempt if already has qualifier
-            "min_criticality": 4,
+            "min_criticality": 3,
         },
         "A4_prohibited_ecosystem": {
             "name": "生态/生态系统敏感词",
