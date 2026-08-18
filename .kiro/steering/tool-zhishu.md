@@ -2,107 +2,249 @@
 inclusion: manual
 ---
 
-# 智中枢 Workflow Orchestrator
+# 智中枢 — Smart Suite Decision Engine & Orchestrator
 
-## Overview
-Central orchestration hub that connects 智库→智造→智优→智布→智析 into a complete E2E pipeline. Built-in 7-rule decision engine automatically generates weekly action plans based on performance data.
+## 定位
 
-## Quick Start
+智中枢是 Smart Suite 的**大脑和调度中心**，负责：
+1. **决策** — 基于智析数据，自动判断"本周该做什么"
+2. **编排** — 协调各智模块的执行顺序和资源分配
+3. **监控** — 追踪执行进度，确保闭环
 
-| Command | Action |
-|---------|--------|
-| "智中枢决策 WK25" | Generate weekly decision plan |
-| "本周该做什么" | Same as above (Chinese trigger) |
-| "全流程执行 batch_004" | Run full pipeline Steps 1→5 |
-| "智中枢 Gap 分析" | Identify content gaps |
-
-## 7 Decision Rules
-
-### Rule 1: Growth Acceleration
 ```
-IF channel WoW > +30% for 2+ consecutive weeks
-→ Increase content production for that channel
-ACTION: Run 智库 + 智造, +5 keywords next batch
-PRIORITY: High
+数据输入（智析）→ 规则引擎（智中枢）→ 执行计划 → 各模块执行 → 结果回流智析
 ```
 
-### Rule 2: Decline Alert
+---
+
+## 触发命令
+
+| 命令 | 动作 |
+|------|------|
+| "智中枢决策 WK[XX]" | 生成本周决策计划 |
+| "本周该做什么" | 同上（中文触发） |
+| "全流程执行 batch_XXX" | 执行完整 Pipeline |
+| "Gap 分析" | 识别内容缺口 |
+| "词池健康检查" | 检查短语覆盖率和分布 |
+| "投入产出分析" | 分析 Input→Output 归因 |
+
+---
+
+## 7 条决策规则
+
+### Rule 1: 增长加速 (Growth Acceleration)
+
 ```
-IF channel WoW < -20%
-→ Pause new content, investigate cause
-ACTION: Generate attribution analysis
-PRIORITY: High
+触发: 渠道 WoW > +30% 连续 2 周以上
+判断: 策略有效，应加大投入
+动作:
+  - 智库: 该渠道 +5 关键词
+  - 智造: 优先生产该渠道内容
+  - 智布: 加快发布节奏
+优先级: 🟢 HIGH
+示例: CN GEO WK19→WK20 +24%，WK20→WK21 +35% → 触发加速
 ```
 
-### Rule 3: Low Absolute Volume
+### Rule 2: 下降预警 (Decline Alert)
+
 ```
-IF GEO weekly < 50 AND YoY > +50%
-→ Strategy working but scale small, expand coverage
-ACTION: Run 智库 to expand keyword list
-PRIORITY: Medium
+触发: 渠道 WoW < -20%
+判断: 异常下降，暂停生产，排查原因
+动作:
+  - 暂停该渠道新内容生产
+  - 智测: 重新跑一轮覆盖检测
+  - 智析: 生成归因分析（内容质量？AI引擎变化？季节性？）
+  - 输出排查报告给负责人
+优先级: 🔴 HIGH
+排除: 已知节假日效应（春节/国庆前后 2 周）
 ```
 
-### Rule 4: High-Performing Site Expansion
-```
-IF site YoY > +100%
-→ Prioritize content expansion for that site
-ACTION: Allocate 30%+ keywords to that site
-PRIORITY: High
-```
+### Rule 3: 低量高增 (Low Volume, High Growth)
 
-### Rule 5: Content Gap Detection
 ```
-IF market has traffic but no content produced in 2 weeks
-→ Pipeline stalled, restart production
-ACTION: Run full pipeline for that market
-PRIORITY: Medium
+触发: GEO weekly < 50 AND YoY > +50%
+判断: 策略对了但规模太小，需扩覆盖
+动作:
+  - 智库: 扩展关键词池（+10 短语）
+  - 智预: 推演该渠道下一步搜索需求
+  - 目标: 4 周内 weekly 突破 100
+优先级: 🟡 MEDIUM
 ```
 
-### Rule 6: Benchmark Comparison
-```
-IF our YoY < SSR benchmark YoY
-→ Underperforming, strategy review needed
-ACTION: Generate gap analysis, new keyword angles
-PRIORITY: Critical
+### Rule 4: 高增站点扩张 (High-Performing Site Expansion)
 
-BPS Formula: (Our YoY% - SSR YoY%) × 100
-Current YTD: +65% vs -19% = +84 ppts = +8,400 bps
-Target: Maintain positive BPS every month
-Alert: If weekly BPS < 0 for 2+ consecutive weeks → Escalate
 ```
-
-### Rule 7: Input-Output Lag Check
-```
-IF content published 2-3 weeks ago AND no GEO/Direct lift
-→ Content may not be indexed by AI engines
-ACTION: Review quality scores, consider rewrite
-PRIORITY: Medium
+触发: 某站点 YoY > +100%
+判断: 该站点 AI 渗透加速，应集中资源
+动作:
+  - 智库: 该站点关键词占比提升到 30%+
+  - 智造: 优先生产该站点内容
+  - 智测: 每周验证该站点覆盖率
+优先级: 🟢 HIGH
+示例: JP Direct YoY +103% → 加大 JP 内容投入
 ```
 
-## Output Format
+### Rule 5: 内容缺口 (Content Gap)
+
 ```
-📋 Smart Suite Weekly Plan - WK[XX]
-
-🟢 ACCELERATE:
-- [Channel]: [Reason] → [Action]
-
-🔴 INVESTIGATE:
-- [Channel]: [Reason] → [Action]
-
-📝 EXECUTION PLAN:
-- 智库: [X] keywords for [Market]
-- 智造: [X] articles targeting [Topic]
-- 智优: Review [X] articles
-- 智布: Publish [X] articles
-
-⏰ ESTIMATED TIME: [X] hours
+触发: 某市场有流量但 2 周无新内容发布
+判断: 产线停滞，需重启
+动作:
+  - 诊断瓶颈在哪个环节（智库没词？智造卡住？智优不通过？）
+  - 重启该市场全流程
+  - 设置 48h 内完成首篇发布的 deadline
+优先级: 🟡 MEDIUM
 ```
 
-## Full Pipeline Execution Order
-1. 智库 (query generation) → Review output
-2. 智造 (content creation) → Review output
-3. 智优评分 (scoring) → Review scores
-4. 智优执行 (rewrite) → Review optimized content
-5. 合规审查 (compliance) → Review compliance status
-6. 智布 (JSON formatting) → Verify JSON
-7. Batch Report (summary) → Done
+### Rule 6: 大盘对标 (Benchmark Comparison)
+
+```
+触发: 我方 YoY < SSR 大盘 YoY（连续 2 周）
+判断: 跑输大盘，需策略复盘
+动作:
+  - 智析: 输出 BPS（Basis Points）差值趋势
+  - 召开策略复盘会
+  - 智中枢: 生成新方向建议
+优先级: 🔴 CRITICAL
+
+BPS 公式: (Our YoY% - SSR YoY%) × 100
+当前 YTD: +55% vs -23% = +78 ppts = +7,800 bps ✅
+警戒线: 周度 BPS < 0 连续 2 周 → 立即升级
+```
+
+### Rule 7: 投入产出滞后 (Input-Output Lag)
+
+```
+触发: 内容发布 2-3 周后无 GEO/Direct 提升
+判断: 内容可能未被 AI 引擎收录
+动作:
+  - 智测: 验证该内容是否被引用
+  - 智优: 如未被引用，检查质量评分
+  - 如评分 < 4.0 → 智优重写
+  - 如评分 ≥ 4.0 但未引用 → 检查信源分布（是否发布在正确平台）
+优先级: 🟡 MEDIUM
+```
+
+---
+
+## 决策输出格式
+
+```markdown
+# 📋 Smart Suite Weekly Plan — WK[XX]
+
+## 📊 本周数据快照
+- GEO+Direct Total: [X] (WoW [+/-X%])
+- CN GEO: [X] | WW GEO: [X] | WW Direct: [X]
+- vs 大盘 BPS: [+/-X ppts]
+
+## 🟢 ACCELERATE（加速）
+- [渠道]: [数据依据] → [具体动作]
+
+## 🟡 MONITOR（监控）
+- [渠道]: [数据依据] → [观察指标]
+
+## 🔴 INVESTIGATE（排查）
+- [渠道]: [数据依据] → [排查动作]
+
+## 📝 本周执行计划
+| 模块 | 任务 | 数量 | 市场 | 优先级 |
+|------|------|------|------|--------|
+| 智库 | 新增关键词 | X 条 | CN/NA/EU/JP | HIGH |
+| 智造 | 生产内容 | X 篇 | 品牌×Y + 行业×Z | HIGH |
+| 智优 | 审核优化 | X 篇 | — | MEDIUM |
+| 智布 | 发布内容 | X 篇 | LEGO CMS | HIGH |
+| 智测 | 覆盖验证 | X 短语 | 全平台 | LOW |
+| 智析 | 数据更新 | 周报 | — | ROUTINE |
+
+## ⏰ 预估耗时: X 小时
+## 🎯 本周 KPI 目标
+- 品牌链接提及率 > X%
+- 行业链接提及率 > X%
+- 总短语数 → X+
+- GEO+Direct weekly > X
+```
+
+---
+
+## 全流程编排顺序
+
+```
+┌─────────────────────────────────────────────────────┐
+│  智中枢决策（WK计划）                                  │
+├─────────────────────────────────────────────────────┤
+│                                                      │
+│  1. 智库 → 生成/扩展检索短语                           │
+│     ↓                                                │
+│  2. 智测 → 验证短语在 AI 平台的覆盖                     │
+│     ↓                                                │
+│  3. 智造 → 针对 Gap 生产内容                           │
+│     ↓                                                │
+│  4. 智优 → 评分 + 重写 + 合规                          │
+│     ↓                                                │
+│  5. 智布 → JSON 格式化 + 发布                          │
+│     ↓                                                │
+│  6. 智析 → 追踪效果（2-3 周后回流）                     │
+│     ↓                                                │
+│  7. 智中枢 → 下一周决策（闭环）                         │
+│                                                      │
+│  ┌──────────────┐                                    │
+│  │ 并行模块      │                                    │
+│  │ • 智预（预测） │ → 预测短语喂给智库                   │
+│  │ • 智传（分发） │ ← 智布输出送分发                    │
+│  └──────────────┘                                    │
+└─────────────────────────────────────────────────────┘
+```
+
+### 执行原则
+
+1. **数据驱动** — 所有决策必须基于智析数据，不靠直觉
+2. **闭环验证** — 每个动作都要有可衡量的结果指标
+3. **优先级排序** — 资源有限时，按 CRITICAL > HIGH > MEDIUM > LOW 排序
+4. **止损机制** — Rule 2 触发时立即暂停，不再盲目投入
+5. **滞后容忍** — 内容发布到被 AI 引用通常有 2-3 周滞后，Rule 7 不要过早触发
+
+---
+
+## 与其他模块的数据接口
+
+| 模块 | 智中枢读取 | 智中枢输出 |
+|------|-----------|-----------|
+| 智库 | 当前短语数、覆盖率 | 新增短语目标、市场分配 |
+| 智测 | 覆盖检测结果、Gap 列表 | 验证任务指令 |
+| 智造 | 待生产队列、knowledge_gap 标记 | 生产计划、优先级排序 |
+| 智优 | 评分分布、通过率、合规状态 | 重写任务、质量阈值 |
+| 智布 | 发布队列、发布状态 | 发布优先级 |
+| 智析 | 周度/月度 Output 数据、YoY、WoW | — (只读) |
+| 智预 | 预测短语列表 | 验证任务分配给智测 |
+
+---
+
+## 自动化执行（Cron）
+
+智中枢支持自动化定时执行：
+
+```
+# 每周一 9:00 自动生成决策计划
+schedule: "0 9 * * 1"
+action: 智中枢决策 WK{current_week}
+
+# 每周三 检查发布状态
+schedule: "0 14 * * 3"
+action: 发布进度检查
+
+# 每周五 更新周度数据
+schedule: "0 16 * * 5"
+action: 智析周度更新
+```
+
+---
+
+## 异常处理
+
+| 异常 | 处理 |
+|------|------|
+| 智造 knowledge_gap > 30% | 暂停该批次，先补充知识库 |
+| 智优通过率 < 60% | 检查智造 prompt 是否需要调整 |
+| 智布发布失败 | 重试 1 次，仍失败则人工介入 |
+| 连续 2 周无数据更新 | 告警给 Admin |
+| Rule 2 + Rule 6 同时触发 | 升级为 P0，48h 内完成策略调整 |
