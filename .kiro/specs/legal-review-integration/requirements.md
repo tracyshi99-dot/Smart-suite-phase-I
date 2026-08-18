@@ -76,6 +76,13 @@
 
 ---
 
+## 设计决策
+
+- **唯一审核源**: 官方 Legal Chatbot（QuickSight Space 中的 Amazon Q），不自建替代方案
+- **全自动要求**: 如果 API 可用，实现全自动；如果 API 不可用，实现最小人工介入的半自动流程
+
+---
+
 ## 优先级
 
 | 阶段 | 内容 | 优先级 |
@@ -83,5 +90,14 @@
 | P0 | 确认 Amazon Q API 可调用性 | 🔴 Blocker |
 | P1 | 智优 → Legal 提交流程 | 高 |
 | P1 | Legal 结果解析 + 状态流转 | 高 |
-| P2 | 自动修改循环 | 中 |
+| P2 | 自动修改循环（智优根据建议修正后重提交） | 中 |
 | P3 | 前端审核状态可视化 | 低 |
+
+---
+
+## 下一步行动
+
+用户需要确认：
+1. 打开 AWS Console → Amazon Q → 查看是否存在 Q Business Application（有 = 有 API）
+2. 或打开 Bedrock → Agents → 查看是否有 Legal Agent（有 = 有 API）
+3. 如果都没有 → 只能半自动（智优生成审核 prompt → 用户手动提交 → 粘贴结果回来）
