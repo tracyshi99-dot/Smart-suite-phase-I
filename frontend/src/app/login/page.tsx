@@ -34,14 +34,22 @@ export default function LoginPage() {
   const { login } = useAuthStore();
   const { setLocale } = useI18nStore();
   const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [applyName, setApplyName] = useState("");
   const [applySuccess, setApplySuccess] = useState(false);
 
+  const APP_PASSWORD = "GEO123456";
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username) return;
+
+    if (password !== APP_PASSWORD) {
+      setError("密码错误 / Incorrect password");
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -87,24 +95,36 @@ export default function LoginPage() {
               htmlFor="username"
               className="block text-sm text-[var(--text-secondary)] mb-1.5"
             >
-              Login Name
+              用户名 / Login Name
             </label>
-            <input
+            <select
               id="username"
-              type="text"
-              list="user-list"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter or select your login name"
               className="w-full border border-[var(--border-card)] rounded-lg px-4 py-2.5 text-[var(--text-primary)] bg-white focus:outline-none focus:border-[var(--accent)] transition-colors"
-              autoFocus
-              autoComplete="off"
-            />
-            <datalist id="user-list">
+            >
+              <option value="">— 请选择用户名 / Select user —</option>
               {ALLOWED_USERS.map((u) => (
-                <option key={u} value={u} />
+                <option key={u} value={u}>{u}</option>
               ))}
-            </datalist>
+            </select>
+          </div>
+
+          <div>
+            <label
+              htmlFor="password"
+              className="block text-sm text-[var(--text-secondary)] mb-1.5"
+            >
+              密码 / Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="请输入密码"
+              className="w-full border border-[var(--border-card)] rounded-lg px-4 py-2.5 text-[var(--text-primary)] bg-white focus:outline-none focus:border-[var(--accent)] transition-colors"
+            />
           </div>
 
           {error && (
@@ -118,7 +138,7 @@ export default function LoginPage() {
             className="w-full"
             size="lg"
             loading={loading}
-            disabled={!username}
+            disabled={!username || !password}
           >
             Login
           </Button>

@@ -34,17 +34,14 @@ export default function DashboardLayout({
   useEffect(() => {
     if (isPublicPage) return; // Skip auth check for public pages
 
-    const timer = setTimeout(() => {
-      if (!isAuthenticated) {
-        router.replace("/login");
-        return;
-      }
-      if (isSessionExpired()) {
-        logout();
-        router.replace("/login");
-      }
-    }, 100);
-    return () => clearTimeout(timer);
+    if (!isAuthenticated) {
+      router.replace("/login");
+      return;
+    }
+    if (isSessionExpired()) {
+      logout();
+      router.replace("/login");
+    }
   }, [isAuthenticated, isSessionExpired, logout, router, isPublicPage]);
 
   // Track user activity for session timeout

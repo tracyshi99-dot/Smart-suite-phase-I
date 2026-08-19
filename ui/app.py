@@ -88,6 +88,11 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# --- Login Gate ---
+# Password is defined in .streamlit/secrets.toml [app] password = "xxx"
+# The actual login UI is shown inline when user clicks a tool page (not overview)
+_APP_PASSWORD = st.secrets.get("app", {}).get("password", "")
+
 # --- Custom CSS (Premium UI) ---
 st.markdown("""
 <style>
@@ -1251,6 +1256,7 @@ with st.sidebar:
         with st.expander(f"{role_label}: **{current_user}**", expanded=False):
             if st.button("🚪 Sign out", key="logout_btn", use_container_width=True):
                 st.session_state["app_user"] = ""
+                st.session_state["password_ok"] = False
                 st.rerun()
 
     if DEMO_MODE:
@@ -1463,33 +1469,43 @@ elif not current_user:
 
     col_login_l, col_login_m, col_login_r = st.columns([1, 2, 1])
     with col_login_m:
-        login_options = [t("ui.select")] + [u for u in ALLOWED_USERS if u not in ["admin", "yujiashi"]]
+        login_options = [t("ui.select")] + sorted([u for u in ALLOWED_USERS if u not in ["admin", "yujiashi"]]) + ["📝 申请注册 / Apply for access"]
         login_choice = st.selectbox("Login", login_options, key="main_login_select", label_visibility="collapsed")
-        if st.button("🔓 " + (t("ui.login")), type="primary", use_container_width=True, key="main_login_btn"):
-            if login_choice and login_choice != "— 请选择 —" and login_choice != "— Select —":
-                st.session_state["app_user"] = login_choice.lower()
-                st.rerun()
+        _pw_input_main = st.text_input("密码 / Password", type="password", placeholder="请输入密码",
+                                       key="_pw_main_gate", label_visibility="collapsed")
 
-        # Apply for access
-        st.divider()
-        st.caption(t("ui.no_access"))
-        apply_name = st.text_input(t("ui.apply_login_name"), key="apply_login", placeholder="输入您想申请的登录名")
-        if st.button("📨 " + (t("ui.apply_for_access")), key="apply_btn", use_container_width=True):
-            if apply_name:
-                _users_file = BASE_PATH / "output" / "users.json"
-                _users_file.parent.mkdir(parents=True, exist_ok=True)
-                if _users_file.exists():
-                    ud = json.loads(_users_file.read_text(encoding="utf-8"))
+        _is_apply_main = login_choice == "📝 申请注册 / Apply for access"
+        if _is_apply_main:
+            # Apply for access
+            st.divider()
+            apply_name = st.text_input(t("ui.apply_login_name"), key="apply_login", placeholder="输入您想申请的登录名")
+            if st.button("📨 " + (t("ui.apply_for_access")), key="apply_btn", use_container_width=True):
+                if apply_name:
+                    _users_file = BASE_PATH / "output" / "users.json"
+                    _users_file.parent.mkdir(parents=True, exist_ok=True)
+                    if _users_file.exists():
+                        ud = json.loads(_users_file.read_text(encoding="utf-8"))
+                    else:
+                        ud = {"allowed": ALLOWED_USERS, "admins": ADMIN_USERS, "pending": []}
+                    pending = ud.get("pending", [])
+                    if apply_name.lower() not in [p.get("name") if isinstance(p, dict) else p for p in pending] and apply_name.lower() not in ud.get("allowed", []):
+                        pending.append({"name": apply_name.lower(), "applied_at": datetime.now().strftime("%Y-%m-%d %H:%M")})
+                        ud["pending"] = pending
+                        _users_file.write_text(json.dumps(ud, ensure_ascii=False, indent=2), encoding="utf-8")
+                        st.success("✅ " + (t("ui.application_submitted_admin_will")))
+                    else:
+                        st.info(t("ui.already_applied_or_already"))
+        else:
+            if st.button("🔓 " + (t("ui.login")), type="primary", use_container_width=True, key="main_login_btn"):
+                if login_choice and login_choice != "— 请选择 —" and login_choice != "— Select —" and login_choice != t("ui.select"):
+                    if _APP_PASSWORD and _pw_input_main != _APP_PASSWORD:
+                        st.error("密码错误 / Incorrect password")
+                    else:
+                        st.session_state["app_user"] = login_choice.lower()
+                        st.session_state["password_ok"] = True
+                        st.rerun()
                 else:
-                    ud = {"allowed": ALLOWED_USERS, "admins": ADMIN_USERS, "pending": []}
-                pending = ud.get("pending", [])
-                if apply_name.lower() not in [p.get("name") for p in pending] and apply_name.lower() not in ud.get("allowed", []):
-                    pending.append({"name": apply_name.lower(), "applied_at": datetime.now().strftime("%Y-%m-%d %H:%M")})
-                    ud["pending"] = pending
-                    _users_file.write_text(json.dumps(ud, ensure_ascii=False, indent=2), encoding="utf-8")
-                    st.success("✅ " + (t("ui.application_submitted_admin_will")))
-                else:
-                    st.info(t("ui.already_applied_or_already"))
+                    st.error("请从下拉菜单选择您的用户名")
 
 
 elif _page_idx == 1:
