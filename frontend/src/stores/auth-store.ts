@@ -140,6 +140,7 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: "auth-store",
+      version: 2, // Bump this to force logout all existing sessions
       partialize: (state) => ({
         user: state.user,
         region: state.region,
@@ -148,6 +149,17 @@ export const useAuthStore = create<AuthState>()(
         isAuthenticated: state.isAuthenticated,
         lastActivity: state.lastActivity,
       }),
+      migrate: () => {
+        // Any version mismatch clears auth state (forces re-login with password)
+        return {
+          user: null,
+          region: "CN",
+          subRegion: "",
+          isAdmin: false,
+          isAuthenticated: false,
+          lastActivity: 0,
+        };
+      },
     }
   )
 );
