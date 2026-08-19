@@ -3,7 +3,10 @@
   "outputDirectory": "frontend/.next",
   "installCommand": "cd frontend && npm install",
   "framework": "nextjs",
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/" }
-  ]
+  "env": {
+    "NEXT_PUBLIC_API_URL": "https://asq6n6kw78.execute-api.us-east-1.amazonaws.com",
+    "SITE_AUTH_ENABLED": "true",
+    "SITE_AUTH_USER": "smartsuite",
+    "SITE_AUTH_PASS": "@site-auth-pass"
+  }
 }
