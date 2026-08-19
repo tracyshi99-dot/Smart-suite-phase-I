@@ -3,7 +3,7 @@ Smart Suite FastAPI Backend
 Wraps engine.py into REST endpoints for Next.js frontend.
 Deployed via AWS Lambda + API Gateway using Mangum.
 """
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, List
@@ -19,16 +19,30 @@ app = FastAPI(title="Smart Suite API", version="2.0.0")
 # CORS for Next.js frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://geo-smartsuite.app",
-        "https://smartsuite-geo.vercel.app",
-        "https://smartsuite-geo-cngs.vercel.app",
-        "http://localhost:3000",
-    ],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# --- Auto-log POST actions to user workspace ---
+@app.middleware("http")
+async def log_actions_middleware(request: Request, call_next):
+    """Automatically log POST actions to user's S3 workspace."""
+    response = await call_next(request)
+    # Only log successful POST/PUT actions (not GET, not errors)
+    if request.method in ("POST", "PUT") and response.status_code == 200:
+        user = request.headers.get("x-user", "")
+        if user and "/api/user/log" not in str(request.url):
+            path = request.url.path
+            action = path.split("/api/")[-1].replace("/", "_") if "/api/" in path else "unknown"
+            try:
+                from s3_storage import user_log_action
+                user_log_action(user.lower(), action, {"endpoint": path})
+            except Exception:
+                pass
+    return response
 
 
 # --- Models ---
@@ -75,6 +89,17 @@ class UploadPhrasesRequest(BaseModel):
 
 
 # --- Auth helper ---
+def _log_user_action_safe(user: str, action: str, details: dict = None):
+    """Best-effort log to user workspace. Never raises."""
+    if not user:
+        return
+    try:
+        from s3_storage import user_log_action
+        user_log_action(user.lower(), action, details or {})
+    except Exception:
+        pass
+
+
 def get_user_region(user: str) -> str:
     """Get user region from users.json (local or S3)."""
     import json
@@ -1043,6 +1068,92 @@ Rule 7 投入产出滞后: 发布2-3周无提升? → ChatGPT 28.5%链接率需�
         return {"content": response, "role": "assistant"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# --- User Workspace ---
+@app.get("/api/user/workspace")
+def get_user_workspace(user: str = Query(...), x_user: Optional[str] = Header(None, alias="X-User")):
+    """Get user's workspace data (files, history). Users can only see their own."""
+    requesting_user = x_user or user
+    data = _load_users_data()
+    is_admin = requesting_user.lower() in data.get("admins", [])
+    
+    # Non-admin can only see their own workspace
+    target_user = user.lower()
+    if not is_admin and target_user != requesting_user.lower():
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    from s3_storage import user_get_workspace_data
+    return user_get_workspace_data(target_user)
+
+
+@app.get("/api/user/history")
+def get_user_history(user: str = Query(...), limit: int = 50, x_user: Optional[str] = Header(None, alias="X-User")):
+    """Get operation history for a user."""
+    requesting_user = x_user or user
+    data = _load_users_data()
+    is_admin = requesting_user.lower() in data.get("admins", [])
+    
+    target_user = user.lower()
+    if not is_admin and target_user != requesting_user.lower():
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    from s3_storage import user_list_history
+    history = user_list_history(target_user, limit)
+    return {"user": target_user, "history": history}
+
+
+@app.post("/api/user/log")
+def log_user_action(user: str = Query(...), action: str = Query(...), details: dict = None):
+    """Log an action to user's workspace history."""
+    from s3_storage import user_log_action
+    user_log_action(user.lower(), action, details or {})
+    return {"success": True}
+
+
+@app.get("/api/user/settings")
+def get_user_settings(user: str = Query(...)):
+    """Get user settings from their workspace."""
+    from s3_storage import user_read_json
+    settings = user_read_json(user.lower(), "settings.json")
+    return settings or {"language": "zh-CN", "theme": "dark"}
+
+
+@app.post("/api/user/settings")
+def save_user_settings(user: str = Query(...), settings: dict = {}):
+    """Save user settings to their workspace."""
+    from s3_storage import user_write_json
+    user_write_json(user.lower(), "settings.json", settings)
+    return {"success": True}
+
+
+# --- Admin: All Users Overview ---
+@app.get("/api/admin/workspaces")
+def admin_list_workspaces(x_user: Optional[str] = Header(None, alias="X-User")):
+    """Admin only: list all user workspaces with stats."""
+    data = _load_users_data()
+    requesting_user = (x_user or "").lower()
+    if requesting_user not in data.get("admins", []):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    from s3_storage import user_list_all_workspaces
+    workspaces = user_list_all_workspaces()
+    return {"workspaces": workspaces, "total_users": len(workspaces)}
+
+
+@app.get("/api/admin/user-data")
+def admin_get_user_data(user: str = Query(...), x_user: Optional[str] = Header(None, alias="X-User")):
+    """Admin only: get full workspace data for any user."""
+    data = _load_users_data()
+    requesting_user = (x_user or "").lower()
+    if requesting_user not in data.get("admins", []):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    from s3_storage import user_get_workspace_data, user_list_history
+    workspace = user_get_workspace_data(user.lower())
+    history = user_list_history(user.lower(), 20)
+    workspace["recent_history"] = history
+    return workspace
 
 
 # --- Lambda Handler ---

@@ -34,28 +34,20 @@ export default function LoginPage() {
   const { login } = useAuthStore();
   const { setLocale } = useI18nStore();
   const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [applyName, setApplyName] = useState("");
   const [applySuccess, setApplySuccess] = useState(false);
 
-  const APP_PASSWORD = "GEO123456";
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username) return;
-
-    if (password !== APP_PASSWORD) {
-      setError("密码错误 / Incorrect password");
-      return;
-    }
+    if (!username.trim()) return;
 
     setLoading(true);
     setError(null);
 
     try {
-      const res = await login(username);
+      const res = await login(username.trim().toLowerCase());
       if (res.allowed) {
         const { regionConfig } = useAuthStore.getState();
         if (regionConfig?.ui_language) {
@@ -85,7 +77,7 @@ export default function LoginPage() {
             Smart Suite
           </h1>
           <p className="text-sm text-[var(--text-secondary)]">
-            AI-native marketing platform
+            GEO Content Intelligence Platform
           </p>
         </div>
 
@@ -95,36 +87,24 @@ export default function LoginPage() {
               htmlFor="username"
               className="block text-sm text-[var(--text-secondary)] mb-1.5"
             >
-              用户名 / Login Name
-            </label>
-            <select
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full border border-[var(--border-card)] rounded-lg px-4 py-2.5 text-[var(--text-primary)] bg-white focus:outline-none focus:border-[var(--accent)] transition-colors"
-            >
-              <option value="">— 请选择用户名 / Select user —</option>
-              {ALLOWED_USERS.map((u) => (
-                <option key={u} value={u}>{u}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm text-[var(--text-secondary)] mb-1.5"
-            >
-              密码 / Password
+              Login Name
             </label>
             <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="请输入密码"
+              id="username"
+              type="text"
+              list="user-list"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Type or select your login name"
               className="w-full border border-[var(--border-card)] rounded-lg px-4 py-2.5 text-[var(--text-primary)] bg-white focus:outline-none focus:border-[var(--accent)] transition-colors"
+              autoFocus
+              autoComplete="off"
             />
+            <datalist id="user-list">
+              {ALLOWED_USERS.map((u) => (
+                <option key={u} value={u} />
+              ))}
+            </datalist>
           </div>
 
           {error && (
@@ -138,30 +118,27 @@ export default function LoginPage() {
             className="w-full"
             size="lg"
             loading={loading}
-            disabled={!username || !password}
+            disabled={!username.trim()}
           >
-            Login
+            Sign In
           </Button>
         </form>
 
-        {/* Apply for access - always visible like Streamlit */}
+        {/* Apply for access */}
         <div className="mt-6 pt-4 border-t border-[var(--border-card)]">
           <p className="text-sm text-[var(--text-secondary)] mb-3">
-            {"\u6CA1\u6709\u6743\u9650\uFF1F"} / No access?
+            No access? / {"\u6CA1\u6709\u6743\u9650\uFF1F"}
           </p>
-          <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">
-            {"\u7533\u8BF7"} Login
-          </label>
           <input
             type="text"
             value={applyName}
             onChange={(e) => setApplyName(e.target.value)}
-            placeholder={"\u8F93\u5165\u60A8\u60F3\u7533\u8BF7\u7684\u767B\u5F55\u540D"}
+            placeholder="Enter desired login name"
             className="w-full border border-[var(--border-card)] rounded-lg px-4 py-2.5 text-sm text-[var(--text-primary)] bg-white focus:outline-none focus:border-[var(--accent)] mb-3"
           />
           {applySuccess ? (
             <p className="text-sm text-[var(--success)] text-center">
-              {"\u2705"} {"\u7533\u8BF7\u5DF2\u63D0\u4EA4\uFF0C\u7B49\u5F85\u7BA1\u7406\u5458\u5BA1\u6838"}
+              {"\u2705"} Application submitted, pending admin approval
             </p>
           ) : (
             <Button
@@ -172,7 +149,7 @@ export default function LoginPage() {
               variant="secondary"
               className="w-full"
             >
-              {"\u{1F4E8}"} {"\u7533\u8BF7\u6743\u9650"}
+              {"\u{1F4E8}"} Apply for Access
             </Button>
           )}
         </div>

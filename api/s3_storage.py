@@ -152,3 +152,145 @@ def list_files(batch_id: str, step: str) -> list:
         return files
     except Exception:
         return []
+
+
+# ============================================================
+# Per-User Workspace Storage
+# ============================================================
+# Each user gets: smartsuite/users/{login}/...
+#   - history/       → operation logs (timestamped JSON)
+#   - batches/       → user's batch data
+#   - settings.json  → user preferences
+# Admin can access any user's workspace.
+
+
+def _user_key(user: str, path: str) -> str:
+    """Build S3 key for user workspace: smartsuite/users/{user}/{path}"""
+    return f"{S3_PREFIX}users/{user}/{path}"
+
+
+def user_read_json(user: str, path: str) -> dict:
+    """Read a JSON file from user's workspace."""
+    key = _user_key(user, path)
+    try:
+        s3 = _get_s3()
+        obj = s3.get_object(Bucket=S3_BUCKET, Key=key)
+        return json.loads(obj["Body"].read().decode("utf-8"))
+    except Exception:
+        return {}
+
+
+def user_write_json(user: str, path: str, data):
+    """Write JSON data to user's workspace."""
+    key = _user_key(user, path)
+    s3 = _get_s3()
+    body = json.dumps(data, ensure_ascii=False, indent=2).encode("utf-8")
+    s3.put_object(Bucket=S3_BUCKET, Key=key, Body=body)
+
+
+def user_read_csv(user: str, path: str) -> pd.DataFrame:
+    """Read a CSV from user's workspace."""
+    key = _user_key(user, path)
+    try:
+        s3 = _get_s3()
+        obj = s3.get_object(Bucket=S3_BUCKET, Key=key)
+        return pd.read_csv(io.BytesIO(obj["Body"].read()), encoding="utf-8-sig", on_bad_lines="skip")
+    except Exception:
+        return pd.DataFrame()
+
+
+def user_write_csv(user: str, path: str, df: pd.DataFrame):
+    """Write a DataFrame as CSV to user's workspace."""
+    key = _user_key(user, path)
+    s3 = _get_s3()
+    csv_buffer = io.BytesIO()
+    df.to_csv(csv_buffer, index=False, encoding="utf-8-sig")
+    csv_buffer.seek(0)
+    s3.put_object(Bucket=S3_BUCKET, Key=key, Body=csv_buffer.getvalue())
+
+
+def user_log_action(user: str, action: str, details: dict = None):
+    """Append an operation log entry to user's history."""
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_entry = {
+        "user": user,
+        "action": action,
+        "timestamp": datetime.now().isoformat(),
+        "details": details or {},
+    }
+    path = f"history/{ts}_{action}.json"
+    user_write_json(user, path, log_entry)
+
+
+def user_list_history(user: str, limit: int = 50) -> list:
+    """List recent operation history for a user."""
+    prefix = _user_key(user, "history/")
+    s3 = _get_s3()
+    try:
+        response = s3.list_objects_v2(Bucket=S3_BUCKET, Prefix=prefix, MaxKeys=1000)
+        items = []
+        for obj in response.get("Contents", []):
+            items.append({
+                "key": obj["Key"],
+                "filename": obj["Key"].split("/")[-1],
+                "size": obj["Size"],
+                "last_modified": obj["LastModified"].isoformat(),
+            })
+        # Sort by last_modified descending, limit
+        items.sort(key=lambda x: x["last_modified"], reverse=True)
+        return items[:limit]
+    except Exception:
+        return []
+
+
+def user_list_all_workspaces() -> list:
+    """Admin: list all user workspaces with summary stats."""
+    prefix = f"{S3_PREFIX}users/"
+    s3 = _get_s3()
+    try:
+        # Use delimiter to get top-level "folders" = user names
+        response = s3.list_objects_v2(Bucket=S3_BUCKET, Prefix=prefix, Delimiter="/")
+        users = []
+        for cp in response.get("CommonPrefixes", []):
+            user_prefix = cp["Prefix"]
+            username = user_prefix.rstrip("/").split("/")[-1]
+            # Count objects in this user's workspace
+            count_resp = s3.list_objects_v2(Bucket=S3_BUCKET, Prefix=user_prefix, MaxKeys=1000)
+            file_count = count_resp.get("KeyCount", 0)
+            # Get latest modification
+            contents = count_resp.get("Contents", [])
+            latest = max((c["LastModified"] for c in contents), default=None) if contents else None
+            users.append({
+                "user": username,
+                "file_count": file_count,
+                "last_activity": latest.isoformat() if latest else None,
+            })
+        return users
+    except Exception:
+        return []
+
+
+def user_get_workspace_data(user: str) -> dict:
+    """Admin: get full workspace listing for a specific user."""
+    prefix = _user_key(user, "")
+    s3 = _get_s3()
+    try:
+        response = s3.list_objects_v2(Bucket=S3_BUCKET, Prefix=prefix, MaxKeys=1000)
+        files = []
+        total_size = 0
+        for obj in response.get("Contents", []):
+            rel_path = obj["Key"][len(prefix):]
+            files.append({
+                "path": rel_path,
+                "size": obj["Size"],
+                "last_modified": obj["LastModified"].isoformat(),
+            })
+            total_size += obj["Size"]
+        return {
+            "user": user,
+            "file_count": len(files),
+            "total_size_bytes": total_size,
+            "files": files,
+        }
+    except Exception:
+        return {"user": user, "file_count": 0, "total_size_bytes": 0, "files": []}
